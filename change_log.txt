@@ -1,0 +1,1571 @@
+Version 1.6.12
+    - Fixed issue with double spinner icons when form is configured with image buttons
+    - Added new filter "gform_pre_validation" to allow add-ons to modify the form object before validation
+    - Added new filter "gform_toolbar_menu" to support custom toolbar buttons
+    - Fixed issue with website field validation failing tildas (~)
+    - Fixed issue with export not taking timezone into account when searching by start and end dates
+    - Fixed issue with "Date Field" type where a blank dates would display as 00-00 in the entry list instead of blank
+    - Fixed issue with export not converting start and end dates to GMT correctly
+    - Fixed issue with fields hidden by page conditional logic saving their values
+	- Removed debug alert statement
+	- Updated post creation to not fire Buddy Press' save_post function until the post data is complete
+    - Fixed issue with translating Widget title and description
+    - Added notification logging to help troubleshoot email issues
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.11
+    - Fixed warnings messages thrown by $wpdb->prepare()
+    - Fixed issue with sorting choices that prevents form from being saved
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.10.1
+    - Fixed issue with wpList script in WP 3.5 causing entry list trash and spam links not to work
+    - Updated form button UI to include text on WP 3.5+
+    - Fixed several styling issues in form editor
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.10.0.2
+    - Fixed Javascript error when resetting drop down values during the conditional logic processing
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.10.0.1
+    - Fixed issue with duplicating a text area with a new line in the default value
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.10
+    - Fixed issue with post category checkbox field always returning validation error when field is set to required (even when an item is checked)
+    - Fixed issue saving multi-input fields on instalations with locales that use comma as the decimal separator
+    - Added is_default_column to the gform_entry_meta filter allow developers to define default columns for the entry list
+    - Fixed a warning notice with gform_get_meta when no key is found
+    - Added gform_field_added and gform_field_deleted jQuery event actions
+    - Fixed issue with calculating fields throwing errors on IE7/8
+	- Fixed an issue which was causing gform_update_meta to insert multiple values for the same key
+	- Fixed an issue with conditional logic when using "Is Not" as the operator
+	- Updated entry export to prompt user when no fields have been chosen
+	- Fixed notice "Undefined index: gf_form_id" displayed when exporting forms and no form chosen
+    - Added gform_entry_meta filter to allow developers to add custom propeties to the lead object. Allows lead meta data to be added as sortable columns to the entry list and export entries file. Added the following functions to assist: GFFormsModel::get_entry_meta(), GFFormsModel::update_entry_meta(), GFSelectColumns::get_selectable_entry_meta, GFExport::get_entry_meta() and gform_get_meta_values_for_entries($entry_ids, $meta_keys)
+    - Fixed issue where default option was being selected for multi-selects when displayed via conditional logic
+    - Updated media button hook to "media_button" instead of "media_button_context"
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.9
+	- Fixed register link on multi-site; goes to primary site's Form Settings
+    - Added "gform_column_input_content" hook to allow modifying of list field column input ouput
+    - Updated "gformAddListItem()" function to support the handling of checkboxes when duplicating a list field row
+    - Fixed issue with postAuthor not being set in some instances and preventing form to save
+    - Fixed issue with greater than conditional logic when targeting radio buttons
+	- Added gform_choices_setting_title filter to allow the choice setting title to be changed
+    - Fixed issue with no duplicate validation firing too early on multi-page forms
+	- Added GFExport::add_default_export_fields($form) to refactor a fragment of duplicate code
+    - Fixed issue with multi-page form validation going to the wrong page
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.8
+    - Fixed issue with conditional logic when configuring multiple "is not" rules with checkboxes as targets
+    - Added hooks on the entry detail page to enable add-ons to create new "boxes" of information
+    - Fixed issue where post category placeholder (for selects) was populating the text as the value when the value should be blank
+    - Fixed issue where fields that are not on the last page of a multi-page form and are marked to not allow duplicates were not going through duplicate validation
+	- Added gform_append_field_choice_option_[field type] JS hook to allow additional options for each choice
+	- Added gform_load_field_choices JS hook to allow help text to be displayed below the choices
+    - Fixed issue where calculation fields hidden via conditional logic were still being processed
+    - Fixed bug where forms with no other Post Field than a "post_custom_field" were not creating posts
+    - Added "gform_before_resend_notifications" filter to allow modification of form object before notifications are resent
+    - Fixed category sorting for manually selected Post Category fields to be case insensitive
+    - Updated AJAX calls using sack and jquery to not pass along a cookie because this caused the loading of admin-ajax.php to be aborted for some users
+    - Fixed notice messages
+    - Fixed issue with spinner not displaying properly when using image buttons
+    - Fixed WordPress minimum version message so that it reflects the correct WordPress minimum version
+    - Fixed issue with number field not trimming value and triggering validation when number is followed by a space character
+    - Fixed issue where quantity was counted as 0 when a product's quantity field was hidden via conditional logic.
+    - Fixed conflict with some popup scripts (i.e. FancyBox) that caused the spinner to be displayed twice
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.7
+    - Fixed conflict with raw shortcode that caused a javascript error on AJAX forms
+    - Updated German translation file
+    - Updated "Edit Forms" menu navigation/page to be "Forms"
+    - Fixed issue with textarea counter on IE9 by moving script to the header instead of footer
+    - Fixed issue with conditional logic when target was set to 0
+    - Fixed issue when duplicating textareas with line breaks in their description
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.6
+    - Fixed warning thrown in has_conditional_logic when $form["fields"] is empty
+    - Fixed issue with pricing field that didn't support the Validation Message setting for Single Product and User Defined Price.
+    - Fixed bug for when a calculated value was zero and it did not show in the email notifications or on the confirmation page
+    - Fixed issue with Warning message being displayed on new forms with no entries
+	- Fixed bug for multi-page ajax forms with progress bar starting at zero that are sent to PayPal Standard
+	- Fixed bug in get_credit_card_init_script that caused javascript error when Force SSL was turned on
+    - Fixed issue with field choices creating a conflict with the Polls Add-On checkbox poll field
+    - Fixed issue in IE9 where conditional logic reset value function set drop down value to option that did not exist resulting in js errors
+    - Fixed issue with non static method being called statically
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.5.0.1
+    - Fixed issue with routine that checks database permissions causing warning message to be displayed on the screen when upgrading
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.5
+	- Fixed sending admin notifications with conditional routing when using PayPal's option to only send when payment is received
+    - Updated gform_merge_tag filter to include the raw field data. To support the Polls Add-On
+    - Updated POT file
+    - Fixed issue where only section headers were displaying in email notifications when using a multi-select with conditional logic
+    - Fixed issue with conditional logic when using "is not" as the operator
+    - Updated field editor so that fields can only be dragged from the title bar
+    - Added drag and drop sorting functionality to selection field choices
+    - Fixed security vulnerability with password field
+    - Fixed conflict with Tabbed Widget plugin that caused the widget page to throw Javascript errors
+    - Fixed issue with field_values not being saved across AJAX validation failures
+    - Added Hungarian translation
+    - Fixed recurring theme conflict by replacing }) with } ) , since some themes create problems by replacing }) with ]
+    - Updated multiselect values so that there is a blank space between values on entry list view
+    - Fixed issue on confirmation page causing malformed markup and preventing progress bar from being displayed properly
+    - Added swedish translation
+    - Fixed issue where submissions (entries) could be created on forms that did not exist or that were inactive.
+    - Fixed issue with number field calculation not rounding correctly when entry is saved
+    - Added gform_shortcode_$action filter to allow Add-Ons to implement shortcode actions
+        add_filter("gform_shortcode_custom", "custom_action", 10, 3);
+        function custom_action($string, $attributes, $content){
+            $string = "custom shortcode action";
+            return $string;
+        }
+    - Fixed issue with total not being calculated on forms with animation and next button conditional logic
+    - Fixed issue with conditional logic value reset with pre-populated fields
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.4.5
+    - Fixed issue with conditional logic on jQuery 1.6.1 under certain circumstances
+    - Fixed issue where required quantity on single, hidden and cacluation products did not accept "0"
+    - Added logging infrastructure and a few log messages around multi-page file upload
+    - Fixed issue where inputs did not have calc events bound to change event
+    - Fixed issue where required quantity on single, hidden and cacluation products did not accept "0"
+    - Fixed issue with input mask not properly clearing value when form was submitted via the Enter key.
+    - Fixed issue with gform_product_info being added to meta even on non-product forms
+    - Fixed issue with default post category not being properly set
+    - Updated "GFCommon::is_post_field()" to be a public method (for use in User Registration Add-on)
+    - Fixed issue with number field failing validation when field was configured with commas for decimal separators
+    - Fixed issue with calculation not supporting the field number format setting
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.4.4
+    - Fixed issue with get_product_fields() function caching product fields for pre-submission entries (ones without an ID)
+    - Fixed issue with credit card field not updating card type as the card number is entered
+    - Fixed issue with init scripts being executed more than once
+    - Fixed issue with gf_global not being output on certain situations
+    - Fixed issue with post not being associated with entries
+    - Fixed some notice messages
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.4.3
+    - Fixed issue with notification url not accepting port number and cleaned up trailing slash and question mark when not necessary
+    - Fixed issue with shipping being displayed even when shipping is hidden by conditional logic
+    - Fixed issue with slow conditional logic on certain situations
+    - Added "create_lead()" function to allow creation of lead object prior to actually saving the lead
+    - Fixed issue with checkbox field reverting back to default selections after form is submitted
+    - Fixed issue with payment amount being displayed on entry details for payments of $0.00
+    - Fixed issue causing long entry values to not be displayed when server's localization changes the number format
+    - Fixed issue with quantity fields not updating total on blur
+    - Fixed issue where "No duplicates" option was not working on calculated fields on values above 999
+    - Fixed issue where jQuery prop function was not returning elem/value
+    - Fixed misc notices
+    - Added constant for min wp version and updated min version error to use this
+    - Fixed issue where hidden fields were not triggering calculation event
+    - Fixed an issue with character counter throwing errors when configured on admin only fields
+    - Fixed issue with shortcodes being executed as part of the post body template
+    - Fixed issue with default values being reset on forms with conditional logic
+    - Updated how gf_global js object was being enqueued and output to work around wp3.2 wp_localize script limitation
+    - Fixed issue with conditional logic when using the post category checkbox field as a target
+    - Fixed issue with no conflict mode blocking scripts for any ajax call
+    - Fixed issue with option and quantity fields not being properly re-assigned to another product field when the product field they are assigned to is deleted.
+    - Added validation to prevent option and quantity fields from being added to the form without a product field.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.4.2
+    - Fixed issue with website validation not allowing port numbers to be entered
+    - Added override for jQuery "prop" method which defaults to using attr if prop not available
+    - Updated AJAX .submit() call, removing extra event data parameter that caused a conflict with some scripts
+    - Fixed issue with field calculation not taking fields hidden by conditional logic into account
+    - Moved Cardholder name under the expiration date on credit card fields
+    - Fixed issue with post image size merge tag drop down not saving its value properly
+    - Fixed issue where field calculations were not triggering conditional logic
+    - Fixed issue with {all_fields} displaying duplicate values
+    - Fixed issue with No conflict mode not enqueueing gravityforms.js on the form editor
+    - Updated Single Product field so that the field label is changed to match the pre-populated product name
+    - Fixed issue with Forms menu overriding other custom post type menus
+    - Fixed issue where number fields in HTML where chocking on comma-formatted numbers
+    - Fixed issue on form editor for forms that had hidden product fields
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.4.1
+    - Fixed issue with conditional logic throwing a javascript error.
+    - Fixed issue with price calculation rounding
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.4
+    - Fixed issue with notification failing when a comma separated list of emails was entered with spaces in between emails
+    - Fixed quantity validation so that it does not allow decimals.
+    - Fixed issue with chosen script not being enqueued properly when form had conditional logic
+    - Fixed validation issue with quantity field that didn't honor the min/max setting
+    - Removed "Enable calculation" option from quantity field
+    - Added step='any' attribute to number inputs when HTML5 is enabled
+    - Fixed javascript error on AJAX forms with credit card field
+    - Added id attribute to anchor
+    - Fixed issue with the WordPress HTTPS plugin integration
+    - Added new entry information fields to the entry export field list
+    - Updated conditional logic and merge tag drop downs so that a width is specified instead of truncating the value
+    - Fixed issue on notification merge tag drop down wrapping to next line when field labels were long
+    - Fixed issue with hidden product not taking quantity into account when calculating total
+    - Fixed issue with hidden product field preventing quantity from being populated dynamically
+    - Fixed issue with entry detail page not loading the entry that was clicked on entry list page
+    - Updated inline js so that it is now "enqueued" and consolidated into a single script block tied to the 'gform_post_render' event
+    - Fixed admin display issue with the bulk-add modal panel in Chrome
+    - Fixed warnings when nl2br used on array
+    - Added new choices for conditional routing to administrator notifications (greater than, less than, contains, starts with, ends with)
+    - Updated notification wysiwyg styles in admin
+    - Fixed issue with form editor not allowing users to uncheck the "Set as Post Image" checkbox
+    - Fixed issue where errors would be displayed when a "starts with" conditional logic was configured without the actual "starts with" value
+    - Fixed issue with quantity field being recorded as . when a value is not entered
+    - Fixed issue with a "Select Format" option appearing in the quantity field's number format option for newly created fields.
+    - Added hook to allow users to specify the page size on the entry list page
+        add_filter("gform_entry_page_size", "set_page_size", 10, 2);
+        function set_page_size($page_size, $form_id){
+            return 50; //sets page size to 50
+        }
+    - Updated the form editor so that the max characters option on single input field is hidden when input mask is enabled
+    - Updated checkbox field so that it can be pre-populated using an array in addition to a comma separated list
+    - Fixed notice for $read_only variable
+    - Fixed notice for postStatus
+    - Added support for calculations in Number field
+    - Added Calculation product type
+    - Added [gravityforms action="conditional"] shortcode
+    - Added support for showing lead on entry detail when LID or POS are passed. Always third parties to link directly to leads.
+    - Implemented support for {Product Name:1:qty} merge tag to allow the quantity of product fields to be returned via a merge tag
+    - Fixed issue with {all_fields} merge tag when using post category fields as target of conditional logic
+    - Added filter to allow changes to the recaptcha init screen
+        add_filter("gform_recaptcha_init_script", "custom_translation", 10, 3);
+        function custom_translation($script, $form_id, $field){
+            $script = 'RecaptchaOptions.custom_translations = {
+                                instructions_visual : "Scrivi le due parole:",
+                                instructions_audio : "Trascrivi ci\u00f2 che senti:",
+                                play_again : "Riascolta la traccia audio",
+                                cant_hear_this : "Scarica la traccia in formato MP3",
+                                visual_challenge : "Modalit\u00e0 visiva",
+                                audio_challenge : "Modalit\u00e0 auditiva",
+                                refresh_btn : "Chiedi due nuove parole",
+                                help_btn : "Aiuto",
+                                incorrect_try_again : "Scorretto. Riprova.",
+                        }';
+            return $script;
+
+        }
+    - Added support for {Total:1:price} merge tag to allow total to be formatted numerically
+    - Fixed issue of no results displayed when viewing a form that has a paged entry list and switching to a form that does not
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.3.1.2
+	- Fixed notices in form widget and when enabling no-conflict mode
+	- Fixed issue with entry list throwing database errors when sorting while filtering by starred or unread
+    - Fixed javascript error on form editor for IE7/8
+    - Fixed issue with entry detail page displaying an error when query string "pos" wasn't specified.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.3.1.1
+    - Fixed bug with Post Category merge tags
+    - Fixed issue when AJAX forms getting displayed blank
+    - Fixed issue with product fields being added to entry even though they were hidden by conditional logic
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.3.1
+    - Fixed bug with conditional logic when applied to checkboxes
+    - Fixed issue where entry limit
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.3
+    - Fixed issue where entry limit was not being validated on form submssion
+    - Fixed issue where form schedule was not being validated on form submission
+    - Added no-conflict mode functionality
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.3.beta2.4
+    - Fixed issue with spinner when multiple forms are placed on the same page
+    - Fixed issue with AJAX multi-form not being displayed on some occasions
+    - Fixed issue with email validation when using {admin_email} on notification emails
+    - Added integration with ManageWP
+    - Fixed deprecated PHP functions
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.3.beta2.3
+    - Updated pricing fields so that they don't support the "Admin Only" option.
+    - Fixed issue with reCaptcha not changing languages properly
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.3.beta2.2
+	- Fixed issue when clicking on "enable values" in admin throwing javascript error; function SetFieldChoices was missing
+	- Fixed issue with non-customer facing error when there was no attachment
+    - Fixed issue with with submit button text always using default text
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.3.beta2
+	- Fixed issue when applying conditional logic to the submit button
+    - Fixed issue with non-translatable strings in JS files
+	- Added merge tag support for HTML fields
+    - Added hook to enable attachments to be added to notifications
+    - Updated POT file
+    - Added total entries to dashboard widget
+    - Added filter to customize dashboard widget title
+    - Fixed issue with dashboard widget table breaking outside of container
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.3.beta1
+    - Fixed issue with post author not being correctly set for posts configured to be created after payment is received
+    - Updated conditional logic to support other types of operation and other types of fields
+    - Updated search in admin to maintain the filter (starred, unread, spam, trash) so the filtered results you are viewing are what is searched
+    - Added field type (Multi Select, Drop Down, Radio, Checkbox) support to Post Category field
+    - Updated single product field so that its quantity is defauted to 1 when the quantity field is disabled
+    - Fixed notices in export and notification page
+    - Added setting to enable/disable Akismet
+    - Removed CDATA from scripts to prevent JS error on some browsers due to a character replacement done by WP core.
+    - Added hooks to enable CDATA wrapping
+    - Fixed issue with Date field not honoring the "No Duplicate" setting and allowing duplicate dates to be entered when they shouldn't
+    - Fixed issue with custom confirmation not working properly on AJAX forms
+    - Added back button to entry detail pagination
+    - Added pagination on entry detail page
+    - Fixed WP3.3 bug with {user:***} merge tag
+    - Fixed issue with chosen script initialization when field is target of conditional logic
+	- Added support for {admin_email} merge tag and using it as the default value for notifications instead of the actual admin email
+	- Updated admin paging total to not include items in the trash
+	- Updated admin paging links so that when an item is moved to the trash using the link, the counts are updated as necessary to reflect the change
+	- Updated admin paging links so that when an item is marked spam using the link, the counts are updated as necessary to reflect the change
+	- Fixed admin paging so that the filter carries through to the next page
+	- Fixed admin paging so that the counts displayed apply to the entry list you are viewing (all, unread, starred, spam, trash)
+    - Added "gform_akismet_enabled" hook which allows you to disable akismet integration
+        Documentation: http://www.gravityhelp.com/documentation/page/Gform_akismet_enabled
+        Example:
+            add_filter("gform_akismet_enabled", "__return_false");
+    - Updated enqueue and print scripts functions to always include jQuery, allows "gform_post_render" js hook to be accessible even when GF not using it
+    - Added 'eventName' parameter to ajaxSpinner submit event to allow third party integrations to target this specific event
+    - Added $ajax parameter to 'gform_pre_render' hook
+    - Updated field type menu on form editor page to prevent it from overlapping the form toolbar when a notice is displayed
+    - Fixed issue with textarea and input mask script on AJAX forms
+    - Fixed issue with multi-select fields on AJAX multi-page forms
+	- Updated progress bar to start at 0%
+	- Added ability to turn on/off progress bar and set completion text when displayed with the confirmation text
+	- Added "gform_progressbar_start_at_zero" hook to set progress bar back to previous behavior
+	  Example:
+	  	add_filter("gform_progressbar_start_at_zero", "set_progressbar_start", 10, 2);
+		function set_progressbar_start($start_at_zero, $form)
+		{
+			return false;
+		}
+    - Added functionality to store a static copy of the product info when the entry is created
+    - Updated Really Simple Captcha to set a tabindex
+    - Fixed notice occuring when 'postFormat' property of form object was not present
+    - Added TinyMCE editor to notification page
+    - Fixed issue with main Gravity Forms permission that prevented the Forms menu from displaying the first time a new user logged in.
+    - Fixed issue with Simple Captcha field not validating because of an extra "input_" in the input's ID attribute
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.2
+
+    - Fixed issue with uploaded files not being properly deleted on multi-site installs
+    - Updated thickbox enqueuing so that it is done conditionally when WP < 3.3, since the conflict between thickbox and the UI tabs have been fixed in WP 3.3
+    - Fixed issue for ReallySimpleCaptcha with image/color display when changing size/font/background colors
+    - Fixed issue with preview link that is displyed after creating a new form
+    - Fixed notice messages
+    - Fixed link for reCaptcha sign-up
+    - Changed the way that the preview, print entry and column selection pages are requested so that they run within the WordPress page cycle instead of being called directly.
+    - Fixed issue with {all_fields:admin} not displaying admin labels for Single Product fields.
+    - Fixed issue with blank sections being displayed on {all_fields} merge tag.
+    - Fixed issue where content templates would return empty when a "0" was passed
+    - Added "gform_replace_merge_tags" hook which allows for the replacement of custom merge tags
+        Documentation: http://www.gravityhelp.com/documentation/page/Gform_replace_variables
+        Example:
+            add_filter('gform_replace_merge_tags', 'replace_download_link', 10, 7);
+            function replace_download_link($text, $form, $entry, $url_encode, $esc_html, $nl2br, $format) {
+
+                if(strpos($text, '{download_link}') === false)
+                    return $text;
+
+                $text = str_replace('{download_link}', gform_get_meta($entry['id'], 'download_link'), $text);
+
+                return $text;
+            }
+    - Added "gform_custom_merge_tags" hook which allows for the inclusion of custom merge tags whereever merge tag drop downs are generated
+        Documentation: http://www.gravityhelp.com/documentation/page/Gform_custom_merge_tags
+        Example:
+            add_filter('gform_custom_merge_tags', 'custom_merge_tags', 10, 4);
+            function custom_merge_tags($merge_tags, $form_id, $fields, $element_id) {
+                $merge_tags[] = array('label' => 'Download Link', 'tag' => '{download_link}');
+                return $merge_tags;
+            }
+    - Added "gform_entry_created" hook which fires immediately after the lead has been created but before any lead specific functionality has processed
+        Documentation: http://www.gravityhelp.com/documentation/page/Gform_entry_created
+        Example:
+            add_action('gform_entry_created', 'generate_mergedoc');
+            function generate_mergedoc($entry, $form) {
+                $download_link = self::get_download_link($entry['id']);
+                gform_update_meta($entry['id'], 'download_link', $download_link);
+            }
+    - Added "gform_form_actions" hook which allows the modification of existing form actions and addition of new form actions
+        Documentation: http://www.gravityhelp.com/documentation/page/Gform_form_actions
+        Example:
+            add_action('gform_form_actions', 'add_mergedoc_link', 10, 4);
+            function add_mergedoc_link($actions, $form_id) {
+                $actions['mergedoc_settings'] = "<a href=\"" . get_admin_url() . "admin.php?page=gf_mergedoc&id={$form_id}\">" . __("MergeDoc", "gravityformsmergedoc") . "</a>";
+                return $actions;
+            }
+    - Fixed issue with activation throwing errors when trying to remove old indexes.
+    - Fixed issue with Pricing fields displaying as $0.00 for text formatted notifications
+    - Updated issue where selecting "None" for Paging Progress Indicator option was not being re-populated correctly after updating the form
+    - Fixed issue with user defined price field not accepting $0.00 as a valid value
+    - Added ability to go back to a specific page when form valiation fails
+    - Fixed issue with radion button and checkbox pricing fields storing the selected items even when they had blank prices
+    - Fixed issue with escaping causing javascript errors on the entry list when language is set to French
+    - Updated the color_picker function in the GFFormDetail class to public (so Add-Ons can access it)
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6.1
+    - Fixed issue with form preview returning a 404
+    - Fixed issue with credit card field not escaping translated text properly and causing issues with French translation.
+    - Updated 'gform_allowable_tags' filter to run on every field including post fields
+    - Fixed issue with form export including the <creditCards> node for non credit card fields.
+    - Fixed issue with gform_save_field_value filter not accepting values greater than 200 characters
+    - Fixed issue with last field in the form being saved with the value of the total field.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.6
+    - Added additional version-specific IE browser classes to gform_wrapper
+    - Removed json.php. Using WordPress JSON class instead.
+    - Fixed issue where blank post meta keys are created when empty value is submitted
+    - Added support for running Gravity Forms setup from settings page based on "setup" query string. (ie. ?page=gf_settings&setup)
+    - Fixed issue with radio buttons when using jQuery 1.6.4 (Wordpress 3.3)
+    - Fixed issue with post images getting saved in a wrong folder (based on the date of the embedded post/page instead of the newly created post)
+    - Fixed debug notice messages
+    - Added support for merge codes :label to allow field labels to be conditionally written to the outputted only when the field has a value.
+    - Fixed issue with Post Format not being selected correctly in the form editor
+    - Added hook on preview.php file to enqueue custom styles
+    - Added Primary key to wp_rg_form_meta and wp_rg_lead_detail_long tables
+    - Fixed issue on checkbox merge tag when targeting specific checkbox item
+    - Added support for :currency and :price modifier on pricing merge tags
+    - Updated tooltip script printing so that only tooltip specific scripts are printed when calling wp_print_scripts();
+    - Updated "gform_confirmation_anchor" hook to affect AJAX forms and provide option for AJAX forms that allows you to specify an integer for the scroll position
+    - Fixed issue with thickbox script on upcoming WP 3.3
+    - Fixed issue with Post Custom Field (Date field type) not honoring date format when storing post meta
+    - Updated editor "Update Form" button to do a full refresh instead of AJAX
+    - Fixed issue with formatting and total calculation of the Swiss Franc currency
+    - Added ID attribute to the "Add Form" link
+    - Dynamically calculating WordPress root directory on files that are loaded outside the WP context (i.e. preview.php, select_columns.php)
+    - Added "gform_post_render" javascript hook to functions to bound to every form render on AJAX enabled forms.
+        Documentation: http://www.gravityhelp.com/documentation/page/Gform_post_render
+        Example:
+            jQuery(document).bind('gform_post_render', function(){
+                // code to trigger on AJAX form render
+            });
+    - Added support for additional date formats
+    - Fixed conditional logic issue on multi-page forms when AJAX is turned on
+    - Fixed issue where the full list of radio and checkbox items were displayed in the admin after editing a choice
+    - Fixed erroneous single quote from AJAX inline script block
+    - Fixed issue with conditional logic fields not making into notification email when sending notification after payment is made.
+    - Added "gform_allowable_tags" hook to allow enabling HTML or specific HTML tags for submitted data
+        Documentation: http://www.gravityhelp.com/documentation/page/Gform_allowable_tags
+        Example:
+        add_filter("gform_allowable_tags", "__return_true");
+    - Added browser class to gform_wrapper
+    - Added a form specific class to the confirmation container. "gform_confirmation_message_FORMID".
+    - Fixed issue where adding any post field to a form prevented the form from saving if Post Formats were not supported
+    - Fixed problem creating warning messages on radio button fields.
+    - Added extra classes to pagination steps
+    - Updated form editor UI
+    - Added Mask setting to Text Field.
+    - Fixed markup on form list page causing WP footer to overlap with long form list.
+    - Aded form advanced setting to require user to be logged in to view form and a configurable message.
+    - Added re-send notification functionality to entry list and entry detail page.
+    - Added Print to list of bulk action operations so that multiple entries can be printed at once.
+    - Added hook to change separator of entry export file.
+    - Added "Other" option to radio button field.
+    - Added tab index to shortcode and function to specify starting tab index.
+    - Added CDATA around scripts to ensure valid HTML.
+    - Updated shortcode wizard to remove square brackets( [ ] ) characters from form name when placed in the shortcode.
+    - Added duplicate field functionality.
+    - Added update message for bulk actions on entries list page.
+    - Added post format setting to main post fields (title, body).
+    - Added option to set post image field as a featured image.
+    - Added default value settings to simple name field
+    - Updated default price for options to $0.00 price instead of blank.
+    - Added visibility setting to product fields so that they can be hidden.
+    - Added trash and spam functionality.
+    - Added integration with Akismet.
+    - Fixed conditional logic problem when target values have single quotes.
+    - Fixed number field validation.
+    - Added support for 24 hour time on time field.
+    - Added Date drop down type to date field.
+    - Added new gform_after_submission hook that fires early in the process and deprecated gform_post_submission.
+    - Enhanced Limit entry option to allow (per day/week/month/year).
+    - Added hidden product field.
+    - Added list field type.
+    - Updated file upload field to increase security.
+    - Added lookup by form name on gravityform shortcode.
+    - Added checkbox merge variable to return a comma separated list of selected items.
+    - Updated product fields to improve pre-population via hooks.
+    - Added new easier to use field validation filter.
+    - Updated entry detail and notification emails to hide section break when all fields in that section are blank.
+    - Added validation so that option field does not get added to a form without a product field.
+    - Added hook for single product sublabels.
+    - Added support for merge tags in confirmation URL redirect field
+    - Added checkbox input type to Post Custom Field.
+    - Added an option to send emails in text format.
+    - Added rg_lead_meta table to be used by Add-On developers.
+    - Removed donation field button (still providing support for existing donation fields).
+    - Added option to use the "chosen" script on drop downs.
+    - Added multi-select field.
+    - Added multi-select field as input type for: Tag, Custom Field.
+    - Added checkbox (comma separated) to entry list.
+    - Added ability to save a predefined choice from the bulk add screen.
+    - Added list field to custom post field.
+    - Added hook for list field column.
+    - Added description placement setting (top label only).
+    - Added new merge tag for displaying Admin labels on notifications(create {all_fields:admin_label} and make it more flexible)
+    - Fixed issue with "gform_notification_format" filter not passing all of the parameters correctly
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.2.10
+    - Fixed issue with checkbox variable replacement creating a warning message.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.2.9
+    - Replaced dot(.) in the state field ID with underscore.
+    - Disabling product state validation if field is configured for dynamic population
+    - Marked build_lead_array() function as public to allow developers to call it when performing custom entry queries.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.2.8
+    - Added product price javascript filter to allow custom total calculation
+
+        function gform_product_total(formId, price){
+            return price + 100;
+        }
+    - Added gform_product_info filter to allow manipulation of the product list
+    - Removed custom class from field when displayed in the form editor
+    - Implemented gform_address_display_format on form display
+    - Fixed formatting issue with address field when state field was hidden
+    - Replace dot (.) in complex field's input IDs with underscores to prevent CSS problems when targeting the input
+    - Added gform_print_entry_header and gform_print_entry_footer hooks to allow users to add custom headers and footers in the Print Entry screen
+    - Added CSS rule to prevent a reported display issue where button panels were cut off by the container overflow in the form editor
+    - Fixed javascript error on drop down shipping fields when using WP 3.2 RC1
+    - Fixed issue with Post Custom Field template not saving value correctly
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.2.7
+    - Fixed issue with drop down fields hidden by conditional logic getting sent in notifications
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.2.6
+    - Added rgobj() function to better handle retrieving properties from objects
+    - Added new hook "gform_default_notification" to allow the default admin notification for new forms to be disabled
+        Documentation: http://www.gravityhelp.com/documentation/page/Gform_default_notification
+        Example:
+        add_filter("gform_default_notification", "__return_false");
+
+    - Fixed localization issues on a few strings
+    - Updated POT file
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.2.5
+    - Adjusted website field so that if the default value of "http://" is left in the field, it is saved as a blank value
+    - Fixed issue with shortcode wizard adding shortcode to wrong the tab
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.2.4
+    - Changed entry export so that entry date is timezone aware
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.2.3
+    - Updated jQuery attr("checked"), attr("disabled") and attr("selected") statements for compatibility with jQuery 1.6
+    - Fixed issue with form editor throwing errors on WP 3.2 on forms without page breaks
+    - Changed Print Entry page so that Admin labels are used when appropriate.
+    - Added "gfield_contains_required" class to main <li> when it contains a required field.
+    - Fixed issue with checkbox option fields displaying blank options in the admin and PayPal
+    - Added Greenland to the list of countries
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.2.2
+    - Changed form action to a relative path instead of full URL
+    - Removed TwentyTen theme-specific styles from forms.css
+    - Minor updates to admin.css
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.2.1
+    - Updated jQuery property selector to include quotes
+    - Removed 'href' attribute from 'Edit' link to resolve IE issue where it triggered the onBeforeUnload event
+    - Updated admin styles to make 'Close' link cursor display as a pointer
+    - Added 'gform_admin_pre_render' hook to fire on Form Editor view
+    - Added renewal reminder to admin notifications
+    - Removed Category ID from category variable replacement
+    - Fixed issue with back-slashes being removed when saving entry
+    - Added gform_get_input_value hook to replace gform_get_field_value
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.2
+    - Updated reCAPTCHA API file
+    - Fixed issue with Post Category fields storing the wrong post when sub categories have the same name
+    - Fixed issue with Post Category field not displaying all categories in the form editor
+    - Fixed issue with drop downs not keeping selected item upon validation error when value is set to 0 (zero) and other item is selected by default
+    - Fixed issue with number of entries being written to the export files
+    - Fixed javascript error on Form Editor when "Enable Content Template" is checked, but nothing is entered in the template field
+    - Added JS escaping to prevent javascript error on Form Editor when translated AJAX error messages contain a single quote.
+    - Fixed issue drop downs not keeping selected item upon validation error when value is set to 0 (zero)
+    - Fixed issue with price calculation when conditional logic animation was enabled
+    - Added gform_validation_error in wrapper div when form fails validation
+    - Updated POT file
+    - Fixed error caused by GFCommon not being included when calling enqueue_function from functions.php
+    - Updated portuguese translation file
+    - Added gform_delete_lead hook
+    - Fixed problem with exporting/importing routing rules
+    - Fixed issue with product field validation when using Euro as currency
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.1
+    - Fixed problem with getting embed_post for {custom_field} variables
+    - Added rules to forms.css file to reset unordered list styles to defaults inside HTML blocks
+    - Cleaned up Notice messages
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.0.2
+    - Updated GFFormsModel::get_forms() to sort by "title ASC" by default
+    - Added autocomplete="off" to honeypot field when HTML5 is on
+    - Added shortcode support to entry limit and expired form messages
+    - Updated POT file
+    - Fixed File Upload and Post Field bug deleting field data when editing entry
+    - Fixed typo in validation message
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.0.1
+    - Localized string "of" in character counter message.
+    - Fixed issue with option field where checkbox and radio buttons items where not getting refreshed when the + and - button were clicked
+    - Fixed issue with currency formatting for currencies with commas as decimal points
+    - Added form specific version of "gform_validation" hook
+    - Fixed issue with gform_unique_id not escaping result before displaying
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.RC7
+    - Added "Disable Auto-formatting" option to form confirmations
+    - Added "Reset Views" and "Delete Entries" to the form list bulk action drop down
+    - Added "Settings" link to the plugins page
+    - Removed Thesis (theme) specific CSS rules from default forms.css file
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.RC6
+    - Added styles to admin.css for new toolbar element
+    - Implemented toolbar on Form editor, Notification and Entry list pages
+    - Added gform_countries filter to allow manipulation of the address field's country list
+    - Added gform_duplicate_message filter to allow customization of the default duplicate value validation message
+    - Populating content templates with the field's variable by default (applies to Post Title, Post Body and Post Custom Field)
+    - Fixed issue with Single Product and User Defined Product not displaying the Rule Settings
+    - Implemented Renew section on Settings page
+    - Limiting the number of items displayed in the admin for checkbox and multiple choice fields
+    - Fixed issue with user defined product field not formatting the entered value as currency
+    - Fixed issue with <form action attribute including port twice
+    - Using label instead of value for {all_fields} variable.
+    - Allowing HTML for checkboxes and radio button items
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.RC4.2
+    - Fixed issue with the tab index on single product fields
+    - Cleaned up some debugging notices
+    - Fixed issue with donation field not accepting price input
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.RC4.1
+    - Fixed issue with "gform_anchor_confirmation" hook where hook was not working when form ID was specified
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.RC4
+    - Fixed issue with {all_field} variable replacement ignoring fields that had the value "0" in them
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.RC3.15
+    - Fixed issue with Post Custom Field (File upload) not working properly on multi-page forms.
+    - Fixed Javascript error when clicking Next on a multi-page form with conditional logic
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.RC3.14
+    - Fixed issue with Next Button conditional logic not firing properly
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.RC3.13
+    - Fixed issue with post image field not uploading images with spaces in the file name
+    - Fixed issue with post image field not displaying images with single quotes in the file name
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.RC3.12
+    - Fixed issue with currency conversion on currencies that use comma as a decimal separator
+    - Suppressing confirmation div when confirmation text is empty
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.RC3.11
+    - Fixed jQuery error when using AJAX
+    - Fixed an issue with the AJAX spinner image that wasn't getting displayed and was throwing errors on Chrome
+    - Fixed issue with password field not maintaining state after failing validation
+    - Fixed issue with AJAX forms not displaying validation errors.
+    - Added password strength CSS classes
+    - Removed empty forms_widget.css file
+    - Fixed issue with image button not submitting the form when a target of conditional logic
+    - Fixed javascript error when trying to delete a file upload field on a non multi-page form
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.RC3.10
+    - Fixed issue when converting text to a number when there were more than 2 decimal cases
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.RC3.9
+    - Moved form processing code to from the "wp_loaded" hook to the "wp" hook in order to make sure the global $post variable is available.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.RC3.8
+    - Fixed issue with page conditional logic throwing a javascript error
+    - Added form tag action to current page to prevent HTML5 validation errors
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.RC3.7
+    - Fixed issue with product fields (checkboxes) failing state validation on items after the tenth in the list
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.RC3.6
+    - Fixed issue with donation field failed required validation even whith a valid value
+    - Fixed CSS issue with Honey pot and multi-page forms
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.RC3.5
+    - Fixed issue with product field failing state validation on some scenarios
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.rc3.4
+    - Fixed issue with multiple choice field default selection.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.rc3.3
+    - Fixed issue with the message on the Plugin page on WP 3.1
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.rc3.2
+    - Changed product selection fields so that an item with empty price triggers the required field validation and acts as if no product was selected.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.rc3.1
+    - Renamed gform_field_value filter to gform_get_field_value
+    - Added gform_get_field_value filter to entry_list.php
+    - Added gform_save_field_value to RGFormsModel::save_input()
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.rc2.6
+    - Added gform_field_value filter to RGFormsModel::get_lead_field_value();
+
+-------------------------------------------------------------------------------------------------------------------
+
+Version 1.5.rc2.5
+    - Fixed issue with file upload field not maintaining uploaded file after failing validation
+    - Fixed issue with file upload field not uploading files when previous file upload field was left blank
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.rc2.4
+    - Fixed issue with file upload field failing required validation on a multi-page form even when a file has been uploaded.
+    - Fixed issue when importing a form with empty pagination page names
+    - Fixed conditional logic issue generating a JS error
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.rc2.3
+    - Added "gform_entry_field_value" to allow users to manipulate field values before being displayed on the entry detail screen
+    - Updated admin.css file to fix and issue with Google Chrome 9 beta
+    - Updated forms.css for better "ready class" support - added "clear:both" rule to containing list items for proper float clearing
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.rc2.2
+    - Fixed issue with the conditional logic script not being enqueued properly.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.rc2.1
+    - Fixed issue with the conditional logic script not being enqueued properly.
+    - Created function to enqueue scripts manually
+    - Fixed issue causing product fields to be deleted when editing entries
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.rc2
+    - Fixed issue with drop down product fields not being able to be populated dynamically.
+    - Updated CSS for advanced fields - improved vertical alignment with existing fields and new ready classes.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.rc1.2
+    - Fixed issue with AJAX submission creating nested form tags
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.rc1.1
+    - Added gform_page_loaded Javascript hook that gets fired when going from one page to the next in a multi-page form
+    - Removed password field from being displayed with the {all_field} variable
+    - Fixed issue with AJAX submission creating nested form tags
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.rc1
+    - Fixed issue with widget not enqueuing the correct scripts
+    - Fixed issue with pricing fields not calculating total correctly for donation fields
+    - Fixed issue with checkboxes not being pre-populated via query string
+    - Fixed issue with {embed_post} variable
+    - Added new "gf_inline" ready class for inline field layouts
+    - Several CSS revisions & improvements
+    - Fixed an alignment issue with the ReCaptcha field in Safari & Chrome
+    - Fixed issue with JSON serializer not escaping new lines properly on Chrome when saving the form.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.beta3.7
+    - Fixed issue with {embed_post} variable
+    - Added new "gf_inline" ready class for inline field layouts
+    - Several CSS revisions & improvements
+    - Fixed an alignment issue with the ReCaptcha field in Safari & Chrome
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.beta3.6
+    - Another adjustment to the JSON serializer script to resolve issues when saving forms on Chrome
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.beta3.5
+    - Fixed issue with JSON serializer not escaping new lines properly on Chrome when saving the form.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.beta3.4
+    - Fixed HTML validation errors
+    - Fixed issue with admin notification BCC field where variables were not getting replaced correctly
+    - Fixed issue with gform_post_submission not being called when confirmation is set to redirect
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.beta3.3
+    - Fixed issue with the Parameter Name input value (advanced tab) being pre-populated with HTML code
+    - Added entry list and entry detail hooks
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.beta3.2
+    - Fixed issue with image preview buttons going to next page instead of previous page
+    - Fixed issue with page names getting cleared out randomly
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.beta3.1
+    - Fixed issue with submit button when it is a target of conditional logic
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.beta3
+    - Moved gravityforms.js script from footer to the header to fix issue with IE
+    - Updated conditional logic script so that it is in printed in one line to avoid conflicts with plugins such as [raw]
+    - Fixed issue with state validation when using the English Pound symbol
+    - Fixed issue with Post Category fields not adding the tabindex property
+    - Added support for predefining a default post category by marking a post category fields as admin only.
+    - Added support for variables on all notification fields
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.beta2
+    - Fixed issue with currency symbol encoding
+    - Fixed issue with entry object not being passed to gform_post_submission
+    - Rolled-back JSON script to version 1.3 due to a critical bug on 2.2
+    - Fixed issue with Post Images displaying separator characters on the entry detail when a file was not selected
+    - Fixed issue with Post creation that created posts even when post fields where hidden by conditional logic
+    - Implemented password field
+    - Added "user specified price" to product field
+    - Added placeholder option to category field
+    - Fixed bug with gform_post_submission firing when changing pages in a multi-page form
+    - Allowing multiple total fields to be added to the form so that they can be placed in different pages in a multi-page form
+    - Added Content Template feature to Post Custom Fields
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.5.beta1
+    - Added multi-page form capabilities
+    - Added default notification when creating a form
+    - Removed most font-family declarations & some '!important' declarations from front end CSS (forms.css)
+    - Cleaned up/reformatted most of the CSS for better readability
+    - Implemented a few admin page UI improvements
+    - Implemented new "ready styles" into the CSS for column layout support and other advanced front-end formatting.
+    - Added hooks to allow custom confirmation messages (to support the payment add-ons)
+    - Fixed issue on address and name label hooks not passing form id parameter
+    - Added support for payment add-ons information to entry detail screen
+    - Implemented pricing fields (Product, Quantity, Option, Shipping, Donation, Total)
+    - Implemented textarea character counter
+    - Creating a default admin notification for new forms
+    - Cleaned up some Notices that were displayed when running on debug mode
+    - Added ability to hardcode the reCAPTCHA keys so that they get automatically set during activation (for multi-site installs)
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.4.beta5
+    - Cleaned up forms.css
+    - Added "ginput_container" classes to time, post title, post tags & post body containing divs
+    - Added "gform_button" class to submit button & "gform_image_button" class to image button option
+    - Added ajax parameter to gravity_form() function call
+    - Changed form list conversion tooltip so that it aligns to the left
+    - Cleaned up XML export file
+    - Added filter to add/remove field types in the form editor page
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.4.beta4
+    - Removed the Post Content Template setting from post title fields
+    - Added Post Title Template setting to post title fields
+    - Fixed issue with Post Tag field duplicating choices in the variable drop downs
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.4.beta3
+    - Fixed issue with is_multisite() function creating throwing errors on WP 2.8 and 2.9
+    - Resolved conflict with [noformat] and [raw] plugins
+    - Cleaned up some notices
+    - Changed email validation so that it accepts valid special characters
+    - Removed post content template setting from excerpt field
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.4.beta2
+    - Added Password option on text fields
+    - Added Maximum Characters option for text fields
+    - Added Gravity Forms version to scripts to prevent browser caching issues during upgrades
+    - Changing CAPTCHA default to Really Simple Captcha if reCAPTCHA is not configured and Really Simple Captcha is installed
+    - Renamed widget to "Form"
+    - Added "Disable default margins" property to HTML fields
+    - Making sure jQuery is loaded when for is configured to be submitted via AJAX
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.4.beta1
+    - Added visibility setting (everyone, admin only) to post fields
+    - Added conditional logic animation
+    - Fixed issue with post custom fields not allowing HTML content
+    - Added dashboard update message
+    - Added menu update icon
+    - Enable creation of post content templates
+    - Added Entry ID column to Entry List Customizer
+    - Added ability to hide the state field
+    - Added hook to allow new address types to be created
+        Example:
+        add_filter("gform_address_types", "brazilian_address", 10, 2);
+
+        function brazilian_address($address_types, $form_id){
+            $address_types["brazil"] = array(
+                                            "label" => "Brasil",
+                                            "country" => "Brasil",
+                                            "zip_label" => "CEP",
+                                            "state_label" => "Estado",
+                                            "states" => array("", "Acre", "Alagoas", "Amapa", "Amazonas","Bahia", "Ceara", "Distrito Federal", "Espirito Santo", "Goias", "Maranhao", "Mato Grosso", "Mato Grosso do Sul", "Minas Gerais", "Para", "Paraiba", "Parana", "Pernambuco", "Piaui", "Roraima", "Rondonia", "Rio de Janeiro", "Rio Grande do Norte", "Rio Grande do Sul", "Santa Catarina", "Sao Paulo", "Sergipe", "Tocantins")
+            );
+            return $address_types;
+        }
+
+    - Added ability to automatically import forms based on config option
+          define("GF_IMPORT_FILE", "c:/gf_import.xml");
+          define("GF_THEME_IMPORT_FILE", "c:/gf_import.xml");
+
+    - Enhanced selection fields (i.e. checkbox, drop down, multiple choice) so that users can define values that are different than choice labels
+    - Enhanced post tag field so that it can also be created as a drop down, checkbox or multiple choice field
+    - Added a "Check for Updates" page
+    - Changed $entry variable when passed to hooks so that it contains the full field value, and not the first 200 characters
+    - Added support for disabling the tabindex via a hook
+    - Added a Gravity Forms Widget so that forms can be easily placed on sidebars
+    - Added support for AJAX submissions
+    - Added support for really simple CAPTCHA and a Math challenge
+    - Added support for Math challenge CAPTCHA
+    - Updated forms.css to add support for new CAPTCHA, math challenge fields and updated the radio/checkbox related rules for better IE7 & IE8 support.
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.13
+    - Changed HTML5 setting default to NO
+    - Fixed issue with Website field when HTML5 is enabled
+    - Redesigned Export page so that the three sections are in one page
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.13.beta3
+    - CSS updates to fix small formatting bugs and improve Checkbox and Multiple Choice field layout
+    - Fixed issue with conditional logic admin not updating values drop down when field drop down is changed
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.13.beta2
+    - Cleaned up conditional logic so that javascript is not written to the page when the button conditional logic is disabled
+    - Fixed issue with Import when dealing with blank nodes
+    - Added support for configuring license key for multi-site installs
+    - Fixed issue with post status not working properly
+    - Changed form lists so that they are sorted by form title
+    - Added valid key indicator to license key input
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.13.beta1
+    - Added Conditional logic to the submit button
+    - Added HTML Block "field"
+    - Added Import/Export functionality
+    - Added filter to define the tab index start value.
+        add_filter("gform_tabindex_4", create_function("", "return false;"));
+
+    - Added option on Settings page to turn on/off HTML5 input types and default to type=text. Default to On.
+    - Added filter to define where file uploads should go. Both globally and form specific.
+        add_filter("gform_upload_path", "change_upload_path", 20, 2);
+        function change_upload_path($path_info, $form_id){
+            $path_info["path"] = "/new/path/";
+            $path_info["url"] = "http://new_url.com/images/";
+            return $path_info;
+        }
+        OR
+        add_filter("gform_upload_path_4", "change_upload_path");
+        function change_upload_path($path_info){
+            $path_info["path"] = "/new/path/";
+            $path_info["url"] = "http://new_url.com/images/";
+            return $path_info;
+        }
+
+    - Added filter for user notifications to modify send to address
+        add_filter("gform_autoresponder_email_4", "change_notification_email");
+        function change_notification_email($email){
+            return "new_email@test.com";
+        }
+
+    - Added filter to enable the confirmation anchor functionality which scrolls the page to the confirmation text after the form is submitted. Off by default.
+        //turns on the confirmation anchor functionality
+        add_filter("gform_confirmation_anchor", create_function("","return true;"));
+
+    - Added .gform_hidden class to list items < li> that contain hidden fields to preserve formatting
+    - Fixed issue with date formatting when using notification variable. It outputs the date as YYYY/MM/DD instead of the date format selected for that field.
+    - Changed export functionality so that it works similar to WordPress export page
+    - Changed validation so that admin only fields are ignored from it.
+    - Updated dashboard widget so that inactive forms do not show up in the list of forms.
+    - Fixed issue with post fields storing post data even when hidden via conditional logic.
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.12.2
+    - Fixed an issue with the file upload field when placed in a form along with any of the post fields.
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.12.1
+    - Fixed issue post category field not saving the category
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.12
+    - Fixed issue with automatic upload on WP 3.0 beta 1
+    - Changed tooltip include so that it doesn't load on every admin page
+    - Updated CSS to resolve conflicts with the Thesis theme
+    - Fixed issue with bulk add/edit button not displaying the thickbox window on WP 3.0 beta 2
+    - Added some HTML 5 features to fields
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.11
+    - Fixed issue with Dashboard widget not displaying last entry when there were no unread entries
+    - Fixed XHTML validation error on the reCAPTCHA field
+    - Fixed issue with drop downs not selecting the correct value when populated dynamically with text and value
+    - Preventing dangerous file extensions from being uploaded via the File Upload field, unless they are explicitly allowed
+    - Fixed issue with Post Image variable displaying wrong value
+    - Fixed issue with checkbox field id conflict (i.e. 2.1 and 2.10) that caused the insert variable not to work correctly.
+    - Fixed issue with empty date fields displaying "Array"
+    - Fixed issue with fields not getting saved in the database when their value is "0"
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.10
+    - Fixed styling issue with scheduling date fields.
+    - Preventing gfield_required div from printing when field is not required
+    - If numeric field has custom validation message, displaying that message instead of the range error message.
+    - Added entry id to the list of available fields on the export screen.
+    - Fixed issue with the editor's floating menu that got stuck to the bottom of the screen when a field was deleted
+    - Added filter on post author field to limit what type of users are displayed
+
+        //Allows manipulation of the arguments that are used to create the user drop down (by the wp_dropdown_users function)
+        //Visit http://codex.wordpress.org/Template_Tags/wp_dropdown_users for a more details on the available options
+        add_filter("gform_author_dropdown_args", set_users);
+        function set_users($args){
+
+            //only include user with id=1
+            $args["include"] = 1;
+            return $args;
+        }
+
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.9.1
+    - Fixed issue on entry screens that caused the entry date to be displayed in the wrong time zone.
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.9
+    - Re-worked conditional logic to solve 404 problems with GoDaddy
+    - Fixed performance issue on form list that caused forms not be displayed when there were 300+ forms
+    - Enhanced number validation to accept thousand separators
+    - Updated POT file
+    - Added "Add New" button on Edit Forms page next to "Edit Forms" header (see Edit Posts for example)
+    - Added the following countries to the country predefined list and country drop downs: "American Samoa", "Guam", "Northern Mariana Islands", "Palau", "Virgin Islands, British", "Virgin Islands, U.S."
+    - Added "District of Columbia" to predefined states and address drop down
+    - Fixed Numeric Field validation bug
+    - Checked jQuery 1.4 compatibility
+    - Prevent corrupt form meta to be saved and display error message
+    - Set collation on tables to match WP tables
+    - Fixed escaping issue when using a double quote for notification email subject
+    - Added country code mapping
+    - Added validation message filter
+
+        add_filter("gform_validation_message", "change_message", 10, 2);
+        function change_message($message, $form){
+            return "failed " . $form["title"];
+        }
+
+    - Refactor get_selection_fields to GFCommon in support of the Integration plugin
+    - Changed settings to support multiple pages (for addons)
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.8.2
+    - Correct time zone for {date_dmy} and (date_mdy} variables
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.8.1
+    - Changed paths to take SSL into account
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.8
+    - Fixed issue with phone formatting where leading zeros where getting cut off
+    - Fixed issue with form front end (throwing errors) when the wp_query posts collection wasn't loaded
+    - Fixed issue with form editor (throwing errors) when description had the character "%" in it.
+    - Fixed issue with entry grid when sorting descending by entry date
+    - Fixed issue with entry grid not keeping sort state when going from page to page (for default fields only, i.e. entry date and ip)
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.7
+    - Fixed issue that caused a javascript error when deleting fields from the form.
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.6
+    - Fixed issue with advanced field validation
+    - Fixed issue with notification routing
+    - Fixed issue with entry search when going to second page and search term has an empty space
+    - Fixed issue with entry search that prevented search from being executed when enter key was pressed
+    - Fixed issue with form editor when a cond. logic target field was deleted
+    - Fixed issue with entry detail that caused uploaded file to be deleted when entry was updated
+    - Fixed issue with entry detail not updating fields with conditional logic (when logic evaluates to field being hidden)
+    - Fixed issue with notification routing when the target field gets deleted
+    - Adding a blank item (selected by default) to drop down fields in the entry edit screen when the field does not have a value saved.
+    - Fixed issue with checkbox fields when 1st and 10th items are selected.
+
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.5
+    - Fixed issue with variables not getting replaced correctly (i.e {entry_id})
+    - Added support for {all_fields_display_empty} variable that includes empty fields
+    - Fixed issue with date picker styles on export screen
+    - Added form id to sub-label filters to allow different forms to have different labels
+    - Fixed issue with one form populating fields of another form when they are displayed on the same page
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.4
+    - Fixed issue with escaping when magic quotes are turned off
+
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.3
+    - Fixed issue with file upload creating a broken link when filename contains a single quote
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.2
+    - Fixed javascript error on conditional logic when select field choice had single quotes
+    - Fixed issue with escaping when magic quotes where turned off
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.1
+    - Fixed javascript error when changing fields in Conditional Logic
+    - Added $form parameter to gform_post_submission action (Thanks to d4le for the suggestion)
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3
+    - Implemented field conditional logic to allow fields to be displayed or hidden based on other field values
+    - Implemented notification routing to allow notifications to be send to different email addresses depending on values submitted from the form
+    - Implemented different field types for post custom fields (i.e. address, email, drop down, multiple choice, etc...)
+    - Implemented enhancement to address field to make it more flexible and allow state drop downs to be displayed for US and Canada
+    - Adjusted markup for HTML standard compliance
+    - Resolved conflict with the WishList plugin
+    - Implemented an "Insert Variable" drop down to easily pre-populate a field's default value with information such as post title, user name, http referrer, and others.
+    - Added gform_is_duplicate filter to allow for custom field duplicate logic. (Thanks to Aaron Campbell)
+    - Added gform_post_data filter that can be used to manipulate the post data before it is created
+
+        add_filter("gform_post_data", "create_as_page", 10, 2);
+        function create_as_page($post_data, $form){
+            $post_data["post_type"] = "page";
+            return $post_data;
+        }
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.dev-9
+
+    - Added gform_post_data filter that can be used to manipulate the post data before it is created
+
+        add_filter("gform_post_data", "create_as_page", 10, 2);
+        function create_as_page($post_data, $form){
+            $post_data["post_type"] = "page";
+            return $post_data;
+        }
+
+    - Fixed issue with address field not updating the state on the entry detail page
+    - Fixed issue with post custom fields being editable on entry detail page
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.dev-8
+    - Added hidden to the Post Custom Field's list of field types
+    - Changed notification routing and conditional logic so that it treats Post Custom Fields as their input type (i.e. email, drop down, checkbox or radio)
+    - Added gform_is_duplicate filter
+    - Preventing "Insert Form" popup script to be displayed on pages that don't need it
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.dev-7
+    - Split gravityforms.php into multiple files
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.dev-6
+    - Implemented enhancement for address field
+    - Implemented "Insert Variable" drop down for default value
+    - Resolved conflict with WishList plugin
+    - Changed field ids so that they are unique when there are multiple forms in a page
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.dev-5
+    - Implemented enhancement for address field
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.dev-4
+    - Implemented different field types for post custom fields
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.dev-3
+    - Implemented notification routing
+    - Fixed issue with form display throwing an error when trying to load a form that doesn't exist (instead of displaying an user friendly message)
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.dev-2
+    - Fixed issue with conditional logic saving values from fields that were hidden
+    - Fixed javascript error when deleting a field that was a target for a conditional logic of another field
+    - Fixed issue when nesting conditional logics (inner field being displayed when it shouldn't)
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.3.dev-1
+    - Implemented field conditional logic
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.2.2
+    - Fixed issue with the {all_field} variable not replacing the name and address fields correctly.
+    - Changed formatting of {all_field} so that advanced fields (i.e. name and address) are consolidated in one row instead of one row for each input.
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.2.1
+    - Fixed issue that caused backslashes to be stripped out from entries and form meta information
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.2
+    - Fixed conflict with the WP Recaptcha plugin
+    - Improved a nicer looking "All Fields" email template
+    - Added option to use currently logged in user as the post author
+    - Implemented bulk add and predefined values for choices
+    - Implemented form activity limit options (entry cap and form start/end scheduling)
+    - Implemented configurable Reply To for admin notification
+    - Changed field editor's default value input to a textarea for fields that are rendered as textareas (Paragraph, Post Content and Post Excerpt)
+    - Added new field variables (Entry Id, Entry Url, Form Id, Post Id, Post Edit Url) to the "Insert Variable" drop down
+    - Added option to email notes to users from the entry screen
+    - Added post status as an option in the editor for post fields
+    - Improved date field
+    - Added duplicate form functionality
+    - Integrated with Justin Tadlock's Members plugin to allow administrators to control user access to different sections of Gravity Forms
+    - Implemented field population via query string, shortcode, filter or direct function call
+    - Implemented hidden field type
+
+    - Added gform_predefined_choices filter to allow users to manipulate and/or add new predefined choices
+
+        Sample:
+        add_filter("gform_predefined_choices", "add_predefined_choice");
+        function add_predefined_choice($choices){
+            $choices["My New Choice"] = array("Choice 1", "Choice 2", "Choice 3"); //Adds a new predefined choice to the end of the list
+            return $choices;
+        }
+
+    - Added gform_pre_render filter. Fires before form rendering process and allows users to manipulate the form object before it gets displayed
+
+        Sample:
+        add_filter("gform_pre_render_17", test_render); //Adds a filter to form id 17. It is also possible to use gform_pre_render to filter every form
+        function test_render($form){
+            $form["fields"][1]["isRequired"] = true; //Dynamically marks a field (id=1) as required
+            return $form;
+        }
+
+    - Added gform_notification_email filter. Fires before sending the admin notification email and allows users to dynamically dynamically route entries to another email address
+
+        Sample:
+        add_filter("gform_notification_email_17", "route_notification", 10, 2); //Adds a filter to form id 17. It is also possible to use gform_notification_email to filter every form
+        function route_notification($email_to, $entry){
+            $value = $entry["17"];
+            return $value;
+        }
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.2.dev7
+    - Implemented bulk add and predefined values for choices
+    - Added gform_predefined_choices filter to allow users to manipulate and/or add new predefined choices
+
+        add_filter("gform_predefined_choices", "add_predefined_choice");
+        function add_predefined_choice($choices){
+            $choices["My New Choice"] = array("Choice 1", "Choice 2", "Choice 3");
+            return $choices;
+        }
+
+    - Implemented form activity limit options (entry cap and form start/end scheduling)
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.2.dev6
+    - Implemented configurable Reply To for admin notification
+    - Changed field editor's default value input to a textarea for fields that are rendered as textareas (Paragraph, Post Content and Post Excerpt)
+    - Added gform_pre_render filter. Fires before form rendering process and allows users to manipulate the form object before it gets displayed
+
+        add_filter("gform_pre_render_17", test_render);
+        function test_render($form){
+            $form["fields"][1]["isRequired"] = true;
+            return $form;
+        }
+
+
+    - Add gform_notification_email filter. Fires before sending the admin notification email and allows users to dynamically route emails
+
+        add_filter("gform_notification_email_17", "route_notification", 10, 2);
+        function route_notification($email_to, $entry){
+            $value = $entry["17"];
+            return $value;
+        }
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.2.dev5
+    - Added new field variables (Entry Id, Entry Url, Form Id, Post Id, Post Edit Url)
+    - Added option to email notes to users from the entry screen
+    - Added post status as an option in the editor for post fields
+    - Removed the "Delete" link from the form list page to create room for "Duplicate"
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.2.dev4
+    - Improved date field
+    - Added duplicate form functionality
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.2.dev3
+    - Added capabilities to different areas of the plugin
+    - Integrated with Justin Tadlock's Members plugin
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.2.dev2
+    - Allows data to be passed to admin only fields
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.2.dev1
+    - Implemented field population via query string, shortcode, filter or direct function call
+    - Implemented hidden field
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.1.3
+    - Fixed issue with export on IE
+    - Optimized javascript include in the admin pages
+    - Fixed issue with variable replacement adding "Array" for complex fields.
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.1.2
+    - Fixed issue with notification truncating field values
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.1.1
+    - Fixed issue with drop down field saving empty values
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.1
+    - Implemented "Select All" functionality in the export page
+    - Disabled form view counting when form is viewed by an administrator
+    - Fixed issue with submitting a Post Image field from the front-end
+    - Fixed issue with file upload validation when extension list had spaces
+    - Removed pluggable.php include
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.0.11
+    - Implemented query string builder
+    - Corrected issue with date localization
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.0.10
+    - Corrected HTML validation errors
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.0.9
+    - Finalized Post Image field type
+    - Displaying a user friendly message when trying to load an invalid form.
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.0.8
+    - Implemented Post Image field type
+    - Fixed issue with file upload not correctly validating against allowed file types.
+    - Added filters for name and address sub-labels
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.0.7
+    - Fixed issue with checkboxes displaying wrong values on the admin screen when options change
+    - Reading email character set from WordPress configuration
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.0.6
+    - Enhanced entry detail page UI
+    - Added Pre-Submission filter
+    - Fixed JSON conflict
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.0.5
+    - Fixed issue with localization where the language file was only being loaded in the admin side and not in the front end form
+    - Fixed issue with entry grid displaying multiple rows for the same entry
+    - Added new hooks and filters
+    - Fixed issue with the file upload field not being correctly inserted in the notification and confirmation messages
+    - Added friendly error message when the media upload folder is not writable
+    - Fixed error in the uninstall function (when the upload folder did not exist)
+    - Implemented Post Category fields
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.0
+    - Added CSS classes for informational messages
+    - Various text changes
+    - Fixed issue with image not being displayed on submit button
+    - Fixed issue with entry detail screen that caused the left menu to highlight the "Edit Form" screen
+    - Fixed issue with confirmation message that caused HTML entered in that field to be stripped
+    - Fixed issue with form settings not sliding down on IE8
+    - Added message validation so that invalid messages (i.e. errors or maintenance mode pages) are not displayed in the message area
+    - Fixed issue when two forms were added to the same page
+    - Changed scheduling logic for checking updates
+    - Removed captcha field from the {all_field} variable
+
+------------------------------------------------------------------------------------------------------------------
+Version 0.9.5
+    - Changed automatic update location to www.gravityhelp.com
+    - Changed update message so that it only displays when remote version is greater than local version
+
+------------------------------------------------------------------------------------------------------------------
+Version 0.9.1
+    - Added tooltip to conversion on forms grid
+    - Added title to black bar on "select columns" modal window.
+    - Added spacing below titles on select column window.
+    - Changed Cancel button style to the gray version
+
+------------------------------------------------------------------------------------------------------------------
+Version 0.9.0
+    - Changing Edit icon label to "Close" when field settings is openned
+    - Allowing HTML to be entered in post fields
+    - Displaying "Edit" link besides the submit button if user is logged in to the admin and is an Administrator
+    - Recording form views by hour to reduce table site
+    - Implemented an uninstall function so that users can delete all plugin data
+    - Swapping class to edit icon so that icon can be changed along with the text
+    - Add tooltip to choices field settings
+    - Made file upload location follow WP's configured upload location
+    - Changed header on entries screen to format (Entries - Form Name)
+    - Added label to forms drop down on entries screen
+    - Added title attribute to form active icon (Active/Inactive)
+    - Added class to choices radio buttons and checkboxes
+    - Styled "Add Form" thickbox window like the other media windows (i.e. added header and close button)
+
+------------------------------------------------------------------------------------------------------------------
+Version 0.8.6
+    - Fixed issue when typing a single quote in the submit button name
+    - Fixed issue with lead detail truncating large text
+    - Fixed issue that caused left menu to change from Entries to Edit Form when form drop down was changed on the entries page
+    - Fixed issue with notification not being properly formed (i.e \n not being correctly converted to <br />)
+    - Added friendly error message for unsupported wp versions
+    - Added friendly message when trying to load a form that does not exist.
+    - Closing active field editor and form editor after adding a new field
+
+------------------------------------------------------------------------------------------------------------------
+Version 0.8.5
+    - Updated UI
+    - Ready for translations - Portuguese translation started
+    - Fixed issue with notification not replacing \n at the right time
+
+------------------------------------------------------------------------------------------------------------------
+Version 0.8.4
+    - Added several tooltips
+    - Optimized queries and improved security
+    - Fixed issue with field delete procedure that cause entry details from other forms to be deleted
+    - Fixed issue with international phone validation
+    - Updated Form Editor UI
+    - Finilized localization
+    - Fixed error on dashboard when form didn't have any unread entries
+    - Fixed issue with drop down field editor that caused all drop downs to be replaced by the values entered in the choice list.
+
+------------------------------------------------------------------------------------------------------------------
+Version 0.8.3
+    - Created a centralized function to consistently handle tooltips
+    - Fixed issue with notification subject that caused the text to be cut-off after a double quote (")
+    - Fixed issue with field editor that resized all text fields in the field settings window when the field size was changed
+
+------------------------------------------------------------------------------------------------------------------
+Version 0.8.2
+    - Added "updated message" to settings page, notification page and lead detail page
+    - Fixed issue when deleting form fields that caused confirmation popup to be displayed multiple times
+
+------------------------------------------------------------------------------------------------------------------
+Version 0.8.1
+    - Changed table character set to Utf8
+    - When sending emails, setting the email as the person's name to prevent WordPress from adding "WordPress" as the name
+    - Added "Embed URL" as an option for the "Insert form field" drop-downs on the notification page and confirmation text
+    - Added an email field drop down to the admin notification page for the "From" address. Users will be able to either type a value, or select one of the email fields in the form.
+    - Replaced all instances of <? by <?php.
+
+------------------------------------------------------------------------------------------------------------------
+Version 0.8.0
+    - Fixed issue with file upload field where it wouldn't pass the validation if the field was set as required
+    - Fixed error when redirecting the form to an external confirmation page
+    - Fixed issue with form settings where the redirect to another page radio button wasn't getting saved
+    - Fixed issue with form settings confirmation tab causing the "text" radio button to be activated when text was entered in the url field
+    - Added "delete form" link to the form edit screen
+
+------------------------------------------------------------------------------------------------------------------
+Version 0.7.5
+    - Added popup with "what to do next" options upon saving a form for the first time.
+    - Removed Captcha fields from the available list on the entry column selector popup
+    - Removed Captcha field from lead detail page
+    - Change style of section break on lead detail page
+    - Added installation status on settings page
+
+------------------------------------------------------------------------------------------------------------------
+Version 0.7.4
+    - Added Captcha field
+    - Added tabindex property to all fields
+
+------------------------------------------------------------------------------------------------------------------
+Version 0.7.3
+    - Fixed issue with field editor that prevented the editor from sliding down on click when a field immediatelly after another field was dragged from whithin the field editor
+    - Storing form submissions in its own table instead of relying on entry table (because entries can be deleted and that shouldn't affect the conversion ratio)
+    - Fixed issue with field editor that allowed field types to be changed even though there was an entry associated with that field
+    - Added ability to specify a validation message for every field
+
+------------------------------------------------------------------------------------------------------------------
+Version 0.7.2
+    - UI improvement for field editor (loading it under the field instead of besides it)
+    - Corrected markup issues that caused it to fail validation. (checked -> checked="checked", class=' gfield ' -> class='gfield' and closed some input tags that were left opened)
+    - Added admin label so that a field label can be different when displayed in the admin area
+    - Fixed issue with phone field where phone format was not getting loaded correctly in the field editor
+    - Fixed issue with dashboard that excluded forms with no unread entries
+    - Fixed issue with entries grid that displayed blanks on totals when form didn't have an unread entry and starred entry
+    - Fixed issue with form settings where clicking on any field would cause the form editor to slide up and close
+    - Fixed issue with form editor that caused field editor not to slide down after a field type change
+    - Fixed issue with radio buttons and checkboxes field editors getting out of wack upon changing one of the items in the list
+
+------------------------------------------------------------------------------------------------------------------
+Version 0.7.1
+    - UI improvement on export page
+    - Performance improvement on Dashboard query and Entries page
+    - Replaced call to mail() with wp_mail()
+    - Added two filters to submit button. ("gform_submit_button", and "gform_submit_button_FORMID"). The first is a filter that applies to all forms. The second applies to a specific form.
+    - Added pre-submission action "gform_pre_submission". Happens after validation has passed and before fields have been saved
+    - Added post-submission action "gform_post_submission". Happens after fields have been saved
+
+------------------------------------------------------------------------------------------------------------------
+Version 0.7.0
+    - Fixed bug on automatic upgrade for WP 2.8
+    - Including a PHP JSON library when a JSON extension is not available on the server (fixes errors for hostings using PHP < 5.2)
+    - Optimized css and js output so that they are printed in the <head> or footer and only when needed
+    - Added setting to allow users to disable the CSS output
+
+------------------------------------------------------------------------------------------------------------------
+Version 0.6.6
+    - Fixed javascript error on form edit screen that prevented the field settings to be loaded correctly for post custom fields
+    - Fixed issue on entry detail screen that was truncating fields with large amounts of text (i.e. post body)
+
+------------------------------------------------------------------------------------------------------------------
+Version 0.6.5
+    - Implemented integration with Wordpress to allow automatic upgrades of Gravity Forms from the Plugins page
+
+------------------------------------------------------------------------------------------------------------------
+Version 0.6.4
+    - Fixed issue on color selector popup where the "white boxes" would not expand in Firefox and Safari as items were added to the list.
+    - Fixed issue on form submission where posts were not created even though there were post fields in the form.
+    - Fixed issue on entry grid where first column's action links were being be cut-off.
+
+------------------------------------------------------------------------------------------------------------------
