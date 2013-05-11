@@ -27,7 +27,7 @@ class GFFormDisplay{
         if(!is_array($files))
             $files = array();
 
-        RGFormsModel::$uploaded_files[$form["id"]] = $files;
+        RGFormsModel::$uploaded_files[$form_id] = $files;
 
         $is_valid = true;
 
@@ -41,7 +41,7 @@ class GFFormDisplay{
         if( $target_page >= $page_number || ($target_page == 0 && !$is_valid) ){
             //Uploading files to temporary folder
             $files = self::upload_files($form, $files);
-            RGFormsModel::$uploaded_files[$form["id"]] = $files;
+            RGFormsModel::$uploaded_files[$form_id] = $files;
         }
 
         // Load target page if it did not fail validation or if going to the previous page
@@ -69,6 +69,9 @@ class GFFormDisplay{
                 $is_valid = false;
             }
             else{
+
+                $form = self::update_confirmation($form);
+
                 //pre submission action
                 do_action("gform_pre_submission", $form);
                 do_action("gform_pre_submission_{$form["id"]}", $form);
@@ -197,7 +200,7 @@ class GFFormDisplay{
         }
         $hash = serialize($product_fields);
         $checksum = wp_hash(crc32($hash));
-        return base64_encode(serialize(array($hash, $checksum)));
+        return base64_encode(json_encode(array($hash, $checksum)));
     }
 
     private static function has_pages($form){
@@ -403,7 +406,7 @@ class GFFormDisplay{
         }
 
         // show the form regardless of the following validations when force display is set to true
-        if(!$force_display) {
+        if(!$force_display || $is_postback) {
 
             $form_schedule_validation = self::validate_form_schedule($form);
 
@@ -631,7 +634,7 @@ class GFFormDisplay{
                 }
             }
 
-            return apply_filters('gform_get_form_filter',$form_string);
+            return apply_filters("gform_get_form_filter_{$form["id"]}",apply_filters('gform_get_form_filter',$form_string, $form), $form);
         }
         else{
             $progress_confirmation = "";
@@ -745,7 +748,7 @@ class GFFormDisplay{
         $footer .="
             <input type='hidden' class='gform_hidden' name='is_submit_{$form_id}' value='1' />
             <input type='hidden' class='gform_hidden' name='gform_submit' value='{$form_id}' />
-            <input type='hidden' class='gform_hidden' name='gform_unique_id' value='" . esc_attr(RGFormsModel::get_form_unique_id($form_id)) . "' />
+            <input type='hidden' class='gform_hidden' name='gform_unique_id' value='" . esc_attr(GFFormsModel::get_form_unique_id($form_id)) . "' />
             <input type='hidden' class='gform_hidden' name='state_{$form_id}' value='" . self::get_state($form, $field_values) . "' />
             <input type='hidden' class='gform_hidden' name='gform_target_page_number_{$form_id}' id='gform_target_page_number_{$form_id}' value='" . $next_page . "' />
             <input type='hidden' class='gform_hidden' name='gform_source_page_number_{$form_id}' id='gform_source_page_number_{$form_id}' value='" . $current_page . "' />
@@ -770,7 +773,7 @@ class GFFormDisplay{
     private static function get_honeypot_field($form){
         $max_id = self::get_max_field_id($form);
         $labels = self::get_honeypot_labels();
-        return array("type" => "honeypot", "label" => $labels[rand(0, 3)], "id" => $max_id + 1, "cssClass" => "gform_validation_container", "description" => "This field is for validation purposes and should be left unchanged.");
+        return array("type" => "honeypot", "label" => $labels[rand(0, 3)], "id" => $max_id + 1, "cssClass" => "gform_validation_container", "description" => __("This field is for validation purposes and should be left unchanged.", "gravityforms"));
     }
 
     private static function get_max_field_id($form){
@@ -807,14 +810,7 @@ class GFFormDisplay{
 
                 return true;
 
-            case 'singleproduct':
-                $value = rgpost("input_" . $field["id"]);
-                $quantity_id = $field["id"] . ".3";
-                $quantity = rgpost($quantity_id, $value);
-
         }
-
-
 
         if(is_array($field["inputs"]))
         {
@@ -887,21 +883,22 @@ class GFFormDisplay{
         //reading entry that was just saved
         $lead = RGFormsModel::get_lead($lead["id"]);
 
-        $lead = GFFormsModel::set_entry_meta($lead, $form);
+		$lead = GFFormsModel::set_entry_meta($lead, $form);
+
         do_action('gform_entry_created', $lead, $form);
+        $lead = apply_filters('gform_entry_post_save', $lead, $form);
+
+        RGFormsModel::set_current_lead($lead);
 
         //if Akismet plugin is installed, run lead through Akismet and mark it as Spam when appropriate
-        $is_spam = false;
-        if(GFCommon::akismet_enabled($form['id']) && GFCommon::is_akismet_spam($form, $lead)){
-            $is_spam = true;
-        }
+        $is_spam = GFCommon::akismet_enabled($form['id']) && GFCommon::is_akismet_spam($form, $lead);
 
         if(!$is_spam){
             GFCommon::create_post($form, $lead);
-            //send auto-responder and notification emails
-            self::send_emails($form, $lead);
+            //send notifications
+            GFCommon::send_form_submission_notifications($form, $lead);
         }
-        else{
+        else {
             //marking entry as spam
             RGFormsModel::update_lead_property($lead["id"], "status", "spam", false, true);
             $lead["status"] = "spam";
@@ -913,11 +910,15 @@ class GFFormDisplay{
 
     public static function handle_confirmation($form, $lead, $ajax=false){
 
+		//run the function to populate the legacy confirmation format to be safe
+		$form = self::update_confirmation($form, $lead);
+
         if($form["confirmation"]["type"] == "message"){
             $default_anchor = self::has_pages($form) ? 1 : 0;
             $anchor = apply_filters("gform_confirmation_anchor_{$form["id"]}", apply_filters("gform_confirmation_anchor", $default_anchor)) ? "<a id='gf_{$form["id"]}' name='gf_{$form["id"]}' class='gform_anchor' ></a>" : "";
             $nl2br = rgar($form["confirmation"],"disableAutoformat") ? false : true;
-            $confirmation = empty($form["confirmation"]["message"]) ? "{$anchor} " : "{$anchor}<div id='gforms_confirmation_message' class='gform_confirmation_message_{$form["id"]}'>" . GFCommon::replace_variables($form["confirmation"]["message"], $form, $lead, false, true, $nl2br) . "</div>";
+            $cssClass = rgar($form, "cssClass");
+            $confirmation = empty($form["confirmation"]["message"]) ? "{$anchor} " : "{$anchor}<div id='gform_confirmation_wrapper_{$form["id"]}' class='gform_confirmation_wrapper {$cssClass}'><div id='gforms_confirmation_message' class='gform_confirmation_message_{$form["id"]}'>" . GFCommon::replace_variables($form["confirmation"]["message"], $form, $lead, false, true, $nl2br) . "</div></div>";
         }
         else{
             if(!empty($form["confirmation"]["pageId"])){
@@ -977,15 +978,8 @@ class GFFormDisplay{
     }
 
     public static function send_emails($form, $lead){
-        $disable_user_notification = apply_filters("gform_disable_user_notification_{$form["id"]}", apply_filters("gform_disable_user_notification", false, $form, $lead), $form, $lead);
-        if(!$disable_user_notification){
-            GFCommon::send_user_notification($form, $lead);
-        }
-
-        $disable_admin_notification = apply_filters("gform_disable_admin_notification_{$form["id"]}", apply_filters("gform_disable_admin_notification", false, $form, $lead), $form, $lead);
-        if(!$disable_admin_notification){
-            GFCommon::send_admin_notification($form, $lead);
-        }
+        _deprecated_function("send_emails", "1.7", "GFCommon::send_form_submission_notifications");
+        GFCommon::send_form_submission_notifications($form, $lead);
     }
 
     public static function checkdate($month, $day, $year){
@@ -1004,24 +998,27 @@ class GFFormDisplay{
             return false;
 
         // validate entry limit
-        if(self::validate_entry_limit($form))
+        if(self::validate_entry_limit($form)){
             return false;
+        }
 
         foreach($form["fields"] as &$field){
 
-            //If a page number is specified, only validates fields that are on current page
+	        //If a page number is specified, only validates fields that are on current page
             $field_in_other_page = $page_number > 0 && $field["pageNumber"] != $page_number;
 
             //validate fields with "no duplicate" functionality when they are present on pages before the current page.
             $validate_duplicate_feature = $field["noDuplicates"] && $page_number > 0 && $field["pageNumber"] <= $page_number;
 
+	        //if(($page_number > 0 && $field["pageNumber"] != $page_number) && $field["noDuplicates"] <> "1"){
             if($field_in_other_page && !$validate_duplicate_feature){
-                continue;
-            }
+	            continue;
+			}
 
             //ignore validation if field is hidden or admin only
-            if(RGFormsModel::is_field_hidden($form, $field, $field_values) || $field["adminOnly"])
+            if(RGFormsModel::is_field_hidden($form, $field, $field_values) || $field["adminOnly"]){
                 continue;
+            }
 
             $value = RGFormsModel::get_field_value($field);
 
@@ -1422,7 +1419,7 @@ class GFFormDisplay{
         }
 
         if(!isset($_gf_state)){
-            $state = unserialize(base64_decode($_POST["state_{$form_id}"]));
+            $state = json_decode(base64_decode($_POST["state_{$form_id}"]), true);
 
             if(!$state || sizeof($state) != 2)
                 return true;
@@ -1463,7 +1460,8 @@ class GFFormDisplay{
             foreach($wp_query->posts as $post){
                 $forms = self::get_embedded_forms($post->post_content, $ajax);
                 foreach($forms as $form){
-                    self::enqueue_form_scripts($form, $ajax);
+                    if(isset($form["id"]))
+                        self::enqueue_form_scripts($form, $ajax);
                 }
             }
         }
@@ -1489,7 +1487,15 @@ class GFFormDisplay{
 
     public static function enqueue_form_scripts($form, $ajax=false){
         if(!get_option('rg_gforms_disable_css')){
-            wp_enqueue_style("gforms_css", GFCommon::get_base_url() . "/css/forms.css", null, GFCommon::$version);
+            wp_enqueue_style("gforms_reset_css", GFCommon::get_base_url() . "/css/formreset.css", null, GFCommon::$version);
+            wp_enqueue_style("gforms_datepicker_css", GFCommon::get_base_url() . "/css/datepicker.css", null, GFCommon::$version);
+            wp_enqueue_style("gforms_formsmain_css", GFCommon::get_base_url() . "/css/formsmain.css", null, GFCommon::$version);
+            wp_enqueue_style("gforms_ready_class_css", GFCommon::get_base_url() . "/css/readyclass.css", null, GFCommon::$version);
+            wp_enqueue_style("gforms_browsers_css", GFCommon::get_base_url() . "/css/browsers.css", null, GFCommon::$version);
+
+            if(is_rtl()){
+                wp_enqueue_style("gforms_rtl_css", GFCommon::get_base_url() . "/css/rtl.css", null, GFCommon::$version);
+            }
         }
 
         if(self::has_price_field($form) || self::has_password_strength($form) || GFCommon::has_list_field($form) || GFCommon::has_credit_card_field($form) || self::has_conditional_logic($form)){
@@ -1500,9 +1506,8 @@ class GFFormDisplay{
             wp_enqueue_script("gforms_conditional_logic_lib", GFCommon::get_base_url() . "/js/conditional_logic.js", array("jquery", "gforms_gravityforms"), GFCommon::$version);
         }
 
-        if(self::has_date_field($form)){
-            wp_enqueue_script("gforms_ui_datepicker", GFCommon::get_base_url() . "/js/jquery-ui/ui.datepicker.js", array("jquery"), GFCommon::$version, true);
-            wp_enqueue_script("gforms_datepicker", GFCommon::get_base_url() . "/js/datepicker.js", array("gforms_ui_datepicker"), GFCommon::$version, true);
+        if(self::has_datepicker_field($form)){
+            wp_enqueue_script("gforms_datepicker", GFCommon::get_base_url() . "/js/datepicker.js", array("jquery-ui-datepicker"), GFCommon::$version, true);
         }
 
         if(self::has_price_field($form) || self::has_password_strength($form) || GFCommon::has_list_field($form) || GFCommon::has_credit_card_field($form) || self::has_calculation_field($form)){
@@ -1541,8 +1546,23 @@ class GFFormDisplay{
 
         if(!get_option('rg_gforms_disable_css')){
             if(!wp_style_is("gforms_css", "queue")){
-                wp_enqueue_style("gforms_css", GFCommon::get_base_url() . "/css/forms.css", GFCommon::$version);
-                wp_print_styles(array("gforms_css"));
+                wp_enqueue_style("gforms_reset_css", GFCommon::get_base_url() . "/css/formreset.css", null, GFCommon::$version);
+                wp_enqueue_style("gforms_datepicker_css", GFCommon::get_base_url() . "/css/datepicker.css", null, GFCommon::$version);
+                wp_enqueue_style("gforms_formsmain_css", GFCommon::get_base_url() . "/css/formsmain.css", null, GFCommon::$version);
+                wp_enqueue_style("gforms_ready_class_css", GFCommon::get_base_url() . "/css/readyclass.css", null, GFCommon::$version);
+                wp_enqueue_style("gforms_browsers_css", GFCommon::get_base_url() . "/css/browsers.css", null, GFCommon::$version);
+
+                wp_print_styles(array("gforms_reset_css"));
+                wp_print_styles(array("gforms_datepicker_css"));
+                wp_print_styles(array("gforms_formsmain_css"));
+                wp_print_styles(array("gforms_ready_class_css"));
+                wp_print_styles(array("gforms_browsers_css"));
+
+                if(is_rtl()){
+                    wp_enqueue_style("gforms_rtl_css", GFCommon::get_base_url() . "/css/rtl.css", null, GFCommon::$version);
+                    wp_print_styles(array("gforms_rtl_css"));
+                }
+
             }
         }
 
@@ -1556,9 +1576,8 @@ class GFFormDisplay{
             wp_print_scripts(array("gforms_conditional_logic_lib"));
         }
 
-        if(self::has_date_field($form) && !wp_script_is("gforms_datepicker", "queue")){
-            wp_enqueue_script("gforms_ui_datepicker", GFCommon::get_base_url() . "/js/jquery-ui/ui.datepicker.js", array("jquery"), GFCommon::$version, true);
-            wp_enqueue_script("gforms_datepicker", GFCommon::get_base_url() . "/js/datepicker.js", array("gforms_ui_datepicker"), GFCommon::$version, true);
+        if(self::has_datepicker_field($form) && !wp_script_is("gforms_datepicker", "queue")){
+            wp_enqueue_script("gforms_datepicker", GFCommon::get_base_url() . "/js/datepicker.js", array("jquery-ui-datepicker"), GFCommon::$version, true);
             wp_print_scripts(array("gforms_datepicker"));
         }
 
@@ -1592,8 +1611,7 @@ class GFFormDisplay{
         }
 
         if(wp_script_is("gforms_gravityforms")) {
-            require_once(GFCommon::get_base_path() . '/currency.php');
-            echo '<script type="text/javascript"> var gf_global = { gf_currency_config: ' . GFCommon::json_encode(RGCurrency::get_currency(GFCommon::get_currency()))  . ' }; </script>';
+            echo '<script type="text/javascript"> ' . GFCommon::gf_global(false) . ' </script>';
         }
 
     }
@@ -1605,12 +1623,14 @@ class GFFormDisplay{
         if(isset($form["button"]["conditionalLogic"]))
             return true;
 
-        foreach(rgar($form,"fields") as $field){
-            if(!empty($field["conditionalLogic"])){
-                return true;
-            }
-            else if(isset($field["nextButton"]) && !empty($field["nextButton"]["conditionalLogic"])){
-                return true;
+        if(is_array(rgar($form,"fields"))){
+            foreach(rgar($form,"fields") as $field){
+                if(!empty($field["conditionalLogic"])){
+                    return true;
+                }
+                else if(isset($field["nextButton"]) && !empty($field["nextButton"]["conditionalLogic"])){
+                    return true;
+                }
             }
         }
         return false;
@@ -1672,10 +1692,10 @@ class GFFormDisplay{
                 }
                 else if($input_type == "list"){
                     $parameter_val = RGFormsModel::get_parameter_value(rgar($field, "inputName"), $field, $field_values);
-                    $field_val = explode(",", str_replace("|", ",", $parameter_val));
+                    $field_val = is_array($parameter_val) ? $parameter_val : explode(",", str_replace("|", ",", $parameter_val));
                 }
                 else {
-                    $field_val = RGFormsModel::get_parameter_value(rgar($field, "inputName"), $field, $field_values);
+                    $field_val = RGFormsModel::get_parameter_value(rgar($field, "inputName"), $field_values, $field);
                 }
             }
 
@@ -1802,6 +1822,8 @@ class GFFormDisplay{
             self::add_init_script($form['id'], 'calculation', self::ON_PAGE_RENDER, self::get_calculations_init_script($form));
         }
 
+        do_action('gform_register_init_scripts', $form, $field_values);
+
     }
 
     public static function get_form_init_scripts($form) {
@@ -1810,8 +1832,7 @@ class GFFormDisplay{
 
         // temporary solution for output gf_global obj until wp min version raised to 3.3
         if(wp_script_is("gforms_gravityforms")) {
-            require_once(GFCommon::get_base_path() . '/currency.php');
-            $gf_global_script = "if(typeof gf_global == 'undefined') var gf_global = {gf_currency_config: " . json_encode(RGCurrency::get_currency(GFCommon::get_currency())) . " };";
+            $gf_global_script = "if(typeof gf_global == 'undefined') " . GFCommon::gf_global(false);
         }
 
         /* rendering initialization scripts */
@@ -1870,7 +1891,6 @@ class GFFormDisplay{
             if(!empty($max_length) && !rgar($field,"adminOnly"))
             {
                 $field_script =
-                        //******  make this callable only once ***********
                         "jQuery('#{$field_id}').textareaCount(" .
                         "    {" .
                         "    'maxCharacterSize': {$max_length}," .
@@ -1971,13 +1991,11 @@ class GFFormDisplay{
     }
 
 
-
-
-    private static function has_date_field($form){
+    private static function has_datepicker_field($form){
         if(is_array($form["fields"])){
             foreach($form["fields"] as $field){
 
-                if(RGFormsModel::get_input_type($field) == "date")
+                if(RGFormsModel::get_input_type($field) == "date" && rgar($field, "dateType") == "datepicker")
                     return true;
             }
         }
@@ -2051,7 +2069,7 @@ class GFFormDisplay{
     }
 
     //Getting all fields that have a rule based on the specified field id
-    private static function get_conditional_logic_fields($form, $fieldId){
+    public static function get_conditional_logic_fields($form, $fieldId){
         $fields = array();
 
         //adding submit button field if enabled
@@ -2216,7 +2234,7 @@ class GFFormDisplay{
             case "page" :
                 //only executed on the form editor in the admin
                 $page_label = __("Page Break", "gravityforms");
-                $src = GFCommon::get_base_url() . "/images/gf_pagebreak_inline.png";
+                $src = GFCommon::get_base_url() . "/images/gf-pagebreak-inline.png";
                 $field_content = "{$admin_buttons} <label class='gfield_label'>&nbsp;</label><img src='{$src}' alt='{$page_label}' title='{$page_label}' />";
             break;
 
@@ -2379,7 +2397,7 @@ class GFFormDisplay{
             $entry_count = RGFormsModel::get_lead_count($form['id'], "", null, null, $range["start_date"], $range["end_date"]);
 
             if($entry_count >= $form["limitEntriesCount"])
-                return empty($form["limitEntriesMessage"]) ? "<p>" . __("Sorry. This form is no longer accepting new submissions.", "gravityforms"). "</p>" : "<p>" . GFCommon::gform_do_shortcode($form["limitEntriesMessage"]) . "</p>";
+                return empty($form["limitEntriesMessage"]) ? "<div class='gf_submission_limit_message'><p>" . __("Sorry. This form is no longer accepting new submissions.", "gravityforms"). "</p></div>" : "<p>" . GFCommon::gform_do_shortcode($form["limitEntriesMessage"]) . "</p>";
         }
 
     }
@@ -2399,6 +2417,42 @@ class GFFormDisplay{
         }
 
     }
+
+    public static function update_confirmation($form, $lead=null) {
+        if(!is_array($form["confirmations"]))
+            return $form;
+
+        // if there is only one confirmation, don't bother with the conditional logic, just return it
+        // this is here mostly to avoid the semi-costly GFFormsModel::create_lead() function unless we really need it
+        if(is_array($form["confirmations"]) && count($form['confirmations']) <= 1) {
+            $form['confirmation'] = reset($form['confirmations']);
+            return $form;
+        }
+
+        if (empty($lead)){
+        	$lead = GFFormsModel::create_lead($form);
+		}
+
+        foreach($form['confirmations'] as $confirmation) {
+
+            if($confirmation['isDefault'])
+                continue;
+
+            $logic = rgar($confirmation, "conditionalLogic");
+            if(GFCommon::evaluate_conditional_logic($logic, $form, $lead)) {
+                $form['confirmation'] = $confirmation;
+                return $form;
+            }
+
+        }
+
+        $form['confirmation'] = reset(wp_filter_object_list($form['confirmations'], array('isDefault' => true)));
+
+        return $form;
+    }
+
+
+
 }
 
 ?>

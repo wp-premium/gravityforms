@@ -192,7 +192,6 @@ function gformDeleteUploadedFile(formId, fieldId){
     //hiding preview
     parent.find(".ginput_preview").hide();
 
-
     //displaying file upload field
     parent.find("input[type=\"file\"]").removeClass("gform_hidden");
 
@@ -479,6 +478,8 @@ function gformInitPriceFields(){
            var productIds = gformGetProductIds("gfield_price", this);
            if(productIds.formId == 0)
                 productIds = gformGetProductIds("gfield_shipping", this);
+
+           jQuery(document).trigger('gform_price_change', [productIds, this]);
            gformCalculateTotalPrice(productIds.formId);
        });
 
@@ -486,8 +487,11 @@ function gformInitPriceFields(){
            var productIds = gformGetProductIds("gfield_price", this);
            if(productIds.formId == 0)
                 productIds = gformGetProductIds("gfield_shipping", this);
+
+           jQuery(document).trigger('gform_price_change', [productIds, this]);
            gformCalculateTotalPrice(productIds.formId);
        });
+
     });
 
     for(formId in _gformPriceFields)
@@ -559,8 +563,7 @@ function gformAddListItem(element, max){
 
     var tr = jQuery(element).parent().parent();
     var clone = tr.clone();
-    clone.find("input, select").not(':checkbox').val("").attr("tabindex", clone.find('input:last').attr("tabindex"));
-    clone.find("input:checkbox").prop('checked', false);
+    clone.find("input, select").val("").attr("tabindex", clone.find('input:last').attr("tabindex"));
     tr.after(clone);
     gformToggleIcons(tr.parent(), max);
     gformAdjustClasses(tr.parent());
@@ -603,6 +606,10 @@ function gformToggleIcons(table, max){
     }
 }
 
+
+//-----------------------------------
+//------ CREDIT CARD FIELD ----------
+//-----------------------------------
 function gformMatchCard(id) {
 
     var cardType = gformFindCardType(jQuery('#' + id).val());
@@ -641,6 +648,12 @@ function gformFindCardType(value) {
     return validCardTypes.length == 1 ? validCardTypes[0].toLowerCase() : false;
 }
 
+function gformToggleCreditCard(){
+    if(jQuery("#gform_payment_method_creditcard").is(":checked"))
+        jQuery(".gform_card_fields_container").slideDown();
+    else
+        jQuery(".gform_card_fields_container").slideUp();
+}
 
 
 //----------------------------------------
@@ -649,12 +662,15 @@ function gformFindCardType(value) {
 
 function gformInitChosenFields(fieldList, noResultsText){
     return jQuery(fieldList).each(function(){
-        var element = jQuery(this);
-        //only initialize once
 
-        if(element.is(":visible") && element.siblings(".chzn-container").length == 0){
-            jQuery(this).chosen({no_results_text: noResultsText});
+        var element = jQuery(this);
+
+        //only initialize once
+        if( element.is(":visible") && element.siblings(".chzn-container").length == 0 ){
+            var options = gform.applyFilters( 'gform_chosen_options', { no_results_text: noResultsText }, element );
+            element.chosen( options );
         }
+
     });
 }
 
@@ -710,7 +726,7 @@ var GFCalc = function(formId, formulaFields){
 
         // allow users to modify result with their own function
         if(window["gform_calculation_result"])
-            result = window["gform_calculation_result"](result, formulaField, formId);
+            result = window["gform_calculation_result"](result, formulaField, formId, calcObj);
 
         //formatting number
         if(field.hasClass('gfield_price')) {
@@ -801,6 +817,7 @@ var GFCalc = function(formId, formulaFields){
     this.replaceFieldTags = function(formId, expr, numberFormat) {
 
         var matches = getMatchGroups(expr, this.patt);
+        var origExpr = expr;
 
         for(i in matches) {
 
@@ -837,8 +854,16 @@ var GFCalc = function(formId, formulaFields){
                 decimalSeparator = ".";
             }
             else if(window['gf_global']){
-                var currency = new Currency(gf_global.gf_currency_config);
-                decimalSeparator = currency.currency["decimal_separator"];
+                var inputType = input.attr("type");
+                var isDropDown = jQuery('#field_' + formId + '_' + fieldId).find('select[name="input_' + inputId + '"]').length > 0;
+
+                var isNumericFormat = inputType == "checkbox" || inputType == "radio" || isDropDown;
+
+                //checkboxes, radio buttons and drop downs use the standard number notation and not the currency format
+                if(!isNumericFormat){
+                    var currency = new Currency(gf_global.gf_currency_config);
+                    decimalSeparator = currency.currency["decimal_separator"];
+                }
             }
 
             value = gformCleanNumber(value, "", "", decimalSeparator);
@@ -900,3 +925,68 @@ function getMatchGroups(expr, patt) {
 
     return matches;
 }
+
+//javascript hook functions
+var gform = {
+	hooks: { action: {}, filter: {} },
+	addAction: function( action, callable, priority, tag ) {
+		gform.addHook( 'action', action, callable, priority, tag );
+	},
+	addFilter: function( action, callable, priority, tag ) {
+		gform.addHook( 'filter', action, callable, priority, tag );
+	},
+	doAction: function( action ) {
+		gform.doHook( 'action', action, arguments );
+	},
+	applyFilters: function( action ) {
+		return gform.doHook( 'filter', action, arguments );
+	},
+	removeAction: function( action, tag ) {
+		gform.removeHook( 'action', action, tag );
+	},
+	removeFilter: function( action, priority, tag ) {
+		gform.removeHook( 'filter', action, priority, tag );
+	},
+	addHook: function( hookType, action, callable, priority, tag ) {
+		if ( undefined == gform.hooks[hookType][action] ) {
+			gform.hooks[hookType][action] = [];
+		}
+		var hooks = gform.hooks[hookType][action];
+		if ( undefined == tag ) {
+			tag = action + '_' + hooks.length;
+		}
+		gform.hooks[hookType][action].push( { tag:tag, callable:callable, priority:priority } );
+	},
+	doHook: function( hookType, action, args ) {
+
+        // splice args from object into array and remove first index which is the hook name
+        args = Array.prototype.slice.call(args, 1);
+
+		if ( undefined != gform.hooks[hookType][action] ) {
+			var hooks = gform.hooks[hookType][action];
+			//sort by priority
+			hooks.sort(function(a,b){return a["priority"]-b["priority"]});
+			for( var i=0; i<hooks.length; i++) {
+				if ( 'action' == hookType ) {
+					window[hooks[i].callable].apply(null, args);
+				} else {
+					args[0] = window[hooks[i].callable].apply(null, args);
+				}
+			}
+		}
+		if ( 'filter'==hookType ) {
+			return args[0];
+		}
+	},
+	removeHook: function( hookType, action, priority, tag ) {
+		if ( undefined != gform.hooks[hookType][action] ) {
+			var hooks = gform.hooks[hookType][action];
+			for( var i=hooks.length-1; i>=0; i--) {
+				if ((undefined==tag||tag==hooks[i].tag) && (undefined==priority||priority==hooks[i].priority)){
+					hooks.splice(i,1);
+				}
+			}
+		}
+	}
+};
+//end of javascript hook functions

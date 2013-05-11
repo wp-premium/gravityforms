@@ -50,12 +50,14 @@ $form = RGFormsModel::get_form_meta($form_id);
         <?php echo count($lead_ids) > 1 ? __("Entry # ", "gravityforms") . $lead_ids[0] : 'Bulk Print' ?>
     </title>
     <link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/print.css' type='text/css' />
-	<?php 
+	<?php
 		$styles = apply_filters("gform_print_styles", false, $form);
 		if(!empty($styles)){
 			wp_print_styles($styles);
 		}
-	?> 
+
+
+	?>
     </head>
 	<body onload="window.print();">
 

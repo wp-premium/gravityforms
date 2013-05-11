@@ -4,10 +4,10 @@
 preview.css
 Gravity Forms Form Preview Styles
 http://www.gravityforms.com
-updated: January 23, 2012 12:55 PM
+updated: March 1, 2013 7:16 PM
 
 Gravity Forms is a Rocketgenius project
-copyright 2012 Rocketgenius Inc.
+copyright 2013 Rocketgenius Inc.
 http: //www.rocketgenius.com
 this may not be re-distrubited without the
 express written permission of the author.
@@ -21,8 +21,9 @@ AND ANY CHANGES MADE HERE WILL BE OVERWRITTTEN.
 
 body {
 	font-family: Helvetica,Arial,sans-serif;
-	padding: 0 0 20px 0
+	padding: 0 0 20px 0;
 }
+
 div#preview_hdr {
 	margin: 0;
 	color: #18749D;
@@ -31,14 +32,16 @@ div#preview_hdr {
 	font-size: 16px;
 	border-bottom: 2px solid #C5D7F1;
 	background-color: #DFEFFF;
-	display:block !important
+	display:block !important;
 }
+
 div#preview_hdr div:first-child {
 	background: url(../../../../wp-admin/images/wp-logo.png);
 	background-position: 16px center;
 	background-repeat: no-repeat;
-	padding-left: 36px
+	padding-left: 36px;
 }
+
 div#preview_hdr span.actionlinks {
 	width: 200px;
 	display: block;
@@ -47,19 +50,22 @@ div#preview_hdr span.actionlinks {
 	margin-top: 5px;
 	font-family: "lucida sans", "lucida grande", lucida , sans-serif;
 	font-size: 12px;
-	color: #CCC
+	color: #CCC;
 }
+
 div#preview_hdr a {
 	color: #21759B;
 	text-decoration: none;
 	display: inline;
 	font-weight: normal;
-	letter-spacing: normal
+	letter-spacing: normal;
 }
+
 div#preview_hdr a:hover {
 	color: #21759B;
-	text-decoration: underline
+	text-decoration: underline;
 }
+
 div#preview_note {
 	background-color: #FFFBCC;
 	color: #424242;
@@ -68,17 +74,58 @@ div#preview_note {
 	margin: 0 0 16px 0;
 	padding: 8px 18px;
 	font-size: 12px;
-	font-family: "lucida sans", "lucida grande", lucida , sans-serif
+	font-family: "lucida sans", "lucida grande", lucida , sans-serif;
 }
+
 div#preview_form_container {
 	padding: 0 20px 40px 20px;
 }
+
 .gform_wrapper {
 	font-size: 13px;
 	color: #111;
 	overflow: visible;
-	max-width: 640px
+	max-width: 640px;
 }
-#gforms_confirmation_message {
-	font-size: 1.4em !important
+
+.gform_footer input.button,
+.gform_page_footer input.button {
+	-moz-box-shadow:inset 0px 1px 0px 0px #FFF;
+	-webkit-box-shadow:inset 0px 1px 0px 0px #FFF;
+	box-shadow:inset 0px 1px 0px 0px #FFF;
+	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #ededed), color-stop(1, #DFDFDF) );
+	background:-moz-linear-gradient( center top, #EDEDED 5%, #DFDFDF 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#EDEDED', endColorstr='#DFDFDF');
+	background-color:#EDEDED;
+	-moz-border-radius:30px;
+	-webkit-border-radius:30px;
+	border-radius:30px;
+	border:3px solid #BCBCBC;
+	display:inline-block;
+	color:#424242;
+	font-family:Arial;
+	font-size:15px;
+	font-weight:bold;
+	padding:6px 24px;
+	text-decoration:none;
+	text-shadow:1px 1px 1px #FFF;
+}
+
+.gform_footer input.button:hover,
+.gform_page_footer input.button:hover {
+	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #DFDFDF), color-stop(1, #ededed) );
+	background:-moz-linear-gradient( center top, #dfdfdf 5%, #ededed 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#DFDFDF', endColorstr='#ededed');
+}
+
+.gform_footer input.button:active,
+.gform_page_footer input.button:active {
+	position:relative;
+	top:1px;
+}
+
+div.gform_wrapper.gf_browser_ie.gf_browser_ie9 input.button.gform_button,
+div.gform_wrapper.gf_browser_ie.gf_browser_ie9 input.button,
+div.gform_wrapper.gf_browser_ie.gf_browser_ie9 input.gform_button {
+	filter: none;
 }

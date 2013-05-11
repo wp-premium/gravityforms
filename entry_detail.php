@@ -11,6 +11,7 @@ class GFEntryDetail{
         echo GFCommon::get_remote_message();
 
         $form = RGFormsModel::get_form_meta($_GET["id"]);
+        $form = apply_filters("gform_admin_pre_render_" . $form["id"], apply_filters("gform_admin_pre_render", $form));
         $lead_id = rgget('lid');
 
         $filter = rgget("filter");
@@ -63,12 +64,12 @@ class GFEntryDetail{
             case "update" :
                 check_admin_referer('gforms_save_entry', 'gforms_save_entry');
                 RGFormsModel::save_lead($form, $lead);
+
                 do_action("gform_after_update_entry", $form, $lead["id"]);
                 do_action("gform_after_update_entry_{$form["id"]}", $form, $lead["id"]);
 
                 $lead = RGFormsModel::get_lead($lead["id"]);
-                $lead = GFFormsModel::set_entry_meta($lead, $form);
-
+				$lead = GFFormsModel::set_entry_meta($lead, $form);
             break;
 
             case "add_note" :
@@ -190,12 +191,14 @@ class GFEntryDetail{
 
             function ResendNotifications() {
 
-                var sendAdmin = jQuery("#notification_admin").is(":checked") ? 1 : 0;
-                var sendUser = jQuery("#notification_user").is(":checked") ? 1 : 0;
+                var selectedNotifications = new Array();
+                jQuery(".gform_notifications:checked").each(function(){
+                    selectedNotifications.push(jQuery(this).val());
+                });
 
                 var sendTo = jQuery('#notification_override_email').val();
 
-                if(!sendAdmin && !sendUser) {
+                if(selectedNotifications.length <=0) {
                     displayMessage("<?php _e("You must select at least one type of notification to resend.", "gravityforms"); ?>", "error", "#notifications_container");
                     return;
                 }
@@ -205,8 +208,7 @@ class GFEntryDetail{
                 jQuery.post(ajaxurl, {
                         action : "gf_resend_notifications",
                         gf_resend_notifications : '<?php echo wp_create_nonce('gf_resend_notifications'); ?>',
-                        sendAdmin : sendAdmin,
-                        sendUser : sendUser,
+                        notifications: jQuery.toJSON(selectedNotifications),
                         sendTo : sendTo,
                         leadIds : '<?php echo $lead['id']; ?>',
                         formId : '<?php echo $form['id']; ?>'
@@ -218,7 +220,7 @@ class GFEntryDetail{
                             displayMessage("<?php _e("Notifications were resent successfully.", "gravityforms"); ?>", "updated", "#notifications_container");
 
                             // reset UI
-                            jQuery("#notification_admin, #notification_user").attr('checked', false);
+                            jQuery(".gform_notifications").attr('checked', false);
                             jQuery('#notification_override_email').val('');
                         }
 
@@ -240,14 +242,14 @@ class GFEntryDetail{
                 if(isInit)
                     jQuery('#notification_override_email').val('');
 
-                if(jQuery('#notification_admin').is(':checked') || jQuery('#notification_user').is(':checked')) {
+                if(jQuery(".gform_notifications:checked").length > 0 ) {
                     jQuery('#notifications_override_settings').slideDown();
-                } else {
+                }
+                else {
                     jQuery('#notifications_override_settings').slideUp(function(){
                         jQuery('#notification_override_email').val('');
                     });
                 }
-
             }
 
         </script>
@@ -259,7 +261,7 @@ class GFEntryDetail{
 
             <div class="wrap gf_entry_wrap">
             <div class="icon32" id="gravity-title-icon"><br></div>
-            <h2><?php _e("Entry #", "gravityforms"); ?><?php echo absint($lead["id"])?></h2>
+            <h2 class="gf_admin_page_title"><span><?php echo __("Entry #", "gravityforms") . absint($lead["id"]); ?></span><span class="gf_admin_page_subtitle"><span class="gf_admin_page_formid">ID: <?php echo $form['id']; ?></span><?php echo $form['title']; ?></span></h2>
 
             <?php if(isset($_GET["pos"])) { ?>
             <div class="gf_entry_detail_pagination">
@@ -275,7 +277,8 @@ class GFEntryDetail{
 
             <div id="poststuff" class="metabox-holder has-right-sidebar">
                 <div id="side-info-column" class="inner-sidebar">
-					<?php do_action("gform_entry_detail_sidebar_before", $form, $lead); ?>
+                	<?php do_action("gform_entry_detail_sidebar_before", $form, $lead); ?>
+
                     <div id="submitdiv" class="stuffbox">
                         <h3>
                             <span class="hndle"><?php _e("Info", "gravityforms"); ?></span>
@@ -393,10 +396,10 @@ class GFEntryDetail{
                                             if(GFCommon::current_user_can_any("gravityforms_edit_entries") && $lead["status"] != "trash"){
                                                 $button_text = $mode == "view" ? __("Edit", "gravityforms") : __("Update", "gravityforms");
                                                 $button_click = $mode == "view" ? "jQuery('#screen_mode').val('edit');" : "jQuery('#action').val('update'); jQuery('#screen_mode').val('view');";
-                                                $update_button = '<input class="button-primary" type="submit" tabindex="4" value="' . $button_text . '" name="save" onclick="' . $button_click . '"/>';
+                                                $update_button = '<input class="button button-large button-primary" type="submit" tabindex="4" value="' . $button_text . '" name="save" onclick="' . $button_click . '"/>';
                                                 echo apply_filters("gform_entrydetail_update_button", $update_button);
                                                 if($mode == "edit")
-                                                    echo '&nbsp;&nbsp;<input class="button" style="color:#bbb;" type="submit" tabindex="5" value="' . __("Cancel", "gravityforms") . '" name="cancel" onclick="jQuery(\'#screen_mode\').val(\'view\');"/>';
+                                                    echo '&nbsp;&nbsp;<input class="button button-large" type="submit" tabindex="5" value="' . __("Cancel", "gravityforms") . '" name="cancel" onclick="jQuery(\'#screen_mode\').val(\'view\');"/>';
                                             }
                                         ?>
                                     </div>
@@ -406,21 +409,22 @@ class GFEntryDetail{
                     </div>
                     <?php do_action("gform_entry_detail_sidebar_middle", $form, $lead); ?>
 
-                    <?php if(GFCommon::current_user_can_any("gravityforms_edit_entry_notes") && (GFCommon::has_admin_notification($form) || GFCommon::has_user_notification($form))) { // TODO: do we need to set a permission for this? ?>
+                    <?php if(GFCommon::current_user_can_any("gravityforms_edit_entry_notes") && !empty($form["notifications"])) { ?>
                         <!-- start notifications -->
                         <div class="postbox" id="notifications_container">
                             <h3 style="cursor:default;"><span><?php _e("Notifications", "gravityforms"); ?></span></h3>
                             <div class="inside">
-                                <div class="message" style="display:none;padding:10px;margin:10px 0 0;"></div>
+                                <div class="message" style="display:none; padding:10px; margin:10px 0px;"></div>
                                 <div>
-
-                                    <br />
-                                    <?php if(GFCommon::has_admin_notification($form)) { ?>
-                                        <input type="checkbox" name="notification_admin" id="notification_admin" onclick="toggleNotificationOverride();" /> <label for="notification_admin"><?php _e("Admin Notification", "gravityforms"); ?></label> <br /><br />
-                                    <?php } ?>
-                                    <?php if(GFCommon::has_user_notification($form)) { ?>
-                                        <input type="checkbox" name="notification_user" id="notification_user" onclick="toggleNotificationOverride();" /> <label for="notification_user"><?php _e("User Notification", "gravityforms"); ?></label> <br /><br />
-                                    <?php } ?>
+                                    <br/>
+                                   <?php
+                                    foreach($form["notifications"] as $notification){
+                                        ?>
+                                        <input type="checkbox" class="gform_notifications" value="<?php echo $notification["id"] ?>" id="notification_<?php echo $notification["id"]?>" onclick="toggleNotificationOverride();" />
+                                        <label for="notification_<?php echo $notification["id"]?>"><?php echo $notification["name"] ?></label> <br /><br />
+                                        <?php
+                                    }
+                                    ?>
 
                                     <div id="notifications_override_settings" style="display:none;">
 
@@ -445,7 +449,7 @@ class GFEntryDetail{
 
                    <!-- begin print button -->
                    <div class="detail-view-print">
-                       <a href="javascript:;" onclick="var notes_qs = jQuery('#gform_print_notes').is(':checked') ? '&notes=1' : ''; var url='<?php echo site_url() ?>/?gf_page=print-entry&fid=<?php echo $form['id'] ?>&lid=<?php echo $lead['id']?>' + notes_qs; window.open (url,'printwindow');" class="button"><?php _e("Print", "gravityforms") ?></a>
+                       <a href="javascript:;" onclick="var notes_qs = jQuery('#gform_print_notes').is(':checked') ? '&notes=1' : ''; var url='<?php echo trailingslashit(site_url()) ?>?gf_page=print-entry&fid=<?php echo $form['id'] ?>&lid=<?php echo $lead['id']?>' + notes_qs; window.open (url,'printwindow');" class="button"><?php _e("Print", "gravityforms") ?></a>
                        <?php if(GFCommon::current_user_can_any("gravityforms_view_entry_notes")) { ?>
                            <input type="checkbox" name="print_notes" value="print_notes" checked="checked" id="gform_print_notes"/>
                            <label for="print_notes"><?php _e("include notes", "gravityforms") ?></label>
@@ -518,7 +522,6 @@ class GFEntryDetail{
     public static function lead_detail_edit($form, $lead){
         $form = apply_filters("gform_admin_pre_render_" . $form["id"], apply_filters("gform_admin_pre_render", $form));
         ?>
-        <script type="text/javascript" src="<?php echo GFCommon::get_base_url() ?>/js/gravityforms.js?version=<?php echo GFCommon::$version?>"></script>
         <div id="namediv" class="stuffbox">
             <h3>
                 <label for="name"><?php _e("Details", "gravityforms"); ?></label>
@@ -637,7 +640,7 @@ class GFEntryDetail{
                     <td colspan="3" style="padding:10px;" class="lastrow">
                         <textarea name="new_note" style="width:100%; height:50px; margin-bottom:4px;"></textarea>
                         <?php
-                        $note_button = '<input type="submit" name="add_note" value="' . __("Add Note", "gravityforms") . '" class="button" style="width:60px;" onclick="jQuery(\'#action\').val(\'add_note\');"/>';
+                        $note_button = '<input type="submit" name="add_note" value="' . __("Add Note", "gravityforms") . '" class="button" style="width:auto;padding-bottom:2px;" onclick="jQuery(\'#action\').val(\'add_note\');"/>';
                         echo apply_filters("gform_addnote_button", $note_button);
 
                         if(!empty($emails)){ ?>

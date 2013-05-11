@@ -1,5 +1,6 @@
 <?php
 class GFFormList{
+
     public static function form_list_page(){
         global $wpdb;
 
@@ -17,42 +18,194 @@ class GFFormList{
             check_admin_referer('gforms_update_forms', 'gforms_update_forms');
             $form_id = RGForms::post("action_argument");
             RGFormsModel::delete_form($form_id);
+            $message = __('Form deleted.', 'gravityforms');
         }
         else if($action == "duplicate"){
             check_admin_referer('gforms_update_forms', 'gforms_update_forms');
             $form_id = RGForms::post("action_argument");
             RGFormsModel::duplicate_form($form_id);
+            $message = __('Form duplicated.', 'gravityforms');
         }
-        else if($bulk_action == "delete"){
+
+        if($bulk_action) {
+
             check_admin_referer('gforms_update_forms', 'gforms_update_forms');
-            $form_ids = rgpost("form");
-            RGFormsModel::delete_forms($form_ids);
-        }
-        else if($bulk_action == "reset_views"){
-            check_admin_referer('gforms_update_forms', 'gforms_update_forms');
-            $form_ids = rgpost("form");
-            if(is_array($form_ids)){
+            $form_ids = is_array(rgpost('form')) ? rgpost('form') : array();
+            $form_count = count($form_ids);
+
+            switch($bulk_action) {
+            case 'delete':
+                RGFormsModel::delete_forms($form_ids);
+                $message = _n('%s form deleted.', '%s forms deleted.', $form_count, 'gravityforms');
+                break;
+            case 'reset_views':
                 foreach($form_ids as $form_id){
                     RGFormsModel::delete_views($form_id);
                 }
-            }
-        }
-        else if($bulk_action == "delete_entries"){
-            check_admin_referer('gforms_update_forms', 'gforms_update_forms');
-            $form_ids = RGForms::post("form");
-            if(is_array($form_ids)){
+                $message = _n('Views for %s form have been reset.', 'Views for %s forms have been reset.', $form_count, 'gravityforms');
+                break;
+            case 'delete_entries':
                 foreach($form_ids as $form_id){
                     RGFormsModel::delete_leads_by_form($form_id);
                 }
+                $message = _n('Entries for %s form have been deleted.', 'Entries for %s forms have been deleted.', $form_count, 'gravityforms');
+                break;
+            case 'activate':
+                foreach($form_ids as $form_id){
+                    RGFormsModel::update_form_active($form_id, 1);
+                }
+                $message = _n('%s form has been marked as active.', '%s forms have been marked as active.', $form_count, 'gravityforms');
+                break;
+            case 'deactivate':
+                foreach($form_ids as $form_id){
+                    RGFormsModel::update_form_active($form_id, 0);
+                }
+                $message = _n('%s form has been marked as inactive.', '%s forms have been marked as inactive.', $form_count, 'gravityforms');
+                break;
             }
+
+            if(isset($message))
+                $message = sprintf($message, $form_count);
+
         }
 
         $active = RGForms::get("active") == "" ? null : RGForms::get("active");
         $forms = RGFormsModel::get_forms($active, "title");
         $form_count = RGFormsModel::get_form_count();
 
+        // - new form modal - //
+
+        wp_print_styles(array('thickbox'));
+
         ?>
-        <script>
+
+        <script type="text/javascript" src="<?php echo GFCommon::get_base_url() . '/js/form_admin.js' ?>"></script>
+        <script type="text/javascript">
+
+            <?php GFCommon::gf_vars(); ?>
+
+            jQuery(document).ready(function($) {
+
+                <?php if(rgget('page') == 'gf_new_form'): ?>
+                loadNewFormModal();
+                <?php endif; ?>
+
+                $('.gf_form_action_has_submenu').hover(function(){
+                    var l = jQuery(this).offset().left;
+                    jQuery(this).find('.gf_submenu')
+                        .toggle()
+                        .offset({ left: l });
+                }, function(){
+                    jQuery(this).find('.gf_submenu').hide();
+                });
+
+
+            });
+
+            function loadNewFormModal() {
+                resetNewFormModal();
+                tb_show('<?php _e('Create a New Form', 'gravityforms'); ?>', '#TB_inline?width=375&amp;inlineId=gf_new_form_modal');
+                jQuery('#new_form_title').focus();
+                return false;
+            }
+
+            function saveNewForm() {
+
+                var createButton = jQuery('#save_new_form');
+                var spinner = new gfAjaxSpinner(createButton, gf_vars.baseUrl + '/images/spinner.gif');
+
+                // clear error message
+                jQuery('#gf_new_form_error_message').html('');
+
+                var origVal = createButton.val();
+                createButton.val('<?php _e('Creating Form...', 'gravityforms'); ?>');
+
+                var form = {
+                    title: jQuery('#new_form_title').val(),
+                    description: jQuery('#new_form_description').val()
+                }
+
+                jQuery.post(ajaxurl, {
+                    form: form,
+                    action: 'gf_save_new_form',
+                    gf_save_new_form: '<?php echo wp_create_nonce('gf_save_new_form'); ?>'
+                }, function(response){
+
+                    spinner.destroy();
+
+                    var respData = jQuery.parseJSON(response);
+
+                    if(respData['error']) {
+                        // adding class later otherwise WP moves box up to the top of the page
+                        jQuery('#gf_new_form_error_message').html( respData.error );
+                        addInputErrorIcon( '#new_form_title' );
+                        createButton.val(origVal);
+                    } else {
+                        location.href = respData.redirect;
+                        createButton.val('<?php _e('Saved! Redirecting...', 'gravityforms'); ?>');
+                    }
+
+                });
+
+            }
+
+            function resetNewFormModal() {
+                jQuery('#new_form_title').val('');
+                jQuery('#new_form_description').val('');
+                jQuery('#gf_new_form_error_message').html('');
+                removeInputErrorIcons( '.gf_new_form_modal_container' );
+            }
+
+            function addInputErrorIcon( elem ) {
+                var elem = jQuery(elem);
+                elem.before( '<span class="gf_input_error_icon"></span>');
+            }
+
+            function removeInputErrorIcons( elem ) {
+                var elem = jQuery(elem);
+                elem.find('span.gf_input_error_icon').remove();
+            }
+
+        </script>
+
+        <style type="text/css">
+        body #TB_window { margin-top: -145px !important; }
+        body #TB_ajaxContent { height: 290px !important; overflow: hidden; }
+        .gf_new_form_modal_container { padding: 30px; }
+        .gf_new_form_modal_container .setting-row { margin: 0 0 10px; }
+        .gf_new_form_modal_container .setting-row label { line-height: 24px; }
+        .gf_new_form_modal_container .setting-row input,
+        .gf_new_form_modal_container .setting-row textarea { display: block; width: 100%; }
+        .gf_new_form_modal_container .setting-row textarea { height: 110px; }
+        .gf_new_form_modal_container .submit-row { margin-top: 18px; }
+        .gf_new_form_modal_container #gf_new_form_error_message { margin: 0 0 18px 5px !important; color: #BC0B0B; }
+        .gf_new_form_modal_container img.gfspinner{ position: relative; top: 5px; left: 5px; }
+        </style>
+
+        <div id="gf_new_form_modal" style="display:none;">
+            <div class="gf_new_form_modal_container">
+
+                <div class="setting-row">
+                    <label for="new_form_title">Form Title<span class="gfield_required">*</span></label><br />
+                    <input type="text" class="regular-text" value="" id="new_form_title" tabindex="9000">
+                </div>
+
+                <div class="setting-row">
+                    <label for="new_form_description">Form Description</label><br />
+                    <textarea class="regular-text" id="new_form_description" tabindex="9001"></textarea>
+                </div>
+
+                <div class="submit-row">
+                    <input id="save_new_form" type="button" class="button button-large button-primary" value="Create Form" onclick="saveNewForm();" tabindex="9002" />
+                    <div id="gf_new_form_error_message" style="display:inline-block;"></div>
+                </div>
+
+            </div>
+        </div>
+
+        <?php // - end of new form modal - // ?>
+
+        <script text="text/javascript">
             function DeleteForm(form_id){
                 jQuery("#action_argument").val(form_id);
                 jQuery("#action").val("delete");
@@ -116,8 +269,13 @@ class GFFormList{
             <div class="icon32" id="gravity-edit-icon"><br></div>
             <h2>
                 <?php _e("Forms", "gravityforms"); ?>
-                <a class="button add-new-h2" href="admin.php?page=gf_new_form"><?php _e("Add New", "gravityforms") ?></a>
+                <a class="button add-new-h2" href="" onclick="return loadNewFormModal();"><?php _e("Add New", "gravityforms") ?></a>
             </h2>
+
+            <?php if(isset($message)) { ?>
+            <div class="updated below-h2" id="message"><p><?php echo $message; ?></p></div>
+            <?php } ?>
+
             <form id="forms_form" method="post">
                 <?php wp_nonce_field('gforms_update_forms', 'gforms_update_forms') ?>
                 <input type="hidden" id="action" name="action"/>
@@ -139,6 +297,8 @@ class GFFormList{
                             <select name="bulk_action" id="bulk_action">
                                 <option value=''> <?php _e("Bulk action", "gravityforms") ?> </option>
                                 <option value='delete'><?php _e("Delete", "gravityforms") ?></option>
+                                <option value='activate'><?php _e("Mark as Active", "gravityforms") ?></option>
+                                <option value='deactivate'><?php _e("Mark as Inactive", "gravityforms") ?></option>
                                 <option value='reset_views'><?php _e("Reset Views", "gravityforms") ?></option>
                                 <option value='delete_entries'><?php _e("Delete Entries", "gravityforms") ?></option>
                             </select>
@@ -218,45 +378,43 @@ class GFFormList{
 
                                             <?php
 
-											$form_actions = array();
-											$form_actions['edit'] = '<a title="Edit this form" href="admin.php?page=gf_edit_forms&id=' . $form->id . '">' . __("Edit", "gravityforms") . '</a>';
+                                            require_once(GFCommon::get_base_path() . '/form_settings.php');
 
-											$form_actions['notifications'] = '<a title="' . __("Edit notifications sent by this form", "gravityforms") . '" href="admin.php?page=gf_edit_forms&view=notification&id=' . $form->id . '">' . __("Notifications", "gravityforms") . '</a>';
+											$form_actions = GFForms::get_toolbar_menu_items($form->id, true);
 
-											if(GFCommon::current_user_can_any("gravityforms_view_entries"))
-												$form_actions['entries'] = '<a title="' . __("View entries generated by this form", "gravityforms") . '" href="admin.php?page=gf_entries&view=entries&id=' . $form->id . '">' . __("Entries", "gravityforms") . '</a>';
+											$form_actions['duplicate'] = array(
+												'label' 		=> __("Duplicate", "gravityforms"),
+												'title' 		=> __("Duplicate this form", "gravityforms"),
+												'url' 			=> 'javascript:DuplicateForm(' . $form->id . ');',
+												'capabilities' 	=> "gravityforms_create_form",
+												'priority'		=> 600
+											);
 
-											$form_actions['preview'] = '<a title="' . __("Preview this form", "gravityforms") . '" href="' . site_url() . '/?gf_page=preview&id=' . $form->id . '" target="_blank">' . __("Preview", "gravityforms") . '</a>';
+											$form_actions['delete'] = array(
+												'label' 		=> __("Delete", "gravityforms"),
+												'title' 		=> __("Delete", "gravityforms"),
+												'url' 			=> 'javascript: if(confirm("' . __("WARNING: You are about to delete this form and ALL entries associated with it. ", "gravityforms") . __('\"Cancel\" to stop, \"OK\" to delete.', "gravityforms") . '")){ DeleteForm(' . $form->id . ');}',
+												'capabilities' 	=> "gravityforms_delete_forms",
+												'priority'		=> 500
+											);
 
-											if(GFCommon::current_user_can_any("gravityforms_create_form"))
-												$form_actions['duplicate'] = '<a title="' . __("Duplicate this form", "gravityforms") . '" href="javascript:DuplicateForm(' . $form->id . ');">' . __("Duplicate", "gravityforms") . '</a>';
+                                            $form_actions = apply_filters("gform_form_actions", $form_actions, $form->id);
+											echo GFForms::format_toolbar_menu_items($form_actions, true);
 
-											if(GFCommon::current_user_can_any("gravityforms_delete_forms")) {
-												$delete_link = '<a title="Delete" href="javascript: if(confirm(\'' . __("WARNING: You are about to delete this form and ALL entries associated with it. ", "gravityforms") . __("\'Cancel\' to stop, \'OK\' to delete.", "gravityforms") . '\')){ DeleteForm(' . $form->id . ');}">' . __("Delete", "gravityforms"). '</a>';
-												$form_actions['delete'] = apply_filters("gform_form_delete_link", $delete_link);
-											}
-
-											$form_actions = apply_filters("gform_form_actions", $form_actions, $form->id);
-
-											if(is_array($form_actions) && !empty($form_actions)) {
-												$last_key = array_pop(array_keys($form_actions));
-												foreach($form_actions as $action_key => $action_link) {
-													$divider = $action_key == $last_key ? '' : " | ";
-													?>
-
-                                                    <span class="edit">
-                                                        <?php echo $action_link . $divider; ?>
-                                                    </span>
-
-													<?php }
-											}
-
-											?>
+                                                    ?>
 
                                         </div>
                                     </td>
                                     <td class="column-date"><strong><?php echo $form->view_count ?></strong></td>
-                                    <td class="column-date"><strong><?php echo $form->lead_count ?></strong></td>
+                                    <td class="column-date">
+                                        <strong>
+                                            <?php if($form->lead_count > 0) { ?>
+                                                <a href="<?php echo admin_url("admin.php?page=gf_entries&view=entries&id={$form->id}"); ?>"><?php echo $form->lead_count; ?></a>
+                                            <?php } else {
+                                                echo $form->lead_count;
+                                            } ?>
+                                        </strong>
+                                    </td>
                                     <td class="column-date"><?php echo $conversion?></td>
                                 </tr>
                                 <?php
@@ -283,6 +441,8 @@ class GFFormList{
                             <select name="bulk_action2" id="bulk_action2">
                                 <option value=''> <?php _e("Bulk action", "gravityforms") ?> </option>
                                 <option value='delete'><?php _e("Delete", "gravityforms") ?></option>
+                                <option value='activate'><?php _e("Mark as Active", "gravityforms") ?></option>
+                                <option value='deactivate'><?php _e("Mark as Inactive", "gravityforms") ?></option>
                                 <option value='reset_views'><?php _e("Reset Views", "gravityforms") ?></option>
                                 <option value='delete_entries'><?php _e("Delete Entries", "gravityforms") ?></option>
                             </select>
@@ -299,6 +459,48 @@ class GFFormList{
         <?php
     }
 
+    public static function save_new_form() {
+
+        if(!check_admin_referer('gf_save_new_form', 'gf_save_new_form')) {
+            die( json_encode( array( 'error' => __('There was an issue creating your form.', 'gravityforms') ) ) );
+        }
+
+        GFFormsModel::ensure_tables_exist();
+
+        require_once(GFCommon::get_base_path() . '/form_detail.php');
+
+        $form = rgpost('form');
+        if( empty( $form['title'] ) ) {
+            $result = array( 'error' => __( 'Please enter a form title.', 'gravityforms' ) );
+            die( json_encode( $result ) );
+        }
+
+        $form['labelPlacement'] = 'top_label';
+        $form['descriptionPlacement'] = 'below';
+        $form['button'] = array(
+            'type' => 'text',
+            'text' => __("Submit", "gravityforms"),
+            'imageUrl' => ''
+            );
+        $form['fields'] = array();
+
+        $result = GFFormDetail::save_form_info( 0, json_encode($form) );
+
+        switch(rgar($result, 'status')){
+            case 'invalid_json':
+                $result['error'] = __('There was an issue creating your form.', 'gravityforms');
+                die(json_encode($result));
+
+            case 'duplicate_title':
+                $result['error'] = __('Please enter an unique form title.', 'gravityforms');
+                die(json_encode($result));
+
+            default:
+                $form_id = abs($result['status']);
+                die( json_encode( array('redirect' => admin_url("admin.php?page=gf_edit_forms&id={$form_id}")) ) );
+        }
+
+    }
 
 }
 

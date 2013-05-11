@@ -14,24 +14,19 @@ function print_tooltip_scripts(){
 
 function gform_tooltip($name, $css_class="", $return=false){
     $gf_tooltips = array(
-        "notification_send_to_email" => "<h6>" . __("Send To Email Address", "gravityforms") . "</h6>" . __("Enter the email address you would like the administrator notification email sent to.", "gravityforms"),
+        "notification_send_to_email" => "<h6>" . __("Send To Email Address", "gravityforms") . "</h6>" . __("Enter the email address you would like the notification email sent to.", "gravityforms"),
         "notification_autoformat" => "<h6>" . __("Disable Auto-Formatting", "gravityforms") . "</h6>" . __("When enabled, auto-formatting will insert paragraph breaks automatically. Disable auto-formatting when using HTML to create email notification content.", "gravityforms"),
         "notification_send_to_routing" => "<h6>" . __("Routing", "gravityforms") . "</h6>" . __("Allows notification to be sent to different email addresses depending on values selected in the form.", "gravityforms"),
-        "notification_from_email" => "<h6>" . __("From Email Address", "gravityforms") . "</h6>" . __("Enter the email address you would like the administrator notification email sent from, or select the email from available email form fields.", "gravityforms"),
-        "notification_from_name" => "<h6>" . __("From Name", "gravityforms") . "</h6>" . __("Enter the name you would like the administrator notification email sent from, or select the name from available name fields.", "gravityforms"),
-        "notification_reply_to" => "<h6>" . __("Reply To", "gravityforms") . "</h6>" . __("Enter the email address you would like to be used as the reply to address for the administrator notification email.", "gravityforms"),
-        "notification_bcc" => "<h6>" . __("Blind Carbon Copy Addresses", "gravityforms") . "</h6>" . __("Enter a comma separated list of email addresses you would like to receive a BCC of the administrator notification email.", "gravityforms"),
-        "autoresponder_send_to_email" => "<h6>" . __("Blind Carbon Copy Addresses", "gravityforms") . "</h6>" . __("Select the email form field that the user notification email should be sent to.", "gravityforms"),
-        "autoresponder_bcc" => "<h6>" . __("Blind Carbon Copy Addresses", "gravityforms") . "</h6>" . __("Enter a comma separated list of email addresses you would like to receive a BCC of the user notification email.", "gravityforms"),
-        "autoresponder_from" => "<h6>" . __("From Email Address", "gravityforms") . "</h6>" . __("Enter the email address you would like the user notification email sent from.", "gravityforms"),
-        "autoresponder_from_name" => "<h6>" . __("From Name", "gravityforms") . "</h6>" . __("Enter the name you would like the user notification email sent from.", "gravityforms"),
-        "autoresponder_reply_to" => "<h6>" . __("Reply To Address", "gravityforms") . "</h6>" . __("Enter the email address you would like to be used as the reply to address for the user notification email.", "gravityforms"),
+        "notification_from_email" => "<h6>" . __("From Email Address", "gravityforms") . "</h6>" . __("Enter the email address you would like the notification email sent from, or select the email from available email form fields.", "gravityforms"),
+        "notification_from_name" => "<h6>" . __("From Name", "gravityforms") . "</h6>" . __("Enter the name you would like the notification email sent from, or select the name from available name fields.", "gravityforms"),
+        "notification_reply_to" => "<h6>" . __("Reply To", "gravityforms") . "</h6>" . __("Enter the email address you would like to be used as the reply to address for the notification email.", "gravityforms"),
+        "notification_bcc" => "<h6>" . __("Blind Carbon Copy Addresses", "gravityforms") . "</h6>" . __("Enter a comma separated list of email addresses you would like to receive a BCC of the notification email.", "gravityforms"),
         "form_activity" => "<h6>" . __("Limit Form Activity", "gravityforms") . "</h6>" . __("Limit the number of entries a form can generate and/or schedule a time period the form is active.", "gravityforms"),
         "form_limit_entries" => "<h6>" . __("Limit Number of Entries", "gravityforms") . "</h6>" . __("Enter a number in the input box below to limit the number of entries allowed for this form. The form will become inactive when that number is reached.", "gravityforms"),
         "form_schedule_form" => "<h6>" . __("Schedule Form", "gravityforms") . "</h6>" . __("Schedule a time period the form is active.", "gravityforms"),
         "form_honeypot" => "<h6>" . __("Enable Anti-spam honeypot", "gravityforms") . "</h6>" . __("Enables the honeypot spam protection technique, which is an alternative to the reCAPTCHA field.", "gravityforms"),
         "form_animation" => "<h6>" . __("Enable Animation", "gravityforms") . "</h6>" . __("Check this option to enable a sliding animation when displaying/hiding conditional logic fields.", "gravityforms"),
-        "form_tile" => "<h6>" . __("Form Title", "gravityforms") . "</h6>" . __("Enter the title of your form.", "gravityforms"),
+        "form_title" => "<h6>" . __("Form Title", "gravityforms") . "</h6>" . __("Enter the title of your form.", "gravityforms"),
         "form_description" => "<h6>" . __("Form Description", "gravityforms") . "</h6>" . __("Enter a description for your form. This may be used for user instructions.", "gravityforms"),
         "form_label_placement" => "<h6>" . __("Form Label Placement", "gravityforms") . "</h6>" . __("Select the label placement.  Labels can be top aligned above a field, left aligned to the left of a field, or right aligned to the left of a field.", "gravityforms"),
         "form_description_placement" => "<h6>" . __("Description Placement", "gravityforms") . "</h6>" . __("Select the description placement.  Descriptions can be placed above the field inputs or below the field inputs.", "gravityforms"),
@@ -155,6 +150,5 @@ function gform_tooltip($name, $css_class="", $return=false){
     else
         echo $tooltip;
 }
-
 
 ?>
