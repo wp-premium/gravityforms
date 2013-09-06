@@ -21,15 +21,27 @@ if(!GFCommon::current_user_can_any(array("gravityforms_edit_forms", "gravityform
     die(__("You don't have adequate permission to preview forms.", "gravityforms"));
 
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" <?php language_attributes(); ?>>
     <head>
         <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
         <meta http-equiv="Imagetoolbar" content="No" />
         <title><?php _e("Form Preview", "gravityforms") ?></title>
         <link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/reset.css' type='text/css' />
-        <link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/forms.css' type='text/css' />
+        <link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/formreset.css' type='text/css' />
+        <link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/datepicker.css' type='text/css' />
+        <link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/formsmain.css' type='text/css' />
+        <link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/readyclass.css' type='text/css' />
+        <link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/browsers.css' type='text/css' />
+
+        <?php
+        if(is_rtl()){
+            ?>
+            <link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/rtl.css' type='text/css' />
+            <?php
+        }
+        ?>
+
         <link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/preview.css' type='text/css' />
         <?php
             require_once(GFCommon::get_base_path() . "/form_display.php");
@@ -37,11 +49,12 @@ if(!GFCommon::current_user_can_any(array("gravityforms_edit_forms", "gravityform
             GFFormDisplay::enqueue_form_scripts($form);
             wp_print_scripts();
 
-            $styles = apply_filters("gform_preview_styles", false, $form);
+            $styles = apply_filters("gform_preview_styles", array(), $form);
             if(!empty($styles)){
                 wp_print_styles($styles);
             }
         ?>
+
     </head>
     <body>
     <div id="preview_top">
@@ -57,7 +70,7 @@ if(!GFCommon::current_user_can_any(array("gravityforms_edit_forms", "gravityform
         ?>
         </div>
         <?php
-        do_action("gform_preview_footer");
+        do_action("gform_preview_footer", $_GET["id"]);
         ?>
     </body>
 </html>

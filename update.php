@@ -14,12 +14,14 @@ class GFUpdate{
         <link rel="stylesheet" href="<?php echo GFCommon::get_base_url() . "/css/admin.css"?>" />
 
         <div class="wrap">
-        
+
         	<div class="icon32" id="gravity-update-icon"><br></div>
           <h2><?php echo _e("Gravity Forms Updates", "gravityforms") ?></h2>
             <?php
 
             $version_info = GFCommon::get_version_info(false);
+            do_action("gform_after_check_update");
+
             if(version_compare(GFCommon::$version, $version_info["version"], '<')) {
                 $plugin_file = "gravityforms/gravityforms.php";
                 $upgrade_url = wp_nonce_url('update.php?action=upgrade-plugin&amp;plugin=' . urlencode($plugin_file), 'upgrade-plugin_' . $plugin_file);

@@ -126,7 +126,6 @@ function InitPaginationOptions(isInit){
     TogglePercentageConfirmationText(isInit);
 }
 
-
 function ShowSettings(element_id){
     jQuery(".field_selected .field_edit_icon, .field_selected .form_edit_icon").removeClass("edit_icon_collapsed").addClass("edit_icon_expanded").html('<?php _e("Close", "gravityforms") ?>');
     jQuery("#" + element_id).slideDown();
@@ -144,7 +143,7 @@ function TogglePostCategoryInitialItem(isInit){
         jQuery("#gfield_post_category_initial_item_container").show(speed);
 
         if(!isInit){
-            jQuery("#field_post_category_initial_item").val('<?php _e("Select a category")?>');
+            jQuery("#field_post_category_initial_item").val('<?php _e("Select a category", "gravityforms")?>');
         }
     }
     else{
@@ -310,7 +309,14 @@ function SaveForm(isNew){
     if(!ValidateForm()){
         return false;
     }
-
+    
+    // remove data that is no longer stored in the form object (as of 1.7)
+    delete form.notification;
+    delete form.autoResponder;
+    delete form.notifications;
+    delete form.confirmation;
+    delete form.confirmations;
+    
     //updating original json. used when verifying if there has been any changes unsaved changed before leaving the page
     var form_json = jQuery.toJSON(form);
     gforms_original_json = form_json;
@@ -456,7 +462,7 @@ function SetDefaultValues(field){
             if(!field.label)
                 field.label = "<?php _e("Address", "gravityforms"); ?>";
             field.inputs = [new Input(field.id + 0.1, '<?php echo esc_js(apply_filters("gform_address_street_" . rgget("id"), apply_filters("gform_address_street",__("Street Address", "gravityforms"), rgget("id")), rgget("id"))); ?>'), new Input(field.id + 0.2, '<?php echo apply_filters("gform_address_street2_" . rgget("id"), apply_filters("gform_address_street2",__("Address Line 2", "gravityforms"), rgget("id")), rgget("id")); ?>'), new Input(field.id + 0.3, '<?php echo apply_filters("gform_address_city_" . rgget("id"), apply_filters("gform_address_city",__("City", "gravityforms"), rgget("id")), rgget("id")); ?>'),
-                            new Input(field.id + 0.4, '<?php echo esc_js(apply_filters("gform_address_state_" . rgget("id"), apply_filters("gform_address_state",__("State / Province", "gravityforms"), rgget("id")), rgget("id"))); ?>'), new Input(field.id + 0.5, '<?php echo apply_filters("gform_address_zip_" . rgget("id"), apply_filters("gform_address_zip",__("Zip / Postal Code", "gravityforms"), rgget("id")), rgget("id")); ?>'), new Input(field.id + 0.6, '<?php echo apply_filters("gform_address_country_" . rgget("id"), apply_filters("gform_address_country",__("Country", "gravityforms"), rgget("id")), rgget("id")); ?>')];
+                            new Input(field.id + 0.4, '<?php echo esc_js(apply_filters("gform_address_state_" . rgget("id"), apply_filters("gform_address_state",__("State / Province", "gravityforms"), rgget("id")), rgget("id"))); ?>'), new Input(field.id + 0.5, '<?php echo apply_filters("gform_address_zip_" . rgget("id"), apply_filters("gform_address_zip",__("ZIP / Postal Code", "gravityforms"), rgget("id")), rgget("id")); ?>'), new Input(field.id + 0.6, '<?php echo apply_filters("gform_address_country_" . rgget("id"), apply_filters("gform_address_country",__("Country", "gravityforms"), rgget("id")), rgget("id")); ?>')];
             break;
         case "creditcard" :
 
@@ -571,7 +577,10 @@ function SetDefaultValues(field){
                 field.inputType = "singleproduct";
 
             if(field.inputType == "singleproduct" || field.inputType == "hiddenproduct" || field.inputType == "calculation"){
-                field.inputs = [new Input(field.id + 0.1, '<?php echo __("Name", "gravityforms"); ?>'), new Input(field.id + 0.2, '<?php echo __("Price", "gravityforms"); ?>'), new Input(field.id + 0.3, '<?php echo __("Quantity", "gravityforms"); ?>')];
+            	//convert field id to a number so it isn't treated as a string
+            	//caused concatenation below instead of addition
+            	field_id = parseFloat(field.id);
+                field.inputs = [new Input(field_id + 0.1, '<?php echo __("Name", "gravityforms"); ?>'), new Input(field_id + 0.2, '<?php echo __("Price", "gravityforms"); ?>'), new Input(field_id + 0.3, '<?php echo __("Quantity", "gravityforms"); ?>')];
                 field.enablePrice = null;
             }
 
@@ -641,7 +650,7 @@ function SetDefaultValues(field){
             break;
 
         case "quantity" :
-             field.label = '<?php _e("Quantity", "gravityformspaypal")?>';
+             field.label = '<?php _e("Quantity", "gravityforms")?>';
 
             if(!field.inputType)
                 field.inputType = "number";
@@ -764,6 +773,17 @@ function StartAddField(type){
 
 function DuplicateField(field, sourceFieldId){
 
+    jQuery.post(ajaxurl,{
+            action:"rg_duplicate_field",
+            rg_duplicate_field: "<?php echo wp_create_nonce("rg_duplicate_field") ?>",
+            field : jQuery.toJSON(field),
+            source_field_id : sourceFieldId},
+            function(data){
+                data = jQuery.evalJSON(data);
+                EndDuplicateField(data["field"], data["fieldString"], data["sourceFieldId"]);
+            }
+    );
+/*
     var mysack = new sack("<?php echo admin_url("admin-ajax.php")?>?id=" + form.id);
     mysack.execute = 1;
     mysack.method = 'POST';
@@ -772,7 +792,7 @@ function DuplicateField(field, sourceFieldId){
     mysack.setVar( "field", jQuery.toJSON(field) );
     mysack.setVar( "source_field_id", sourceFieldId);
     mysack.onError = function() { alert('<?php echo esc_js(__("Ajax error while duplicating field", "gravityforms")) ?>' )};
-    mysack.runAJAX();
+    mysack.runAJAX();*/
 
     return true;
 }
@@ -801,55 +821,6 @@ function StartChangeInputType(type, field){
     return true;
 }
 
-function CreateConditionalLogic(objectType, obj){
-    if(!obj.conditionalLogic)
-        obj.conditionalLogic = new ConditionalLogic();
-
-
-    var hideSelected = obj.conditionalLogic.actionType == "hide" ? "selected='selected'" :"";
-    var showSelected = obj.conditionalLogic.actionType == "show" ? "selected='selected'" :"";
-    var allSelected = obj.conditionalLogic.logicType == "all" ? "selected='selected'" :"";
-    var anySelected = obj.conditionalLogic.logicType == "any" ? "selected='selected'" :"";
-    var imagesUrl = '<?php echo GFCommon::get_base_url() . "/images"?>';
-
-    var objText;
-    if(objectType == "field")
-        objText = "<?php _e("this field if", "gravityforms") ?>";
-    else if(objectType == "page")
-        objText = "<?php _e("this page", "gravityforms") ?>";
-    else
-        objText = "<?php _e("this form button", "gravityforms") ?>";
-
-    var str = "<select id='" + objectType + "_action_type' onchange='SetConditionalProperty(\"" + objectType + "\", \"actionType\", jQuery(this).val());'><option value='show' " + showSelected + "><?php _e("Show", "gravityforms") ?></option><option value='hide' " + hideSelected + "><?php _e("Hide", "gravityforms") ?></option></select>";
-    str += objText;
-    str += "<select id='" + objectType + "_logic_type' onchange='SetConditionalProperty(\"" + objectType + "\", \"logicType\", jQuery(this).val());'><option value='all' " + allSelected + "><?php _e("All", "gravityforms") ?></option><option value='any' " + anySelected + "><?php _e("Any", "gravityforms") ?></option></select>";
-    str += " <?php _e("of the following match:", "gravityforms") ?> ";
-
-    for(var i=0; i<obj.conditionalLogic.rules.length; i++){
-        var isSelected = obj.conditionalLogic.rules[i].operator == "is" ? "selected='selected'" :"";
-        var isNotSelected = obj.conditionalLogic.rules[i].operator == "isnot" ? "selected='selected'" :"";
-        var greaterThanSelected = obj.conditionalLogic.rules[i].operator == ">" ? "selected='selected'" :"";
-        var lessThanSelected = obj.conditionalLogic.rules[i].operator == "<" ? "selected='selected'" :"";
-        var containsSelected = obj.conditionalLogic.rules[i].operator == "contains" ? "selected='selected'" :"";
-        var startsWithSelected = obj.conditionalLogic.rules[i].operator == "starts_with" ? "selected='selected'" :"";
-        var endsWithSelected = obj.conditionalLogic.rules[i].operator == "ends_with" ? "selected='selected'" :"";
-
-        str += "<div width='100%'>" + GetRuleFields(objectType, i, obj.conditionalLogic.rules[i].fieldId);
-        str += "<select id='" + objectType + "_rule_operator_" + i + "' onchange='SetRuleProperty(\"" + objectType + "\", " + i + ", \"operator\", jQuery(this).val());'><option value='is' " + isSelected + "><?php _e("is", "gravityforms") ?></option><option value='isnot' " + isNotSelected + "><?php _e("is not", "gravityforms") ?></option><option value='>' " + greaterThanSelected + "><?php _e("greater than", "gravityforms") ?></option><option value='<' " + lessThanSelected + "><?php _e("less than", "gravityforms") ?></option><option value='contains' " + containsSelected + "><?php _e("contains", "gravityforms") ?></option><option value='starts_with' " + startsWithSelected + "><?php _e("starts with", "gravityforms") ?></option><option value='ends_with' " + endsWithSelected + "><?php _e("ends with", "gravityforms") ?></option></select>";
-        str += GetRuleValues(objectType, i, obj.conditionalLogic.rules[i].fieldId, obj.conditionalLogic.rules[i].value);
-        str += "<img src='" + imagesUrl + "/add.png' class='add_field_choice' title='add another rule' alt='add another rule' style='cursor:pointer; margin:0 3px;' onclick=\"InsertRule('" + objectType + "', " + (i+1) + ");\" />";
-        if(obj.conditionalLogic.rules.length > 1 )
-            str += "<img src='" + imagesUrl + "/remove.png' title='remove this rule' alt='remove this rule' class='delete_field_choice' style='cursor:pointer;' onclick=\"DeleteRule('" + objectType + "', " + i + ");\" /></li>";
-
-        str += "</div>";
-    }
-
-    jQuery("#" + objectType + "_conditional_logic_container").html(str);
-
-    //initializing placeholder script
-    jQuery.Placeholder.init();
-}
-
 function GetFieldChoices(field){
     var imagesUrl = '<?php echo GFCommon::get_base_url() . "/images"?>';
     if(field.choices == undefined)
@@ -863,7 +834,7 @@ function GetFieldChoices(field){
         var inputType = GetInputType(field);
         var type = inputType == 'checkbox' ? 'checkbox' : 'radio';
 
-        var value = field.enableChoiceValue ? field.choices[i].value : field.choices[i].text;
+        var value = field.enableChoiceValue ? String(field.choices[i].value) : field.choices[i].text;
         var price = field.choices[i].price ? currency.toMoney(field.choices[i].price) : "";
         if(!price)
             price = "";
@@ -871,12 +842,14 @@ function GetFieldChoices(field){
         str += "<li data-index='" + i + "'>";
         str += "<img src='" + imagesUrl + "/arrow-handle.png' class='field-choice-handle' alt='<?php _e("Drag to re-order", "gravityforms") ?>' /> ";
         str += "<input type='" + type + "' class='gfield_choice_" + type + "' name='choice_selected' id='" + inputType + "_choice_selected_" + i + "' " + checked + " onclick=\"SetFieldChoice('" + inputType + "', " + i + ");\" /> ";
-        str += "<input type='text' id='" + inputType + "_choice_text_" + i + "' value=\"" + field.choices[i].text.replace(/"/g, "&quot;") + "\" onkeyup=\"SetFieldChoice('" + inputType + "', " + i + ");\" class='field-choice-input field-choice-text' />";
-        str += "<input type='text' id='"+ inputType + "_choice_value_" + i + "' value=\"" + value.replace(/"/g, "&quot;") + "\" onkeyup=\"SetFieldChoice('" + inputType + "', " + i + ");\" class='field-choice-input field-choice-value' />";
+        str += "<input type='text' id='" + inputType + "_choice_text_" + i + "' value=\"" + field.choices[i].text.replace(/"/g, "&quot;") + "\" onkeyup=\"SetFieldChoice('" + inputType + "', " + i + ");\" onchange='CheckChoiceConditionalLogicDependency(this);' class='field-choice-input field-choice-text' />";
+        str += "<input type='text' id='"+ inputType + "_choice_value_" + i + "' value=\"" + value.replace(/"/g, "&quot;") + "\" onkeyup=\"SetFieldChoice('" + inputType + "', " + i + ");\" onchange='CheckChoiceConditionalLogicDependency(this);' class='field-choice-input field-choice-value' />";
         str += "<input type='text' id='"+ inputType + "_choice_price_" + i + "' value=\"" + price.replace(/"/g, "&quot;") + "\" onchange=\"SetFieldChoice('" + inputType + "', " + i + ");\" class='field-choice-input field-choice-price' />";
 
-		if(window["gform_append_field_choice_option_" + field.type])
+        if(window["gform_append_field_choice_option_" + field.type])
             str += window["gform_append_field_choice_option_" + field.type](field, i);
+
+        str += gform.applyFilters('gform_append_field_choice_option', '', field, i);
 
 		str += "<img src='" + imagesUrl + "/add.png' class='add_field_choice' title='<?php _e("add another choice", "gravityforms") ?>' alt='<?php _e("add another choice", "gravityforms") ?>' style='cursor:pointer; margin:0 3px;' onclick=\"InsertFieldChoice(" + (i+1) + ");\" />";
 
@@ -921,8 +894,7 @@ function LoadMessageVariables(){
 }
 
 </script>
-<script type="text/javascript" src="<?php echo GFCommon::get_base_url() ?>/js/form_editor.js?version=<?php echo GFCommon::$version ?>"></script>
 
-<?php
-    do_action("gform_editor_js");
-?>
+<?php wp_print_scripts(array('gform_form_editor')); ?>
+
+<?php do_action("gform_editor_js"); ?>

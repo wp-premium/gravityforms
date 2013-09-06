@@ -96,7 +96,7 @@ class RGXML{
     }
 
     private function unserialize_node($values, $index){
-        $current = $values[$index];
+        $current = isset($values[$index]) ? $values[$index] : false;
 
         //initializing current object
         $obj = array();
@@ -119,7 +119,10 @@ class RGXML{
         if(is_array($children)){
             //if all children have the same tag, add them as regular array items (not associative)
             $is_identical_tags = $this->has_identical_tags($children);
-            $unserialize_as_array = $is_identical_tags && isset($this->options[$children[0]["tag"]]) && $this->options[$children[0]["tag"]]["unserialize_as_array"];
+            $unserialize_as_array = $is_identical_tags 
+                                    && isset($children[0]["tag"])
+                                    && isset($this->options[$children[0]["tag"]])
+                                    && $this->options[$children[0]["tag"]]["unserialize_as_array"];
 
             //serialize every child and add it to the object (as a regular array item, or as an associative array entry)
             foreach($children as $child){
@@ -134,7 +137,7 @@ class RGXML{
     }
 
     private function get_children($values, $parent_index){
-        $level = $values[$parent_index]["level"] + 1;
+        $level = isset($values[$parent_index]["level"]) ? $values[$parent_index]["level"] + 1 : false;
         $nodes = array();
         for($i= $parent_index + 1, $count = sizeof($values); $i<$count; $i++){
             $current = $values[$i];
@@ -150,7 +153,7 @@ class RGXML{
     }
 
     private function has_identical_tags($nodes){
-        $tag = $nodes[0]["tag"];
+        $tag = isset($nodes[0]["tag"]) ? $nodes[0]["tag"] : false;
         foreach($nodes as $node){
             if($node["tag"] != $tag)
                 return false;

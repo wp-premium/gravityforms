@@ -18,11 +18,10 @@ function gf_apply_rules(formId, fields, isInit){
 function gf_check_field_rule(formId, fieldId, isInit, callback){
 
     //if conditional logic is not specified for that field, it is supposed to be displayed
-    if(!window["gf_form_conditional_logic"][formId] || !window["gf_form_conditional_logic"][formId]["logic"][fieldId])
+    if(!window["gf_form_conditional_logic"] || !window["gf_form_conditional_logic"][formId] || !window["gf_form_conditional_logic"][formId]["logic"][fieldId])
         return "show";
 
     var conditionalLogic = window["gf_form_conditional_logic"][formId]["logic"][fieldId];
-
     var action = gf_get_field_action(formId, conditionalLogic["section"]);
 
     //If section is hidden, always hide field. If section is displayed, see if field is supposed to be displayed or hidden
@@ -68,11 +67,12 @@ function gf_get_field_action(formId, conditionalLogic){
 }
 
 function gf_is_match(formId, rule){
-
+    
+    var isMatch = false;
     var inputs = jQuery("#input_" + formId + "_" + rule["fieldId"] + " input");
 
     if(inputs.length > 0){
-        //handling checkboxes
+        //handling checkboxes/radio
         for(var i=0; i< inputs.length; i++){
             var fieldValue = gf_get_value(jQuery(inputs[i]).val());
 
@@ -85,9 +85,8 @@ function gf_is_match(formId, rule){
             if(!jQuery(inputs[i]).is(":checked"))
                 fieldValue = "";
 
-            if(gf_matches_operation(fieldValue, rule["value"], rule["operator"])){
-                return true;
-            }
+            if(gf_matches_operation(fieldValue, rule["value"], rule["operator"]))
+                isMatch = true;
         }
     }
     else{
@@ -105,9 +104,10 @@ function gf_is_match(formId, rule){
             }
         }
         //If operator is Is Not, none of the value can match
-        return rule["operator"] == "isnot" ? matchCount == values.length : matchCount > 0;
+        isMatch = rule["operator"] == "isnot" ? matchCount == values.length : matchCount > 0;
     }
-    return false;
+    
+    return gform.applyFilters( 'gform_is_value_match', isMatch, formId, rule );
 }
 
 function gf_try_convert_float(text){
@@ -198,7 +198,6 @@ function gf_do_next_button_action(formId, action, fieldId, isInit){
 }
 
 function gf_do_action(action, targetId, useAnimation, defaultValues, isInit, callback){
-
     if(action == "show"){
         if(useAnimation && !isInit){
             if(jQuery(targetId).length > 0)
@@ -209,9 +208,9 @@ function gf_do_action(action, targetId, useAnimation, defaultValues, isInit, cal
         }
         else{
             jQuery(targetId).show();
-            if(callback){
+            if(callback)
                 callback();
-            }
+
         }
     }
     else{
@@ -237,7 +236,6 @@ function gf_do_action(action, targetId, useAnimation, defaultValues, isInit, cal
 }
 
 function gf_reset_to_default(targetId, defaultValue){
-
     //cascading down conditional logic to children to suppport nested conditions
     //text fields and drop downs
     var target = jQuery(targetId).find('select, input[type="text"], input[type="number"], textarea');
@@ -247,10 +245,17 @@ function gf_reset_to_default(targetId, defaultValue){
     target.each(function(){
         var val = "";
 
-        if(jQuery(this).is('select:not([multiple])'))
+        if(jQuery(this).is('select:not([multiple])')){
             val = jQuery(this).find('option').eq(0).val();
+        }
 
-        if(jQuery.isArray(defaultValue)){
+        //get name of previous input field to see if it is the radio button which goes with the "Other" text box
+        //otherwise field is populated with input field name
+        var radio_button_name = jQuery(this).prev("input").attr("value");
+        if(radio_button_name == "gf_other_choice"){
+        	val = jQuery(this).attr("value");
+        }
+        else if(jQuery.isArray(defaultValue)){
             val = defaultValue[target_index];
         }
         else if(jQuery.isPlainObject(defaultValue)){

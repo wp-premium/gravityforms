@@ -1,0 +1,217 @@
+
+table#gquiz-results-summary {
+    table-layout: fixed;
+}
+
+table#gquiz-results-summary td {
+    font-weight: bold;
+    text-align: center;
+    padding: 10px;
+}
+
+table#gquiz-results-summary td.gquiz-results-summary-label {
+    font-size: 1.2em;
+}
+
+table#gquiz-results-summary td.gquiz-results-summary-data {
+    font-size: 2em;
+}
+
+.gquiz-results-summary-data-box {
+    border: 1px solid silver;
+    padding: 10px;
+    width: 75%;
+    margin: auto;
+}
+
+.gquiz-field-precentages-correct {
+    float: left;
+    margin: 15px 0 0 50px;
+}
+
+
+/*-------------*/
+
+#gresults-results-wrapper {
+    float:left;
+    width:100%;
+    height:100%;
+}
+
+#gresults-results {
+    margin-right:300px;
+    min-height:460px;;
+}
+
+.gresults-results-field {
+    margin-bottom:20px;
+}
+
+.gresults-results-field-label {
+    font-size:1.2em;
+    margin-bottom:10px;
+}
+
+.gresults-results-field table{
+    border-bottom: 1px solid silver;
+    border-spacing: 0;
+}
+
+.gresults-results-field table td{
+    padding:5px;
+    border-right: 1px solid silver;
+    border-top: 1px solid silver;
+    text-align:center;
+}
+
+.gresults-results-field-table-header{
+    background-color: #EEEEEE;
+}
+
+.gresults-results-field table td:first-child {
+    border-left: 1px solid silver;
+}
+
+
+ul.gresults-results-field-content,
+ul.gresults-results-field-content li{
+    list-style:disc outside none;
+}
+ul.gresults-results-field-content{
+    margin:10px;
+}
+
+td.gresults-rank-field-score,
+td.gresults-rank-field-rank{
+    width:110px;
+}
+
+.gsurvey-rank-field-results table{
+    width:100%;
+}
+
+
+/* filter box */
+
+#gresults-results-filter {
+    position:absolute;
+    width:270px;
+}
+
+#gresults-results-filter-content {
+    padding:10px;
+}
+
+#gresults-results-filter.sticky {
+    position:fixed;
+    top:30px;
+}
+
+.gresults-results-filter-section-label {
+    font-size:1.2em;
+    font-weight:bold;
+    margin-top:10px;
+    margin-bottom:10px;
+}
+
+#gresults-results-filter label {
+    margin-top:10px;
+    display:block;
+}
+
+.gresults-remove,
+.gresults-add {
+    margin-top:2px;
+    vertical-align:middle;
+    cursor:pointer;
+}
+
+.gresults-add {
+    margin-left:5px;
+}
+
+#gresults-no-filters{
+    color:silver;
+}
+
+.gresults-datepicker,
+.gresults-filter-value,
+.gresults-filter-field {
+    width:150px;
+    box-sizing:border-box;
+    -ms-box-sizing:border-box;
+    -moz-box-sizing:border-box;
+    -webkit-box-sizing:border-box;
+    height: 2em;
+    padding: 2px;
+}
+
+.gresults-filter-operator {
+    width:70px;
+}
+
+#gresults-results-filter-buttons {
+    clear:both;
+    margin-top:20px;
+    width:180px;
+}
+
+.gresults-results-filter-field-label {
+    font-size:1.1em;
+    font-weight:bold;
+    margin-bottom:10px;
+}
+
+.gresults-results-filter-field {
+    margin-bottom:20px;
+}
+
+.gresults-results-filter-field ul li label {
+    margin-left:5px;
+}
+
+.gresults-results-filter-title {
+    font-size:1.5em;
+    font-weight:bold;
+}
+
+#gresults-results-filter {
+    visibility: hidden;
+}
+
+#gresults-results-field-filters-container.resizable {
+    border-bottom:5px double #DDD;
+    min-height:120px;
+}
+
+#gresults-results-field-filters {
+    height:100%;
+    overflow-y:auto;
+}
+
+.ui-resizable {
+    position:relative;
+}
+
+.ui-resizable-handle {
+    position:absolute;
+    font-size:0.1px;
+    z-index:99999;
+    display:block;
+}
+
+.ui-resizable-disabled .ui-resizable-handle, .ui-resizable-autohide .ui-resizable-handle {
+    display:none;
+}
+
+.ui-resizable-s {
+    cursor:s-resize;
+    height:7px;
+    width:100%;
+    bottom:-5px;
+    left:0px;
+}
+
+.gsurvey-likert-score{
+    margin-top:5px;
+}
