@@ -1,7 +1,7 @@
 <?php
 class GFCommon{
 
-    public static $version = "1.7.2";
+    public static $version = "1.7.8";
     public static $tab_index = 1;
     public static $errors = array();
 
@@ -360,7 +360,9 @@ class GFCommon{
                 <option value='{entry_url}'><?php _e("Entry URL", "gravityforms"); ?></option>
                 <option value='{form_id}'><?php _e("Form Id", "gravityforms"); ?></option>
                 <option value='{form_title}'><?php _e("Form Title", "gravityforms"); ?></option>
+                <option value='{referer}'><?php _e("HTTP Referer URL", "gravityforms"); ?></option>
                 <option value='{user_agent}'><?php _e("HTTP User Agent", "gravityforms"); ?></option>
+
 
                 <?php if(self::has_post_field($fields)){ ?>
                     <option value='{post_id}'><?php _e("Post Id", "gravityforms"); ?></option>
@@ -506,6 +508,7 @@ class GFCommon{
         $other_group[] = array('tag' => '{form_id}', 'label' => __("Form Id", "gravityforms"));
         $other_group[] = array('tag' => '{form_title}', 'label' => __("Form Title", "gravityforms"));
         $other_group[] = array('tag' => '{user_agent}', 'label' => __("HTTP User Agent", "gravityforms"));
+        $other_group[] = array('tag' => '{referer}', 'label' => __("HTTP Referer URL", "gravityforms"));
 
         if(self::has_post_field($fields)) {
             $other_group[] = array('tag' => '{post_id}', 'label' => __("Post Id", "gravityforms"));
@@ -777,7 +780,7 @@ class GFCommon{
     public static function replace_variables($text, $form, $lead, $url_encode = false, $esc_html=true, $nl2br = true, $format="html"){
         $text = $nl2br ? nl2br($text) : $text;
 
-        //Replacing field variables
+        //Replacing field variables: {FIELD_LABEL:FIELD_ID} {My Field:2}
         preg_match_all('/{[^{]*?:(\d+(\.\d+)?)(:(.*?))?}/mi', $text, $matches, PREG_SET_ORDER);
         if(is_array($matches))
         {
@@ -928,14 +931,20 @@ class GFCommon{
             $use_admin_label = in_array("admin", $options);
 
             //all submitted fields using text
-            $text = str_replace($match[0], self::get_submitted_fields($form, $lead, $display_empty, !$use_value, $format, $use_admin_label, "all_fields", rgar($match,2)), $text);
+            if (strpos($text, $match[0]) !== false){
+                $text = str_replace($match[0], self::get_submitted_fields($form, $lead, $display_empty, !$use_value, $format, $use_admin_label, "all_fields", rgar($match,2)), $text);
+            }
         }
 
         //all submitted fields including empty fields
-        $text = str_replace("{all_fields_display_empty}", self::get_submitted_fields($form, $lead, true, true, $format, false, "all_fields_display_empty"), $text);
+        if (strpos($text, "{all_fields_display_empty}") !== false){
+            $text = str_replace("{all_fields_display_empty}", self::get_submitted_fields($form, $lead, true, true, $format, false, "all_fields_display_empty"), $text);
+        }
 
         //pricing fields
-        $text = str_replace("{pricing_fields}", self::get_submitted_pricing_fields($form, $lead, $format), $text);
+        if (strpos($text, "{pricing_fields}") !== false){
+            $text = str_replace("{pricing_fields}", self::get_submitted_pricing_fields($form, $lead, $format), $text);
+        }
 
         //form id
         $text = str_replace("{form_id}", $url_encode ? urlencode($form["id"]) : $form["id"], $text);
@@ -962,6 +971,10 @@ class GFCommon{
 
         // hook allows for custom merge tags
         $text = apply_filters('gform_replace_merge_tags', $text, $form, $lead, $url_encode, $esc_html, $nl2br, $format);
+
+        // TODO: Deprecate the 'gform_replace_merge_tags' and replace it with a call to the 'gform_merge_tag_filter'
+        //$text = apply_filters('gform_merge_tag_filter', $text, false, false, false );
+
         return $text;
     }
 
@@ -1394,7 +1407,7 @@ class GFCommon{
         $replyTo = rgempty("replyToField", $form["notification"]) ? rgget("replyTo", $form["notification"]): rgget($form["notification"]["replyToField"], $lead);
 
         if(rgempty("routing", $form["notification"])){
-            $email_to = rgget("to", $form["notification"]);
+            $email_to = rgempty("toField", $form["notification"]) ? rgget("to", $form["notification"]) : rgget("toField", $form["notification"]);
         }
         else{
             $email_to = array();
@@ -1611,15 +1624,21 @@ class GFCommon{
         $bcc = str_replace(" ", "", $bcc);
 
         //invalid to email address or no content. can't send email
-        if(!GFCommon::is_valid_email($to) || (empty($subject) && empty($message)))
+        if(!GFCommon::is_valid_email($to) || (empty($subject) && empty($message))){
+         	GFCommon::log_debug("Cannot send email because either the TO address is invalid or there is no SUBJECT or MESSAGE.");
+         	GFCommon::log_debug(print_r(compact("to", "subject", "message"), true));
             return;
+		}
 
         if(!GFCommon::is_valid_email($from))
             $from = get_bloginfo("admin_email");
 
         //invalid from address. can't send email
-        if(!GFCommon::is_valid_email($from))
+        if(!GFCommon::is_valid_email($from)){
+         	GFCommon::log_debug("Cannot send email because the FROM address is invalid.");
+         	GFCommon::log_debug(print_r(compact("to", "from", "subject"), true));
             return;
+		}
 
         $content_type = $message_format == "html" ? "text/html" : "text/plain";
 
@@ -1642,7 +1661,7 @@ class GFCommon{
         $is_success = false;
         if(!$abort_email){
             GFCommon::log_debug("Sending email via wp_mail()");
-            GFCommon::log_debug(compact("to", "subject", "message", "headers", "attachments", "abort_email"));
+            GFCommon::log_debug(print_r(compact("to", "subject", "message", "headers", "attachments", "abort_email"), true));
             $is_success = wp_mail($to, $subject, $message, $headers, $attachments);
             GFCommon::log_debug("Result from wp_mail(): {$is_success}");
         }
@@ -1679,15 +1698,19 @@ class GFCommon{
 
     public static function current_user_can_any($caps){
 
-        if(!is_array($caps))
-            return current_user_can($caps) || current_user_can("gform_full_access");
-
-        foreach($caps as $cap){
-            if(current_user_can($cap))
-                return true;
+        if(!is_array($caps)){
+            $has_cap = current_user_can($caps) || current_user_can("gform_full_access");
+            return $has_cap;
         }
 
-        return current_user_can("gform_full_access");
+        foreach($caps as $cap){
+            if(current_user_can($cap)){
+                return true;
+            }
+        }
+
+        $has_full_access = current_user_can("gform_full_access");
+        return $has_full_access;
     }
 
     public static function current_user_can_which($caps){
@@ -2074,7 +2097,7 @@ class GFCommon{
                 $tabindex = self::get_tabindex();
                 $choice_value = $choice["value"];
                 if(rgget("enablePrice", $field))
-                    $choice_value .= "|" . GFCommon::to_number($choice["price"]);
+                    $choice_value .= "|" . GFCommon::to_number(rgar($choice,"price"));
 
                 $choices.= sprintf("<li class='gchoice_$id'><input name='input_%s' type='checkbox' $logic_event value='%s' %s id='choice_%s' $tabindex %s /><label for='choice_%s'>%s</label></li>", $input_id, esc_attr($choice_value), $checked, $id, $disabled_text, $id, $choice["text"]);
 
@@ -3594,7 +3617,7 @@ class GFCommon{
                 }
                 $checked = rgpost("gform_payment_method") == "creditcard" || rgempty("gform_payment_method") ? "checked='checked'" : "";
                 $card_radio_button = empty($payment_options) ? "" : "<input type='radio' name='gform_payment_method' id='gform_payment_method_creditcard' value='creditcard' onclick='gformToggleCreditCard();'   {$checked}/>";
-                $card_icons = "{$payment_options}<div class='gform_card_icon_container gform_card_icon_{$card_style}'>{$card_radio_button}{$card_icons}</div><div class='gform_card_fields_container'>";
+                $card_icons = "{$payment_options}<div class='gform_card_icon_container gform_card_icon_{$card_style}'>{$card_radio_button}{$card_icons}</div>";
 
 
 
@@ -3633,7 +3656,7 @@ class GFCommon{
                 $tabindex = self::get_tabindex();
                 $card_name_field = sprintf("<span class='ginput_full{$class_suffix}' id='{$field_id}_5_container'><input type='text' name='input_%d.5' id='%s_5' value='%s' {$tabindex} %s /><label for='%s_5' id='{$field_id}_5_label'>" . apply_filters("gform_card_name_{$form_id}", apply_filters("gform_card_name",__("Cardholder Name", "gravityforms"), $form_id), $form_id) . "</label></span>", $id, $field_id, $card_name, $disabled_text, $field_id);
 
-                return "<div class='ginput_complex{$class_suffix} ginput_container' id='{$field_id}'>" . $card_field . $expiration_field . $security_field . $card_name_field . " </div></div>";
+                return "<div class='ginput_complex{$class_suffix} ginput_container' id='{$field_id}'>" . $card_field . $expiration_field . $security_field . $card_name_field . " </div>";
 
             break;
 
@@ -4720,19 +4743,25 @@ class GFCommon{
 
     public static function evaluate_conditional_logic($logic, $form, $lead) {
 
-        if(!$logic)
+        if(!$logic || !is_array($logic["rules"]))
             return true;
-
+        $entry_meta_keys = array_keys(GFFormsModel::get_entry_meta($form["id"]));
         $match_count = 0;
-        foreach($logic["rules"] as $rule) {
+        if(is_array($logic["rules"])){
+            foreach($logic["rules"] as $rule) {
 
-            $source_field = GFFormsModel::get_field($form, $rule["fieldId"]);
-            $field_value = empty($lead) ? GFFormsModel::get_field_value($source_field, array()) : GFFormsModel::get_lead_field_value($lead, $source_field);
-            $is_value_match = GFFormsModel::is_value_match($field_value, $rule["value"], $rule["operator"], $source_field);
+                if (in_array($rule["fieldId"], $entry_meta_keys)){
+                        $is_value_match = GFFormsModel::is_value_match(rgar($lead,$rule["fieldId"]), $rule["value"], $rule["operator"]);;
+                } else {
+                    $source_field = GFFormsModel::get_field($form, $rule["fieldId"]);
+                    $field_value = empty($lead) ? GFFormsModel::get_field_value($source_field, array()) : GFFormsModel::get_lead_field_value($lead, $source_field);
+                    $is_value_match = GFFormsModel::is_value_match($field_value, $rule["value"], $rule["operator"], $source_field);
+                }
 
-            if($is_value_match)
-                $match_count++;
+                if($is_value_match)
+                    $match_count++;
 
+            }
         }
 
         $do_action = ($logic["logicType"] == "all" && $match_count == sizeof($logic["rules"]) ) || ($logic["logicType"] == "any"  && $match_count > 0);
@@ -5019,8 +5048,6 @@ class GFCommon{
              'value' => ''
           ), $attributes));
 
-        $result = RGFormsModel::matches_operation($merge_tag, $value, $condition);
-
         return RGFormsModel::matches_operation($merge_tag, $value, $condition) ? do_shortcode($content) : '';
 
     }
@@ -5080,6 +5107,8 @@ class GFCommon{
     }
 
     public static function gf_vars($echo = true) {
+        if(!class_exists("RGCurrency"))
+            require_once("currency.php");
 
         $gf_vars = array();
         $gf_vars["active"] = __("Active", "gravityforms");
@@ -5133,6 +5162,7 @@ class GFCommon{
         $gf_vars["mergeTagsTooltip"] = __('<h6>Merge Tags</h6>Merge tags allow you to dynamically populate submitted field values in your form content wherever this merge tag icon is present.', 'gravityforms');
 
         $gf_vars["baseUrl"] = GFCommon::get_base_url();
+        $gf_vars["gf_currency_config"] = RGCurrency::get_currency(GFCommon::get_currency());
         $gf_vars["otherChoiceValue"] = GFCommon::get_other_choice_value();
         $gf_vars["isFormDelete"] = false;
 
@@ -5203,6 +5233,21 @@ class GFCommon{
 
     }
 
+    private static function requires_gf_vars() {
+        $dependent_scripts = array( 'gform_form_admin', 'gform_gravityforms', 'gform_form_editor' );
+        foreach( $dependent_scripts as $script ) {
+            if( wp_script_is( $script ) )
+                return true;
+        }
+        return false;
+    }
+
+    public static function maybe_output_gf_vars() {
+        if( self::requires_gf_vars() ){
+            echo '<script type="text/javascript">' . self::gf_vars(false) . '</script>';
+        }
+    }
+
 }
 
 class GFCategoryWalker extends Walker {
@@ -5230,10 +5275,10 @@ class GFCategoryWalker extends Walker {
      * @param int $depth Depth of category. Used for padding.
      * @param array $args Uses 'selected' and 'show_count' keys, if they exist.
      */
-    function start_el( &$output, $term, $depth) {
+    function start_el( &$output, $object, $depth = 0, $args = array(), $current_object_id = 0) {
         $pad = str_repeat('&nbsp;', $depth * 3);
-        $term->name = "{$pad}{$term->name}";
-        $output[] = $term;
+        $object->name = "{$pad}{$object->name}";
+        $output[] = $object;
     }
 }
 
@@ -5315,8 +5360,13 @@ class GFCache {
         return $success;
     }
 
-    public static function flush() {
+    public static function flush($flush_persistent = false) {
         global $wpdb;
+
+        self::$_cache = array();
+
+        if(false === $flush_persistent)
+            return true;
 
         if (is_multisite()) {
             $sql = "
@@ -5335,8 +5385,6 @@ class GFCache {
         $rows_deleted = $wpdb->query($sql);
 
         $success = $rows_deleted !== false ? true : false;
-
-        self::$_cache = array();
 
         return $success;
     }
@@ -5372,6 +5420,3 @@ class GFCache {
     }
 
 }
-
-
-?>

@@ -49,7 +49,7 @@ if(!GFCommon::current_user_can_any(array("gravityforms_edit_forms", "gravityform
             GFFormDisplay::enqueue_form_scripts($form);
             wp_print_scripts();
 
-            $styles = apply_filters("gform_preview_styles", false, $form);
+            $styles = apply_filters("gform_preview_styles", array(), $form);
             if(!empty($styles)){
                 wp_print_styles($styles);
             }

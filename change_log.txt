@@ -1,4 +1,113 @@
 -------------------------------------------------------------------------------------------------------------------
+Version 1.7.8
+    - Added gform_pre_enqueue_scripts hook so that scripts can be added first if a need exists. This was added in order to resolve conflicts caused by new Picatcha's JS.
+    - Added logging statements
+    - Fixed bad markup with the credit card field
+    - Fixed issues with switched parameters on get_parameter_value() call causing issues with pre-populating certain field types.
+    - Fixed conflict between HTML5 validation and the script to prevent duplicate submissions
+    - Fixed issue with notification processing causing form to display "blank" in the admin under certain conditions.
+    - Updated tooltips to optimize performance when using WPML
+    - Updated 'gform_is_value_match' filter to optionally pass rule object being validated
+    - Updated the results page to display as a view of the gf_entries page so the gravityforms_view_entries capability is required instead of gravityforms_edit_forms (in addition to the gravityforms_{add-on}_results capability)
+	- Fixed issue with entry list page where more entries were being used than the ones selected when applying actions
+    - Fixed issue with multisite upgrades preventing tables from being properly updated.
+    - Fixed conflict on Add-On page preventing add-ons from being installed.
+    - Fixed a PHP notice on the Entry list for imported forms
+    - Fixed issue with conditional logic conflict with calculating field
+    - Fixed issue with user defined product field not formatting correctly
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.7.7
+
+    - Added support for touchscreen devices
+    - Added safeguard to prevent double clicks from creating duplicate entries
+    - Added logging statements around the setup() function
+    - Added support for filtering return of 'has_conditional_logic', useful for developers using conditional logic in objects not checked by Gravity Forms
+    - Added support for updating page title based on settings page
+
+    - Updated multi-site database upgrade procedure so that it only updates all sites in the network on network admin pages
+    - Updated tooltips so that they use the jQuery UI Tooltip script instead of qTip
+    - Updated masked input script to 1.3.1
+    - Updated chosen script to 0.9.12
+    - Updated tooltip function so that it uses a global variable improving performance on sites using WPML
+    - Updated ManageWP hooks so that they fire in the admin and front end
+    - Updated GFFormsModel::search_leads() to accept both a single form id and an array of form ids
+    - Updated dutch translation file
+    - Updated Pot file
+    - Updated Add-On framework with various fixes and enhancements
+
+    - Fixed issue with scheduling when "weekly" is selected.
+    - Fixed an issue where user defined pricing field wouldn't format to currency on AJAX forms after a validation failure
+    - Fixed an issue where the confirmation message would not be displayed below the progress bar on AJAX enabled forms.
+    - Fixed E_STRICT notices under WP 3.6 running on PHP 5.4
+    - Fixed entry meta conditional logic in confirmations and notifications
+    - Fixed issue with pagination on entry list page displaying wrong counts after a search is performed
+    - Fixed notices
+    - Fixed localization issues
+    - Fixed issue with admin_title filter return false instead of original title when not on form settings page
+    - Fixed bug with hidden, single, or calculated product inputs object creation treating the field id as a string instead of number, resulting in the ids of the items in the inputs object not matching the field id
+
+
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.7.6
+    - Fixed "ob_clean(): failed to delete buffer" notice thrown in export
+    - Fixed issue with create_lead() not taking conditional logic into account for calculation fields
+    - Fixed issue with addon framework's checkbox fields onclick attribute
+    - Added JS hook: gform_conditional_logic_fields, allows filtering which fields are avialable for conditional logic (and adding custom fields)
+    - Added JS hook: gform_conditional_logic_operators, allows filtering which conditional logic operators are avialable for the selected field
+    - Added JS hook: gform_conditional_logic_values_input, allows filtering the input provided for the conditional logic comparison value
+    - Various modifications in the conditional logic functions found in form_admin.js to better support the new filters
+    - Added entry meta to conditional logic for confirmations and notifications
+    - Added gform_entry_meta_conditional_logic_confirmations and gform_entry_meta_conditional_logic_notifications so the entry meta filters can be modified depending on their context
+    - Fixed typo in GetLabel function when testing for "undefined", was "undefind"
+    - Fixed issue where not specifying a field label could at times throw javascript errors (merge tags)
+    - Updated merge tag list in admin to use admin label if one exists
+    - Fixed issue where the database wasn't being updated on every site when updating a network activated install of Gravity Forms, causing forms to display an error after updating
+    - Fixed issue with quantity drop down when "enhanced interface" is enabled not calculating the total correctly
+    - Fixed issue with limiting form entries per day not validating the form properly
+    - Added an Add-On Framework to provide tools for developers when creating new Gravity Forms Add-Ons
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.7.5
+    - Fixed issue with new form not displaying fields after first time it was saved
+    - Fixed issue with notification's conditional logic causing notifications to not be sent even when conditional logic was disabled
+	- Updated save_input function to delete from the rg_lead_detail_long table before deleting from rg_lead_detail
+    - Changed GFCache::flush() to prevent deleting persistent transients by default
+    - Various fixes for gaddon support
+    - Updated gf_vars js variable to be automatically included based on script-dependency
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.7.4
+	- Fixed bug in sending notifications when a form field is chosen
+	- Updated POT file
+    - Added support for object methods to the JavaScript hook framework.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.7.3
+    - Changed form switcher so that it redirects to the main form settings tab when switching form while at any other form settings tab
+    - Updated post creation process to create post initially as a draft and then update to desired post status
+	- Fixed issue where merge tag drop down did not display items when a required extended name field was present
+    - Added new hook to prevent new forms from being created in the demo site
+    - Fixed issue with form duplication routine not duplicating confirmations and notifications
+    - Fixed issue with new notifications being created with the "enable conditional logic" checkbox checked
+    - Fixed issue with entry date timezone conversion when exporting entries
+    - Added JS hook: 'gform_is_value_match' allows filtering whether the source and target values are a match
+    - Added PHP hook: 'gform_is_value_match' allows filtering whether the source and target values are a match
+    - Fixed script path issue when registering scripts by using get_base_url()
+    - Added gaddon JS object for use with the upcoming add-on framework
+    - Added support for "tab_label" setting when creating "Settings Pages"
+    - Updated SaveForm() in js.php to delete the data that should no longer be stored in the form meta from the form object: 'notficadtion', 'notifications', 'autoResponder', 'confirmation', and 'confirmations'
+    - Fixed issue with calculating fields not working correctly when it contained another calculated field in its formula
+    - Updated JS GetFieldById() function to allow passing of input ID (i.e. "3.3")
+    - Added JS filter: 'gform_conditional_logic_description' allows you to modify the descriptive HTML (i.e. "Show/hide this field if any/all of the following match")
+    - Added JS filter: 'gform_conditional_object' allows you to modify the conditional logic object based on the object type
+    - Added 'gf_currency_config' to gf_vars array, one step closer to deprecating gf_global array
+    - Fixed several issues with unlocalized strings
+    - Fixed issue with notification logging message
+   - Fixed issue with file uploads where concurrent submissions may result in files being deleted or assigned to the wrong entry
+
+-------------------------------------------------------------------------------------------------------------------
 Version 1.7.2
     - Fixed issue with enqueueing the wrong css file on the preview page
 

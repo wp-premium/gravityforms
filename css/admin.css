@@ -8,7 +8,7 @@
 admin.css
 Gravity Forms Administration Form Styles
 http: //www.gravityforms.com
-updated: April 24, 2013 3:30 PM
+updated: June 13, 2013 12:13 PM
 
 Gravity Forms is a Rocketgenius project
 copyright 2013 Rocketgenius Inc.
@@ -190,7 +190,10 @@ div#field_settings.ui-tabs {
 	margin-top: 10px;
 }
 
-li.field_setting input,
+li.field_setting input[type="text"],
+li.field_setting input[type="password"],
+li.field_setting input[type="number"],
+li.field_setting input[type="email"],
 li.field_setting select {
 	margin-top: 4px;
 }
@@ -211,7 +214,8 @@ label.float_label {
 #gform_fields li{
 	border: 1px solid transparent;
 	padding: 0px 10px 10px 10px;
-	overflow: hidden;
+	overflow-x: hidden;
+	overflow-y: visible;
 }
 
 #gform_fields li ul li {
@@ -609,8 +613,8 @@ ul.gfield_checkbox, ul.gfield_radio {
 	vertical-align: top
 }
 
-.gfield_checkbox li input[type=checkbox],
-.gfield_radio li input[type=radio],
+.gfield_checkbox li input[type="checkbox"],
+.gfield_radio li input[type="radio"],
 .gfield_checkbox li input {
 	float: left;
 	margin-top: 2px
@@ -1319,7 +1323,7 @@ body #namediv div.ginput_complex_admin .ginput_full_admin label {
 	font-size: 11px
 }
 
-body #namediv table.entry-details input[type=text],
+body #namediv table.entry-details input[type="text"],
 body #namediv table.entry-details input {
 	width: 99%
 }
@@ -1350,7 +1354,7 @@ body #namediv .ginput_container ul.gfield_checkbox li input {
 	width: auto !important
 }
 
-body #namediv .ginput_left_admin input[type=text] {
+body #namediv .ginput_left_admin input[type="text"] {
 	width: 99% !important
 }
 
@@ -3842,8 +3846,8 @@ div.wrap.gf_browser_ie .menu.collapsible li {
 	min-width: 20% !important;
 }
 
-div.wrap.gf_browser_ie .gfield_checkbox li input[type=checkbox],
-div.wrap.gf_browser_ie .gfield_radio li input[type=radio],
+div.wrap.gf_browser_ie .gfield_checkbox li input[type="checkbox"],
+div.wrap.gf_browser_ie .gfield_radio li input[type="radio"],
 div.wrap.gf_browser_ie .gfield_checkbox li input {
 	margin-top: 0;
 }
@@ -3916,8 +3920,8 @@ body .gf_browser_chrome .ui-tabs-panel ul li label.inline {
 	margin-top: 1px !important;
 }
 
-div.wrap.gf_browser_chrome .gfield_checkbox li input[type=checkbox],
-div.wrap.gf_browser_chrome .gfield_radio li input[type=radio],
+div.wrap.gf_browser_chrome .gfield_checkbox li input[type="checkbox"],
+div.wrap.gf_browser_chrome .gfield_radio li input[type="radio"],
 div.wrap.gf_browser_chrome .gfield_checkbox li input {
 	margin-left: 2px !important;
 }

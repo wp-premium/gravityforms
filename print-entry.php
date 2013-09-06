@@ -21,7 +21,20 @@ if(!GFCommon::current_user_can_any("gravityforms_view_entries"))
     die(__("You don't have adequate permission to view entries.", "gravityforms"));
 
 $form_id = absint(rgget("fid"));
-$lead_ids = explode(',', rgget("lid"));
+$leads = rgget("lid");
+if(0 == $leads){
+    // get all the lead ids for the current filter / search
+    $filter = rgget("filter");
+    $search = rgget("search");
+    $star = $filter == "star" ? 1 : null;
+    $read = $filter == "unread" ? 0 : null;
+    $status = in_array($filter, array("trash", "spam")) ? $filter : "active";
+    $lead_ids = GFFormsModel::get_lead_ids($form_id, $search, $star, $read, null, null, $status);
+} else {
+    $lead_ids = explode(',', $leads);
+}
+
+
 $page_break = rgget("page_break") ? 'print-page-break' : false;
 
 // sort lead IDs numerically

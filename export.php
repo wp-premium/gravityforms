@@ -20,7 +20,10 @@ class GFExport{
             header('Content-Description: File Transfer');
             header("Content-Disposition: attachment; filename=$filename");
             header('Content-Type: text/plain; charset=' . $charset, true);
-            ob_clean();
+            $buffer_length = ob_get_length(); //length or false if no buffer
+            if ($buffer_length > 1){
+            	ob_clean();
+			}
             GFExport::start_export($form);
 
             die();
@@ -605,7 +608,7 @@ class GFExport{
                         case "date_created" :
                             $lead_gmt_time = mysql2date("G", $lead["date_created"]);
                             $lead_local_time = GFCommon::get_local_timestamp($lead_gmt_time);
-                            $value = date_i18n("Y-m-d H:i:s", $lead_local_time);
+                            $value = date_i18n("Y-m-d H:i:s", $lead_local_time, true);
                         break;
                         default :
                             $long_text = "";

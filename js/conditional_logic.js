@@ -18,7 +18,7 @@ function gf_apply_rules(formId, fields, isInit){
 function gf_check_field_rule(formId, fieldId, isInit, callback){
 
     //if conditional logic is not specified for that field, it is supposed to be displayed
-    if(!window["gf_form_conditional_logic"][formId] || !window["gf_form_conditional_logic"][formId]["logic"][fieldId])
+    if(!window["gf_form_conditional_logic"] || !window["gf_form_conditional_logic"][formId] || !window["gf_form_conditional_logic"][formId]["logic"][fieldId])
         return "show";
 
     var conditionalLogic = window["gf_form_conditional_logic"][formId]["logic"][fieldId];
@@ -67,7 +67,8 @@ function gf_get_field_action(formId, conditionalLogic){
 }
 
 function gf_is_match(formId, rule){
-
+    
+    var isMatch = false;
     var inputs = jQuery("#input_" + formId + "_" + rule["fieldId"] + " input");
 
     if(inputs.length > 0){
@@ -84,9 +85,8 @@ function gf_is_match(formId, rule){
             if(!jQuery(inputs[i]).is(":checked"))
                 fieldValue = "";
 
-            if(gf_matches_operation(fieldValue, rule["value"], rule["operator"])){
-                return true;
-            }
+            if(gf_matches_operation(fieldValue, rule["value"], rule["operator"]))
+                isMatch = true;
         }
     }
     else{
@@ -104,9 +104,10 @@ function gf_is_match(formId, rule){
             }
         }
         //If operator is Is Not, none of the value can match
-        return rule["operator"] == "isnot" ? matchCount == values.length : matchCount > 0;
+        isMatch = rule["operator"] == "isnot" ? matchCount == values.length : matchCount > 0;
     }
-    return false;
+    
+    return gform.applyFilters( 'gform_is_value_match', isMatch, formId, rule );
 }
 
 function gf_try_convert_float(text){

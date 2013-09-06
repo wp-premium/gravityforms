@@ -34,6 +34,10 @@ class GFSelectColumns{
                 <?php
                 wp_print_styles(array("wp-admin", "colors-fresh"));
                 wp_print_scripts(array("jquery-ui-sortable"));
+
+                //adds touchscreen support on mobile devices
+                if( wp_is_mobile() )
+                    wp_print_scripts(array("jquery-touch-punch"));
                 ?>
 
                 <style type="text/css">

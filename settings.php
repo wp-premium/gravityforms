@@ -5,8 +5,24 @@ class GFSettings{
     public static $addon_pages = array();
 
     public static function add_settings_page($name, $handler, $icon_path){
+        
+        // if name is an array, assume that an array of args is passed
+        if( is_array( $name ) ) {
+            
+            extract( wp_parse_args( $name, array(
+                'name' => '',
+                'tab_label' => '',
+                'handler' => false,
+                'icon_path' => ''
+            ) ) );
+            
+        }
+            
+        if( !isset( $tab_label ) || !$tab_label )
+            $tab_label = $name;
+        
         add_action("gform_settings_" . str_replace(" " , "_", $name), $handler);
-        self::$addon_pages[$name] = array("name" => $name, "icon" => $icon_path);
+        self::$addon_pages[$name] = array("name" => $name, "tab_label" => $tab_label, "icon" => $icon_path);
     }
 
     public static function settings_page() {
@@ -240,7 +256,7 @@ class GFSettings{
                 <br/><br/>
                 <p class="submit" style="text-align: left;">
                 <?php
-                $save_button = '<input type="submit" name="submit" value="' . __("Save Settings", "gravityforms"). '" class="button-primary gf_settings_savebutton"/>';
+                $save_button = '<input type="submit" name="submit" value="' . __("Save Settings", "gravityforms"). '" class="button-primary gfbutton"/>';
                 echo apply_filters("gform_settings_save_button", $save_button);
                 ?>
                 </p>
@@ -393,21 +409,23 @@ class GFSettings{
 
         //build left side options, always have GF Settings first and Uninstall last, put add-ons in the middle
         $setting_tabs = array("10" => array("name" => "settings", "label" => __("Settings", "gravityforms")));
-        $start_add_on_location = 11;
-        $i = 0;
+        
         if(!empty(self::$addon_pages)){
-			$sorted_addons = self::$addon_pages;
+			
+            $sorted_addons = self::$addon_pages;
 			asort($sorted_addons);
+            
 			//add add-ons to menu
-			$count = sizeof($sorted_addons);
-            for($i = 0; $i<$count; $i++){
-                $addon_keys = array_keys($sorted_addons);
-                $addon = $addon_keys[$i];
-                $setting_tabs[$start_add_on_location + $i] = array("name" => urlencode($addon) , "label" => __(esc_html($addon), "gravityforms"));
+            foreach( $sorted_addons as $sorted_addon ) {
+                $setting_tabs[] = array(
+                    "name" => urlencode($sorted_addon["name"]) , 
+                    "label" => __(esc_html( $sorted_addon["tab_label"] ), "gravityforms")
+                    );
             }
 
 		}
-      	$setting_tabs[$start_add_on_location + $i] = array("name" => "uninstall" , "label" => __("Uninstall", "gravityforms"));
+        
+      	$setting_tabs[] = array("name" => "uninstall" , "label" => __("Uninstall", "gravityforms") );
 
         $setting_tabs = apply_filters("gform_settings_menu", $setting_tabs);
         ksort($setting_tabs, SORT_NUMERIC);
@@ -455,6 +473,7 @@ class GFSettings{
                 <ul id="gform_tabs" class="gform_tabs">
                     <?php
                     foreach($setting_tabs as $tab){
+                        $name = $tab["label"];
                         ?>
                         <li <?php echo urlencode($current_tab) == $tab["name"] ? "class='active'" : ""?>>
                             <a href="<?php echo add_query_arg(array("subview" => $tab["name"])); ?>"><?php echo $tab["label"] ?></a>
@@ -481,6 +500,7 @@ class GFSettings{
         </div> <!-- / wrap -->
 
         <script type="text/javascript">
+            // JS fix for keep content contained on tabs with less content
             jQuery(document).ready(function($) {
                 $('#gform_tab_container').css( 'minHeight', jQuery('#gform_tabs').height() + 100 );
             });

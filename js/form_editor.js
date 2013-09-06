@@ -1264,22 +1264,6 @@ function EndDuplicateField(field, fieldString, sourceFieldId) {
 
 }
 
-function Copy(variable){
-
-    if(!variable)
-        return variable;
-    else if(typeof variable != 'object')
-        return variable;
-
-    variable = jQuery.isArray(variable) ? variable.slice() : jQuery.extend({}, variable);
-
-    for(i in variable) {
-        variable[i] = Copy(variable[i]);
-    }
-
-    return variable;
-}
-
 function GetFieldsByType(types){
     var fields = new Array();
     for(var i=0; i<form["fields"].length; i++){
@@ -2318,16 +2302,6 @@ function IndexOf(ary, item){
 
     return -1;
 }
-
-function DefaultValueCallback(){
-    SetFieldDefaultValue(jQuery('#field_default_value').val())
-}
-
-function HtmlContentCallback(){
-    SetFieldProperty('content', jQuery('#field_content').val())
-}
-
-
 
 function ToggleCalculationOptions(isEnabled, field) {
 

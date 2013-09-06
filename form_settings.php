@@ -96,7 +96,6 @@ class GFFormSettings {
         <script type="text/javascript">
 
         <?php GFCommon::gf_global(); ?>
-        <?php GFCommon::gf_vars(); ?>
 
         var form = <?php echo json_encode($form); ?>;
         var fieldSettings = [];
@@ -118,7 +117,7 @@ class GFFormSettings {
         /**
         * New Form Settings Functions
         */
-        
+
         function SaveFormSettings() {
 
             hasUnsavedChanges = false;
@@ -132,7 +131,7 @@ class GFFormSettings {
 
             // set fields to empty array to avoid issues with post data being too long
             form.fields = [];
-            
+
             jQuery("#gform_meta").val(jQuery.toJSON(form));
             jQuery("form#gform_form_settings").submit();
 
@@ -277,9 +276,9 @@ class GFFormSettings {
             }
             break;
         }
-        
-        
-        
+
+
+
         /**
         * These variables are used to convenient "wrap" child form settings in the appropriate HTML.
         */
@@ -293,9 +292,9 @@ class GFFormSettings {
                     </table>
                 </div>
             </td>';
-        
-        
-        
+
+
+
         //create form settings table rows and put them into an array
         //form title
         $tr_form_title = '
@@ -361,7 +360,7 @@ class GFFormSettings {
                         'above' => __("Above inputs", "gravityforms")
                         );
         foreach($description_options as $value => $label) {
-            $selected = $form['descriptionPlacement'] == $value ? 'selected="selected"' : '';
+            $selected = rgar( $form, 'descriptionPlacement' ) == $value ? 'selected="selected"' : '';
 
             $description_dd .= '<option value="' . $value . '" ' . $selected . '>' . $label . '</option>';
         }
@@ -760,7 +759,12 @@ class GFFormSettings {
         $form_restrictions = array("limit_entries" => $tr_limit_entries, "number_of_entries" => $tr_limit_entries_count, "entry_limit_message" => $tr_limit_entries_message, "schedule_form" => $tr_schedule_form, "schedule_start" => $tr_schedule_start, "schedule_end" => $tr_schedule_end, "schedule_message" => $tr_schedule_message, "requires_login" => $tr_requires_login, "requires_login_message" => $tr_requires_login_message);
         $form_options = array("honey_pot" => $tr_honey_pot, "enable_animation" => $tr_enable_animation);
 
-        $form_settings = array("Form Basics" => $form_basics, "Form Layout" => $form_layout, "Form Button" => $form_button, "Restrictions" => $form_restrictions, "Form Options" => $form_options);
+        $form_settings = array(
+            __("Form Basics", "gravityforms") => $form_basics,
+            __("Form Layout", "gravityforms") => $form_layout,
+            __("Form Button", "gravityforms") => $form_button,
+            __("Restrictions", "gravityforms") => $form_restrictions,
+            __("Form Options", "gravityforms") => $form_options);
 
         $form_settings = apply_filters("gform_form_settings", $form_settings, $form);
         ?>
@@ -816,7 +820,7 @@ class GFFormSettings {
 
                 <?php wp_nonce_field("gform_save_form_settings_{$form_id}", 'gform_save_form_settings'); ?>
                 <input type="hidden" id="gform_meta" name="gform_meta" />
-                <input type="button" id="gform_save_settings" name="gform_save_settings" value="Update Form Settings" class="button-primary gfbutton" onclick="SaveFormSettings();" />
+                <input type="button" id="gform_save_settings" name="gform_save_settings" value="<?php _e('Update Form Settings', 'gravityforms'); ?>" class="button-primary gfbutton" onclick="SaveFormSettings();" />
 
             </form>
 
@@ -857,7 +861,6 @@ class GFFormSettings {
         <?php $form = GFFormsModel::get_form_meta($form_id); ?>
 
         <script type="text/javascript">
-            <?php GFCommon::gf_vars(); ?>
             var form = <?php echo json_encode($form); ?>;
         </script>
 
@@ -887,16 +890,18 @@ class GFFormSettings {
         $confirmation = self::handle_confirmation_edit_submission( rgar($form["confirmations"], $confirmation_id), $form );
         $confirmation_ui_settings = self::get_confirmation_ui_settings($confirmation);
 
+        $entry_meta = GFFormsModel::get_entry_meta($form_id);
+        $entry_meta = apply_filters("gform_entry_meta_conditional_logic_confirmations", $entry_meta, $form, $confirmation_id);
+
         self::page_header(__('Confirmations', 'gravityforms'));
 
         ?>
 
         <script type="text/javascript">
 
-            <?php GFCommon::gf_vars(); ?>
-
             var confirmation = <?php echo $confirmation ? json_encode($confirmation) : 'new ConfirmationObj()' ?>;
             var form = <?php echo json_encode($form); ?>;
+            var entry_meta = <?php echo GFCommon::json_encode($entry_meta) ?>;
 
             jQuery(document).ready(function($){
 
@@ -963,7 +968,7 @@ class GFFormSettings {
                     </table>
                 </div>
             </td>';
-            
+
         $ui_settings = array();
         $confirmation_type = rgar($confirmation, 'type') ? rgar($confirmation, 'type') : 'message';
         $is_valid = !empty(GFCommon::$errors);
@@ -1059,7 +1064,7 @@ class GFFormSettings {
             <?php echo $subsetting_close; ?>
         </tr> <!-- / confirmation use querystring -->
         <?php $ui_settings['confirmation_querystring'] = ob_get_contents(); ob_clean(); ?>
-        
+
 
         <tr <?php echo rgget('isDefault', $confirmation) ? 'style="display:none;"' : ''; ?> >
             <th><?php _e('Conditional Logic', 'gravityforms'); ?></th>
@@ -1381,7 +1386,8 @@ class GFConfirmationTable extends WP_List_Table {
 
             <?php
             if(is_array($actions) && !empty($actions)) {
-                $last_key = array_pop(array_keys($actions));
+                $keys = array_keys($actions);
+                $last_key = array_pop($keys);
                 foreach($actions as $key => $html) {
                     $divider = $key == $last_key ? '' : " | ";
                     ?>

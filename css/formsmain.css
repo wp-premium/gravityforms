@@ -4,7 +4,7 @@
 Gravity Forms Front End Form Styles
 Version 1.7
 http: //www.gravityforms.com
-updated: April 22, 2013 5:19 PM
+updated: June 3, 2013 5:41 PM
 
 Gravity Forms is a Rocketgenius project
 copyright 2013 Rocketgenius Inc.
@@ -471,7 +471,7 @@ html>body .entry ul,
 
 .gform_wrapper ul.gfield_checkbox,
 .gform_wrapper ul.gfield_radio {
-	margin: 6px 0; 
+	margin: 6px 0;
 	padding: 0;
 }
 
@@ -1538,6 +1538,7 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
 }
 
 .gform_wrapper .chzn-container .chzn-results li {
+    display:none;
 	line-height: 80%;
 	padding: 7px 7px 8px;
 	margin: 0;
@@ -1546,6 +1547,7 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
 
 .gform_wrapper .chzn-container .chzn-results .active-result {
 	cursor: pointer;
+	display: list-item;
 }
 
 .gform_wrapper .chzn-container .chzn-results .highlighted {
@@ -1707,7 +1709,7 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
 .gform_wrapper div.gform_card_icon {
 	margin-right: 4px;
 	text-indent: -9000px;
-	background-image: url(../images/gf_creditcard_icons.png);
+	background-image: url(../images/gf-creditcard-icons.png);
 	background-repeat: no-repeat;
 	width: 36px;
 	height: 32px;
@@ -1919,7 +1921,7 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
 .gform_wrapper .ginput_complex .ginput_cardinfo_right span.ginput_card_security_code_icon {
 	width: 32px;
 	height: 23px;
-	background-image: url(../images/gf_creditcard_icons.png);
+	background-image: url(../images/gf-creditcard-icons.png);
 	background-repeat: no-repeat;
 	background-position: 0 -128px;
 	position: relative;
@@ -1929,4 +1931,11 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
 	display: inline-block;
 	zoom: 1;
 	*display: inline;
+}
+
+/* fix recaptcha line height issue ------------------------------------------------------*/
+
+body #content .entry-content .gform_wrapper form .gform_body .gform_fields .gfield .ginput_container #recaptcha_widget_div #recaptcha_area .recaptchatable tbody tr td .recaptcha_input_area,
+body .gform_wrapper form .gform_body .gform_fields .gfield .ginput_container #recaptcha_widget_div #recaptcha_area .recaptchatable tbody tr td .recaptcha_input_area {
+	line-height: 1em !important;
 }

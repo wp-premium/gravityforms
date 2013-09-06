@@ -4,7 +4,7 @@
 rtl.css
 Gravity Forms RTL Language Support
 http://www.gravityforms.com
-updated: April 23, 2013 11:09 AM
+updated: May 7, 2013 10:52 PM
 
 Gravity Forms is a Rocketgenius project
 copyright 2013 Rocketgenius Inc.
@@ -400,7 +400,7 @@ html[dir="rtl"] div#preview_hdr span.actionlinks {
 
 html[dir="rtl"] div#preview_hdr div:first-child {
 	background-position: right center !important;
-	padding-left: 10px !important;;
+	padding-left: 10px !important;
 	padding-right: 26px !important;
 }
 

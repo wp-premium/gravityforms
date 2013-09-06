@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms
 Plugin URI: http://www.gravityforms.com
 Description: Easily create web forms and manage form entries within the WordPress admin.
-Version: 1.7.2
+Version: 1.7.8
 Author: rocketgenius
 Author URI: http://www.rocketgenius.com
 
@@ -102,6 +102,7 @@ class GFForms {
     public static function init(){
 
         add_filter("gform_logging_supported", array("RGForms", "set_logging_supported"));
+        add_action( 'admin_head', array( 'GFCommon', 'maybe_output_gf_vars' ) );
 
         self::register_scripts();
 
@@ -135,6 +136,9 @@ class GFForms {
 
                     add_action('admin_footer',  array('RGForms', 'check_upload_folder'));
                     add_action('wp_dashboard_setup', array('RGForms', 'dashboard_setup'));
+
+                    // Support modifying the admin page title for settings
+                    add_filter( 'admin_title' , array( __class__, 'modify_admin_title' ), 10, 2 );
 
                     //Adding "embed form" button
                     add_action('media_buttons', array('RGForms', 'add_form_button'), 20);
@@ -193,7 +197,7 @@ class GFForms {
 
                     }
 
-                    add_filter("plugins_api", array("RGForms", "get_addon_info"), 10, 3);
+                    add_filter("plugins_api", array("RGForms", "get_addon_info"), 100, 3);
                     add_action('after_plugin_row_gravityforms/gravityforms.php', array('RGForms', 'plugin_row') );
                     add_action('install_plugins_pre_plugin-information', array('RGForms', 'display_changelog'));
                     add_filter('plugin_action_links', array('RGForms', 'plugin_settings_link'),10,2);
@@ -204,18 +208,17 @@ class GFForms {
         else{
             add_action('wp_enqueue_scripts', array('RGForms', 'enqueue_scripts'));
             add_action('wp', array('RGForms', 'ajax_parse_request'), 10);
-
-            // ManageWP premium update filters
-            add_filter( 'mwp_premium_update_notification', array('RGForms', 'premium_update_push') );
-            add_filter( 'mwp_premium_perform_update', array('RGForms', 'premium_update') );
         }
 
         add_shortcode('gravityform', array('RGForms', 'parse_shortcode'));
         add_shortcode('gravityforms', array('RGForms', 'parse_shortcode'));
+
+        // ManageWP premium update filters
+        add_filter( 'mwp_premium_update_notification', array('RGForms', 'premium_update_push') );
+        add_filter( 'mwp_premium_perform_update', array('RGForms', 'premium_update') );
     }
 
-    public static function set_logging_supported($plugins)
-    {
+    public static function set_logging_supported($plugins){
         $plugins["gravityforms"] = "Gravity Forms Core";
         return $plugins;
     }
@@ -269,190 +272,35 @@ class GFForms {
     public static function setup($force_setup = false){
         global $wpdb;
 
-        $version = GFCommon::$version;
+        if(get_option("rg_form_version") != GFCommon::$version || $force_setup){
+            $blog_str = "Blog " . get_current_blog_id();
+            GFCommon::log_debug("{$blog_str} - Starting Setup.");
+            GFCommon::log_debug("{$blog_str} - Previous GF Version: " . get_option("rg_form_version"));
+            GFCommon::log_debug("{$blog_str} - Current GF Version: " . GFCommon::$version);
 
-        if(get_option("rg_form_version") != $version || $force_setup){
+            require_once(ABSPATH . '/wp-admin/includes/plugin.php');
 
-            $error = "";
-            if(!self::has_database_permission($error)){
-                ?>
-                <div class='error' style="padding:15px;"><?php echo $error?></div>
-                <?php
+            if(is_plugin_active_for_network("gravityforms/gravityforms.php") ){
+
+                if(self::start_multisite_setup($force_setup))
+                {
+                    //if gravity forms is network activated, run the database setup for every site
+                    $sql = $wpdb->prepare("SELECT blog_id FROM $wpdb->blogs WHERE site_id = %d", $wpdb->siteid);
+                    GFCommon::log_debug("Installing multisite. SQL: {$sql}");
+                    $blog_ids = $wpdb->get_col( $sql );
+                    GFCommon::log_debug("Blog Ids: " . print_r($blog_ids, true));
+
+                    foreach($blog_ids as $id){
+                        self::setup_site($id);
+                    }
+
+                    self::finish_multisite_setup();
+                }
+
             }
-
-            require_once(ABSPATH . '/wp-admin/includes/upgrade.php');
-
-            if ( ! empty($wpdb->charset) )
-                $charset_collate = "DEFAULT CHARACTER SET $wpdb->charset";
-            if ( ! empty($wpdb->collate) )
-                $charset_collate .= " COLLATE $wpdb->collate";
-
-            //Fixes issue with dbDelta lower-casing table names, which cause problems on case sensitive DB servers.
-            add_filter( 'dbdelta_create_queries', array("RGForms", "dbdelta_fix_case"));
-
-            //------ FORM -----------------------------------------------
-            $form_table_name = RGFormsModel::get_form_table_name();
-            $sql = "CREATE TABLE " . $form_table_name . " (
-                  id mediumint(8) unsigned not null auto_increment,
-                  title varchar(150) not null,
-                  date_created datetime not null,
-                  is_active tinyint(1) not null default 1,
-                  PRIMARY KEY  (id)
-                ) $charset_collate;";
-            dbDelta($sql);
-
-            //droping table that was created by mistake in version 1.6.3.2
-            $wpdb->query("DROP TABLE IF EXISTS A" . $form_table_name);
-
-            //------ META -----------------------------------------------
-            $meta_table_name = RGFormsModel::get_meta_table_name();
-            $sql = "CREATE TABLE " . $meta_table_name . " (
-                  form_id mediumint(8) unsigned not null,
-                  display_meta longtext,
-                  entries_grid_meta longtext,
-                  confirmations longtext,
-                  notifications longtext,
-                  PRIMARY KEY  (form_id)
-                ) $charset_collate;";
-            dbDelta($sql);
-
-            //droping outdated form_id index (if one exists)
-            self::drop_index($meta_table_name, 'form_id');
-
-            //------ FORM VIEW -----------------------------------------------
-            $form_view_table_name = RGFormsModel::get_form_view_table_name();
-            $sql = "CREATE TABLE " . $form_view_table_name . " (
-                  id bigint(20) unsigned not null auto_increment,
-                  form_id mediumint(8) unsigned not null,
-                  date_created datetime not null,
-                  ip char(15),
-                  count mediumint(8) unsigned not null default 1,
-                  PRIMARY KEY  (id),
-                  KEY form_id (form_id)
-                ) $charset_collate;";
-            dbDelta($sql);
-
-            //------ LEAD -----------------------------------------------
-            $lead_table_name = RGFormsModel::get_lead_table_name();
-            $sql = "CREATE TABLE " . $lead_table_name . " (
-                  id int(10) unsigned not null auto_increment,
-                  form_id mediumint(8) unsigned not null,
-                  post_id bigint(20) unsigned,
-                  date_created datetime not null,
-                  is_starred tinyint(1) not null default 0,
-                  is_read tinyint(1) not null default 0,
-                  ip varchar(39) not null,
-                  source_url varchar(200) not null default '',
-                  user_agent varchar(250) not null default '',
-                  currency varchar(5),
-                  payment_status varchar(15),
-                  payment_date datetime,
-                  payment_amount decimal(19,2),
-                  transaction_id varchar(50),
-                  is_fulfilled tinyint(1),
-                  created_by bigint(20) unsigned,
-                  transaction_type tinyint(1),
-                  status varchar(20) not null default 'active',
-                  PRIMARY KEY  (id),
-                  KEY form_id (form_id),
-                  KEY status (status)
-                ) $charset_collate;";
-           dbDelta($sql);
-
-           //------ LEAD NOTES ------------------------------------------
-            $lead_notes_table_name = RGFormsModel::get_lead_notes_table_name();
-            $sql = "CREATE TABLE " . $lead_notes_table_name . " (
-                  id int(10) unsigned not null auto_increment,
-                  lead_id int(10) unsigned not null,
-                  user_name varchar(250),
-                  user_id bigint(20),
-                  date_created datetime not null,
-                  value longtext,
-                  PRIMARY KEY  (id),
-                  KEY lead_id (lead_id),
-                  KEY lead_user_key (lead_id,user_id)
-                ) $charset_collate;";
-           dbDelta($sql);
-
-            //------ LEAD DETAIL -----------------------------------------
-            $lead_detail_table_name = RGFormsModel::get_lead_details_table_name();
-            $sql = "CREATE TABLE " . $lead_detail_table_name . " (
-                  id bigint(20) unsigned not null auto_increment,
-                  lead_id int(10) unsigned not null,
-                  form_id mediumint(8) unsigned not null,
-                  field_number float not null,
-                  value varchar(". GFORMS_MAX_FIELD_LENGTH ."),
-                  PRIMARY KEY  (id),
-                  KEY form_id (form_id),
-                  KEY lead_id (lead_id),
-                  KEY lead_field_number (lead_id,field_number)
-                ) $charset_collate;";
-            dbDelta($sql);
-
-            //------ LEAD DETAIL LONG -----------------------------------
-            $lead_detail_long_table_name = RGFormsModel::get_lead_details_long_table_name();
-
-            $sql = "CREATE TABLE " . $lead_detail_long_table_name . " (
-                  lead_detail_id bigint(20) unsigned not null,
-                  value longtext,
-                  PRIMARY KEY  (lead_detail_id)
-                ) $charset_collate;";
-            dbDelta($sql);
-
-            //droping outdated form_id index (if one exists)
-            self::drop_index($lead_detail_long_table_name, 'lead_detail_key');
-
-            //------ LEAD META -----------------------------------
-            $lead_meta_table_name = RGFormsModel::get_lead_meta_table_name();
-            $sql = "CREATE TABLE " . $lead_meta_table_name . " (
-                  id bigint(20) unsigned not null auto_increment,
-				  form_id mediumint(8) unsigned not null default 0,
-                  lead_id bigint(20) unsigned not null,
-                  meta_key varchar(255),
-                  meta_value longtext,
-                  PRIMARY KEY  (id),
-                  KEY meta_key (meta_key),
-                  KEY lead_id (lead_id),
-				  KEY form_id_meta_key (form_id,meta_key)
-                ) $charset_collate;";
-            dbDelta($sql);
-
-            remove_filter('dbdelta_create_queries', array("RGForms", "dbdelta_fix_case"));
-
-			//fix form_id value needed to update from version 1.6.11
-			self::fix_lead_meta_form_id_values();
-
-            //fix checkbox value. needed for version 1.0 and below but won't hurt for higher versions
-            self::fix_checkbox_value();
-
-            //auto-setting license key based on value configured via the GF_LICENSE_KEY constant or the gf_license_key variable
-            global $gf_license_key;
-            $license_key = defined("GF_LICENSE_KEY") && empty($gf_license_key) ? GF_LICENSE_KEY : $gf_license_key;
-            if(!empty($license_key))
-                update_option("rg_gforms_key", md5($license_key));
-
-            //auto-setting recaptcha keys based on value configured via the constant or global variable
-            global $gf_recaptcha_public_key, $gf_recaptcha_private_key;
-            $private_key = defined("GF_RECAPTCHA_PRIVATE_KEY") && empty($gf_recaptcha_private_key) ? GF_RECAPTCHA_PRIVATE_KEY : $gf_recaptcha_private_key;
-            if(!empty($private_key))
-                update_option("rg_gforms_captcha_private_key", $private_key);
-
-            $public_key = defined("GF_RECAPTCHA_PUBLIC_KEY") && empty($gf_recaptcha_public_key) ? GF_RECAPTCHA_PUBLIC_KEY : $gf_recaptcha_public_key;
-            if(!empty($public_key))
-                update_option("rg_gforms_captcha_public_key", $public_key);
-
-            //Auto-importing forms based on GF_IMPORT_FILE AND GF_THEME_IMPORT_FILE
-            if(defined("GF_IMPORT_FILE") && !get_option("gf_imported_file")){
-                GFExport::import_file(GF_IMPORT_FILE);
-                update_option("gf_imported_file", true);
+            else{
+                self::setup_site();
             }
-
-            //adds empty index.php files to upload folders. only for v1.5.2 and below
-            if(version_compare(get_option("rg_form_version"), "1.6", "<")){
-                self::add_empty_index_files();
-            }
-
-            update_option("rg_form_version", $version);
         }
 
         //Import theme specific forms if configured. Will only import forms once per theme.
@@ -473,6 +321,266 @@ class GFForms {
                 update_option("gf_imported_theme_file", $themes);
             }
         }
+
+    }
+
+    public static function start_multisite_setup($force_setup){
+
+        $can_start = false;
+        GFCommon::log_debug("Starting multisite setup from blog: " . get_current_blog_id());
+
+        //switching to primary blog
+        if(switch_to_blog(BLOG_ID_CURRENT_SITE)){
+
+            GFCommon::log_debug("Switched to primary blog: " . BLOG_ID_CURRENT_SITE);
+
+            $is_doing_setup = self::get_wp_option("gf_doing_setup");
+
+            $is_completed_setup = self::get_wp_option("gf_setup_completed") == GFCommon::$version;
+
+
+            //Can start a multisite setup if the setup has not already started and has not been completed.
+            //Allow setup to start no matter what if "force" mode is specified
+            $can_start = $force_setup || (!$is_doing_setup && !$is_completed_setup);
+
+            if($can_start)
+                update_option("gf_doing_setup", 1);
+
+            GFCommon::log_debug("Is doing setup: {$is_doing_setup}. Last setup version: " . self::get_wp_option("gf_setup_completed") . ". Is setup completed {$is_setup_completed}. Force setup: {$force_setup}. Can start: {$can_start}");
+
+            restore_current_blog();
+        }
+
+        return $can_start;
+    }
+
+    public static function finish_multisite_setup(){
+        GFCommon::log_debug("Finishing multisite setup");
+
+        if(switch_to_blog(BLOG_ID_CURRENT_SITE)){
+
+            GFCommon::log_debug("Switched to main blog: " . BLOG_ID_CURRENT_SITE);
+
+            update_option("gf_setup_completed", GFCommon::$version);
+            update_option("gf_doing_setup", 0);
+            restore_current_blog();
+
+        }
+
+    }
+
+    public static function get_wp_option($option_name){
+        global $wpdb;
+        return $wpdb->get_var($wpdb->prepare("SELECT option_value FROM {$wpdb->prefix}options WHERE option_name=%s", $option_name));
+    }
+
+    public static function setup_site($blog_id=null){
+
+        GFCommon::log_debug("Blog {$blog_id} - Beginning of setup site");
+
+        if(empty($blog_id)){
+            $blog_id = get_current_blog_id();
+        }
+
+        GFCommon::log_debug("Blog {$blog_id} - Trying to switch to blog");
+
+        //if a blog id is specified, switch to it
+        if(MULTISITE && !switch_to_blog($blog_id)){
+            GFCommon::log_debug("Could not switch to blog {$blog_id}");
+            return;
+        }
+
+
+        GFCommon::log_debug("Blog {$blog_id} - Executing database scripts.");
+
+        global $wpdb;
+
+        $error = "";
+        if(!self::has_database_permission($error)){
+            ?>
+            <div class='error' style="padding:15px;"><?php echo $error?></div>
+            <?php
+        }
+
+        require_once(ABSPATH . '/wp-admin/includes/upgrade.php');
+
+        if ( ! empty($wpdb->charset) )
+            $charset_collate = "DEFAULT CHARACTER SET $wpdb->charset";
+        if ( ! empty($wpdb->collate) )
+            $charset_collate .= " COLLATE $wpdb->collate";
+
+        //Fixes issue with dbDelta lower-casing table names, which cause problems on case sensitive DB servers.
+        add_filter( 'dbdelta_create_queries', array("RGForms", "dbdelta_fix_case"));
+
+        //------ FORM -----------------------------------------------
+        $form_table_name = RGFormsModel::get_form_table_name();
+        $sql = "CREATE TABLE " . $form_table_name . " (
+              id mediumint(8) unsigned not null auto_increment,
+              title varchar(150) not null,
+              date_created datetime not null,
+              is_active tinyint(1) not null default 1,
+              PRIMARY KEY  (id)
+            ) $charset_collate;";
+        dbDelta($sql);
+
+        //droping table that was created by mistake in version 1.6.3.2
+        $wpdb->query("DROP TABLE IF EXISTS A" . $form_table_name);
+
+        //------ META -----------------------------------------------
+        $meta_table_name = RGFormsModel::get_meta_table_name();
+        $sql = "CREATE TABLE " . $meta_table_name . " (
+              form_id mediumint(8) unsigned not null,
+              display_meta longtext,
+              entries_grid_meta longtext,
+              confirmations longtext,
+              notifications longtext,
+              PRIMARY KEY  (form_id)
+            ) $charset_collate;";
+        dbDelta($sql);
+
+        //droping outdated form_id index (if one exists)
+        self::drop_index($meta_table_name, 'form_id');
+
+        //------ FORM VIEW -----------------------------------------------
+        $form_view_table_name = RGFormsModel::get_form_view_table_name();
+        $sql = "CREATE TABLE " . $form_view_table_name . " (
+              id bigint(20) unsigned not null auto_increment,
+              form_id mediumint(8) unsigned not null,
+              date_created datetime not null,
+              ip char(15),
+              count mediumint(8) unsigned not null default 1,
+              PRIMARY KEY  (id),
+              KEY form_id (form_id)
+            ) $charset_collate;";
+        dbDelta($sql);
+
+        //------ LEAD -----------------------------------------------
+        $lead_table_name = RGFormsModel::get_lead_table_name();
+        $sql = "CREATE TABLE " . $lead_table_name . " (
+              id int(10) unsigned not null auto_increment,
+              form_id mediumint(8) unsigned not null,
+              post_id bigint(20) unsigned,
+              date_created datetime not null,
+              is_starred tinyint(1) not null default 0,
+              is_read tinyint(1) not null default 0,
+              ip varchar(39) not null,
+              source_url varchar(200) not null default '',
+              user_agent varchar(250) not null default '',
+              currency varchar(5),
+              payment_status varchar(15),
+              payment_date datetime,
+              payment_amount decimal(19,2),
+              transaction_id varchar(50),
+              is_fulfilled tinyint(1),
+              created_by bigint(20) unsigned,
+              transaction_type tinyint(1),
+              status varchar(20) not null default 'active',
+              PRIMARY KEY  (id),
+              KEY form_id (form_id),
+              KEY status (status)
+            ) $charset_collate;";
+       dbDelta($sql);
+
+       //------ LEAD NOTES ------------------------------------------
+        $lead_notes_table_name = RGFormsModel::get_lead_notes_table_name();
+        $sql = "CREATE TABLE " . $lead_notes_table_name . " (
+              id int(10) unsigned not null auto_increment,
+              lead_id int(10) unsigned not null,
+              user_name varchar(250),
+              user_id bigint(20),
+              date_created datetime not null,
+              value longtext,
+              PRIMARY KEY  (id),
+              KEY lead_id (lead_id),
+              KEY lead_user_key (lead_id,user_id)
+            ) $charset_collate;";
+       dbDelta($sql);
+
+        //------ LEAD DETAIL -----------------------------------------
+        $lead_detail_table_name = RGFormsModel::get_lead_details_table_name();
+        $sql = "CREATE TABLE " . $lead_detail_table_name . " (
+              id bigint(20) unsigned not null auto_increment,
+              lead_id int(10) unsigned not null,
+              form_id mediumint(8) unsigned not null,
+              field_number float not null,
+              value varchar(". GFORMS_MAX_FIELD_LENGTH ."),
+              PRIMARY KEY  (id),
+              KEY form_id (form_id),
+              KEY lead_id (lead_id),
+              KEY lead_field_number (lead_id,field_number)
+            ) $charset_collate;";
+        dbDelta($sql);
+
+        //------ LEAD DETAIL LONG -----------------------------------
+        $lead_detail_long_table_name = RGFormsModel::get_lead_details_long_table_name();
+
+        $sql = "CREATE TABLE " . $lead_detail_long_table_name . " (
+              lead_detail_id bigint(20) unsigned not null,
+              value longtext,
+              PRIMARY KEY  (lead_detail_id)
+            ) $charset_collate;";
+        dbDelta($sql);
+
+        //droping outdated form_id index (if one exists)
+        self::drop_index($lead_detail_long_table_name, 'lead_detail_key');
+
+        //------ LEAD META -----------------------------------
+        $lead_meta_table_name = RGFormsModel::get_lead_meta_table_name();
+        $sql = "CREATE TABLE " . $lead_meta_table_name . " (
+              id bigint(20) unsigned not null auto_increment,
+              form_id mediumint(8) unsigned not null default 0,
+              lead_id bigint(20) unsigned not null,
+              meta_key varchar(255),
+              meta_value longtext,
+              PRIMARY KEY  (id),
+              KEY meta_key (meta_key),
+              KEY lead_id (lead_id),
+              KEY form_id_meta_key (form_id,meta_key)
+            ) $charset_collate;";
+        dbDelta($sql);
+
+        GFCommon::log_debug("Blog {$blog_id} - Finished executing database scripts.");
+
+        remove_filter('dbdelta_create_queries', array("RGForms", "dbdelta_fix_case"));
+
+        //fix form_id value needed to update from version 1.6.11
+        self::fix_lead_meta_form_id_values();
+
+        //fix checkbox value. needed for version 1.0 and below but won't hurt for higher versions
+        self::fix_checkbox_value();
+
+        //auto-setting license key based on value configured via the GF_LICENSE_KEY constant or the gf_license_key variable
+        global $gf_license_key;
+        $license_key = defined("GF_LICENSE_KEY") && empty($gf_license_key) ? GF_LICENSE_KEY : $gf_license_key;
+        if(!empty($license_key))
+            update_option("rg_gforms_key", md5($license_key));
+
+        //auto-setting recaptcha keys based on value configured via the constant or global variable
+        global $gf_recaptcha_public_key, $gf_recaptcha_private_key;
+        $private_key = defined("GF_RECAPTCHA_PRIVATE_KEY") && empty($gf_recaptcha_private_key) ? GF_RECAPTCHA_PRIVATE_KEY : $gf_recaptcha_private_key;
+        if(!empty($private_key))
+            update_option("rg_gforms_captcha_private_key", $private_key);
+
+        $public_key = defined("GF_RECAPTCHA_PUBLIC_KEY") && empty($gf_recaptcha_public_key) ? GF_RECAPTCHA_PUBLIC_KEY : $gf_recaptcha_public_key;
+        if(!empty($public_key))
+            update_option("rg_gforms_captcha_public_key", $public_key);
+
+        //Auto-importing forms based on GF_IMPORT_FILE AND GF_THEME_IMPORT_FILE
+        if(defined("GF_IMPORT_FILE") && !get_option("gf_imported_file")){
+            GFExport::import_file(GF_IMPORT_FILE);
+            update_option("gf_imported_file", true);
+        }
+
+        //adds empty index.php files to upload folders. only for v1.5.2 and below
+        if(version_compare(get_option("rg_form_version"), "1.6", "<")){
+            self::add_empty_index_files();
+        }
+
+        update_option("rg_form_version", GFCommon::$version);
+
+        //going back to current blog
+        if (MULTISITE)
+            restore_current_blog();
     }
 
 	//Changes form_id values from default value "0" to the correct value. Neededed when upgrading users from 1.6.11
@@ -534,11 +642,11 @@ class GFForms {
 
         $wp_required_scripts = array("admin-bar", "common", "jquery-color", "utils");
         $gf_required_scripts = array(
-            "common" => array("qtip-init", "sack"),
+            "common" => array("gf_tooltip_init", "sack"),
             "gf_edit_forms" => array("backbone", "editor", "gform_forms", "gform_form_admin", "gform_form_editor", "gform_gravityforms", "gform_json", "gform_menu", "gform_placeholder", "jquery-ui-autocomplete", "jquery-ui-core", "jquery-ui-datepicker", "jquery-ui-sortable", "jquery-ui-tabs", "json2", "media-editor", "media-models", "media-upload", "media-views", "plupload", "plupload-flash", "plupload-html4", "plupload-html5", "plupload-silverlight", "quicktags", "rg_currency", "thickbox", "word-count", "wp-plupload", "wpdialogs-popup", "wplink"),
             "gf_edit_forms_notification" => array("editor", "word-count", "quicktags", "wpdialogs-popup", "media-upload", "wplink", "backbone", "jquery-ui-sortable", "json2", "media-editor", "media-models", "media-views", "plupload", "plupload-flash", "plupload-html4", "plupload-html5", "plupload-silverlight", "wp-plupload", "gform_placeholder", "gform_json", "jquery-ui-autocomplete"),
-            "gf_new_form" => array("thickbox", "jquery-ui-core", "jquery-ui-sortable", "jquery-ui-tabs", "rg_currency", "gforms_gravityforms" ),
-            "gf_entries" => array("thickbox", "gforms_gravityforms", "wp-lists", "gform_json"),
+            "gf_new_form" => array("thickbox", "jquery-ui-core", "jquery-ui-sortable", "jquery-ui-tabs", "rg_currency", "gform_gravityforms" ),
+            "gf_entries" => array("thickbox", "gform_gravityforms", "wp-lists", "gform_json"),
             "gf_settings" => array(),
             "gf_export" => array("gform_form_admin","jquery-ui-datepicker"),
             "gf_help" => array(),
@@ -862,6 +970,30 @@ class GFForms {
         return $parent;
     }
 
+    public static function modify_admin_title( $admin_title, $title ) {
+
+        $subview = rgget( 'subview' );
+        $form_id = rgget( 'id' );
+
+        if( ! $form_id || rgget( 'page' ) != 'gf_edit_forms' || rgget( 'view' ) != 'settings' )
+            return $admin_title;
+
+        require_once( GFCommon::get_base_path() . '/form_settings.php' );
+
+        $setting_tabs = GFFormSettings::get_tabs( $form_id );
+        $page_title = '';
+
+        foreach( $setting_tabs as $tab ) {
+            if( $tab['name'] == $subview )
+                $page_title = $tab['label'];
+        }
+
+        if( $page_title )
+            $admin_title = sprintf( __( '%1$s &lsaquo; %2$s &#8212; WordPress' ), $page_title, $admin_title );
+
+        return $admin_title;
+    }
+
     //Parses the [gravityform shortcode and returns the front end form UI
     public static function parse_shortcode( $attributes, $content = null ) {
 
@@ -907,6 +1039,14 @@ class GFForms {
         $shortcode_string = apply_filters("gform_shortcode_{$action}", $shortcode_string, $attributes, $content);
 
         return $shortcode_string;
+    }
+
+    public static function include_addon_framework() {
+        require_once( GFCommon::get_base_path() . '/includes/addon/class-gf-addon.php' );
+    }
+
+    public static function include_feed_addon_framework() {
+        require_once(GFCommon::get_base_path() . '/includes/addon/class-gf-feed-addon.php' );
     }
 
     //-------------------------------------------------
@@ -1197,22 +1337,21 @@ class GFForms {
 
     public static function register_scripts() {
 
-        wp_register_script('gform_chosen', plugins_url('/js/chosen.jquery.min.js', __FILE__), array('jquery'), GFCommon::$version );
-        wp_register_script('gform_conditional_logic', plugins_url('/js/conditional_logic.js', __FILE__), array('jquery'), GFCommon::$version );
-        wp_register_script('gform_datepicker_init', plugins_url('/js/datepicker.js', __FILE__), array('jquery', 'jquery-ui-datepicker'), GFCommon::$version );
-        wp_register_script('gform_dimensions', plugins_url('/js/jquery.dimensions.js', __FILE__), array('jquery'), GFCommon::$version );
-        wp_register_script('gform_floatmenu', plugins_url('/js/floatmenu_init.js', __FILE__), array('jquery'), GFCommon::$version );
-        wp_register_script('gform_form_admin', plugins_url('/js/form_admin.js', __FILE__), array('jquery', 'jquery-ui-autocomplete'), GFCommon::$version );
-        wp_register_script('gform_form_editor', plugins_url('/js/form_editor.js', __FILE__), array('jquery', 'gform_json'), GFCommon::$version );
-        wp_register_script('gform_forms', plugins_url('/js/forms.js', __FILE__), array('jquery'), GFCommon::$version );
-        wp_register_script('gform_gravityforms', plugins_url('/js/gravityforms.js', __FILE__), array('jquery'), GFCommon::$version );
-        wp_register_script('gform_json', plugins_url('/js/jquery.json-1.3.js', __FILE__), array('jquery'), GFCommon::$version );
-        wp_register_script('gform_masked_input', plugins_url('/js/jquery.maskedinput-1.3.min.js', __FILE__), array('jquery'), GFCommon::$version );
-        wp_register_script('gform_menu', plugins_url('/js/menu.js', __FILE__), array('jquery'), GFCommon::$version );
-        wp_register_script('gform_placeholder', plugins_url('/js/jquery.placeholder.1.2.min.js', __FILE__), array('jquery'), GFCommon::$version );
-        wp_register_script('gform_qtip', plugins_url('/js/jquery.qtip-1.0.0-rc2.min.js', __FILE__), array('jquery'), GFCommon::$version );
-        wp_register_script('gform_qtip_init', plugins_url('/js/qtip_init.js', __FILE__), array('jquery'), GFCommon::$version );
-        wp_register_script('gform_textarea_counter', plugins_url('/js/jquery.textareaCounter.plugin.js', __FILE__), array('jquery'), GFCommon::$version );
+        wp_register_script('gform_chosen', GFCommon::get_base_url() . '/js/chosen.jquery.min.js', array('jquery'), GFCommon::$version );
+        wp_register_script('gform_conditional_logic', GFCommon::get_base_url() . '/js/conditional_logic.js', array('jquery'), GFCommon::$version );
+        wp_register_script('gform_datepicker_init', GFCommon::get_base_url() . '/js/datepicker.js', array('jquery', 'jquery-ui-datepicker'), GFCommon::$version );
+        wp_register_script('gform_dimensions', GFCommon::get_base_url() . '/js/jquery.dimensions.js', array('jquery'), GFCommon::$version );
+        wp_register_script('gform_floatmenu', GFCommon::get_base_url() . '/js/floatmenu_init.js', array('jquery'), GFCommon::$version );
+        wp_register_script('gform_form_admin', GFCommon::get_base_url() . '/js/form_admin.js', array('jquery', 'jquery-ui-autocomplete'), GFCommon::$version );
+        wp_register_script('gform_form_editor', GFCommon::get_base_url() . '/js/form_editor.js', array('jquery', 'gform_json'), GFCommon::$version );
+        wp_register_script('gform_forms', GFCommon::get_base_url() . '/js/forms.js', array('jquery'), GFCommon::$version );
+        wp_register_script('gform_gravityforms', GFCommon::get_base_url() . '/js/gravityforms.js', array('jquery'), GFCommon::$version );
+        wp_register_script('gform_json', GFCommon::get_base_url() . '/js/jquery.json-1.3.js', array('jquery'), GFCommon::$version );
+        wp_register_script('gform_masked_input', GFCommon::get_base_url() . '/js/jquery.maskedinput-1.3.1.min.js', array('jquery'), GFCommon::$version );
+        wp_register_script('gform_menu', GFCommon::get_base_url() . '/js/menu.js', array('jquery'), GFCommon::$version );
+        wp_register_script('gform_placeholder', GFCommon::get_base_url() . '/js/jquery.placeholder.1.2.min.js', array('jquery'), GFCommon::$version );
+        wp_register_script('gf_tooltip_init', GFCommon::get_base_url() . '/js/tooltip_init.js', array('jquery-ui-tooltip'), GFCommon::$version );
+        wp_register_script('gform_textarea_counter', GFCommon::get_base_url() . '/js/jquery.textareaCounter.plugin.js', array('jquery'), GFCommon::$version );
 
         // only required for WP versions prior to 3.3
         wp_register_script("gf_thickbox", GFCommon::get_base_url() . "/js/thickbox.js", null, GFCommon::$version);
@@ -1239,6 +1378,7 @@ class GFForms {
         case 'new_form' :
         case 'form_list':
             $scripts = array(
+                'gform_gravityforms',
                 'gform_json',
                 'gform_form_admin',
                 'thickbox'
@@ -1275,6 +1415,10 @@ class GFForms {
                 'gform_placeholder',
                 'jquery-ui-autocomplete'
                 );
+
+            if ( wp_is_mobile() )
+                $scripts[] = 'jquery-touch-punch';
+
             break;
 
         case 'entry_detail':
@@ -1451,7 +1595,7 @@ class GFForms {
         GFSettings::settings_page();
     }
 
-    public static function add_settings_page($name, $handle, $icon_path=""){
+    public static function add_settings_page( $name, $handle = '', $icon_path = '' ){
         require_once(GFCommon::get_base_path() . "/settings.php");
         GFSettings::add_settings_page($name, $handle, $icon_path);
     }
@@ -1554,15 +1698,21 @@ class GFForms {
 
     public static function all_leads_page(){
 
+
+        $view = rgget("view");
+        $lead_id = rgget('lid');
+
+
         //displaying lead detail page if lead id is in the query string
-        if(rgget('lid') || !rgblank(rgget('pos')))
-        {
+        if($view == 'entry' && (rgget('lid') || !rgblank(rgget('pos')))) {
             require_once(GFCommon::get_base_path() . "/entry_detail.php");
             GFEntryDetail::lead_detail_page();
-        }
-        else{
+        } else if ($view == 'entries' || empty($view)){
             require_once(GFCommon::get_base_path() . "/entry_list.php");
             GFEntryList::all_leads_page();
+        } else {
+            $form_id = rgget('id');
+            do_action("gform_entries_view", $view, $form_id, $lead_id);
         }
     }
 
@@ -1623,11 +1773,20 @@ class GFForms {
     public static function resend_notifications(){
 
         check_admin_referer('gf_resend_notifications', 'gf_resend_notifications');
-
-        $leads = rgpost('leadIds'); // may be a single ID or an array of IDs
-        $leads = !is_array($leads) ? array($leads) : $leads;
-
         $form_id = rgpost('formId');
+        $leads = rgpost('leadIds'); // may be a single ID or an array of IDs
+        if(0 == $leads){
+            // get all the lead ids for the current filter / search
+            $filter = rgpost("filter");
+            $search = rgpost("search");
+            $star = $filter == "star" ? 1 : null;
+            $read = $filter == "unread" ? 0 : null;
+            $status = in_array($filter, array("trash", "spam")) ? $filter : "active";
+            $leads = GFFormsModel::get_lead_ids($form_id, $search, $star, $read, null, null, $status);
+        } else {
+            $leads = !is_array($leads) ? array($leads) : $leads;
+        }
+
         $form = apply_filters("gform_before_resend_notifications_{$form_id}", apply_filters('gform_before_resend_notifications', RGFormsModel::get_form_meta($form_id), $leads), $leads);
 
         if(empty($leads) || empty($form)) {
@@ -1867,6 +2026,14 @@ class GFForms {
                     //remove paging from querystring when changing forms
                     new_query = GF_RemoveQuery("paged", query);
                    	new_query = new_query.replace("gf_new_form", "gf_edit_forms");
+
+                    //When switching forms within any form settings tab, go back to main form settings tab
+                    var is_form_settings = new_query.indexOf("page=gf_edit_forms") >=0 && new_query.indexOf("view=settings");
+                    if(is_form_settings){
+                        //going back to main form settings tab
+                        new_query = "page=gf_edit_forms&view=settings&id=" + id;
+                    }
+
                     document.location = "?" + new_query;
                 }
             }
@@ -1932,7 +2099,10 @@ class GFForms {
 		}
 
 		array_multisort($priorities, SORT_DESC, $menu_items);
-		$last_key = array_pop(array_keys($menu_items));
+
+        $keys = array_keys($menu_items);
+        $last_key = array_pop($keys);  // array_pop(array_keys($menu_items)) causes a Strict Standards warning in WP 3.6 on PHP 5.4
+
 		foreach($menu_items as $key => $menu_item){
             if(is_array($menu_item)){
                 if(GFCommon::current_user_can_any(rgar($menu_item, "capabilities"))){
@@ -1944,6 +2114,7 @@ class GFForms {
                             if(false === GFCommon::current_user_can_any(rgar($sub_menu_items[$k], "capabilities")))
                                 unset($sub_menu_items[$k]);
                         }
+                        $sub_menu_items = array_values($sub_menu_items); //reset numeric keys
                         $count_sub_menu_items = count($sub_menu_items);
                     }
 
@@ -2121,7 +2292,7 @@ class GFForms {
             case "entries" :
                 if(rgget("page") == "gf_new_form")
                     return "gf_toolbar_disabled";
-                else if(rgget("page") == "gf_entries")
+                else if(rgget("page") == "gf_entries" && rgempty("view", $_GET))
                     return "gf_toolbar_active";
 
             break;
