@@ -1671,13 +1671,20 @@ class GFFormsModel {
         return $value;
     }
 
+    public static function maybe_trim_input($value, $form_id, $field){
+        $trim_value = apply_filters("gform_trim_input_value", true, $form_id, $field);
+
+        if($trim_value)
+            $value = is_array($value) ? array_map('trim', $value) : trim($value);
+
+        return $value;
+    }
+
     private static function get_input_value($field, $standard_name, $custom_name = "", $field_values=array(), $get_from_post=true){
         $form_id = rgar($field,"formId");
         if(!empty($_POST["is_submit_" . $form_id]) && $get_from_post){
             $value = rgpost($standard_name);
-            $trim_value = apply_filters("gform_trim_input_value", true, $form_id, $field);
-            if($trim_value)
-                $value = is_array($value) ? array_map('trim', $value) : trim($value);
+            $value = self::maybe_trim_input($value, $form_id, $field);
             return $value;
         }
         else if(rgar($field, "allowsPrepopulate")){
@@ -2133,17 +2140,26 @@ class GFFormsModel {
 
     private static function get_fileupload_value($form_id, $input_name){
         global $_gf_uploaded_files;
-        if(empty($_gf_uploaded_files))
+
+        GFCommon::log_debug("Starting GFFormsModel::get_fileupload_value()");
+
+        if(empty($_gf_uploaded_files)){
+            GFCommon::log_debug("No files uploaded. Exiting GFFormsModel::get_fileupload_value()");
             $_gf_uploaded_files = array();
+        }
+
 
         if(!isset($_gf_uploaded_files[$input_name])){
 
             //check if file has already been uploaded by previous step
             $file_info = self::get_temp_filename($form_id, $input_name);
             $temp_filepath = self::get_upload_path($form_id) . "/tmp/" . $file_info["temp_filename"];
+            GFCommon::log_debug("get_fileupload_value() - temp file path: " . $temp_filepath);
             if($file_info && file_exists($temp_filepath)){
+                GFCommon::log_debug("get_fileupload_value() - moving temp file: " . $temp_filepath);
                 $_gf_uploaded_files[$input_name] = self::move_temp_file($form_id, $file_info);
             } else if(!empty($_FILES[$input_name]["name"])) {
+                GFCommon::log_debug("get_fileupload_value() - uploading file: " . $_FILES[$input_name]["name"]);
                 $_gf_uploaded_files[$input_name] = self::upload_file($form_id, $_FILES[$input_name]);
             }
         }
@@ -2561,9 +2577,8 @@ class GFFormsModel {
 
         $input_name = "input_" . str_replace('.', '_', $input_id);
         $value = rgpost($input_name);
-        $trim_value = apply_filters("gform_trim_input_value", true, $form["id"], $field);
-        if($trim_value)
-            $value = is_array($value) ? array_map('trim', $value) : trim($value);
+
+        $value = self::maybe_trim_input($value, $form["id"], $field);
 
         //ignore file upload when nothing was sent in the admin
         //ignore post fields in the admin
@@ -2699,14 +2714,19 @@ class GFFormsModel {
     public static function upload_file($form_id, $file){
 
         $target = self::get_file_upload_path($form_id, $file["name"]);
-        if(!$target)
+        if(!$target){
+            GFCommon::log_debug("upload_file() - FAILED (Upload folder could not be created.)");
             return "FAILED (Upload folder could not be created.)";
+        }
+
 
         if(move_uploaded_file($file['tmp_name'], $target["path"])){
+            GFCommon::log_debug("upload_file() - setting permissions on " . $target["path"]);
             self::set_permissions($target["path"]);
             return $target["url"];
         }
         else{
+            GFCommon::log_debug("upload_file() - FAILED (Temporary file could not be copied.)");
             return "FAILED (Temporary file could not be copied.)";
         }
     }

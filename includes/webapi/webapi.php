@@ -90,11 +90,11 @@ if (class_exists("GFForms")) {
 
         protected function plugin_settings_init() {
             $subview = rgget("subview");
-            RGForms::add_settings_page( array(
-                'name' => __("Gravity Forms API Settings", "gravityforms"),
+            RGForms::add_settings_page(array(
+                'name'      => __("Gravity Forms API Settings", "gravityforms"),
                 'tab_label' => $this->get_short_title(),
-                'handler' => array($this, 'plugin_settings_page')
-            ) );
+                'handler'   => array($this, 'plugin_settings_page')
+            ));
             if (rgget("page") == "gf_settings" && $subview == $this->get_short_title() && $this->current_user_can_any($this->_capabilities_settings_page)) {
                 require_once(GFCommon::get_base_path() . "/tooltips.php");
             }
@@ -151,13 +151,16 @@ if (class_exists("GFForms")) {
 
         // ------- Plugin settings -------
 
-        public function plugin_settings_title(){
+        public function plugin_settings_title() {
             return "<span><i class='fa fa-cogs'></i> " . __("Gravity Forms API Settings", "gravityforms") . "</span>";
         }
 
         public function plugin_settings_fields() {
-            $max_accounts    = apply_filters("gform_webapi_max_accounts_settings_page", 200);
-            $accounts        = get_users(array("number" => $max_accounts));
+
+            $args = apply_filters("gform_webapi_get_users_settings_page", array("number" => 200));
+
+            $accounts = get_users($args);
+
             $account_choices = array();
             foreach ($accounts as $account) {
                 $account_choices[] = array("label" => $account->user_login, "value" => $account->ID);
@@ -232,7 +235,7 @@ if (class_exists("GFForms")) {
         }
 
         public function settings_requirements_check() {
-            $permalinks_url  = admin_url("options-permalink.php");
+            $permalinks_url = admin_url("options-permalink.php");
             echo "<i class='fa fa-exclamation-triangle gf_invalid'></i> <span class='gf_invalid'>Permalinks are not in the correct format.</span><br /><span class='gf_settings_description'>Change the <a href='{$permalinks_url}'>WordPress Permalink Settings</a> from default to any of the other options to get started.</span>";
         }
 
@@ -543,7 +546,7 @@ if (class_exists("GFForms")) {
 
         public function authorize($caps = array()) {
 
-            if (GFCommon::current_user_can_any($caps)){
+            if (GFCommon::current_user_can_any($caps)) {
 
                 GFCommon::add_api_call();
 
@@ -600,9 +603,9 @@ if (class_exists("GFForms")) {
 
             if (isset($result) && is_wp_error($result)) {
                 $response = $this->get_error_response($result);
-                $status = $this->get_error_status($result);
+                $status   = $this->get_error_status($result);
             } else {
-                $status = 200;
+                $status   = 200;
                 $response = sprintf(__("Feeds deleted successfully: %d", "gravityforms"), $count);
             }
 
@@ -613,7 +616,7 @@ if (class_exists("GFForms")) {
 
             self::authorize("gravityforms_edit_forms");
 
-            $count = 0;
+            $count  = 0;
             $result = array();
             if (empty($feed_id)) {
                 foreach ($feed_data as $feed) {
@@ -631,9 +634,9 @@ if (class_exists("GFForms")) {
 
             if (isset($results) && is_wp_error($result)) {
                 $response = $this->get_error_response($result);
-                $status = $this->get_error_status($result);
+                $status   = $this->get_error_status($result);
             } else {
-                $status = 200;
+                $status   = 200;
                 $response = sprintf(__("Feeds updated: %d", "gravityforms"), $count);
             }
 
@@ -645,7 +648,7 @@ if (class_exists("GFForms")) {
             $this->authorize("gravityforms_edit_forms");
 
             $feed_ids = array();
-            $result = array();
+            $result   = array();
             foreach ($feeds as $feed) {
                 $addon_slug = isset($feed["addon_slug"]) ? $feed["addon_slug"] : rgget("addon");
                 $f_id       = empty($form_id) ? $feed["form_id"] : $form_id;
@@ -660,9 +663,9 @@ if (class_exists("GFForms")) {
             }
             if (is_wp_error($result)) {
                 $response = $this->get_error_response($result);
-                $status = $this->get_error_status($result);
+                $status   = $this->get_error_status($result);
             } else {
-                $status = 201;
+                $status   = 201;
                 $response = $feed_ids;
 
             }
@@ -691,9 +694,9 @@ if (class_exists("GFForms")) {
 
             if (isset($result) && is_wp_error($result)) {
                 $response = $this->get_error_response($result);
-                $status = $this->get_error_status($result);
+                $status   = $this->get_error_status($result);
             } else {
-                $status = 200;
+                $status   = 200;
                 $response = sprintf(__("Forms deleted successfully: %d", "gravityforms"), $count);
 
             }
@@ -709,10 +712,10 @@ if (class_exists("GFForms")) {
 
             if (is_wp_error($result)) {
                 $response = $this->get_error_response($result);
-                $status = $this->get_error_status($result);
+                $status   = $this->get_error_status($result);
             } else {
-                $status = 201;
-                $response   = $result;
+                $status   = 201;
+                $response = $result;
             }
 
             $this->end($status, $response);
@@ -726,9 +729,9 @@ if (class_exists("GFForms")) {
 
             if (is_wp_error($result)) {
                 $response = $this->get_error_response($result);
-                $status = $this->get_error_status($result);
+                $status   = $this->get_error_status($result);
             } else {
-                $status = 200;
+                $status   = 200;
                 $response = empty($entry_id) ? __("Entries updated successfully", "gravityforms") : __("Entry updated successfully", "gravityforms");
             }
 
@@ -743,9 +746,9 @@ if (class_exists("GFForms")) {
 
             if (is_wp_error($form_ids) || count($form_ids) == 0) {
                 $response = $this->get_error_response($form_ids);
-                $status = $this->get_error_status($form_ids);
+                $status   = $this->get_error_status($form_ids);
             } else {
-                $status = 201;
+                $status   = 201;
                 $response = $form_ids;
             }
 
@@ -763,9 +766,9 @@ if (class_exists("GFForms")) {
 
             if (is_wp_error($result)) {
                 $response = $this->get_error_response($result);
-                $status = $this->get_error_status($result);
+                $status   = $this->get_error_status($result);
             } else {
-                $status = 200;
+                $status   = 200;
                 $response = empty($form_id) ? __("Forms updated successfully", "gravityforms") : __("Form updated successfully", "gravityforms");
             }
 
@@ -791,9 +794,9 @@ if (class_exists("GFForms")) {
 
             if (isset($result) && is_wp_error($result)) {
                 $response = $this->get_error_response($result);
-                $status = $this->get_error_status($result);
+                $status   = $this->get_error_status($result);
             } else {
-                $status = 200;
+                $status   = 200;
                 $response = sprintf(__("Entries deleted successfully: %d", "gravityforms"), $count);
             }
 
@@ -803,9 +806,9 @@ if (class_exists("GFForms")) {
         public function get_entries($entry_ids, $form_ids = null, $schema = "", $field_ids = array()) {
 
             $this->authorize("gravityforms_view_entries");
-            $status = 200;
+            $status   = 200;
             $response = array();
-            $result = array();
+            $result   = array();
             if ($entry_ids) {
 
                 if (is_array($entry_ids)) {
@@ -867,7 +870,7 @@ if (class_exists("GFForms")) {
 
             if (is_wp_error($result)) {
                 $response = $this->get_error_response($result);
-                $status = $this->get_error_status($result);
+                $status   = $this->get_error_status($result);
             }
 
             $this->end($status, $response);
@@ -889,14 +892,14 @@ if (class_exists("GFForms")) {
         public function get_forms($form_ids = null, $schema = "") {
 
             $this->authorize("gravityforms_edit_forms");
-            $status = 200;
+            $status   = 200;
             $response = array();
             if (empty($form_ids)) {
                 $forms = RGFormsModel::get_forms(true);
                 foreach ($forms as $form) {
-                    $form_id          = $form->id;
-                    $totals           = GFFormsModel::get_form_counts($form_id);
-                    $form_info        = array(
+                    $form_id            = $form->id;
+                    $totals             = GFFormsModel::get_form_counts($form_id);
+                    $form_info          = array(
                         "id"      => $form_id,
                         "title"   => $form->title,
                         "entries" => rgar($totals, "total")
@@ -914,10 +917,10 @@ if (class_exists("GFForms")) {
                     $result = GFAPI::get_form($form_ids);
                     if (is_wp_error($result)) {
                         $response = $this->get_error_response($result);
-                        $status = $this->get_error_status($result);
-                    } elseif (!$result){
+                        $status   = $this->get_error_status($result);
+                    } elseif (!$result) {
                         $this->die_not_found();
-                    } else{
+                    } else {
                         $response = $result;
                     }
 
@@ -927,7 +930,6 @@ if (class_exists("GFForms")) {
 
             $this->end($status, $response);
         }
-
 
 
         // RESULTS
@@ -1138,7 +1140,7 @@ if (class_exists("GFForms")) {
 
             $form = GFAPI::get_form($form_id);
 
-            if(!$form)
+            if (!$form)
                 self::die_not_found();
 
             // for the Web API return all fields
@@ -1163,7 +1165,7 @@ if (class_exists("GFForms")) {
             // check for valid cached results first
             if (!empty($data) && "complete" == rgar($data, "status") && !$cache_expired) {
                 $results = $data;
-                $status = 200;
+                $status  = 200;
                 if (isset($results["progress"]))
                     unset($results["progress"]);
             } else {
@@ -1323,8 +1325,8 @@ if (class_exists("GFForms")) {
             return $sig;
         }
 
-        public function end($status, $response){
-            $output["status"] = $status;
+        public function end($status, $response) {
+            $output["status"]   = $status;
             $output["response"] = $response;
 
             // PHP > 5.3
@@ -1340,11 +1342,11 @@ if (class_exists("GFForms")) {
         }
 
         public function die_not_authorized() {
-            $this->end(401,  __("Not authorized", "gravityforms"));
+            $this->end(401, __("Not authorized", "gravityforms"));
         }
 
         public function die_permission_denied() {
-            $this->end(401,  __("Permission denied", "gravityforms"));
+            $this->end(401, __("Permission denied", "gravityforms"));
         }
 
         public function die_bad_request() {
@@ -1363,12 +1365,13 @@ if (class_exists("GFForms")) {
             $this->end(500, __("Internal Error", "gravityforms"));
         }
 
-        public function get_error_response($wp_error){
+        public function get_error_response($wp_error) {
             $response["code"]    = $wp_error->get_error_code();
             $response["message"] = $wp_error->get_error_message();
-            $data              = $wp_error->get_error_data();
+            $data                = $wp_error->get_error_data();
             if ($data)
                 $output["data"] = $data;
+
             return $response;
         }
 

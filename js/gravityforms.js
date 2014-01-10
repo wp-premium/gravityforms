@@ -1156,6 +1156,14 @@ var gform = {
 
         });
 
+        gfMultiFileUploader.toggleDisabled = function (settings, disabled){
+            $("#" + settings.browse_button).prop("disabled", disabled);
+        }
+
+        function addMessage(messagesID, message){
+            $("#" + messagesID).prepend("<li>" + message + "</li>");
+        }
+
         uploader.init();
 
         uploader.bind('FilesAdded', function(up, files) {
@@ -1284,13 +1292,7 @@ var gform = {
 
         });
 
-        gfMultiFileUploader.toggleDisabled = function (settings, disabled){
-            $("#" + settings.browse_button).prop("disabled", disabled);
-        }
 
-        function addMessage(messagesID, message){
-            $("#" + messagesID).prepend("<li>" + message + "</li>");
-        }
 
         function getAllFiles(){
             var selector = '#gform_uploaded_files_' + formID,

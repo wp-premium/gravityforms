@@ -905,7 +905,7 @@ class GFEntryList{
                         }
                         ?>
                         <th scope="col" align="right" width="50">
-                            <a title="<?php _e("click to select columns to display" , "gravityforms") ?>" href="<?php echo trailingslashit(site_url()) ?>?gf_page=select_columns&id=<?php echo $form_id ?>&TB_iframe=true&height=365&width=600" class="thickbox entries_edit_icon"><i class=fa-cog"></i></a>
+                            <a title="<?php _e("click to select columns to display" , "gravityforms") ?>" href="<?php echo trailingslashit(site_url()) ?>?gf_page=select_columns&id=<?php echo $form_id ?>&TB_iframe=true&height=365&width=600" class="thickbox entries_edit_icon"><i class="fa fa-cog"></i></a>
                         </th>
                     </tr>
                 </thead>

@@ -578,7 +578,7 @@ Class GFNotification {
         </tr> <!-- / to email -->
         <?php $ui_settings['notification_to_email'] = ob_get_contents(); ob_clean(); ?>
 
-        <?php $email_fields = apply_filters("gform_email_fields_notification_admin_{$form["id"]}", apply_filters("gform_email_fields_notification_admin", GFCommon::get_email_fields($form)) ); ?>
+        <?php $email_fields = apply_filters("gform_email_fields_notification_admin_{$form["id"]}", apply_filters("gform_email_fields_notification_admin", GFCommon::get_email_fields($form), $form), $form); ?>
         <tr id="gform_notification_to_field_container" class="notification_to_container <?php echo $send_to_class ?>" <?php echo $notification_to_type != "field" ? "style='display:none';" : ""?>>
             <?php echo $subsetting_open; ?>
             <th scope="row"><?php _e("Send to Field", "gravityforms") ?></th>
@@ -861,7 +861,7 @@ Class GFNotification {
                             ||
                             (rgpost('gform_notification_to_type') == "field" && (!rgempty("gform_notification_to_field")));
 
-        return $is_valid = apply_filters("gform_is_valid_notification_to", $is_valid, rgpost('gform_notification_to_type'), rgpost("gform_notification_to_email", rgpost("gform_notification_to_field")));
+        return $is_valid = apply_filters("gform_is_valid_notification_to", $is_valid, rgpost('gform_notification_to_type'), rgpost("gform_notification_to_email"), rgpost("gform_notification_to_field"));
     }
 
     private static function get_first_routing_field($form){

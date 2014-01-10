@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms
 Plugin URI: http://www.gravityforms.com
 Description: Easily create web forms and manage form entries within the WordPress admin.
-Version: 1.8
+Version: 1.8.1
 Author: rocketgenius
 Author URI: http://www.rocketgenius.com
 
@@ -96,7 +96,7 @@ if(is_admin() && (RGForms::is_gravity_page() || RGForms::is_gravity_ajax_action(
 
 class GFForms {
 
-    public static $version = '1.8';
+    public static $version = '1.8.1';
 
     public static function has_members_plugin(){
         return function_exists( 'members_get_capabilities' );
@@ -162,10 +162,11 @@ class GFForms {
 
                     require_once(GFCommon::get_base_path() . "/includes/locking/locking.php");
 
-                    if(in_array(RG_CURRENT_PAGE, array('post.php', 'page.php', 'page-new.php', 'post-new.php'))){
+                    if(self::page_supports_add_form_button()){
                         add_action('admin_footer',  array('RGForms', 'add_mce_popup'));
                     }
-                    else if(self::is_gravity_page()){
+
+                    if(self::is_gravity_page()){
                         require_once(GFCommon::get_base_path() . "/tooltips.php");
                         add_action("admin_print_scripts", array('RGForms', 'print_scripts'));
                     }
@@ -331,6 +332,10 @@ class GFForms {
 
             //Auto-importing forms based on GF_IMPORT_FILE AND GF_THEME_IMPORT_FILE
             self::maybe_import_forms();
+
+            if(version_compare(get_option("rg_form_version"), "1.8.0.3", "<" )){
+                delete_transient("gform_update_info");
+            }
 
             update_option("rg_form_version", GFCommon::$version);
 
@@ -1049,13 +1054,19 @@ class GFForms {
     //------------------------------------------------------
     //------------- PAGE/POST EDIT PAGE ---------------------
 
-    //Action target that adds the "Insert Form" button to the post/page edit screen
-    public static function add_form_button(){
+    public static function page_supports_add_form_button(){
         $is_post_edit_page = in_array(RG_CURRENT_PAGE, array('post.php', 'page.php', 'page-new.php', 'post-new.php'));
 
         $display_add_form_button = apply_filters("gform_display_add_form_button", $is_post_edit_page);
 
-        if(!$display_add_form_button)
+        return $display_add_form_button;
+    }
+
+    //Action target that adds the "Insert Form" button to the post/page edit screen
+    public static function add_form_button(){
+
+        $is_add_form_page = self::page_supports_add_form_button();
+        if(!$is_add_form_page)
             return;
 
         // do a version check for the new 3.5 UI
@@ -2466,4 +2477,3 @@ function rgexplode($sep, $string, $count){
     return $ary;
 }
 }
-
