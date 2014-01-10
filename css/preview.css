@@ -36,7 +36,7 @@ div#preview_hdr {
 }
 
 div#preview_hdr div:first-child {
-	background: url(../../../../wp-admin/images/wp-logo.png);
+	background: url(../images/wp-logo.png);
 	background-position: 16px center;
 	background-repeat: no-repeat;
 	padding-left: 36px;

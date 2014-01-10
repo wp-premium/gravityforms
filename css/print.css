@@ -38,7 +38,7 @@ AND ANY CHANGES MADE HERE WILL BE OVERWRITTEN.
 	  	display: block !important
   	}
   	div#print_preview_hdr div:first-child {
-	  	background-image: url(../../../../wp-admin/images/wp-logo.png);
+	  	background-image: url(../images/wp-logo.png);
 	  	background-position: 16px center;
 	  	background-repeat: no-repeat;
 	  	padding-left: 36px
@@ -271,9 +271,9 @@ AND ANY CHANGES MADE HERE WILL BE OVERWRITTEN.
 	table.entry-products td ul.product_options li.lastitem {
 		background-image: url(../images/prodlist_last.png)
 	}
-	
+
 	/* list table styles  ------------------------------------------------------------------------- */
-	
+
 	table.gfield_list td.gfield_list_cell {
 		padding: 8px 0
 	}
@@ -308,7 +308,7 @@ AND ANY CHANGES MADE HERE WILL BE OVERWRITTEN.
 	table.widefat tbody tr td.entry-view-field-value ul li {
 		color: #555 !important
 	}
-	table.widefat tbody tr td.entry-view-field-value table.gfield_list td, 
+	table.widefat tbody tr td.entry-view-field-value table.gfield_list td,
 	table.widefat tbody tr td.entry-view-field-value table.gfield_list th {
     		border-bottom: 1px solid #DFDFDF;
     		padding: 6px 10px

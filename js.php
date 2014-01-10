@@ -53,11 +53,11 @@ function SaveCustomChoices(){
 function InitializeFormConditionalLogic(){
      var canHaveConditionalLogic = GetFirstRuleField() > 0;
     if(canHaveConditionalLogic){
-        jQuery("#form_button_conditional_logic").removeAttr("disabled").attr("checked", form.button.conditionalLogic ? true : false);
+        jQuery("#form_button_conditional_logic").prop("disabled", false).prop("checked", form.button.conditionalLogic ? true : false);
         ToggleConditionalLogic(true, "form_button");
     }
     else{
-        jQuery("#form_button_conditional_logic").attr("disabled", false).attr("checked", false);
+        jQuery("#form_button_conditional_logic").prop("disabled", false).prop("checked", false);
         jQuery("#form_button_conditional_logic_container").show().html("<span class='instruction'><?php _e("To use conditional logic, please create a drop down, checkbox or radio button field.", "gravityforms") ?></span>");
     }
 }
@@ -84,7 +84,7 @@ function InitPaginationOptions(isInit){
     if(jQuery("#pagination_type_none").is(":checked")){
         jQuery(".gform_page_names input").val("");
         jQuery("#percentage_confirmation_page_name").val("");
-        jQuery("#percentage_confirmation_display").attr("checked",false);
+        jQuery("#percentage_confirmation_display").prop("checked",false);
 
         jQuery("#page_names_setting").hide(speed);
         jQuery("#percentage_style_setting").hide(speed);
@@ -108,7 +108,7 @@ function InitPaginationOptions(isInit){
         jQuery("#percentage_confirmation_display_setting").show(speed);
         jQuery("#percentage_confirmation_page_name_setting").show(speed);
 
-        jQuery("#percentage_confirmation_display").attr("checked", form["pagination"] && form["pagination"]["display_progressbar_on_confirmation"] ? true : false);
+        jQuery("#percentage_confirmation_display").prop("checked", form["pagination"] && form["pagination"]["display_progressbar_on_confirmation"] ? true : false);
         //set default text to Completed when displaying progress bar on confirmation is NOT checked
         var completion_text = form["pagination"] && form["pagination"]["display_progressbar_on_confirmation"] ? form["pagination"]["progressbar_completion_text"] : "<?php _e("Completed","gravityforms") ?>";
         jQuery("#percentage_confirmation_page_name").val(completion_text);
@@ -119,7 +119,7 @@ function InitPaginationOptions(isInit){
         jQuery("#percentage_confirmation_display_setting").hide(speed);
         jQuery("#percentage_confirmation_page_name_setting").hide(speed);
         jQuery("percentage_confirmation_page_name").val("");
-        jQuery("#percentage_confirmation_display").attr("checked",false);
+        jQuery("#percentage_confirmation_display").prop("checked",false);
     }
 
     TogglePercentageStyle(isInit);
@@ -127,12 +127,12 @@ function InitPaginationOptions(isInit){
 }
 
 function ShowSettings(element_id){
-    jQuery(".field_selected .field_edit_icon, .field_selected .form_edit_icon").removeClass("edit_icon_collapsed").addClass("edit_icon_expanded").html('<?php _e("Close", "gravityforms") ?>');
+    jQuery(".field_selected .field_edit_icon, .field_selected .form_edit_icon").removeClass("edit_icon_collapsed").addClass("edit_icon_expanded").html('<i class="fa fa-caret-up fa-lg"></i>');
     jQuery("#" + element_id).slideDown();
 }
 
 function HideSettings(element_id){
-    jQuery(".field_edit_icon, .form_edit_icon").removeClass("edit_icon_expanded").addClass("edit_icon_collapsed").html('<?php _e("Edit", "gravityforms") ?>');
+    jQuery(".field_edit_icon, .form_edit_icon").removeClass("edit_icon_expanded").addClass("edit_icon_collapsed").html('<i class="fa fa-caret-down fa-lg"></i>');
     jQuery("#" + element_id).hide();
 }
 
@@ -212,14 +212,14 @@ function SetProductField(field){
 function LoadFieldConditionalLogic(isEnabled, objectType){
     var obj = GetConditionalObject(objectType);
     if(isEnabled){
-        jQuery("#" + objectType + "_conditional_logic").attr("checked", obj.conditionalLogic ? true : false);
-        jQuery("#" + objectType + "_conditional_logic").removeAttr("disabled");
+        jQuery("#" + objectType + "_conditional_logic").prop("checked", obj.conditionalLogic ? true : false);
+        jQuery("#" + objectType + "_conditional_logic").prop("disabled", false);
         ToggleConditionalLogic(true, objectType);
 
 
     }
     else{
-        jQuery("#" + objectType + "_conditional_logic").attr("disabled", true).attr("checked", false);
+        jQuery("#" + objectType + "_conditional_logic").prop("disabled", true).prop("checked", false);
         jQuery("#" + objectType + "_conditional_logic_container").show().html("<span class='instruction'><?php _e("To use conditional logic, please create a drop down, checkbox or radio button field.", "gravityforms") ?></span>");
     }
 }
@@ -257,7 +257,7 @@ function ToggleColumns(isInit){
 
 function DuplicateTitleMessage(){
     jQuery("#please_wait_container").hide();
-    alert('<?php _e("The form title you have entered is already taken. Please enter an unique form title", "gravityforms"); ?>');
+    alert('<?php _e("The form title you have entered is already taken. Please enter a unique form title", "gravityforms"); ?>');
 }
 
 function ValidateForm(){
@@ -309,14 +309,14 @@ function SaveForm(isNew){
     if(!ValidateForm()){
         return false;
     }
-    
+
     // remove data that is no longer stored in the form object (as of 1.7)
     delete form.notification;
     delete form.autoResponder;
     delete form.notifications;
     delete form.confirmation;
     delete form.confirmations;
-    
+
     //updating original json. used when verifying if there has been any changes unsaved changed before leaving the page
     var form_json = jQuery.toJSON(form);
     gforms_original_json = form_json;
@@ -753,8 +753,13 @@ function CanFieldBeAdded(type){
 
 function StartAddField(type){
 
+    if(gf_vars["currentlyAddingField"] == true)
+        return;
+
     if(! CanFieldBeAdded(type))
         return;
+
+    gf_vars["currentlyAddingField"] = true;
 
     var nextId = GetNextFieldId();
     var field = CreateField(nextId, type);
@@ -840,7 +845,7 @@ function GetFieldChoices(field){
             price = "";
 
         str += "<li data-index='" + i + "'>";
-        str += "<img src='" + imagesUrl + "/arrow-handle.png' class='field-choice-handle' alt='<?php _e("Drag to re-order", "gravityforms") ?>' /> ";
+        str += "<i class='fa fa-sort field-choice-handle'></i> ";
         str += "<input type='" + type + "' class='gfield_choice_" + type + "' name='choice_selected' id='" + inputType + "_choice_selected_" + i + "' " + checked + " onclick=\"SetFieldChoice('" + inputType + "', " + i + ");\" /> ";
         str += "<input type='text' id='" + inputType + "_choice_text_" + i + "' value=\"" + field.choices[i].text.replace(/"/g, "&quot;") + "\" onkeyup=\"SetFieldChoice('" + inputType + "', " + i + ");\" onchange='CheckChoiceConditionalLogicDependency(this);' class='field-choice-input field-choice-text' />";
         str += "<input type='text' id='"+ inputType + "_choice_value_" + i + "' value=\"" + value.replace(/"/g, "&quot;") + "\" onkeyup=\"SetFieldChoice('" + inputType + "', " + i + ");\" onchange='CheckChoiceConditionalLogicDependency(this);' class='field-choice-input field-choice-value' />";
@@ -851,10 +856,11 @@ function GetFieldChoices(field){
 
         str += gform.applyFilters('gform_append_field_choice_option', '', field, i);
 
-		str += "<img src='" + imagesUrl + "/add.png' class='add_field_choice' title='<?php _e("add another choice", "gravityforms") ?>' alt='<?php _e("add another choice", "gravityforms") ?>' style='cursor:pointer; margin:0 3px;' onclick=\"InsertFieldChoice(" + (i+1) + ");\" />";
+		str += "<a class='gf_insert_field_choice' onclick=\"InsertFieldChoice(" + (i+1) + ");\"><i class='fa fa-plus-square'></i></a>";
+	
 
         if(field.choices.length > 1 )
-            str += "<img src='" + imagesUrl + "/remove.png' title='<?php _e("remove this choice", "gravityforms") ?>' alt='<?php _e("remove this choice", "gravityforms") ?>' class='delete_field_choice' style='cursor:pointer;' onclick=\"DeleteFieldChoice(" + i + ");\" />";
+            str += "<a class='gf_delete_field_choice' onclick=\"DeleteFieldChoice(" + i + ");\"><i class='fa fa-minus-square'></i></a>";
 
         str += "</li>";
 
@@ -895,6 +901,6 @@ function LoadMessageVariables(){
 
 </script>
 
-<?php wp_print_scripts(array('gform_form_editor')); ?>
+<?php wp_print_scripts( array( 'gform_form_editor' ) ); ?>
 
 <?php do_action("gform_editor_js"); ?>

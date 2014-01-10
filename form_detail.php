@@ -10,9 +10,9 @@ class GFFormDetail{
             return;
 
         $update_result = "";
-        if(rgpost("operation") == "delete"){
-            check_admin_referer('gforms_delete_form', 'gforms_delete_form');
-            RGFormsModel::delete_form($form_id);
+        if(rgpost("operation") == "trash"){
+            check_admin_referer('gforms_trash_form', 'gforms_trash_form');
+            GFFormsModel::trash_form($form_id);
             ?>
                 <script type="text/javascript">
                 jQuery(document).ready(
@@ -86,11 +86,34 @@ class GFFormDetail{
 
                 InsertVariable(element_id, callback);
             }
+
+
+            function IsValidFormula(formula){
+                if(formula == '')
+                    return true;
+                var patt = /{([^}]+)}/i,
+                    exprPatt = /^[0-9 -/*\(\)]+$/i,
+                    expr = formula.replace(/(\r\n|\n|\r)/gm,""),
+                    match;
+                while(match = patt.exec(expr)) {
+                    expr = expr.replace(match[0], 1);
+                }
+                if(exprPatt.test(expr)) {
+                    try {
+                        var r = eval(expr);
+                        return !isNaN(parseFloat(r)) && isFinite(r);
+                    } catch (e) {
+                        return false;
+                    }
+                } else {
+                    return false;
+                }
+            }
         </script>
 
         <?php
 
-        $form = !rgempty("meta",$update_result) ? rgar($update_result, "meta") : RGFormsModel::get_form_meta($form_id);
+        $form = !rgempty("meta",$update_result) ? rgar($update_result, "meta") : GFFormsModel::get_form_meta($form_id);
         $form = RGFormsModel::add_default_properties($form);
 
         if(!isset($form['fields']) || !is_array($form['fields']))
@@ -107,12 +130,10 @@ class GFFormDetail{
 
         <?php echo GFCommon::get_remote_message(); ?>
         <div class="wrap gforms_edit_form <?php echo GFCommon::get_browser_class() ?>">
-
-            <div class="icon32" id="gravity-edit-icon"><br></div>
             <?php if( empty($form_id) ): ?>
                 <h2 class="gf_admin_page_title"><?php _e("New Form", "gravityforms") ?></h2>
             <?php else: ?>
-                <h2 class="gf_admin_page_title"><span><?php _e("Form Editor", "gravityforms") ?></span><span class="gf_admin_page_subtitle"><span class="gf_admin_page_formid">ID: <?php echo $form['id']; ?></span><?php echo $form['title']; ?></span></h2>
+                <h2 class="gf_admin_page_title"><span><?php _e("Form Editor", "gravityforms") ?></span><span class="gf_admin_page_subtitle"><span class="gf_admin_page_formid">ID: <?php echo $form['id']; ?></span><span class="gf_admin_page_formname"><?php _e("Form Name", "gravityforms") ?>: <?php echo $form['title']; ?></span></span></h2>
             <?php endif; ?>
 
             <?php RGForms::top_toolbar() ?>
@@ -131,7 +152,7 @@ class GFFormDetail{
                 case "duplicate_title" :
                     ?>
                     <div class="error_base gform_editor_status" id="after_update_error_dialog">
-                        <?php _e("The form title you have entered is already taken. Please enter an unique form title.", "gravityforms") ?>
+                        <?php _e("The form title you have entered is already taken. Please enter a unique form title.", "gravityforms") ?>
                     </div>
                     <?php
                 break;
@@ -147,9 +168,14 @@ class GFFormDetail{
             }
             ?>
 
-            <form method="post" id="form_delete">
-                <?php wp_nonce_field( 'gforms_delete_form', 'gforms_delete_form' ); ?>
-                <input type="hidden" value="delete" name="operation" />
+            <?php // link to the google webfont library ?>
+            <style type="text/css">
+            	@import url('http://fonts.googleapis.com/css?family=Shadows+Into+Light+Two');
+            </style>
+
+            <form method="post" id="form_trash">
+                <?php wp_nonce_field( 'gforms_trash_form', 'gforms_trash_form' ); ?>
+                <input type="hidden" value="trash" name="operation" />
             </form>
 
             <table width="100%">
@@ -160,9 +186,17 @@ class GFFormDetail{
                         ?>
                         <div id="gform_pagination" class="selectable gform_settings_container" style="display:<?php echo $has_pages ? "block" : "none" ?>;">
                             <div class="settings_control_container">
-                                <a href="javascript:void(0);" class="form_edit_icon edit_icon_collapsed" title="<?php _e("Edit Last Page", "gravityforms"); ?>"><?php _e("Edit", "gravityforms"); ?></a>
+                                <a href="javascript:void(0);" class="form_edit_icon edit_icon_collapsed" title="<?php _e("click to edit page options", "gravityforms"); ?>"><i class='fa fa-caret-down fa-lg'></i></a>
                             </div>
-                            <img src="<?php echo GFCommon::get_base_url() . "/images/gf-pagebreak-first.png"?>" alt="<?php __("First Page Options", "gravityforms") ?>" title="<?php __("First Page Options", "gravityforms") ?>" />
+
+
+
+                            <div class="gf-pagebreak-first gf-pagebreak-container">
+	                            <div class="gf-pagebreak-text-before"><?php _e("begin form", "gravityforms") ?></div>
+	                            <div class="gf-pagebreak-text-main"><span><?php _e("START PAGING", "gravityforms") ?></span></div>
+	                            <div class="gf-pagebreak-text-after"><?php _e("top of the first page", "gravityforms") ?></div>
+                            </div>
+
                             <div id="pagination_settings" style="display: none;">
                                 <ul>
                                     <li style="width:100px; padding:0px;"><a href="#gform_pagination_settings_tab_1"><?php _e("Properties", "gravityforms"); ?></a></li>
@@ -280,7 +314,7 @@ class GFFormDetail{
                             </style>
                             <li id="no-fields">
 
-                                <div class="newform_notice"><?php _e('This form doesn&#39;t have any fields yet. Follow the steps below to get started.'); ?><span></span></div>
+                                <div class="newform_notice"><?php _e("This form doesn't have any fields yet. Follow the steps below to get started.", 'gravityforms'); ?><span></span></div>
 
                                 <?php // first step ?>
 
@@ -295,7 +329,7 @@ class GFFormDetail{
                                 <?php // second step ?>
 
                                 <h4 class="gf_nofield_header gf_nofield_2">2. <?php _e('Click to Add A Field', 'gravityforms'); ?></h4>
-                                <p><?php _e('Once you&#39;ve found the field type you want, click to add it to the form editor here on the left side of your screen.', 'gravityforms'); ?></p>
+                                <p><?php _e("Once you&#39;ve found the field type you want, click to add it to the form editor here on the left side of your screen.", 'gravityforms'); ?></p>
 
                                 <div id="gf_nofield_2_instructions">
                                     <span class="gf_nofield_2_instructions_copy gf_tips"><?php _e('Now your new field magically appears over here.', 'gravityforms'); ?></span>
@@ -348,9 +382,17 @@ class GFFormDetail{
 
                         <div id="gform_last_page_settings" class="selectable gform_settings_container" style="display:<?php echo $has_pages ? "block" : "none" ?>;">
                             <div class="settings_control_container">
-                                <a href="javascript:void(0);" class="form_edit_icon edit_icon_collapsed" title="<?php _e("Edit Last Page", "gravityforms"); ?>"><?php _e("Edit", "gravityforms"); ?></a>
+                                <a href="javascript:void(0);" class="form_edit_icon edit_icon_collapsed" title="<?php _e("Edit Last Page", "gravityforms"); ?>"><i class='fa fa-caret-down fa-lg'></i></a>
                             </div>
-                            <img src="<?php echo GFCommon::get_base_url() . "/images/gf-pagebreak-end.png"?>" alt="<?php __("Last Page Options", "gravityforms") ?>" title="<?php __("Last Page Options", "gravityforms") ?>" />
+
+                            <div class="gf-pagebreak-end gf-pagebreak-container">
+	                            <div class="gf-pagebreak-text-before"><?php _e("end of last page", "gravityforms") ?></div>
+	                            <div class="gf-pagebreak-text-main"><span><?php _e("END PAGING", "gravityforms") ?></span></div>
+	                            <div class="gf-pagebreak-text-after"><?php _e("end of form", "gravityforms") ?></div>
+                            </div>
+
+
+
                             <div id="last_page_settings" style="display:none;">
                                 <ul>
                                     <li style="width:100px; padding:0px;"><a href="#gform_last_page_settings_tab_1"><?php _e("Properties", "gravityforms"); ?></a></li>
@@ -1173,6 +1215,39 @@ class GFFormDetail{
                                    <input type="text" id="field_file_extension" size="40" onkeyup="SetFieldProperty('allowedExtensions', this.value);"/>
                                    <div><small><?php _e("Separated with commas (i.e. jpg, gif, png, pdf)", "gravityforms"); ?></small></div>
                                 </li>
+                                <?php
+                                do_action("gform_field_standard_settings", 1260, $form_id);
+                                ?>
+                                <li class="multiple_files_setting field_setting">
+                                    <input type="checkbox" id="field_multiple_files" onclick="ToggleMultiFile();"/>
+                                    <label for="field_multiple_files" class="inline">
+                                        <?php _e("Enable Multi-File Upload", "gravityforms"); ?>
+                                        <?php gform_tooltip("form_field_multiple_files") ?>
+                                    </label>
+                                    <div id="gform_multiple_files_options">
+                                        <br />
+                                        <div>
+                                        <label for="field_max_files">
+                                            <?php _e("Maximum Number of Files", "gravityforms"); ?>
+                                            <?php gform_tooltip("form_field_max_files") ?>
+                                        </label>
+                                        <input type="text" id="field_max_files" size="10" onkeyup="SetFieldProperty('maxFiles', this.value);"/>
+                                        </div>
+                                        <br />
+
+                                    </div>
+                                </li>
+                                <?php
+                                do_action("gform_field_standard_settings", 1267, $form_id);
+                                ?>
+                                <li class="file_size_setting field_setting">
+                                    <label for="field_max_file_size">
+                                        <?php _e("Maximum File Size", "gravityforms"); ?>
+                                        <?php gform_tooltip("form_field_max_file_size") ?>
+                                    </label>
+                                    <input type="text" id="field_max_file_size" size="10" placeholder="<?php $max_upload_size = wp_max_upload_size() / 1048576; echo $max_upload_size; ?>MB"/>
+                                    <div><small><?php echo __(sprintf("Maximum allowed on this server: %sMB", $max_upload_size), "gravityforms") ; ?></small></div>
+                                </li>
 
                                 <?php
                                 do_action("gform_field_standard_settings", 1275, $form_id);
@@ -1303,7 +1378,7 @@ class GFFormDetail{
                                             <br style="clear:both;"/>
                                             <div class="panel-buttons" style="">
                                                 <input type="button" onclick="InsertBulkChoices(jQuery('#gfield_bulk_add_input').val().split('\n')); tb_remove();" class="button-primary" value="<?php _e("Insert Choices", "gravityforms") ?>" />&nbsp;
-                                                <input type="button" onclick="tb_remove();" class="button" value="Cancel" />
+                                                <input type="button" onclick="tb_remove();" class="button" value="<?php _e("Cancel", "gravityforms") ?>" />
                                             </div>
 
                                             <div class="panel-custom" style="">
@@ -1398,9 +1473,10 @@ class GFFormDetail{
                                         <?php _e("Number Format", "gravityforms"); ?>
                                         <?php gform_tooltip("form_field_number_format") ?>
                                     </label>
-                                    <select id="field_number_format" onchange="SetFieldProperty('numberFormat', this.value);">
+                                    <select id="field_number_format" onchange="SetFieldProperty('numberFormat', this.value);jQuery('.field_calculation_rounding').toggle(this.value != 'currency');">
                                         <option value="decimal_dot">9,999.99</option>
                                         <option value="decimal_comma">9.999,99</option>
+                                        <option value="currency"><?php _e("Currency", "gravityforms") ?></option>
                                     </select>
 
                                 </li>
@@ -1602,23 +1678,9 @@ class GFFormDetail{
                                                 <?php } ?>
                                             </div>
                                         </div>
-                                        <textarea id="field_calculation_formula" onkeyup="SetFieldProperty('calculationFormula', this.value);" class="fieldwidth-3 fieldheight-2"></textarea>
-
-                                        <div id="forumla_instructions" style="display:none;">
-                                            <div class="forumla_instructions">
-
-                                                <h4><?php _e("Usage", "gravityforms") ?></h4>
-                                                <ul class="description-list">
-                                                    <li><?php _e("Use a <em>'9'</em> to indicate a numerical character.", "gravityforms") ?></li>
-                                                    <li><?php _e("Use a lower case <em>'a'</em> to indicate an alphabetical character.", "gravityforms") ?></li>
-                                                    <li><?php _e("Use an asterick <em>'*'</em> to indicate any alphanumeric character.", "gravityforms") ?></li>
-                                                    <li><?php _e("Use a question mark <em>'?'</em> to indicate optional characters. <em>Note:</em> All characters after the question mark will be optional.", "gravityforms") ?></li>
-                                                    <li><?php _e("All other characters are literal values and will be displayed automatically.", "gravityforms") ?></li>
-                                                </ul>
-
-                                            </div>
-                                        </div>
-
+                                        <textarea id="field_calculation_formula" onkeyup="SetFieldProperty('calculationFormula', this.value.trim());" class="fieldwidth-3 fieldheight-2"></textarea>
+                                        <br />
+                                        <a href="javascript:void(0)" onclick="var field = GetSelectedField(); alert(IsValidFormula(field.calculationFormula) ? '<?php _e("The formula appears to be valid.", "gravityforms"); ?>' : '<?php _e("There appears to be a problem with the formula.", "gravityforms"); ?>');"><?php _e("Validate Formula", "gravityforms"); ?></a>
                                         <div class="field_calculation_rounding">
                                             <label for="field_calculation_rounding" style="margin-top:10px;">
                                                 <?php _e("Rounding", "gravityforms"); ?>
@@ -1826,7 +1888,7 @@ class GFFormDetail{
                                     do_action("gform_field_advanced_settings", 450, $form_id);
                                     ?>
                                     <li class="prepopulate_field_setting field_setting">
-                                        <input type="checkbox" id="field_prepopulate" onclick="SetFieldProperty('allowsPrepopulate', this.checked); ToggleInputName()"/> <label for="field_prepopulate" class="inline"><?php _e("Allow field to be populated dynamically", "gravityforms") ?><?php gform_tooltip("form_field_prepopulate") ?></label>
+                                        <input type="checkbox" id="field_prepopulate" onclick="SetFieldProperty('allowsPrepopulate', this.checked); ToggleInputName()"/> <label for="field_prepopulate" class="inline"><?php _e("Allow field to be populated dynamically", "gravityforms") ?> <?php gform_tooltip("form_field_prepopulate") ?></label>
                                         <br/>
                                         <div id="field_input_name_container" style="display:none; padding-top:10px;">
                                             <!-- content dynamically created from js.php -->
@@ -1836,7 +1898,7 @@ class GFFormDetail{
                                     do_action("gform_field_advanced_settings", 500, $form_id);
                                     ?>
                                     <li class="conditional_logic_field_setting field_setting">
-                                        <input type="checkbox" id="field_conditional_logic" onclick="SetFieldProperty('conditionalLogic', this.checked ? new ConditionalLogic() : null); ToggleConditionalLogic(false, 'field');"/> <label for="field_conditional_logic" class="inline"><?php _e("Enable Conditional Logic", "gravityforms") ?><?php gform_tooltip("form_field_conditional_logic") ?></label>
+                                        <input type="checkbox" id="field_conditional_logic" onclick="SetFieldProperty('conditionalLogic', this.checked ? new ConditionalLogic() : null); ToggleConditionalLogic(false, 'field');"/> <label for="field_conditional_logic" class="inline"><?php _e("Enable Conditional Logic", "gravityforms") ?> <?php gform_tooltip("form_field_conditional_logic") ?></label>
                                         <br/>
                                         <div id="field_conditional_logic_container" style="display:none; padding-top:10px;">
                                             <!-- content dynamically created from js.php -->
@@ -1847,7 +1909,7 @@ class GFFormDetail{
                                     do_action("gform_field_advanced_settings", 525, $form_id);
                                     ?>
                                     <li class="conditional_logic_page_setting field_setting">
-                                        <input type="checkbox" id="page_conditional_logic" onclick="SetFieldProperty('conditionalLogic', this.checked ? new ConditionalLogic() : null); ToggleConditionalLogic(false, 'page');"/> <label for="page_conditional_logic" class="inline"><?php _e("Enable Page Conditional Logic", "gravityforms") ?><?php gform_tooltip("form_page_conditional_logic") ?></label>
+                                        <input type="checkbox" id="page_conditional_logic" onclick="SetFieldProperty('conditionalLogic', this.checked ? new ConditionalLogic() : null); ToggleConditionalLogic(false, 'page');"/> <label for="page_conditional_logic" class="inline"><?php _e("Enable Page Conditional Logic", "gravityforms") ?> <?php gform_tooltip("form_page_conditional_logic") ?></label>
                                         <br/>
                                         <div id="page_conditional_logic_container" style="display:none; padding-top:10px;">
                                             <!-- content dynamically created from js.php -->
@@ -1859,7 +1921,7 @@ class GFFormDetail{
                                     ?>
                                     <li class="conditional_logic_nextbutton_setting field_setting">
                                         <input type="checkbox" id="next_button_conditional_logic" onclick="SetNextButtonConditionalLogic(this.checked); ToggleConditionalLogic(false, 'next_button');"/>
-                                        <label for="next_button_conditional_logic" class="inline"><?php _e("Enable Next Button Conditional Logic", "gravityforms") ?><?php gform_tooltip("form_nextbutton_conditional_logic") ?></label>
+                                        <label for="next_button_conditional_logic" class="inline"><?php _e("Enable Next Button Conditional Logic", "gravityforms") ?> <?php gform_tooltip("form_nextbutton_conditional_logic") ?></label>
                                         <br/>
                                         <div id="next_button_conditional_logic_container" style="display:none; padding-top:10px;">
                                             <!-- content dynamically created from js.php -->
@@ -1968,8 +2030,9 @@ class GFFormDetail{
 
                                 <?php
                                 if(GFCommon::current_user_can_any("gravityforms_delete_forms")){
-                                    $delete_link = '<a class="submitdelete" title="' . __("Delete this Form", "gravityforms") . '" onclick="if(confirm(\'' . __("Would you like to delete this form and ALL entries associated with it? \'Cancel\' to stop. \'OK\' to delete", "gravityforms") . '\')){ gf_vars.isFormDelete = true; jQuery(\'#form_delete\')[0].submit();} else{return false;}">' . __("Delete Form", "gravityforms") . '</a>';
-                                    echo apply_filters("gform_form_delete_link", $delete_link);
+                                    $trash_link = '<a class="submitdelete" title="' . __("Move this form to the trash", "gravityforms") . '" onclick="if(confirm(\'' . __("Would you like to move this form to the trash? \'Cancel\' to stop. \'OK\' to continue", "gravityforms") . '\')){ gf_vars.isFormTrash = true; jQuery(\'#form_trash\')[0].submit();} else{return false;}">' . __("Move to Trash", "gravityforms") . '</a>';
+                                    $trash_link = apply_filters("gform_form_delete_link", $trash_link); // deprecated
+                                    echo apply_filters("gform_form_trash_link", $trash_link);
                                 }
 
                                 $button_text = rgar($form,"id") > 0 ? __("Update Form", "gravityforms") : __("Save Form", "gravityforms");
@@ -2225,6 +2288,14 @@ class GFFormDetail{
         exit();
     }
 
+    /**
+     * Saves form meta. Note the special requirements for the meta string.
+     *
+     * @param $id
+     * @param string $form_json A valid JSON string. The JSON is manipulated before decoding and is designed to work together with jQuery.toJSON() rather than json_encode. Avoid using json_encode as it will convert unicode characters into their respective entities with slashes. These slashes get stripped so unicode characters won't survive intact.
+     *
+     * @return array
+     */
     public static function save_form_info($id, $form_json){
         global $wpdb;
         $form_json = stripslashes($form_json);
@@ -2350,5 +2421,4 @@ class GFFormDetail{
         die($dropdown);
     }
 }
-
 ?>

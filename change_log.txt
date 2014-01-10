@@ -1,53 +1,568 @@
 -------------------------------------------------------------------------------------------------------------------
-Version 1.7.8
-    - Added gform_pre_enqueue_scripts hook so that scripts can be added first if a need exists. This was added in order to resolve conflicts caused by new Picatcha's JS.
-    - Added logging statements
-    - Fixed bad markup with the credit card field
-    - Fixed issues with switched parameters on get_parameter_value() call causing issues with pre-populating certain field types.
-    - Fixed conflict between HTML5 validation and the script to prevent duplicate submissions
-    - Fixed issue with notification processing causing form to display "blank" in the admin under certain conditions.
-    - Updated tooltips to optimize performance when using WPML
-    - Updated 'gform_is_value_match' filter to optionally pass rule object being validated
+Version 1.8
+
+    - Added API to allow developers to easily perform operations such as read/update/delete/create forms and entries
+    - Added Web API to allow developers to perform operations such as read/update/delete/create forms and entries from a remote web site
+    - Added filter to export to allow entries to be changed before exporting them
+    - Added support for mu-plugins deployment
+    - Added JS filter: "gform_calculation_result" to allow modifying the calculated result
+    - Added JS filter: "gform_calculation_format_result" to allow user to override default formatting to calculated result
+    - Added fontawesome webfonts and icon support for form admin
+    - Added trash for forms
+    - Added sorting to form list
+    - Added form locking
+    - Added entry locking
+    - Added form settings locking
+    - Added plugin settings locking
+    - Added locking to the Add-On Framework
+    - Added Romanian and Georgian translation files
+    - Added Kosovo (KV) to the country list
+    - Added Cayman Islands to country list
+    - Added Active/Inactive functionality to Notifications
+    - Added Active/Inactive functionality to Confirmations
+    - Added Duplicate functionality to Notifications
+    - Added Duplicate functionality to Confirmations (not for the default confirmation)
+    - Added enhanced entry search
+    - Added enhanced filters to entry export
+    - Added Query String setting to Page Confirmation
+    - Added hierarchy to the Post Category field UI when the "Select Categories" setting is active.
+    - Added "Form Pending Message" option to Schedule Form restrictions in Form Settings
+    - Added gform_process_form hook
+    - Added Multi-file upload support to the File Upload field
+    - Added max file size setting to single file upload field
+    - Added two filters to next page button. ("gform_next_button", and "gform_next_button_FORMID"). The first is a filter that applies to all forms. The second applies to a specific form.
+    - Added two filters to previous page button. ("gform_previous_button", and "gform_previous_button_FORMID"). The first is a filter that applies to all forms. The second applies to a specific form.
+    - Added new style JS filter for the original Javascript filter gform_product_total() so that multiple filters can be applied to it
+    - Added new notification hook (gform_email_fields_notification_admin) to allow list of email fields to be filtered
+    - Added support for any/all mode for field filters in the search queries and API
+    - Added clean up of temp files removed from form submissions
+    - Added clean up of files older than 48 hours from abandoned submissions
+    - Added gform_form_trash_link filter to replace the deprecated gform_form_delete_link filter
+    - Added a "validate formula" button to the calculation formula setting in the form editor
+    - Added the "instructions" and "checkbox_label" properties of the feed_condition field in GFFeedAddOn
+    - Added gformGetProductQuantity() JS function for getting current quantity of an item; extracted from gformCalculateProductPrice()
+    - Added GFFormDisplay::is_last_page() method as an easier method for determining if the last page of the form is being submitted
+    - Added support for GF_DEBUG constant on AJAX iframe to more easily allow viewing the contents of the iframe when debugging AJAX forms
+    - Added GFFormsModel::get_form_ids()
+    - Added multifile support to the 'post custom field' field (file upload field type)
+    - Added Entry ID, Entry Date, Starred, IP Address, Source URL, Payment Status, Payment Date, Payment Amount, Transaction ID and User to the list of available fields in the entry list search, export conditional logic and Add-On Framework results page filter.
+    - Added sorting by active/inactive in form list
+    - Added form-specific version of "gform_register_init_scripts" hook
+    - Added JS filter: "gform_spinner_url" to allow modifying the spinner URL with the new gformInitSpinner() function
+    - Added logging statements to GFFormsModel::create_post()
+    - Added logging statements to GFAsyncUpload::upload()
+
+    - Updated GFFormDisplay::register_form_init_scripts() function to include 'is_ajax' parameter
+    - Updated 'gform_register_init_scripts' action to pass 'is_ajax' parameter
+    - Updated gravityforms_addon_browser capability to be gravityforms_view_addons since that is the one actually in use
+    - Updated GFFormsModel::get_entry_meta() to support an array of form IDs and all form IDs (zero)
+    - Updated how GFFormsModel::prepare_value() handled credit card fields, allowing default formatting to be overwritten for the last credit card number
+    - Updated icons to use webfont where possible
+    - Updated CSS file removing IE 7 hacks and removed inline style blocks
+    - Updated the formatting for the Danish Krone
+    - Updated the styles of the form list and entry list to emphasise alternate rows
+    - Updated the credit card field HTML5 markup to use an HTML text input with a pattern instead of a number input
+    - Updated upgrade process so that it gets aborted if database user doesn't have the proper permission to change or create tables
+    - Updated product labels to allow html formatting in the notifications and entry detail page instead of showing the html tags
+    - Updated {form_title} merge tag so that it is not available as a choice for field default values (since it is not supported there).
+    - Updated gravity_form() function call to take "echo" parameter.
+    - Updated page break fields in admin - replaced imagery with translatable text strings
+    - Updated admin.css for new icon and page break markup and styles
+    - Updated the merge tags cursor to pointer (hand)
+    - Updated GFFormsModel::build_lead_array() to include long values by default. GFFormsModel::search_leads() and GFFormsModel::get_leads() now include long values in entry objects.
+    - Updated date range tooltip on export entries page
+    - Updated bulk form actions text
+    - Updated the hierarchy indicator in the Post Category field from spaces to continuous lines
     - Updated the results page to display as a view of the gf_entries page so the gravityforms_view_entries capability is required instead of gravityforms_edit_forms (in addition to the gravityforms_{add-on}_results capability)
-	- Fixed issue with entry list page where more entries were being used than the ones selected when applying actions
-    - Fixed issue with multisite upgrades preventing tables from being properly updated.
-    - Fixed conflict on Add-On page preventing add-ons from being installed.
-    - Fixed a PHP notice on the Entry list for imported forms
-    - Fixed issue with conditional logic conflict with calculating field
-    - Fixed issue with user defined product field not formatting correctly
+    - Updated the results page filter box from sticky (always visible) and fixed height to static and fluid height
+    - Updated form submission process to trim leading and trailing spaces before validation and before saving. Added the gform_trim_input_value filter to so it's possible to override this behaviour by field and by form.
+    - Updated calculation formula so that it is now trimmed in the form editor
+    - Updated single product field. Removed Admin Label setting
+    - Updated conditional logic for fields with choices to display dropdown values for "is" and "is not" operators and a textbox values for other operators
+    - Updated automatic license key population so that it is remotely validated on first install and version change
+    - Updated the behaviour of the number field to add a leading zero if missing before decimal/comma (ie .5 or ,5 is now validated and stored as 0.5 or 0,5)
+    - Updated resend notification UI so that it displays an appropriate message when no notifications are configured
+    - Updated tooltip function to optimize performance for WPML users
+    - Updated 'gform_is_value_match' filter to optionally pass rule object being validated
+    - Updated the location where the load_plugin_textdomain function is loaded so translations by third-party apps are loaded
+    - Updated code to use functions mb_substr and mb_strlen to truncate large text values before inserting them in the DB to accommodate for Chinese characters and other multi-byte characters
+    - Updated admin styles to comment out button styles conflicting with WP default button styles
+    - Updated remote license key validation procedure so that it consolidates all add-ons and gravity forms into one request/response to save requests to the Gravity Help server.
+    - Updated form meta format to JSON
+    - Updated the "Delete Form" link in the form editor to "Move to trash".
+    - Updated the product quantity input type to "number" when HTML5 is enabled in settings
+    - Updated the credit card number input type to "number" when HTML5 is enabled in settings
+    - Updated the credit card security code input type to "number" when HTML5 is enabled in settings
+    - Updated references to gforms_gravityforms script handle to gform_gravityforms for consistency
+    - Updated spanish translation file
+    - Updated min required WP version to 3.4 (necessitated by use of wp_is_mobile() function)
+    - Updated domain in add-on include files to use gravityforms for translations
+    - Updated hungarian translation file
+    - Updated the button text "Cancel" on the Bulk Add / Predefined Choices so it may be translated into other languages
+    - Updated {ip} merge tag to use GFFormsModel::get_ip() method
+    - Updated GFFormsModel::get_ip() method to try for $_SERVER['HTTP_CLIENT_IP'] first
+    - Updated form settings to use "label" instead of "name" when getting tab label
+    - Updated jQuery calls so that the deprecated jQuery.live() method isn't used
+    - Updated POT file
+    - Updated the Web API to respond always with a 200 HTTP status along with a JSON object containing the status code and response
+    - Updated gformInitSpinner() to be generic and moved to gravityforms.js
+    - Updated enqueue and print script functions to enqueue gravityforms.js when AJAX is enabled
+    - Updated confirmation and notification titles to link to edit view for that item
+    - Updated the help page: removed references to the forum
+    - Updated the field filters on the export entries page and results page to include greater than and less than operators by default
+
+    - Fixed search criteria operators for likert fields
+    - Fixed issue where datepicker was displaying below WP content
+    - Fixed issue with ReCAPTCHA field throwing Javascript error
+    - Fixed tabindex for AJAX enabled forms after validation
+    - Fixed validation of standard phone field when value is zero
+    - Fixed issue where no formatting was being applied to calculated results
+    - Fixed issue where [gravityforms] shortcode (plural) was not detected and scripts were not loading correctly
+    - Fixed bulk actions at the bottom of the form list to reflect recent changes
+    - Fixed strings that weren't properly localized
+    - Fixed an issue where the confirmation message would not be displayed below the progress bar on AJAX enabled forms.
+    - Fixed an issue with GFCache which can result in long keys getting cut off. Keys are now hashed.
+    - Fixed misspelling
+    - Fixed issue with weekly form scheduling
+    - Fixed conflict on add-on page causing an error when installing new plugins
+    - Fixed conditional logic conflict
+    - Fixed issue with pricing formatting on AJAX forms
+    - Fixed issue with entry list page where more entries were being used than the ones selected when applying actions
+    - Fixed issue with notification causing form to be "blank" in the editor under certain conditions
+    - Fixed issue with multisite database upgrade
+    - Fixed issue when creating a form using special characters
+    - Fixed dynamic population of admin only multi-selects
+    - Fixed dynamic population of admin only list fields
+    - Fixed issues with switched parameters on get_parameter_value() call causing issues with pre-populating certain field types.
+    - Fixed issue with credit card field markup
+    - Fixed issue where zero amount totals were not being saved to carry over in Total merge tags
+    - Fixed issue with legacy notifications causing emails to be sent using field id instead of email address
+    - Fixed issue when adding multiple total fields to a form causing the total field entry data and total field merge tag to not save the correct value
+    - Fixed issue with calculations where formula choked when calculating single-input products when currency number format was 'decimal_comma'
+    - Fixed issue with merge tags entered in the front end being executed when the field is added to notifications
+    - Fixed an issue with single file upload where the entry wouldn't fail validation if the file exceeded the upload_max_filesize PHP init setting
+    - Fixed an issue the results page where single row likert fields display multiple rows with a form that's been imported
+    - Fixed an issue the results page when the error message doesn't display after a database timeout
+    - Fixed notice thrown in multi-site logging for $is_setup_completed variable
+    - Fixed encoding issue on Form Settings causing double quotes on form title to get dropped
+    - Fixed invalid license key message
+    - Fixed issue with database upgrade on multi-sites
+    - Fixed issue where form admin fields menu doesn't remain on screen when scrolling and in no conflict mode
+    - Fixed the merge tags UI and the select columns UI on the entry list to display only Card Type and Card Number for the credit card field
+    - Fixed the calculation formula so that it accepts line breaks
+    - Fixed the add-on feed page feed condition setting
+    - Fixed issue when truncating text with special characters
+    - Fixed issue with date formatting
+    - Fixed text "Insert Form" so that it is localized
+    - Fixed the gform_save_field_value filter
+    - Fixed issue where some calculations resulted in "Infinity" being output to calculated field
+    - Fixed the gform_previous_button filter on the last page. Removed from first page.
+    - Fixed issue where using decimal values from drop downs (and other fields) resulted in ignored decimals
+    - Fixed issue on export entries page allowing exports to be perform without a selected field
+    - Fixed typo on the export forms tab
+    - Fixed typo in the tooltip for the allowed file extensions setting in the fileupload field
+    - Fixed issue with the hidden field type in the form editor where the merge tags UI for the default value wasn't displaying correctly
+    - Fixed issue with date field not resetting to default value correctly when hidden by conditional logic
+    - Fixed issue where number of updates available was being displayed when user didn't have permissions to update the plugin
+    - Fixed issue with for in loops causing strange behavior under certain conditions.
+    - Fixed issue on form notifications page where WP footer was overlapping notifications list
+    - Fixed issue when adding fields in the form editor. Users are now prevented from adding a field while another field is in the process of being added
+    - Fixed captcha math input id
+
+    - Deprecated the gform_form_delete_link filter
+    - Deprecated the gform_calculation_result function
+
+    - API: Added further details to some error messages
+    - API: Updated Web API slug from gfwebapi to gravityformsapi
+    - API: Updated the API Functions to remove the capability checks
+
+    - AF: Added Payment Add-On base class to help and provide consistency when creating payment processors.
+    - AF: Added caching for feed addon's get_feeds() method
+    - AF: Added support for 'validation_callback' and 'dependency' properties for Field Map child fields
+    - AF: Added support for storing previous settings when saving new settings
+    - AF: Added support for plugin_settings_title() overridable function
+    - AF: Added "feedName" as default column and field setting for payment add-on
+    - AF: Added add_field_before() and add_field_after() functions to facilitate adding new fields to existing field groups
+    - AF: Added support for 'style', 'class', and 'id' properties to $sections
+    - AF: Added feed_settings_title() method to Feed Add-on rather; used as title of feed detail page
+    - AF: Renamed has_feed_for_this_addon() method to has_feed()
+    - AF: Updated rgempty() function to support passing just an array for empty() validation
+    - AF: Updated setting_dependency_met() method to handle when false value is passed as $dependency
+    - AF: Updated setting validation to not validate settings where dependency is not met
+    - AF: Updated all calls to $_short_title to use get_short_title()
+    - AF: Updated scripts and styles so that they are registered and can be used as dependencies
+    - AF: Removed some inline styles and added to admin.css
+    - AF: Updated section title markup to use <h4> and match styles of GF Form Settings
+    - AF: Updated get_setting() function to support a $settings parameter
+    - AF: Updated Payment Add-on fields to be grouped by their dependencies (based on transaction type)
+    - AF: Updated feed_callback icon to use font
+    - AF: Updated error icon to use fontawesome
 
 -------------------------------------------------------------------------------------------------------------------
-Version 1.7.7
+Version 1.8.beta4.1
 
-    - Added support for touchscreen devices
-    - Added safeguard to prevent double clicks from creating duplicate entries
-    - Added logging statements around the setup() function
-    - Added support for filtering return of 'has_conditional_logic', useful for developers using conditional logic in objects not checked by Gravity Forms
-    - Added support for updating page title based on settings page
+    - Added 'currency' to the options for number format in the number field.
+    - Updated logging so that number of Web API calls are recorded.
+    - Updated GFFormsModel::get_prepared_input_value(), used by GFFormsModel::create_lead() to handle multi-file fileupload fields correctly.
+    - Updated gravity_form() function call to take "echo" parameter.
+    - Updated {form_title} merge tag so that it is not available as a choice for field default values (since it is not supported there).
+    - Updated POT file
+    - Updated product labels to allow html formatting in the notifications and entry detail page instead of showing the html tags
+    - Fixed a parser error generated in the form list for certain systems.
+    - Fixed issue with {form_title} merge tag displaying for the default value of fields where it is not currently supported.
+    - Fixed default value merge tag list for hidden fields
+    - Fixed the WordPress logo not appearing on the preview and print pages
+    - API: Fixed the Web API paging offset for GET entries.
+    - AF: Updated Payment Add-On to reflect future change in subscription flow
 
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.beta4
+
+    - Updated upgrade process so that it gets aborted if database user doesn't have the proper permission to change or create tables
+    - Updated FontAwesome Webfont library to 4.0.3
+    - Updated GFFormsModel::create_lead() method to correctly populate multiple total fields
+    - Updated the credit card field HTML5 markup to use an HTML text input with a pattern instead of a number input
+    - Updated the styles of the form list and entry list to emphasise alternate rows
+    - Updated icons to use webfont where possible
+    - Updated CSS file removing IE 7 hacks and removed inline style blocks
+    - Updated the formatting for the Danish Krone
+    - Updated the text "Enable access to the API" so it can be translated
+    - Replaced icon images
+    - Replaced image-based icons with webfont icons where possible
+    - Removed IE7 CSS hacks from CSS files
+    - Removed several deprecated icon images
+    - Removed several inline style blocks and took care of some general code cleanup
+
+    - Fixed issue with license validation when upgrading from 1.7 to 1.8
+    - Fixed duplicate IDs for the credit card field
+    - Fixed various whitespace issues
+
+    - AF: Added Payment Add-On to help and provide consistency when creating payment processors.
+    - AF: Added remove_field() method for simplify removing a setting from any GFAddon settings array
+
+    - API: Fixed issue with add_entry() and update_entry() for payment entries where some values would be inserted without quotes generating errors.
+    - API: Fixed add_entry() and update_entry() for payment entries
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.beta3
+
+    - Added gformGetProductQuantity() JS function for getting current quantity of an item; extracted from gformCalculateProductPrice()
+    - Added GFFormDisplay::is_last_page() method as an easier method for determining if the last page of the form is being submitted
+    - Added support for GF_DEBUG constant on AJAX iframe to more easily allow viewing the contents of the iframe when debugging AJAX forms
+    - Added GFFormsModel::get_form_ids()
+
+    - Updated GFFormDisplay::register_form_init_scripts() function to include 'is_ajax' parameter
+    - Updated 'gform_register_init_scripts' action to pass 'is_ajax' parameter
+    - Updated gravityforms_addon_browser capability to be gravityforms_view_addons since that is the one actually in use
+    - Updated GFFormsModel::get_entry_meta() to support an array of form IDs and all form IDs (zero)
+    - Updated how GFFormsModel::prepare_value() handled credit card fields, allowing default formatting to be overwritten for the last credit card number
+
+    - Fixed issue where function setup_site had been changed to setup_database but code not updated; caused fatal error to be thrown
+    - Fixed entry sorting by entry meta
+    - Fixed multi-file merge tag output
+
+    - AF: Added caching for feed addon's get_feeds() method
+    - AF: Added support for 'validation_callback' and 'dependency' properties for Field Map child fields
+    - AF: Added base class for Payment Add-ons.
+    - AF: Updated payment add-on to only run authorize() method on the last page
+    - AF: Updated the results of fields without choices to display latest non-empty values instead of all values
+    - AF: Updated billing cycle strings to be translatable
+
+    - API: removed html, page and section fields from update_entry() and add_entry()
+
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.beta2
+
+    - Added multifile support to the 'post custom field' field (file upload field type)
+    - Added Entry ID, Entry Date, Starred, IP Address, Source URL, Payment Status, Payment Date, Payment Amount, Transaction ID and User to the list of available fields in the entry list search, export conditional logic and Add-On Framework results page filter.
+    - Added sorting by active/inactive in form list
+    - Added form-specific version of "gform_register_init_scripts" hook
+    - Added JS filter: "gform_spinner_url" to allow modifying the spinner URL with the new gformInitSpinner() function
+    - Added logging statements to GFFormsModel::create_post()
+    - Added logging statements to GFAsyncUpload::upload()
+
+    - Updated the Web API to respond always with a 200 HTTP status along with a JSON object containing the status code and response
+    - Updated gformInitSpinner() to be generic and moved to gravityforms.js
+    - Updated enqueue and print script functions to enqueue gravityforms.js when AJAX is enabled
+    - Updated confirmation and notification titles to link to edit view for that item
+    - Updated the help page: removed references to the forum
+    - Updated the field filters on the export entries page and results page to include greater than and less than operators by default
+    - Moved the QR Code library to the includes folder so it can be reused more easily
+
+    - Fixed element IDs for the date field
+    - Fixed search criteria operators for likert fields
+    - Fixed an issue with the field filter drop down which could result in duplicate inputs
+    - Fixed issue with the field filters where the mode is added more than once
+    - Fixed issue where datepicker was displaying below WP content
+    - Fixed issue where notification edit page was "busting out" of the WP wrapper
+    - Fixed the styles for the active/inactive column of the notification list and confirmation list
+    - Fixed the styles for the field header in the form editor in Chrome.
+    - Fixed an issue with sorting entries from the API
+    - Fixed issue with ReCAPTCHA field throwing Javascript error
+    - Fixed an issue with multi-file uploader opening multiple file dialogs
+    - Fixed issue with calculation formatting
+    - Fixed an issue with the multi-file uploader in IE8
+    - Fixed an issue with the multi-file uploader for forms with conditional logic in IE
+    - Fixed tabindex for AJAX enabled forms after validation
+    - Fixed validation of standard phone field when value is zero
+    - Fixed issue where no formatting was being applied to calculated results
+    - Fixed issue where [gravityforms] shortcode (plural) was not detected and scripts were not loading correctly
+    - Fixed bulk actions at the bottom of the form list to reflect recent changes
+
+    - AF: Added support for storing previous settings when saving new settings
+    - AF: Added support for plugin_settings_title() overridable function
+    - AF: Added "feedName" as default column and field setting for payment add-on
+    - AF: Added add_field_before() and add_field_after() functions to facilitate adding new fields to existing field groups
+    - AF: Added support for 'style', 'class', and 'id' properties to $sections
+    - AF: Added feed_settings_title() method to Feed Add-on rather; used as title of feed detail page
+
+    - AF: Renamed has_feed_for_this_addon() method to has_feed()
+    - AF: Updated rgempty() function to support passing just an array for empty() validation
+    - AF: Updated setting_dependency_met() method to handle when false value is passed as $dependency
+    - AF: Updated setting validation to not validate settings where dependency is not met
+    - AF: Updated all calls to $_short_title to use get_short_title()
+    - AF: all scripts and styles are now always registered so they can be used as dependencies
+    - AF: Removed some inline styles and added to admin.css
+    - AF: Updated section title markup to use <h4> and match styles of GF Form Settings
+    - AF: Updated get_setting() function to support a $settings parameter
+    - AF: Updated Payment Add-on fields to be grouped by their dependencies (based on transaction type)
+    - AF: Updated feed_callback icon to use font
+    - AF: Updated error icon to use fontawesome
+
+    - AF: fixed results filter mode initialization
+
+    - API: added further details to some error messages
+    - API: Updated Web API slug from gfwebapi to gravityformsapi
+    - API: Updated the API Functions to remove the capability checks
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.beta1
+
+    - Added API to allow developers to easily perform operations such as read/update/delete/create forms and entries
+    - Added Web API to allow developers to perform operations such as read/update/delete/create forms and entries from a remote web site
+    - Added filter to export to allow entries to be changed before exporting them
+    - Added support for mu-plugins deployment
+    - Added JS filter: "gform_calculation_result" to allow modifying the calculated result
+    - Added JS filter: "gform_calculation_format_result" to allow user to override default formatting to calculated result
+    - Added fontawesome webfonts and icon support for form admin
+    - Added trash for forms
+    - Added sorting to form list
+    - Added form locking
+    - Added entry locking
+    - Added form settings locking
+    - Added plugin settings locking
+    - Added locking to the Add-On Framework
+    - Added Romanian and Georgian translation files
+    - Added Kosovo (KV) to the country list
+    - Added Cayman Islands to country list
+    - Added Active/Inactive functionality to Notifications
+    - Added Active/Inactive functionality to Confirmations
+    - Added Duplicate functionality to Notifications
+    - Added Duplicate functionality to Confirmations (not for the default confirmation)
+    - Added enhanced entry search
+    - Added enhanced filters to entry export
+    - Added Query String setting to Page Confirmation
+    - Added hierarchy to the Post Category field UI when the "Select Categories" setting is active.
+    - Added "Form Pending Message" option to Schedule Form restrictions in Form Settings
+    - Added gform_process_form hook
+    - Added Multi-file upload support to the File Upload field
+    - Added max file size setting to single file upload field
+    - Added two filters to next page button. ("gform_next_button", and "gform_next_button_FORMID"). The first is a filter that applies to all forms. The second applies to a specific form.
+    - Added two filters to previous page button. ("gform_previous_button", and "gform_previous_button_FORMID"). The first is a filter that applies to all forms. The second applies to a specific form.
+    - Added new style JS filter for the original Javascript filter gform_product_total() so that multiple filters can be applied to it
+    - Added new notification hook (gform_email_fields_notification_admin) to allow list of email fields to be filtered
+    - Added support for any/all mode for field filters in the search queries and API
+    - Added clean up of temp files removed from form submissions
+    - Added clean up of files older than 48 hours from abandoned submissions
+    - Added gform_form_trash_link filter to replace the deprecated gform_form_delete_link filter
+    - Added a "validate formula" button to the calculation formula setting in the form editor
+    - Added the "instructions" and "checkbox_label" properties of the feed_condition field in GFFeedAddOn
+
+    - Updated page break fields in admin - replaced imagery with translatable text strings
+    - Updated admin.css for new icon and page break markup and styles
+    - Updated the merge tags cursor to pointer (hand)
+    - Updated GFFormsModel::build_lead_array() to include long values by default. GFFormsModel::search_leads() and GFFormsModel::get_leads() now include long values in entry objects.
+    - Updated date range tooltip on export entries page
+    - Updated bulk form actions text
+    - Updated the hierarchy indicator in the Post Category field from spaces to continuous lines
+    - Updated the results page to display as a view of the gf_entries page so the gravityforms_view_entries capability is required instead of gravityforms_edit_forms (in addition to the gravityforms_{add-on}_results capability)
+    - Updated the results page filter box from sticky (always visible) and fixed height to static and fluid height
+    - Updated form submission process to trim leading and trailing spaces before validation and before saving. Added the gform_trim_input_value filter to so it's possible to override this behaviour by field and by form.
+    - Updated calculation formula so that it is now trimmed in the form editor
+    - Updated single product field. Removed Admin Label setting
+    - Updated conditional logic for fields with choices to display dropdown values for "is" and "is not" operators and a textbox values for other operators
+    - Updated automatic license key population so that it is remotely validated on first install and version change
+    - Updated the behaviour of the number field to add a leading zero if missing before decimal/comma (ie .5 or ,5 is now validated and stored as 0.5 or 0,5)
+    - Updated resend notification UI so that it displays an appropriate message when no notifications are configured
+    - Updated tooltip function to optimize performance for WPML users
+    - Updated 'gform_is_value_match' filter to optionally pass rule object being validated
+    - Updated the location where the load_plugin_textdomain function is loaded so translations by third-party apps are loaded
+    - Updated code to use functions mb_substr and mb_strlen to truncate large text values before inserting them in the DB to accommodate for Chinese characters and other multi-byte characters
+    - Updated admin styles to comment out button styles conflicting with WP default button styles
+    - Updated remote license key validation procedure so that it consolidates all add-ons and gravity forms into one request/response to save requests to the Gravity Help server.
+    - Updated form meta format to JSON
+    - Updated the "Delete Form" link in the form editor to "Move to trash".
+    - Updated the product quantity input type to "number" when HTML5 is enabled in settings
+    - Updated the credit card number input type to "number" when HTML5 is enabled in settings
+    - Updated the credit card security code input type to "number" when HTML5 is enabled in settings
+    - Updated references to gforms_gravityforms script handle to gform_gravityforms for consistency
+    - Updated spanish translation file
+    - Updated min required WP version to 3.4 (necessitated by use of wp_is_mobile() function)
+    - Updated domain in add-on include files to use gravityforms for translations
+    - Updated hungarian translation file
+    - Updated the button text "Cancel" on the Bulk Add / Predefined Choices so it may be translated into other languages
+    - Updated {ip} merge tag to use GFFormsModel::get_ip() method
+    - Updated GFFormsModel::get_ip() method to try for $_SERVER['HTTP_CLIENT_IP'] first
+    - Updated form settings to use "label" instead of "name" when getting tab label
+    - Updated jQuery calls so that the deprecated jQuery.live() method isn't used
+
+    - Fixed an issue where the confirmation message would not be displayed below the progress bar on AJAX enabled forms.
+    - Fixed an issue with GFCache which can result in long keys getting cut off. Keys are now hashed.
+    - Fixed misspelling
+    - Fixed issue with weekly form scheduling
+    - Fixed conflict on add-on page causing an error when installing new plugins
+    - Fixed conditional logic conflict
+    - Fixed issue with pricing formatting on AJAX forms
+    - Fixed issue with entry list page where more entries were being used than the ones selected when applying actions
+    - Fixed issue with notification causing form to be "blank" in the editor under certain conditions
+    - Fixed issue with multisite database upgrade
+    - Fixed issue when creating a form using special characters
+    - Fixed dynamic population of admin only multi-selects
+    - Fixed dynamic population of admin only list fields
+    - Fixed issues with switched parameters on get_parameter_value() call causing issues with pre-populating certain field types.
+    - Fixed issue with credit card field markup
+    - Fixed issue where zero amount totals were not being saved to carry over in Total merge tags
+    - Fixed issue with legacy notifications causing emails to be sent using field id instead of email address
+    - Fixed issue when adding multiple total fields to a form causing the total field entry data and total field merge tag to not save the correct value
+    - Fixed issue with calculations where formula choked when calculating single-input products when currency number format was 'decimal_comma'
+    - Fixed issue with merge tags entered in the front end being executed when the field is added to notifications
+    - Fixed an issue with single file upload where the entry wouldn't fail validation if the file exceeded the upload_max_filesize PHP init setting
+    - Fixed an issue the results page where single row likert fields display multiple rows with a form that's been imported
+    - Fixed an issue the results page when the error message doesn't display after a database timeout
+    - Fixed notice thrown in multi-site logging for $is_setup_completed variable
+    - Fixed encoding issue on Form Settings causing double quotes on form title to get dropped
+    - Fixed invalid license key message
+    - Fixed issue with database upgrade on multi-sites
+    - Fixed issue where form admin fields menu doesn't remain on screen when scrolling and in no conflict mode
+    - Fixed the merge tags UI and the select columns UI on the entry list to display only Card Type and Card Number for the credit card field
+    - Fixed the calculation formula so that it accepts line breaks
+    - Fixed the add-on feed page feed condition setting
+    - Fixed issue when truncating text with special characters
+    - Fixed issue with date formatting
+    - Fixed text "Insert Form" so that it is localized
+    - Fixed the gform_save_field_value filter
+    - Fixed issue where some calculations resulted in "Infinity" being output to calculated field
+    - Fixed the gform_previous_button filter on the last page. Removed from first page.
+    - Fixed issue where using decimal values from drop downs (and other fields) resulted in ignored decimals
+    - Fixed issue on export entries page allowing exports to be perform without a selected field
+    - Fixed typo on the export forms tab
+    - Fixed typo in the tooltip for the allowed file extensions setting in the fileupload field
+    - Fixed issue with the hidden field type in the form editor where the merge tags UI for the default value wasn't displaying correctly
+    - Fixed issue with date field not resetting to default value correctly when hidden by conditional logic
+    - Fixed issue where number of updates available was being displayed when user didn't have permissions to update the plugin
+    - Fixed issue with for in loops causing strange behavior under certain conditions.
+    - Fixed issue on form notifications page where WP footer was overlapping notifications list
+    - Fixed issue when adding fields in the form editor. Users are now prevented from adding a field while another field is in the process of being added
+    - Fixed captcha math input id
+
+    - Deprecated the gform_form_delete_link filter
+    - Deprecated the gform_calculation_result function
+-------------------------------------------------------------------------------------------------------------------
+Version 1.7.6.12
+    - Fixed E_STRICT notices under WP 3.6 running on PHP 5.4
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.7.6.11
     - Updated multi-site database upgrade procedure so that it only updates all sites in the network on network admin pages
+    - AF: Updated all functionality activation checks, e.g. has_plugin_settings_page(), to use GFAddOn:method_is_overridden();
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.7.6.10
+    - Added the option to select all entries on all pages for bulk actions
+    - Added support for touchscreen devices
+    - AF: removed vertical_label support from settings_xxx() fields
+    - AF: removed extra <div> around inputs
+    - Fixed issue with pagination on entry list page displaying wrong counts after a search is performed
     - Updated tooltips so that they use the jQuery UI Tooltip script instead of qTip
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.7.6.9
+    - Added safeguard to prevent double clicks from creating duplicate entries
+    - AF: added support for addons to create a "Plugin Page", which are pages specific for that addon linked from the left menu (similar to the old style addon pages).
+    - AF: added "progress" and "timestamp" to the results calculation
+    - AF: added max_execution_time to the params of GFResults::get_results_data(). Changed the default value from 20 to 15.
+    - AF: added the gform_admin_pre_render filter to GFAddOn::form_settings_page() so the form object and merge tags can be filtered on form settings pages for add-ons
+    - AF: renamed GFResults::get_entries_data() to GFResults::get_results_data()
+    - AF: fixed an issue with the results page for forms with a Quiz fields and with a high volume of entries
+    - AF: fixed an issue with the results page with HTML in choice labels
+    - AF: fixed an issue where entry meta might not get registered before the cache is invoked; Added GFAddOn::pre_init(). Moved the entry meta hook into pre_int().
+    - Updated tooltip function so that it uses a global variable improving performance on sites using WPML
+    - Fixed notices
+
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.7.6.8
     - Updated masked input script to 1.3.1
     - Updated chosen script to 0.9.12
-    - Updated tooltip function so that it uses a global variable improving performance on sites using WPML
+    - AF: Added the "horizontal" property to the settings_radio field
+    - Added logging statements around the setup() function
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.7.6.7
     - Updated ManageWP hooks so that they fire in the admin and front end
-    - Updated GFFormsModel::search_leads() to accept both a single form id and an array of form ids
-    - Updated dutch translation file
-    - Updated Pot file
-    - Updated Add-On framework with various fixes and enhancements
+    - Changed GFFormsModel::search_leads() to accept both a single form id and an array of form ids
+    - AF: Added tooltips to the results markup
+    - AF: Added a callback to allow the results filters to be modified
+    - AF: Added gform_filters_pre_results filter to allow the results filters to be modified
+    - AF: Added support for the contains operator in the results filters
+    - AF: Added support for likert scores on the results page
+    - AF: Added vertical_label attribute to text box and textarea settings
+    - AF: Added the id attribute to setting rows
+    - AF: Changed the results page to include results filters for all fields and all entry meta by default
+    - AF: Updated Addon Framework uninstall so that it displays the "Uninstall success" message inside the settings panel
+    - AF: Updated the Feed Addon to display a more friendly message when no feeds are configured
+    - AF: Fixed more results link on the results page
+    - AF: Fixed no output attributes for field choices
+    - AF: Fixed issue with "hidden" property of AFW settings fields
+    - AF: Fixed issue with new feed being created multiple times
+    - AF: Fixed _get_base_path() and _get_base_url()
 
-    - Fixed issue with scheduling when "weekly" is selected.
-    - Fixed an issue where user defined pricing field wouldn't format to currency on AJAX forms after a validation failure
-    - Fixed an issue where the confirmation message would not be displayed below the progress bar on AJAX enabled forms.
-    - Fixed E_STRICT notices under WP 3.6 running on PHP 5.4
-    - Fixed entry meta conditional logic in confirmations and notifications
-    - Fixed issue with pagination on entry list page displaying wrong counts after a search is performed
-    - Fixed notices
-    - Fixed localization issues
+-------------------------------------------------------------------------------------------------------------------
+Version 1.7.6.6
+    - AF: Added support for labels, tooltips and default values to text and textarea settings
+    - AF: Added support for tooltips in checkbox choices
+    - AF: Added settings_radio()
+    - AF: Moved some MailChimp specific functions back into MailChimp
     - Fixed issue with admin_title filter return false instead of original title when not on form settings page
-    - Fixed bug with hidden, single, or calculated product inputs object creation treating the field id as a string instead of number, resulting in the ids of the items in the inputs object not matching the field id
 
+-------------------------------------------------------------------------------------------------------------------
+Version 1.7.6.5
+	- Fixed notice if confirmations object doesn't exist (it could be removed using a hook)
 
+-------------------------------------------------------------------------------------------------------------------
+Version 1.7.6.4
+	- Fixed bug with hidden, single, or calculated product inputs object creation treating the field id as a string instead of number,
+		resulting in the ids of the items in the inputs object not matching the field id
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.7.6.3
+    - AFW: Changed script enqueueing to add scripts automatically to preview and print pages
+    - Fixed entry meta conditional logic in confirmations and notifications
+    - AFW: moved support for paypal integration into feed addon
+    - Added support for updating page title based on settings page
+    - AFW: added support for 'save' field type
+    - Added support for filtering return of 'has_conditional_logic', useful for developers using conditional logic in objects not checked by Gravity Forms
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.7.6.2
+    - Updated dutch translation file
+    - Fixed localization issue
+    - Updated Pot file
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.7.6.1
+    - AFW: Added maybe_process_feed(), handles getting feeds and only calling process_feed() method when feed should be processed
 
 -------------------------------------------------------------------------------------------------------------------
 Version 1.7.6
@@ -87,7 +602,7 @@ Version 1.7.4
 Version 1.7.3
     - Changed form switcher so that it redirects to the main form settings tab when switching form while at any other form settings tab
     - Updated post creation process to create post initially as a draft and then update to desired post status
-	- Fixed issue where merge tag drop down did not display items when a required extended name field was present
+    - Fixed issue where merge tag drop down did not display items when a required extended name field was present
     - Added new hook to prevent new forms from being created in the demo site
     - Fixed issue with form duplication routine not duplicating confirmations and notifications
     - Fixed issue with new notifications being created with the "enable conditional logic" checkbox checked

@@ -12,7 +12,7 @@ class GFWidget extends WP_Widget {
 
     function __construct() {
 
-        //load_plugin_textdomain( 'gravityforms', false, '/gravityforms/languages' );
+        load_plugin_textdomain( 'gravityforms', false, '/gravityforms/languages' );
 
         $description = __('Gravity Forms Widget', "gravityforms");
         $this->WP_Widget( 'gform_widget', __('Form', 'gravityforms'),

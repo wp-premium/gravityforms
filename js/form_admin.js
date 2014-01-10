@@ -7,16 +7,9 @@ jQuery(document).ready(function($){
 
     gaddon.init();
 
-    if($(document).on){
-        $(document).on('change', '.gfield_rule_value_dropdown', function(){
-            SetRuleValueDropDown($(this));
-        });
-    }
-    else{
-        $('.gfield_rule_value_dropdown').live('change', function(){
-            SetRuleValueDropDown($(this));
-        });
-    }
+    $(document).on('change', '.gfield_rule_value_dropdown', function(){
+        SetRuleValueDropDown($(this));
+    });
 
     // init merge tag auto complete
     if(typeof form != 'undefined')
@@ -117,9 +110,9 @@ function CreateConditionalLogic(objectType, obj){
         str += GetRuleFields(objectType, i, rule.fieldId);
         str += GetRuleOperators(objectType, i, rule.fieldId, rule.operator);
         str += GetRuleValues(objectType, i, rule.fieldId, rule.value);
-        str += "<img src='" + gf_vars.baseUrl + "/images/add.png' class='add_field_choice' title='add another rule' alt='add another rule' style='cursor:pointer; margin:0 3px;' onclick=\"InsertRule('" + objectType + "', " + (i+1) + ");\" />";
+        str += "<a class='add_field_choice' title='add another rule' onclick=\"InsertRule('" + objectType + "', " + (i+1) + ");\" ><i class='fa fa-plus-square fa-lg'></i></a>";
         if(obj.conditionalLogic.rules.length > 1 )
-            str += "<img src='" + gf_vars.baseUrl + "/images/remove.png' title='remove this rule' alt='remove this rule' class='delete_field_choice' style='cursor:pointer;' onclick=\"DeleteRule('" + objectType + "', " + i + ");\" /></li>";
+            str += "<a class='delete_field_choice' title='remove this rule' onclick=\"DeleteRule('" + objectType + "', " + i + ");\" ><i class='fa fa-minus-square fa-lg'></i></a></li>";
 
         str += "</div>";
     }
@@ -127,13 +120,13 @@ function CreateConditionalLogic(objectType, obj){
     jQuery("#" + objectType + "_conditional_logic_container").html(str);
 
     //initializing placeholder script
-    jQuery.Placeholder.init();
+    Placeholders.enable();
 }
 
 function GetRuleOperators( objectType, i, fieldId, selectedOperator ) {
     var str, supportedOperators, operators, str, selected;
     supportedOperators = {"is":"is","isnot":"isNot", ">":"greaterThan", "<":"lessThan", "contains":"contains", "starts_with":"startsWith", "ends_with":"endsWith"};
-    str = "<select id='" + objectType + "_rule_operator_" + i + "' class='gfield_rule_select' onchange='SetRuleProperty(\"" + objectType + "\", " + i + ", \"operator\", jQuery(this).val());'>";
+    str = "<select id='" + objectType + "_rule_operator_" + i + "' class='gfield_rule_select' onchange='SetRuleProperty(\"" + objectType + "\", " + i + ", \"operator\", jQuery(this).val());var valueSelector=\"#" + objectType + "_rule_value_" + i + "\"; jQuery(valueSelector).replaceWith(GetRuleValues(\"" + objectType + "\", " + i + ",\"" + fieldId + "\", \"\"));jQuery(valueSelector).change();'>";
     operators = IsEntryMeta(fieldId) ? GetOperatorsForMeta(supportedOperators, fieldId) : supportedOperators;
 
     operators = gform.applyFilters( 'gform_conditional_logic_operators', operators, objectType, fieldId )
@@ -248,13 +241,12 @@ function GetRuleValues(objectType, ruleIndex, selectedFieldId, selectedValue, in
     if(selectedFieldId == 0)
         return "";
 
-    var field = GetFieldById(selectedFieldId);
-    var isEntryMeta = IsEntryMeta(selectedFieldId);
-    // @STEVE - removed this to allow for non-field-based conditional logic
-    /*if(!field && !isEntryMeta)
-        return "";*/
-
-    var str = "";
+    var field = GetFieldById(selectedFieldId),
+        isEntryMeta = IsEntryMeta(selectedFieldId),
+        obj = GetConditionalObject(objectType),
+        rule = obj["conditionalLogic"]["rules"][ruleIndex],
+        operator = rule.operator,
+        str = "";
 
     if(field && field["type"] == "post_category" && field["displayAllCategories"]){
 
@@ -289,7 +281,7 @@ function GetRuleValues(objectType, ruleIndex, selectedFieldId, selectedValue, in
             str = "<select id='" + placeholderName + "' class='gfield_rule_select'><option>" + gf_vars["loading"] + "</option></select>";
         }
     }
-    else if(field && field.choices){
+    else if(field && field.choices && jQuery.inArray(operator, ["is", "isnot"]) > -1){
         str = GetRuleValuesDropDown(field.choices, objectType, ruleIndex, selectedValue, inputName);
     }
     else if (isEntryMeta && entry_meta && entry_meta[selectedFieldId] &&  entry_meta[selectedFieldId].filter && typeof entry_meta[selectedFieldId].filter.choices != 'undefined') {
@@ -486,6 +478,10 @@ function GetInput(field, id){
     if( typeof field['inputs'] != 'undefined' && jQuery.isArray(field['inputs']) ) {
 
         for(i in field['inputs']) {
+
+            if(!field['inputs'].hasOwnProperty(i))
+                continue;
+
             var input = field['inputs'][i];
             if(input.id == id)
                 return input;
@@ -537,6 +533,11 @@ function DeleteNotification(notificationId) {
     jQuery('#action').val('delete');
     jQuery('#notification_list_form')[0].submit();
 }
+function DuplicateNotification(notificationId) {
+    jQuery('#action_argument').val(notificationId);
+    jQuery('#action').val('duplicate');
+    jQuery('#notification_list_form')[0].submit();
+}
 
 function DeleteConfirmation(confirmationId) {
     jQuery('#action_argument').val(confirmationId);
@@ -544,13 +545,14 @@ function DeleteConfirmation(confirmationId) {
     jQuery('#confirmation_list_form')[0].submit();
 }
 
-function SetConfirmationConditionalLogic(isChecked) {
+function DuplicateConfirmation(confirmationId) {
+    jQuery('#action_argument').val(confirmationId);
+    jQuery('#action').val('duplicate');
+    jQuery('#confirmation_list_form')[0].submit();
+}
 
-    if(typeof isChecked == 'undefined') {
-        confirmation['conditionalLogic'] = jQuery('#conditional_logic').val() ? jQuery.parseJSON(jQuery('#conditional_logic').val()) : null;
-    } else {
-        confirmation['conditionalLogic'] = isChecked ? new ConditionalLogic() : null;
-    }
+function SetConfirmationConditionalLogic() {
+   confirmation['conditionalLogic'] = jQuery('#conditional_logic').val() ? jQuery.parseJSON(jQuery('#conditional_logic').val()) : new ConditionalLogic();
 
 }
 
@@ -562,21 +564,22 @@ function ToggleConfirmation() {
 
     if(isRedirect){
         showElement = ".form_confirmation_redirect_container";
-        hideElement = "#form_confirmation_message_container, #form_confirmation_page_container";
+        hideElement = "#form_confirmation_message_container, .form_confirmation_page_container";
         ClearConfirmationSettings(['text', 'page']);
     }
     else if(isPage){
-        showElement = "#form_confirmation_page_container";
+        showElement = ".form_confirmation_page_container";
         hideElement = "#form_confirmation_message_container, .form_confirmation_redirect_container";
         ClearConfirmationSettings(['text', 'redirect']);
     }
     else{
         showElement = "#form_confirmation_message_container";
-        hideElement = "#form_confirmation_page_container, .form_confirmation_redirect_container";
+        hideElement = ".form_confirmation_page_container, .form_confirmation_redirect_container";
         ClearConfirmationSettings(['page', 'redirect']);
     }
 
     ToggleQueryString();
+    TogglePageQueryString()
 
     jQuery(hideElement).hide();
     jQuery(showElement).show();
@@ -594,11 +597,26 @@ function ToggleQueryString() {
     }
 }
 
+function TogglePageQueryString() {
+    if(jQuery('#form_page_use_querystring').is(":checked")){
+        jQuery('#form_page_querystring_container').show();
+    }
+    else{
+        jQuery('#form_page_querystring_container').hide();
+        jQuery("#form_page_querystring").val('');
+        jQuery("#form_page_use_querystring").val('');
+    }
+}
+
 function ClearConfirmationSettings(type) {
 
     var types = jQuery.isArray(type) ? type : [type];
 
     for(i in types) {
+
+        if(!types.hasOwnProperty(i))
+            continue;
+
         switch(types[i]) {
         case 'text':
             jQuery('#form_confirmation_message').val('');
@@ -606,6 +624,8 @@ function ClearConfirmationSettings(type) {
             break;
         case 'page':
             jQuery('#form_confirmation_page').val('');
+            jQuery('#form_page_querystring').val('');
+            jQuery('#form_page_use_querystring').prop('checked', false);
             break;
         case 'redirect':
             jQuery('#form_confirmation_url').val('');
@@ -875,6 +895,9 @@ var gfMergeTagsObj = function(form) {
             // group fields by required, optional and pricing
             for(i in fields) {
 
+                if(!fields.hasOwnProperty(i))
+                    continue;
+
                 var field = fields[i];
 
                 if(field['displayOnly'])
@@ -929,12 +952,19 @@ var gfMergeTagsObj = function(form) {
 
             if(requiredFields.length > 0) {
                 for(i in requiredFields) {
+                    if(! requiredFields.hasOwnProperty(i))
+                        continue;
+
                     requiredGroup = requiredGroup.concat(this.getFieldMergeTags(requiredFields[i], option));
                 }
             }
 
             if(optionalFields.length > 0) {
                 for(i in optionalFields) {
+
+                    if(!optionalFields.hasOwnProperty(i))
+                        continue;
+
                     optionalGroup = optionalGroup.concat(this.getFieldMergeTags(optionalFields[i], option));
                 }
             }
@@ -945,6 +975,9 @@ var gfMergeTagsObj = function(form) {
                     pricingGroup.push({ tag: '{pricing_fields}', 'label': this.getMergeTagLabel('{pricing_fields}') });
 
                 for(i in pricingFields) {
+                    if(!pricingFields.hasOwnProperty(i))
+                        continue;
+
                     pricingGroup.concat(this.getFieldMergeTags(pricingFields[i], option));
                 }
 
@@ -961,7 +994,9 @@ var gfMergeTagsObj = function(form) {
         otherGroup.push( { tag: '{entry_id}', label: this.getMergeTagLabel('{entry_id}') });
         otherGroup.push( { tag: '{entry_url}', label: this.getMergeTagLabel('{entry_url}') });
         otherGroup.push( { tag: '{form_id}', label: this.getMergeTagLabel('{form_id}') });
+
         otherGroup.push( { tag: '{form_title}', label: this.getMergeTagLabel('{form_title}') });
+
         otherGroup.push( { tag: '{user_agent}', label: this.getMergeTagLabel('{user_agent}') });
         otherGroup.push( { tag: '{referer}', label: this.getMergeTagLabel('{referer}') });
 
@@ -977,6 +1012,10 @@ var gfMergeTagsObj = function(form) {
         var customMergeTags = this.getCustomMergeTags();
         if( customMergeTags.tags.length > 0 ) {
             for( i in customMergeTags.tags ) {
+
+                if(! customMergeTags.tags.hasOwnProperty(i))
+                    continue;
+
                 var customMergeTag = customMergeTags.tags[i];
                 customGroup.push( { tag: customMergeTag.tag, label: customMergeTag.label } );
             }
@@ -1017,8 +1056,16 @@ var gfMergeTagsObj = function(form) {
     this.getMergeTagLabel = function(tag) {
 
         for(groupName in gf_vars.mergeTags) {
+
+            if(!gf_vars.mergeTags.hasOwnProperty(groupName))
+                continue;
+
             var tags = gf_vars.mergeTags[groupName].tags;
             for(i in tags) {
+
+                if(!tags.hasOwnProperty(i))
+                    continue;
+
                 if(tags[i].tag == tag)
                     return tags[i].label;
             }
@@ -1050,7 +1097,13 @@ var gfMergeTagsObj = function(form) {
             }
 
             for(i in field.inputs) {
+
+                if(!field.inputs.hasOwnProperty(i))
+                    continue;
+
                 var input = field.inputs[i];
+                if(inputType == "creditcard" && jQuery.inArray(input.id,[parseFloat(field.id + ".2"), parseFloat(field.id + ".3"), parseFloat(field.id + ".5")]) > -1)
+                    continue;
                 label = GetLabel(field, input.id).replace("'", "\\'");
                 value = "{" + label + ":" + input.id + tagArgs + "}";
                 mergeTags.push( { tag: value, label: label } );
@@ -1068,6 +1121,9 @@ var gfMergeTagsObj = function(form) {
 
     this.getCustomMergeTags = function() {
         for(groupName in gf_vars.mergeTags) {
+            if(!gf_vars.mergeTags.hasOwnProperty(groupName))
+                continue;
+
             if(groupName == 'custom')
                 return gf_vars.mergeTags[groupName];
         }
@@ -1090,8 +1146,16 @@ var gfMergeTagsObj = function(form) {
 
         var autoCompleteTags = [];
         for(group in mergeTags) {
+
+            if(! mergeTags.hasOwnProperty(group))
+                continue;
+
             var tags = mergeTags[group].tags;
             for(i in tags) {
+
+                if(!tags.hasOwnProperty(i))
+                    continue;
+
                 autoCompleteTags.push(tags[i].tag);
             }
         }
@@ -1117,6 +1181,9 @@ var gfMergeTagsObj = function(form) {
 
         for(group in mergeTags) {
 
+            if(! mergeTags.hasOwnProperty(group))
+                continue;
+
             var label = mergeTags[group].label
             var tags = mergeTags[group].tags;
 
@@ -1129,6 +1196,10 @@ var gfMergeTagsObj = function(form) {
                 optionsHTML += '<li class="group-header">' + label + '</li>';
 
             for(i in tags) {
+
+                if(!tags.hasOwnProperty(i))
+                    continue;
+
                 var tag = tags[i];
                 optionsHTML += '<li class=""><a class="" data-value="' + tag.tag + '">' + tag.label + '</a></li>';
             }
@@ -1141,6 +1212,10 @@ var gfMergeTagsObj = function(form) {
     this.hasMultipleGroups = function(mergeTags) {
         var count = 0;
         for(group in mergeTags) {
+
+            if(!mergeTags.hasOwnProperty(group))
+                continue;
+
             if(mergeTags[group].tags.length > 0)
                 count++;
         }
@@ -1172,6 +1247,9 @@ var gfMergeTagsObj = function(form) {
         var classes = classStr.split(' ');
 
         for(i in classes) {
+
+            if(!classes.hasOwnProperty(i))
+                continue;
 
             var pieces = classes[i].split('-');
 

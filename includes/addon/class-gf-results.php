@@ -7,18 +7,19 @@ if (!class_exists("GFResults")) {
         protected $_title;
         protected $_callbacks;
         protected $_capabilities;
+        protected $_search_title;
 
         public function __construct($slug, $config) {
-            $this->_slug        = $slug;
-            $this->_title       = rgar($config, "title");
-            $this->_callbacks = isset($config["callbacks"]) ? $config["callbacks"] : array();
+            $this->_slug         = $slug;
+            $this->_title        = rgar($config, "title");
+            $this->_search_title = rgempty("search_title", $config) ? __("Results Filters", "gravityforms") : rgar($config, "search_title");
+            $this->_callbacks    = isset($config["callbacks"]) ? $config["callbacks"] : array();
             $this->_capabilities = isset($config["capabilities"]) ? $config["capabilities"] : array();
-
         }
 
         public function init() {
 
-            if(!GFCommon::current_user_can_any($this->_capabilities))
+            if (!GFCommon::current_user_can_any($this->_capabilities))
                 return;
 
             //add top toolbar menu item
@@ -48,49 +49,26 @@ if (!class_exists("GFResults")) {
 
         public static function localize_results_scripts() {
 
-            $filter_fields    = rgget("f");
-            $filter_types     = rgget("t");
-            $filter_operators = rgget("o");
-            $filter_values    = rgget("v");
-
             // Get current page protocol
             $protocol = isset($_SERVER["HTTPS"]) ? 'https://' : 'http://';
             // Output admin-ajax.php URL with same protocol as current page
 
             $vars = array(
-                'ajaxurl'         => admin_url('admin-ajax.php', $protocol),
-                'imagesUrl'       => GFCommon::get_base_url() . "/images",
-                'filterFields'    => $filter_fields,
-                'filterTypes'     => $filter_types,
-                'filterOperators' => $filter_operators,
-                'filterValues'    => $filter_values
+                'ajaxurl'   => admin_url('admin-ajax.php', $protocol),
+                'imagesUrl' => GFCommon::get_base_url() . "/images"
             );
 
             wp_localize_script('gaddon_results_js', 'gresultsVars', $vars);
 
             $strings = array(
-                'noFilters'         => __("No filters", "gravityforms"),
-                'addFieldFilter'    => __("Add a field filter", "gravityforms"),
-                'removeFieldFilter' => __("Remove a field filter", "gravityforms"),
-                'ajaxError'         => __("Error retrieving results. Please contact support.", "gravityforms")
+                'ajaxError' => __("Error retrieving results. If the problem persists, please contact support.", "gravityforms")
             );
-
 
             wp_localize_script('gaddon_results_js', 'gresultsStrings', $strings);
 
-            $strings = array(
-                'is'         => __("is", "gravityforms"),
-                'isnot'    => __("is not", "gravityforms"),
-                '>' => __("greater than", "gravityforms"),
-                '<'         => __("less than", "gravityforms"),
-                'contains' => __("contains", "gravityforms")
-            );
-
-            wp_localize_script('gaddon_results_js', 'gresultsOperatorStrings', $strings);
-
         }
 
-        private function get_fields($form){
+        private function get_fields($form) {
             return isset($this->_callbacks["fields"]) ? call_user_func($this->_callbacks["fields"], $form) : $form["fields"];
         }
 
@@ -122,6 +100,12 @@ if (!class_exists("GFResults")) {
                     'capabilities' => $this->_capabilities
                 );
 
+                $duplicate_submenus = wp_filter_object_list( rgars($menu_items, "results/sub_menu_items") , array("label" => $sub_menu_items[0]["label"] ) );
+                if(count($duplicate_submenus) > 0)
+                {
+                    return $menu_items;
+                }
+
                 // If there's already a menu item with the key "results" then merge the two.
                 if (isset($menu_items["results"])) {
                     $existing_link_class = $menu_items["results"]["link_class"];
@@ -133,7 +117,7 @@ if (!class_exists("GFResults")) {
                     $menu_items["results"]["link_class"]     = $link_class;
                     $menu_items["results"]["capabilities"]   = $merged_capabilities;
                     $menu_items["results"]["sub_menu_items"] = $merged_sub_menu_items;
-                    $menu_items["results"]["label"] = __("Results", "gravityforms");
+                    $menu_items["results"]["label"]          = __("Results", "gravityforms");
 
                 } else {
                     // so far during the page cycle this is the only menu item for this key
@@ -164,7 +148,6 @@ if (!class_exists("GFResults")) {
 
         public function results_page($form_id, $page_title, $gf_page, $gf_view) {
             if (empty($form_id)) {
-
                 $forms = RGFormsModel::get_forms();
                 if (!empty($forms)) {
                     $form_id = $forms[0]->id;
@@ -173,79 +156,40 @@ if (!class_exists("GFResults")) {
             $form = GFFormsModel::get_form_meta($form_id);
             $form = apply_filters("gform_form_pre_results_$form_id", apply_filters("gform_form_pre_results", $form));
 
-
-
             // set up filter vars
-            $start_date    = rgget("start");
-            $end_date      = rgget("end");
+            $start_date = rgget("start");
+            $end_date   = rgget("end");
 
-            $all_fields    = $form["fields"];
+            $all_fields = $form["fields"];
 
-            // set up filters
-            $fields        = $all_fields;
-            $exclude_types = array("rank", "page");
+            $filter_settings = GFCommon::get_field_filter_settings($form);
+            $filter_settings = apply_filters("gform_filters_pre_results", $filter_settings, $form);
+            $filter_settings = array_values($filter_settings); // reset the numeric keys in case some filters have been unset
 
-            for ($i = 0; $i < count($all_fields); $i++) {
-                $field_type = GFFormsmodel::get_input_type($all_fields[$i]);
-                if (in_array($field_type, $exclude_types))
-                    unset($fields[$i]);
-            }
-            $fields = array_values($fields);
+            $filter_fields    = rgget("f");
+            $filter_operators = rgget("o");
+            $filter_values    = rgget("v");
+            $filters          = array();
 
-            $field_filters = array();
-
-            foreach ($fields as $field) {
-                $operators   = array();
-                $field_type  = GFFormsmodel::get_input_type($field);
-                $operators[] = "is";
-                if ($field_type != "checkbox")
-                    $operators[] = "isnot";
-                $field_filter = array();
-                $key          = $field["id"];
-                if ($field_type == "likert" && rgar($field, "gsurveyLikertEnableMultipleRows")) {
-                    $field_filter["key"]  = $key;
-                    $field_filter["type"] = "group";
-                    $field_filter["text"] = rgar($field, "label");
-                    $sub_filters          = array();
-                    $rows                 = rgar($field, "gsurveyLikertRows");
-                    foreach ($rows as $row) {
-                        $sub_filter                    = array();
-                        $sub_filter["key"]             = $key . "|" . rgar($row, "value");
-                        $sub_filter["text"]            = rgar($row, "text");
-                        $sub_filter["type"]            = "field";
-                        $sub_filter["preventMultiple"] = false;
-                        $sub_filter["operators"]       = $operators;
-                        $sub_filter["values"]          = $field["choices"];
-                        $sub_filters[]                 = $sub_filter;
-                    }
-                    $field_filter["filters"] = $sub_filters;
-                } else {
-                    $field_filter["key"]             = $key;
-                    $field_filter["type"]            = "field";
-                    $field_filter["preventMultiple"] = false;
-                    $field_filter["text"]            = rgar($field, "label");
-
-                    if (isset($field["choices"]))
-                        $field_filter["values"] = $field["choices"];
-                    else
-                        $operators[] = "contains";
-
-                    $field_filter["operators"]       = $operators;
-
+            $init_vars = array();
+            if (!empty($filter_fields)) {
+                $init_vars["mode"] = rgget("mode");
+                foreach ($filter_fields as $i => $filter_field) {
+                    $filters[$i]["field"]    = $filter_field;
+                    $filters[$i]["operator"] = $filter_operators[$i];
+                    $filters[$i]["value"]    = $filter_values[$i];
                 }
-                $field_filters[] = $field_filter;
-
+                $init_vars["filters"] = $filters;
             }
 
-            $entry_meta_filters = self::get_entry_meta_filters($form_id);
-            $field_filters = array_merge($field_filters, $entry_meta_filters);
-
-            $field_filters = apply_filters("gform_filters_pre_results", $field_filters, $form);
-            $field_filters = array_values($field_filters); // reset the numeric keys in case some filters have been unset
             ?>
             <script type="text/javascript">
                 var gresultsFields = <?php echo json_encode($all_fields); ?>;
-                var gresultsFilters = <?php echo json_encode($field_filters); ?>;
+                var gresultsFilterSettings = <?php echo json_encode($filter_settings); ?>;
+                var gresultsInitVars = <?php echo json_encode($init_vars); ?>;
+
+                <?php GFCommon::gf_global() ?>
+                <?php GFCommon::gf_vars() ?>
             </script>
 
             <link rel="stylesheet"
@@ -259,79 +203,104 @@ if (!class_exists("GFResults")) {
 
                 <?php RGForms::top_toolbar(); ?>
                 <?php if (false === empty($all_fields)) : ?>
-                    <div class="gresults-filter-loading" style="display:none;float:left;margin-right:5px;">
+
+                    <div id="poststuff" class="metabox-holder has-right-sidebar">
+                        <div id="side-info-column" class="inner-sidebar">
+                            <div id="gresults-results-filter" class="postbox">
+                                <h3 style="cursor: default;"><?php echo $this->_search_title ?></h3>
+
+                                <div id="gresults-results-filter-content">
+                                    <form id="gresults-results-filter-form" action="" method="GET">
+                                        <input type="hidden" id="gresults-page-slug" name="page"
+                                               value="<?php echo esc_attr($gf_page); ?>">
+                                        <input type="hidden" id="gresults-view-slug" name="view"
+                                               value="<?php echo esc_attr($gf_view); ?>">
+                                        <input type="hidden" id="gresults-form-id" name="id"
+                                               value="<?php echo esc_attr($form_id); ?>">
+
+                                        <?php
+                                        $filter_ui = array(
+                                            "fields" => array(  "label" => __("Filters", "gravityforms"),
+                                                "tooltip" => "gresults_filters",
+                                                "markup" => '<div id="gresults-results-field-filters-container">
+                                                                                <!-- placeholder populated by js -->
+                                                                             </div>'
+
+
+                                            ),
+
+                                            "date_range" => array(  "label" =>  __("Date Range", "gravityforms"),
+                                                "tooltip" => "gresults_date_range",
+                                                "markup" => '<div style="width:90px; float:left; ">
+
+                                                                                    <label
+                                                                                        for="gresults-results-filter-date-start">' . __("Start", "gravityforms") .'</label>
+                                                                                    <input type="text" id="gresults-results-filter-date-start" name="start"
+                                                                                           style="width:80px"
+                                                                                           class="gresults-datepicker"
+                                                                                           value="' . $start_date . '"/>
+                                                                                </div>
+                                                                                <div style="width:90px; float:left; ">
+                                                                                    <label
+                                                                                        for="gresults-results-filter-date-end">' . __("End", "gravityforms") .'</label>
+                                                                                    <input type="text" id="gresults-results-filter-date-end" name="end"
+                                                                                           style="width:80px"
+                                                                                           class="gresults-datepicker"
+                                                                                           value="' . $end_date . '"/>
+                                                                                </div>'
+                                            )
+
+                                        );
+
+                                        $filter_ui = apply_filters("gform_filter_ui", $filter_ui, $form_id, $page_title, $gf_page, $gf_view);
+
+                                        foreach($filter_ui as $name => $filter){
+                                            ?>
+                                            <div class='gresults-results-filter-section-label'>
+                                                <?php echo $filter["label"] ?>
+                                                &nbsp;<?php gform_tooltip(rgar($filter,"tooltip"), "tooltip_bottomleft") ?>
+                                            </div>
+                                            <?php
+                                            echo $filter["markup"];
+                                        }
+
+                                        ?>
+
+                                        <br style="clear:both"/>
+
+                                        <div id="gresults-results-filter-buttons">
+                                            <input type="submit" id="gresults-results-filter-submit-button"
+                                                   class="button button-primary button-large" value="Apply filters">
+                                            <input type="button" id="gresults-results-filter-clear-button"
+                                                   class="button button-secondary button-large" value="Clear"
+                                                   onclick="gresults.clearFilterForm();">
+
+                                            <div class="gresults-filter-loading"
+                                                 style="display:none; float:right; margin-top:5px;">
+                                                <img
+                                                    src="<?php echo GFCommon::get_base_url() ?>/images/spinner.gif"
+                                                    alt="loading..."/>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="gresults-filter-loading" style="display:none;margin:0 5px 10px 0;">
                         <img style="vertical-align:middle;"
                              src="<?php echo GFCommon::get_base_url() ?>/images/spinner.gif"
                              alt="loading..."/>&nbsp;
                         <a href="javascript:void(0);" onclick="javascript:gresultsAjaxRequest.abort()">Cancel</a>
                     </div>
-                    <div id="poststuff" class="metabox-holder has-right-sidebar">
-                        <div id="gresults-results-wrapper">
-                            <div id="gresults-results">&nbsp;
-                            </div>
-                        </div>
 
-                        <div id="gresults-results-filter" class="postbox">
-                            <h3 style="cursor: default;"><?php _e("Results Filters", "gravityforms"); ?></h3>
-
-                            <div id="gresults-results-filter-content">
-                                <form id="gresults-results-filter-form" action="" method="GET">
-                                    <input type="hidden" id="gresults-page-slug" name="page"
-                                           value="<?php echo esc_attr($gf_page); ?>">
-                                    <input type="hidden" id="gresults-view-slug" name="view"
-                                           value="<?php echo esc_attr($gf_view); ?>">
-                                    <input type="hidden" id="gresults-form-id" name="id"
-                                           value="<?php echo esc_attr($form_id); ?>">
-                                    <div class='gresults-results-filter-section-label'>
-                                        <?php _e("Filters", "gravityforms"); ?>
-                                        &nbsp;<?php gform_tooltip("gresults_filters", "tooltip_bottomleft") ?></div>
-                                    <div id="gresults-results-field-filters-container">
-                                        <div id="gresults-results-field-filters">
-                                            <!-- placeholder populated by js -->
-                                        </div>
-                                    </div>
-                                    <div class='gresults-results-filter-section-label'>
-                                        <?php _e("Date Range", "gravityforms"); ?>
-                                        &nbsp;<?php gform_tooltip("gresults_date_range", "tooltip_left") ?>
-                                    </div>
-                                    <div style="width:90px; float:left; ">
-
-                                        <label
-                                            for="gresults-results-filter-date-start"><?php _e("Start", "gravityforms"); ?></label>
-                                        <input type="text" id="gresults-results-filter-date-start" name="start"
-                                               style="width:80px"
-                                               class="gresults-datepicker"
-                                               value="<?php echo $start_date; ?>"/>
-                                    </div>
-                                    <div style="width:90px; float:left; ">
-                                        <label
-                                            for="gresults-results-filter-date-end"><?php _e("End", "gravityforms"); ?></label>
-                                        <input type="text" id="gresults-results-filter-date-end" name="end"
-                                               style="width:80px"
-                                               class="gresults-datepicker"
-                                               value="<?php echo $end_date; ?>"/>
-                                    </div>
-                                    <br style="clear:both"/>
-
-                                    <div id="gresults-results-filter-buttons">
-                                        <input type="submit" id="gresults-results-filter-submit-button"
-                                               class="button button-primary button-large" value="Apply filters">
-                                        <input type="button" id="gresults-results-filter-clear-button"
-                                               class="button button-secondary button-large" value="Clear"
-                                               onclick="gresults.clearFilterForm();">
-
-                                        <div class="gresults-filter-loading"
-                                             style="display:none; float:right; margin-top:5px;">
-                                            <img
-                                                src="<?php echo GFCommon::get_base_url() ?>/images/spinner.gif"
-                                                alt="loading..."/>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
+                    <div id="gresults-results-wrapper">
+                        <div id="gresults-results">&nbsp;
                         </div>
                     </div>
-                <?php else :
+
+                <?php
+                else :
                     _e("This form does not have any fields that can be used for results", "gravityforms");
                 endif ?>
             </div>
@@ -349,107 +318,50 @@ if (!class_exists("GFResults")) {
             return $tooltips;
         }
 
-        private function get_entry_meta_filters($form_id){
-            $filters = array();
-            //$entry_meta = is_callable($this->_callbacks["get_entry_meta"]) ? call_user_func($this->_callbacks["get_entry_meta"], array(), $form_id) : array();
-            $entry_meta = GFFormsModel::get_entry_meta($form_id);
-            if(empty($entry_meta))
-                return $filters;
-
-            foreach($entry_meta as $key => $meta){
-                if(isset($meta["filter"])){
-                    $filter = array();
-                    $filter["key"]             = $key;
-                    $filter["type"]            = "meta";
-                    $filter["preventMultiple"] = isset($meta["filter"]["preventMultiple"]) ? $meta["filter"]["preventMultiple"] : false;
-                    $filter["text"]            = rgar($meta, "label");
-                    $filter["operators"]       = isset($meta["filter"]["operators"]) ? $meta["filter"]["operators"] : array("is", "isnot") ;
-                    if (isset($meta["filter"]["choices"]))
-                        $filter["values"] = $meta["filter"]["choices"];
-                    $filters[] = $filter;
-                }
-
-            }
-            return $filters;
-        }
 
         public function ajax_get_results() {
-            $output          = array();
-            $html            = "";
-            $form_id         = rgpost("id");
-            $form            = GFFormsModel::get_form_meta($form_id);
-            $form            = apply_filters("gform_form_pre_results_$form_id", apply_filters("gform_form_pre_results", $form));
-            $search_criteria = array();
-            $fields          = $this->get_fields($form);
-            $total_entries   = GFFormsModel::count_search_leads($form_id, $search_criteria);
+            $output                    = array();
+            $html                      = "";
+            $form_id                   = rgpost("id");
+            $form                      = GFFormsModel::get_form_meta($form_id);
+            $form                      = apply_filters("gform_form_pre_results_$form_id", apply_filters("gform_form_pre_results", $form));
+            $search_criteria["status"] = "active";
+            $fields                    = $this->get_fields($form);
+            $total_entries             = GFAPI::count_entries($form_id, $search_criteria);
             if ($total_entries == 0) {
                 $html = __("No results.", "gravityforms");
             } else {
-
-                $filter_fields = rgpost("f");
-                if (is_array($filter_fields)) {
-                    $filter_types     = rgpost("t");
-                    $filter_operators = rgpost("o");
-                    $filter_values    = rgpost("v");
-                    for ($i = 0; $i < count($filter_fields); $i++) {
-                        $field_filter         = array();
-                        $field_filter["type"] = "field";
-                        $key                  = $filter_fields[$i];
-                        $filter_type          = $filter_types[$i];
-                        $operator             = $filter_operators[$i];
-                        $val                  = $filter_values[$i];
-                        $strpos_row_key       = strpos($key, "|");
-                        if ($strpos_row_key !== false) { //multi-row
-                            $key_array = explode("|", $key);
-                            $key       = $key_array[0];
-                            $val       = $key_array[1] . ":" . $val;
-                        }
-                        $field_filter["key"]      = $key;
-                        $field_filter["type"]     = $filter_type;
-                        $field_filter["operator"] = $operator;
-                        $field_filter["value"]    = $val;
-                        $search_criteria[]        = $field_filter;
-                    }
-                }
+                $search_criteria                  = array();
+                $search_criteria["field_filters"] = GFCommon::get_field_filters_from_post();
 
                 $start_date = rgpost("start");
                 $end_date   = rgpost("end");
                 if ($start_date)
-                    $search_criteria[] = array(
-                        'key'      => 'date_created',
-                        'type'     => 'info',
-                        'operator' => '>=',
-                        'value'    => $start_date
-                    );
+                    $search_criteria["start_date"] = $start_date;
                 if ($end_date)
-                    $search_criteria[] = array(
-                        'key'      => 'date_created',
-                        'type'     => 'info',
-                        'operator' => '<=',
-                        'value'    => $end_date
-                    );
+                    $search_criteria["end_date"] = $end_date;
 
-                $search_criteria[] = array("type" => "info", "key" => "status", "value" => "active");
-                $output["s"] = http_build_query($search_criteria);
-                $state_array = null;
+                $search_criteria["status"] = "active";
+                $output["s"]               = http_build_query($search_criteria);
+                $state_array               = null;
                 if (isset($_POST["state"])) {
-                    $state = $_POST["state"];
-                    $posted_check_sum   = rgpost("checkSum");
+                    $state               = $_POST["state"];
+                    $posted_check_sum    = rgpost("checkSum");
                     $generated_check_sum = self::generate_checksum($state);
-                    $state_array = json_decode(base64_decode($state), true);
-                    if ( $generated_check_sum !== $posted_check_sum) {
+                    $state_array         = json_decode(base64_decode($state), true);
+                    if ($generated_check_sum !== $posted_check_sum) {
                         $output["status"] = "complete";
                         $output["html"]   = __('There was an error while processing the entries. Please contact support.', "gravityforms");
                         echo json_encode($output);
                         die();
                     }
-
                 }
-                $data        = $this->get_results_data($form, $fields, $search_criteria, $state_array);
+
+                $data        = isset($this->_callbacks["data"]) ? call_user_func($this->_callbacks["data"], $form, $fields, $search_criteria, $state_array) : $this->get_results_data($form, $fields, $search_criteria, $state_array);
                 $entry_count = $data["entry_count"];
 
                 if ("incomplete" === rgar($data, "status")) {
-                    $state = base64_encode(json_encode($data));
+                    $state                 = base64_encode(json_encode($data));
                     $output["status"]      = "incomplete";
                     $output["stateObject"] = $state;
                     $output["checkSum"]    = self::generate_checksum($state);
@@ -482,6 +394,7 @@ if (!class_exists("GFResults")) {
             die();
         }
 
+
         public static function ajax_get_more_results() {
             $form_id         = rgpost("form_id");
             $field_id        = rgpost("field_id");
@@ -492,16 +405,15 @@ if (!class_exists("GFResults")) {
                 $search_criteria = array();
             $page_size = 10;
 
-            $form    = RGFormsModel::get_form_meta($form_id);
-            $form_id = $form["id"];
-            $field   = RGFormsModel::get_field($form, $field_id);
-            $entry_count           = GFFormsModel::count_search_leads($form_id, $search_criteria);
-            $html                  = self::get_default_field_results($form_id, $field, $search_criteria, $offset, $page_size);
-            $remaining             = $entry_count - ($page_size + $offset);
-            $remaining             = $remaining < 0 ? 0 : $remaining;
-            $response              = array();
-            $response["remaining"] = $remaining;
-            $response['html']      = $html;
+            $form           = RGFormsModel::get_form_meta($form_id);
+            $form_id        = $form["id"];
+            $field          = RGFormsModel::get_field($form, $field_id);
+            $more_remaining = false;
+            $html           = self::get_default_field_results($form_id, $field, $search_criteria, $offset, $page_size, $more_remaining);
+
+            $response                   = array();
+            $response["more_remaining"] = $more_remaining;
+            $response['html']           = $html;
 
             echo json_encode($response);
             die();
@@ -589,7 +501,7 @@ if (!class_exists("GFResults")) {
                     break;
                 case "likert" :
                     $results       = $field_data[$field["id"]];
-                    $multiple_rows = rgar($field, "gsurveyLikertEnableMultipleRows");
+                    $multiple_rows = rgar($field, "gsurveyLikertEnableMultipleRows") ? true : false;
 
                     $n = 100;
 
@@ -652,8 +564,8 @@ if (!class_exists("GFResults")) {
                     $field_results .= "</div>";
 
                     if (rgar($field, "gsurveyLikertEnableScoring") && class_exists("GFSurvey")) {
-                        $sum = $results["sum_of_scores"];
-                        $average_score = $sum == 0 ? 0 : round($sum / $entry_count,3);
+                        $sum           = $results["sum_of_scores"];
+                        $average_score = $sum == 0 ? 0 : round($sum / $entry_count, 3);
                         $field_results .= "<div class='gsurvey-likert-score'>" . __("Average score: ", "gravityforms") . $average_score . "</div>";
                     }
 
@@ -699,13 +611,14 @@ if (!class_exists("GFResults")) {
                     $offset    = 0;
                     $field_id  = $field["id"];
 
-                    $field_results .= "<div class='gresults-results-field-sub-label'>" . __("Latest entries:", "gravityforms") . "</div>";
+                    $field_results .= "<div class='gresults-results-field-sub-label'>" . __("Latest values:", "gravityforms") . "</div>";
 
                     $field_results .= "<ul id='gresults-results-field-content-{$field_id}' class='gresults-results-field-content' data-offset='{$page_size}'>";
-                    $field_results .= self::get_default_field_results($form_id, $field, $search_criteria, $offset, $page_size);
+                    $more_remaining = false;
+                    $field_results .= self::get_default_field_results($form_id, $field, $search_criteria, $offset, $page_size, $more_remaining);
                     $field_results .= "</ul>";
 
-                    if ($entry_count > 5) {
+                    if ($more_remaining) {
                         $field_results .= "<a id='gresults-results-field-more-link-{$field_id}' class='gresults-results-field-more-link' href='javascript:void(0)' onclick='gresults.getMoreResults({$form_id},{$field_id})'>Show more</a>";
                     }
                     break;
@@ -718,11 +631,11 @@ if (!class_exists("GFResults")) {
         public function get_results_data($form, $fields, $search_criteria = array(), $state_array = array(), $max_execution_time = 15 /* seconds */) {
             // todo: add hooks to modify $max_execution_time and $page_size?
 
-            $page_size          = 200;
+            $page_size = 150;
 
             $time_start = microtime(true);
 
-            $form_id = $form["id"];
+            $form_id     = $form["id"];
             $data        = array();
             $offset      = 0;
             $entry_count = 0;
@@ -731,8 +644,8 @@ if (!class_exists("GFResults")) {
 
             if ($state_array) {
                 //get counts from state
-                $data        = $state_array;
-                $offset      = (int)rgar($data, "offset");
+                $data   = $state_array;
+                $offset = (int)rgar($data, "offset");
 
                 unset($data["offset"]);
                 $entry_count = $offset;
@@ -765,7 +678,7 @@ if (!class_exists("GFResults")) {
                 }
             }
 
-            $count_search_leads  = GFFormsModel::count_search_leads($form_id, $search_criteria);
+            $count_search_leads  = GFAPI::count_entries($form_id, $search_criteria);
             $data["entry_count"] = $count_search_leads;
 
             $entries_left = $count_search_leads - $offset;
@@ -845,7 +758,7 @@ if (!class_exists("GFResults")) {
                 }
                 $data["field_data"] = $field_data;
                 if (isset($this->_callbacks["calculation"]))
-                    $data =  call_user_func($this->_callbacks["calculation"],$data, $form, $fields, $leads);
+                    $data = call_user_func($this->_callbacks["calculation"], $data, $form, $fields, $leads);
 
                 $offset += $page_size;
                 $entries_left -= $page_size;
@@ -854,9 +767,9 @@ if (!class_exists("GFResults")) {
                 $execution_time = ($time_end - $time_start);
 
                 if ($entries_left > 0 && $execution_time + $search_leads_time > $max_execution_time) {
-                    $data["status"] = "incomplete";
-                    $data["offset"] = $offset;
-                    $progress = $data["entry_count"] > 0 ? round($data["offset"] / $data["entry_count"] * 100) : 0;
+                    $data["status"]   = "incomplete";
+                    $data["offset"]   = $offset;
+                    $progress         = $data["entry_count"] > 0 ? round($data["offset"] / $data["entry_count"] * 100) : 0;
                     $data["progress"] = $progress;
                     break;
                 }
@@ -867,30 +780,44 @@ if (!class_exists("GFResults")) {
             }
 
             $data["timestamp"] = time();
+
             return $data;
         }
 
-        public function get_likert_score($field, $entry){
+        public function get_likert_score($field, $entry) {
             return is_callable(array("GFSurvey", "get_field_score")) ? GFSurvey::get_field_score($field, $entry) : 0;
         }
 
 
-        public static function get_default_field_results($form_id, $field, $search_criteria, $offset, $page_size) {
+        public static function get_default_field_results($form_id, $field, $search_criteria, $offset, $page_size, &$more_remaining = false) {
             $field_results = "";
 
-            $paging = array('offset' => $offset, 'page_size' => $page_size);
 
             $sorting = array('key' => "date_created", 'direction' => "DESC");
 
-            $leads = GFFormsModel::search_leads($form_id, $search_criteria, $sorting, $paging);
+            $c = 0;
 
-            foreach ($leads as $lead) {
 
-                $value   = RGFormsModel::get_lead_field_value($lead, $field);
-                $content = apply_filters("gform_entries_field_value", $value, $form_id, $field["id"], $lead);
+            do {
+                $paging = array('offset' => $offset, 'page_size' => $page_size);
+                $leads  = GFFormsModel::search_leads($form_id, $search_criteria, $sorting, $paging);
+                foreach ($leads as $lead) {
 
-                $field_results .= "<li>{$content}</li>";
-            }
+                    $value   = RGFormsModel::get_lead_field_value($lead, $field);
+                    $content = apply_filters("gform_entries_field_value", $value, $form_id, $field["id"], $lead);
+
+                    if (!empty($content)) {
+                        $field_results .= "<li>{$content}</li>";
+                        $c++;
+                    }
+
+                }
+                $offset += $page_size;
+
+            } while ($c < $page_size && !empty($leads));
+
+            if (!empty($leads))
+                $more_remaining = true;
 
             return $field_results;
 
