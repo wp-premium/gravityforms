@@ -1,0 +1,20 @@
+
+#gform-lock-dialog .gform-locked-message,
+#gform-lock-dialog .gform-taken-over {
+    margin: 25px;
+}
+
+#gform-lock-dialog .gform-locked-message a.button {
+    margin-right: 10px;
+}
+
+#gform-lock-dialog .gform-locked-avatar {
+    float: left;
+    margin: 0 20px 20px 0;
+}
+
+#gform-lock-dialog .wp-tab-first {
+    outline: 0;
+}
+
+

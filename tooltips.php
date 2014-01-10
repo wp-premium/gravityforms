@@ -3,10 +3,11 @@
 //Prints required tooltip scripts
 add_action("admin_print_scripts", 'print_tooltip_scripts');
 function print_tooltip_scripts(){
-    wp_enqueue_style("gf_tooltip", GFCommon::get_base_url() ."/css/tooltip.css", null, GFCommon::$version);
 
-    wp_print_scripts("gf_tooltip_init");
-    wp_print_styles("gf_tooltip");
+    wp_enqueue_style( 'gform_tooltip', GFCommon::get_base_url() . '/css/tooltip.css', null, GFCommon::$version );
+
+    wp_print_scripts( 'gform_tooltip_init' );
+    wp_print_styles( 'gform_tooltip' );
 
 }
 
@@ -63,7 +64,10 @@ $__gf_tooltips = array(
     "form_field_card_style" => "<h6>" . __("Credit Card Icon Style", "gravityforms") . "</h6>" . __("Select the style you would like to use for the credit card icons.", "gravityforms"),
     "form_field_date_format" => "<h6>" . __("Field Date Format", "gravityforms") . "</h6>" . __("Select the format you would like to use for the date input.  Available options are MM/DD/YYYY and DD/MM/YYYY.", "gravityforms"),
     "form_field_time_format" => "<h6>" . __("Time Format", "gravityforms") . "</h6>" . __("Select the format you would like to use for the time field.  Available options are 12 hour (i.e. 8:30 pm) and 24 hour (i.e. 20:30).", "gravityforms"),
-    "form_field_fileupload_allowed_extensions" => "<h6>" . __("Allowed File Extensions", "gravityforms") . "</h6>" . __("Enter that allowed file extensions for file uploads.  This will limit what type of files a user may upload.", "gravityforms"),
+    "form_field_fileupload_allowed_extensions" => "<h6>" . __("Allowed File Extensions", "gravityforms") . "</h6>" . __("Enter the allowed file extensions for file uploads.  This will limit the type of files a user may upload.", "gravityforms"),
+    "form_field_multiple_files" => "<h6>" . __("Enable Multi-File Upload", "gravityforms") . "</h6>" . __("Select this option to enable multiple files to be uploaded for this field.", "gravityforms"),
+    "form_field_max_files" => "<h6>" . __("Maximum Number of Files", "gravityforms") . "</h6>" . __("Specify the maximum number of files that can be uploaded using this field. Leave blank for unlimited. Note that the actual number of files permitted may be limited by this server's specifications and configuration.", "gravityforms"),
+    "form_field_max_file_size" => "<h6>" . __("Maximum File Size", "gravityforms") . "</h6>" . __("Specify the maximum file size in megabytes allowed for each of the files.", "gravityforms"),
     "form_field_phone_format" => "<h6>" . __("Phone Number Format", "gravityforms") . "</h6>" . __("Select the format you would like to use for the phone input.  Available options are domestic US/CANADA style phone number and international long format phone number.", "gravityforms"),
     "form_field_description" => "<h6>" . __("Field Description", "gravityforms") . "</h6>" . __("Enter the description for the form field.  This will be displayed to the user and provide some direction on how the field should be filled out or selected.", "gravityforms"),
     "form_field_required" => "<h6>" . __("Required Field", "gravityforms") . "</h6>" . __("Select this option to make the form field required.  A required field will prevent the form from being submitted if it is not filled out or selected.", "gravityforms"),
@@ -118,8 +122,10 @@ $__gf_tooltips = array(
     "form_pricing_fields" => "<h6>" . __("Pricing Fields", "gravityforms") . "</h6>" . __("Pricing fields allow you to add fields to your form that calculate pricing for selling goods and services.", "gravityforms"),
     "export_select_form" => "<h6>" . __("Export Selected Form", "gravityforms") . "</h6>" . __("Select the form you would like to export entry data from. You may only export data from one form at a time.", "gravityforms"),
     "export_select_forms" => "<h6>" . __("Export Selected Forms", "gravityforms") . "</h6>" . __("Select the forms you would like to export.", "gravityforms"),
-    "export_select_fields" => "<h6>" . __("Export Selected Fields", "gravityforms") . "</h6>" . __("Select the fields from the select form you would like to export data from.", "gravityforms"),
-    "export_date_range" => "<h6>" . __("Export Date Range", "gravityforms") . "</h6>" . __("Select a date range. Setting a range will only export entries submitted during that date range. If no range is set, all entries will be exported.", "gravityforms"),
+    "export_conditional_logic" => "<h6>" . __("Conditional Logic", "gravityforms") . "</h6>" . __("Filter the entries by adding conditions.", "gravityforms"),
+    "export_select_fields" => "<h6>" . __("Export Selected Fields", "gravityforms") . "</h6>" . __("Select the fields you would like to include in the export.", "gravityforms"),
+    "export_date_range" => "<h6>" . __("Export Date Range", "gravityforms") . "</h6>" . __("Select a date range. Setting a range will limit the export to entries submitting during that date range. If no range is set, all entries will be exported.", "gravityforms"),
+    "import_select_file" => "<h6>" . __("Select File", "gravityforms") . "</h6>" . __("Click the Choose File button to upload a Gravity Forms XML file from your computer", "gravityforms"),
     "settings_license_key" => "<h6>" . __("Settings License Key", "gravityforms") . "</h6>" . __("Your Gravity Forms support license key is used to verify your support package, enable automatic updates and receive support.", "gravityforms"),
     "settings_output_css" => "<h6>" . __("Output CSS", "gravityforms") . "</h6>" . __("Select yes or no to enable or disable CSS output.  Setting this to no will disable the standard Gravity Forms CSS from being included in your theme.", "gravityforms"),
     "settings_html5" => "<h6>" . __("Output HTML5", "gravityforms") . "</h6>" . __("Select yes or no to enable or disable HTML5 output. Setting this to no will disable the standard Gravity Forms HTML5 form field output.", "gravityforms"),
@@ -151,11 +157,10 @@ function gform_tooltip($name, $css_class="", $return=false){
     if(empty($tooltip_text))
         return "";
 
-    $tooltip = "<a href='#' onclick='return false;' class='gf_tooltip " . esc_attr($css_class) . " {$tooltip_class}' title='" . esc_attr($tooltip_text) . "'>(?)</a>";
+    $tooltip = "<a href='#' onclick='return false;' class='gf_tooltip " . esc_attr($css_class) . " {$tooltip_class}' title='" . esc_attr($tooltip_text) . "'><i class='fa fa-question-circle'></i></a>";
 
     if($return)
         return $tooltip;
     else
         echo $tooltip;
 }
-

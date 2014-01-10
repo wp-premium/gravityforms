@@ -1,5 +1,6 @@
 @import url('datepicker.css');
 @import url('jquery-ui.custom.css');
+@import url('font-awesome.css');
 @import url('rtl.css');
 
 /*
@@ -8,7 +9,7 @@
 admin.css
 Gravity Forms Administration Form Styles
 http: //www.gravityforms.com
-updated: June 13, 2013 12:13 PM
+updated: December 12, 2013 12:14 PM
 
 Gravity Forms is a Rocketgenius project
 copyright 2013 Rocketgenius Inc.
@@ -68,6 +69,11 @@ select {
 	padding: 2px 0;
 }
 
+/* As of 3.7.1, datepicker container shows up at the bottom of the page. This is quick fix to hide it. */
+.ui-datepicker {
+    display: none;
+}
+
 .gform_pending_delete{
 	background-color: #FFE1E1;
 	border: 5px solid #f00;
@@ -92,8 +98,12 @@ div.wrap {
 }
 
 div.delete-alert {
-	padding: 0 0 20px 20px;
+	padding: 20px 0 20px 20px;
 	margin-bottom: 30px;
+}
+
+div.gf_delete_notice {
+	margin-bottom: 10px;
 }
 
 div.gforms_help_alert {
@@ -104,7 +114,7 @@ div.gforms_help_alert {
 }
 
 div.gforms_helpbox {
-	border: 1px solid #C2D7EF;
+	border: 1px solid #D2E0EB;
 	background-color: #E2EDFF;
 	margin: 10px 0;
 	padding: 10px;
@@ -128,7 +138,7 @@ div.gforms_helpbox ul.resource_list li {
 }
 
 div.gforms_code {
-	border: 1px solid #C2D7EF;
+	border: 1px solid #D2E0EB;
 	background-color: #E2EDFF;
 	margin: 10px 0;
 	padding: 10px;
@@ -154,12 +164,22 @@ div.gforms_code pre {
 }
 
 div.delete-alert input.button {
-	border: 1px solid #CFADB3;
-	color: #832525;
+	border: 1px solid #9E0B0F;
+	background: #9E0B0F;
+	color: #FFF;
+	-webkit-box-shadow: inset 0 2px 5px -3px rgba( 173, 12, 17, 0.5 );
+ 	box-shadow: inset 0 2px 5px -3px rgba( 173, 12, 17, 0.5 );
+ 	text-shadow: none !important;
 }
 
-div.delete-alert input.button:hover {
-	border: 1px solid #DBADAC;
+div.delete-alert input.button:hover,
+div.delete-alert input.button:active {
+	border: 1px solid #DD3D36;
+	background: #DD3D36;
+	color: #FFF;
+	-webkit-box-shadow: inset 0 2px 5px -3px rgba( 173, 12, 17, 0.5 );
+ 	box-shadow: inset 0 2px 5px -3px rgba( 173, 12, 17, 0.5 );
+ 	text-shadow: none !important;
 }
 
 #field_settings {
@@ -174,7 +194,8 @@ div.delete-alert input.button:hover {
 	margin: 0 0 3px;
 }
 
-.gform_heading .form_edit_iconx,.form_head .form_delete_iconx {
+.gform_heading .form_edit_iconx,
+.form_head .form_delete_iconx {
 	display: block;
 }
 
@@ -214,7 +235,6 @@ label.float_label {
 #gform_fields li{
 	border: 1px solid transparent;
 	padding: 0px 10px 10px 10px;
-	overflow-x: hidden;
 	overflow-y: visible;
 }
 
@@ -258,6 +278,10 @@ label.float_label {
 	margin-bottom: 4px;
 }
 
+.selectable.gfield {
+	margin-bottom: 10px;
+}
+
 .gfield_date_month,
 .gfield_date_day,
 .gfield_date_year {
@@ -280,7 +304,6 @@ label.float_label {
 	display: -moz-inline-stack;
 	display: inline-block;
 	zoom: 1;
-	*display: inline;
 }
 
 .gfield_time_ampm select {
@@ -293,11 +316,14 @@ label.float_label {
 }
 
 .field_hover {
-	border: 1px solid #C2D7EF !important;
+	border: 1px solid #D2E0EB !important;
 	background-image: url(../images/gf-fieldsettings-header.jpg);
 	background-position: 0 0;
 	background-repeat: repeat-x;
-	background-color: #DFEFFF;
+	background-color: #F6FBFD;
+	-webkit-box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
+	-moz-box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
+	box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
 }
 
 div#gform_heading.field_hover {
@@ -305,14 +331,14 @@ div#gform_heading.field_hover {
 }
 
 .field_selected {
-	border: 1px solid #C2D7EF !important;
+	border: 1px solid #D2E0EB !important;
 	background-image: url(../images/gf-fieldsettings-header.jpg);
 	background-position: 0 0;
 	background-repeat: repeat-x;
-	background-color: #DFEFFF;
-	-webkit-box-shadow: 0 6px 6px -6px rgba(0, 0, 0, 0.3);
-	-moz-box-shadow: 0 6px 6px -6px rgba(0, 0, 0, 0.3);
-	box-shadow: 0 6px 6px -6px rgba(0, 0, 0, 0.3);
+	background-color: #F6FBFD;
+	-webkit-box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
+	-moz-box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
+	box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
 	margin-bottom: 16px !important;
 }
 
@@ -322,7 +348,7 @@ div.pagination_container {
 
 div#gform_pagination,
 div#gform_pagination.field_selected {
-	margin-bottom:6px;
+	margin-bottom: 10px;
 }
 
 div#gform_pagination.gform_settings_container .settings_control_container a,
@@ -653,7 +679,7 @@ ul.gfield_checkbox, ul.gfield_radio {
 }
 
 .gfield_required {
-	color: #790000;
+	color: #9E0B0F;
 	margin-left: 4px
 }
 
@@ -708,9 +734,8 @@ div.gform_admin_icons div.gform_admin_header_title {
 	float: left;
 	font-size: 11px;
 	font-weight: bold;
-	color: #21759B;
-	letter-spacing: 0.3pt;
-	text-shadow: 0 1px 1px #FFF
+	color: #47759B;
+	letter-spacing: 0.025em;
 }
 
 a.close_icon {
@@ -722,7 +747,8 @@ a.close_icon {
 	height: 16px;
 	background-image: url(../images/close.png);
 	background-repeat: no-repeat;
-	text-indent: -9000px
+	text-indent: -9000px;
+	text-shadow: 0 1px 1px #FFF;
 }
 
 .gfield {
@@ -740,76 +766,86 @@ a.close_icon {
 .field_selected .form_edit_icon,
 .field_selected .form_delete_icon {
 	display: block !important;
-	cursor: pointer
+	cursor: pointer;
+	color: #47759B;
+	zoom: 1;
+	filter: alpha(opacity=50);
+	opacity: 0.5;
 }
 
-.field_edit_icon,.form_edit_icon {
+.field_hover .field_edit_icon:hover,
+.field_hover .field_delete_icon:hover,
+.field_hover .field_duplicate_icon:hover,
+.field_hover .form_edit_icon:hover,
+.field_hover .form_delete_icon:hover,
+.field_selected .field_edit_icon:hover,
+.field_selected .field_delete_icon:hover,
+.field_selected .field_duplicate_icon:hover,
+.field_selected .form_edit_icon:hover,
+.field_selected .form_delete_icon:hover {
+	color: #47759B;
+	zoom: 1;
+	filter: alpha(opacity=100);
+	opacity: 1.0;
+}
+
+.field_edit_icon,
+.form_edit_icon {
 	display: none;
 	float: right;
-	font-size: 10px;
-	text-decoration: none;
-	margin-right: 6px;
-	height: 16px;
-	line-height: 17px;
-	padding: 0 0 0 18px;
-	letter-spacing: 0.3pt
-}
+	margin-left: 6px;
 
-.edit_icon_expanded {
-	background-image: url(../images/icon-close.png);
-	background-repeat: no-repeat
-}
-
-.edit_icon_collapsed {
-	background-image: url(../images/icon-edit.png);
-	background-repeat: no-repeat
 }
 
 .entries_edit_icon {
 	float: right;
-	font-size: 10px;
-	text-decoration: none;
 	margin: 2px 6px 0 0;
-	height: 16px;
-	line-height: 16px;
-	padding: 0 0 0 18px;
-	background-image: url(../images/icon-edit-gray.png);
-	background-repeat: no-repeat;
-	text-shadow: none;
-	font-weight: normal
 }
 
 .field_delete_icon,
 .form_delete_icon {
 	display: none;
 	float: right;
-	font-size: 10px;
-	text-decoration: none;
-	height: 16px;
-	line-height: 17px;
-	padding: 0 0 0 18px;
-	background-image: url(../images/icon-delete.png);
-	background-repeat: no-repeat;
-	letter-spacing: 0.3pt
+	margin: 0 0 0 6px;
 }
 
 .field_duplicate_icon {
 	display: none;
 	float: right;
-	font-size: 10px;
+	margin: 0 0 0 8px;
+}
+
+.field_duplicate_icon i {
+	color: #185d7c !important;
+}
+
+.field_edit_icon,
+.form_edit_icon,
+.entries_edit_icon,
+.field_delete_icon,
+.form_delete_icon,
+.field_duplicate_icon {
 	text-decoration: none;
-	height: 16px;
-	line-height: 17px;
-	padding: 0 0 0 18px;
-	margin: 0 5px 0 0;
-	background-image: url(../images/icon-duplicate.png);
-	background-repeat: no-repeat;
-	letter-spacing: 0.3pt
+	padding: 0;
+	font-weight: normal;
+	letter-spacing: 0.3pt;
+	text-shadow: 0 1px 1px #FFF;
+	text-align: center;
+	vertical-align: middle;
+}
+
+.entries_edit_icon {
+	color: #AAA  !important;
+}
+
+.entries_edit_icon:hover,
+.entries_edit_icon:active {
+	color: #707070 !important;
 }
 
 .option_header {
 	margin: 5px 0 2px;
-	font-weight: bold
+	font-weight: bold;
 }
 
 img.gtitle_icon {
@@ -824,6 +860,13 @@ td.pad_top {
 #form_settings {
 	padding: 0 5px 5px 5px;
 	margin-top: 10px
+}
+
+#form_settings h3 span i[class^="fa-"],
+#form_settings h3 span i[class*=" fa-"],
+.gform_tab_container h3 span i[class^="fa-"],
+.gform_tab_container h3 span i[class*=" fa-"] {
+	color: #0074A2;
 }
 
 .input_size_a,
@@ -926,10 +969,10 @@ div.new-form-option a {
 
 div.new-form-option a:hover {
 	color: #2B2B2B;
-	border: 1px solid #C2D7EF;
-	box-shadow: 0px 0px 5px #C2D7EF;
-	-moz-box-shadow: 0px 0px 5px #C2D7EF;
-	-webkit-box-shadow: 0px 0px 5px #C2D7EF
+	border: 1px solid #D2E0EB;
+	box-shadow: 0px 0px 5px #D2E0EB;
+	-moz-box-shadow: 0px 0px 5px #D2E0EB;
+	-webkit-box-shadow: 0px 0px 5px #D2E0EB
 }
 
 .installation_item_cell {
@@ -938,7 +981,8 @@ div.new-form-option a:hover {
 
 .installation_item_message {
 	padding-left: 15px;
-	color: #790000
+	font-size: .8em;
+	color: #9E0B0F;
 }
 
 div#wpbody {
@@ -954,18 +998,14 @@ div#wpbody {
 #floatMenu {
 	width: 280px;
 	z-index: 99;
-	background-color: #FFF;
 	padding-bottom: 20px
 }
 
 .button-title-link div.add-buttons-title {
-	background-image: url(../images/gf-expand-title-bg.png);
-	background-position: right 0;
-	background-repeat: no-repeat;
-	background-color: #EEE;
 	height: 24px;
 	overflow: hidden;
 	cursor: pointer;
+	position: relative;
 	font-size: 15px;
 	border-width: 1px;
 	border-style: solid;
@@ -975,7 +1015,26 @@ div#wpbody {
 	white-space: nowrap;
 	-webkit-border-radius: 4px;
 	-moz-border-radius: 4px;
-	border-radius: 4px
+	border-radius: 4px;
+	background: #f8f8f8;
+	background: -moz-linear-gradient(top,  #f8f8f8 0%, #eeeeee 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#f8f8f8), color-stop(100%,#eeeeee));
+	background: -webkit-linear-gradient(top,  #f8f8f8 0%,#eeeeee 100%);
+	background: -o-linear-gradient(top,  #f8f8f8 0%,#eeeeee 100%);
+	background: -ms-linear-gradient(top,  #f8f8f8 0%,#eeeeee 100%);
+	background: linear-gradient(to bottom,  #f8f8f8 0%,#eeeeee 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f8f8f8', endColorstr='#eeeeee',GradientType=0 );
+	-webkit-box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
+	-moz-box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
+	box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
+}
+
+.button-title-link div.add-buttons-title span.add-buttons-caret-down,
+.button-title-link div.add-buttons-title span.add-buttons-caret-up {
+	width: 16px;
+	position: absolute;
+	right: 4px;
+	color: #CCC;
 }
 
 .button-title-link.gf_button_title_active div.add-buttons-title {
@@ -1011,7 +1070,10 @@ div#wpbody {
 	border-bottom-left-radius: 4px;
 	background-color: #FCFCFC;
 	border-color: #DFDFDF;
-	padding: 12px
+	padding: 12px;
+	-webkit-box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
+	-moz-box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
+	box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
 }
 
 ul.menu li {
@@ -1056,8 +1118,8 @@ div.push-alert-green {
 
 div.push-alert-blue {
 	background-color: #E2EDFF;
-	border-bottom: 1px solid #C2D7EF;
-	border-top: 1px solid #C2D7EF;
+	border-bottom: 1px solid #D2E0EB;
+	border-top: 1px solid #D2E0EB;
 	display: block !important;
 	font-size: 1.1em;
 	line-height: 1.5;
@@ -1092,7 +1154,6 @@ div.push-alert-red {
 .field-choice-handle {
     vertical-align:middle;
     cursor:move;
-    border-right: 1px solid #CCC;
 }
 
 #gfield_settings_category_container {
@@ -1250,7 +1311,7 @@ table.entry-detail-view {
 }
 
 table.entry-detail-view td.lastrow {
-	border-bottom: none !important
+	border-bottom: none !important;
 }
 
 td.entry-view-section-break {
@@ -1258,7 +1319,7 @@ td.entry-view-section-break {
 	font-weight: bold;
 	background-color: #EEE;
 	border-bottom: 1px solid #DFDFDF;
-	padding: 7px
+	padding: 7px;
 }
 
 td.entry-view-field-name {
@@ -1266,66 +1327,95 @@ td.entry-view-field-name {
 	background-color: #EAF2FA;
 	border-bottom: 1px solid #FFF;
 	line-height: 1.5;
-	padding: 7px
+	padding: 7px;
 }
 
 td.entry-view-field-value {
 	border-bottom: 1px solid #DFDFDF;
 	padding: 7px 7px 7px 40px;
-	line-height: 1.5
+	line-height: 1.8;
 }
 
 td.entry-view-field-value p {
-	text-align: left
+	text-align: left;
 }
 
 td.entry-view-field-value ul.bulleted {
-	margin-left: 12px
+	margin-left: 12px;
 }
 
 td.entry-view-field-value ul.bulleted li {
-	list-style-type: disc
+	list-style-type: disc;
 }
 
 div.note-avatar {
 	width: 48px;
 	height: 48px;
 	float: left;
-	margin-right: 6px
+	margin-right: 6px;
 }
 
 h6.note-author {
 	font-weight: bold;
 	font-size: 13px;
 	margin: 0;
-	padding: 0
+	padding: 0;
+}
+
+p.note-author-email {
+	line-height: 1.3;
+	margin: 0 !important;
+	padding: 0 !important;
+	text-align: left;
+}
+
+div.detail-note-content:before {
+     content: " ";
+     width: 100%;
+     height: 30px;
+     position: absolute;
+     top: 0;
+     left: 0;
+     z-index: -1;
+     display: block;
+     background-color:#FFF;
 }
 
 div.detail-note-content {
-	margin: 10px 0 10px 54px;
-	line-height: 1.5
+	margin: 10px 6px 10px 0;
+	padding: 20px 14px;
+	line-height: 1.8;
+	border: 1px solid #E6DB55;
+	border-bottom: 2px solid #E6DB55;
+	background-color: #FFFBCC;
+	background-image: url(../images/top-highlight.png);
+	background-position: 0 0;
+	background-repeat: repeat-x;
+	-webkit-box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
+	-moz-box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
+	box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
 }
 
 div.detail-note-content p {
-	line-height: 1.5
+	line-height: 1.8;
 }
 
 /* edit details form styles ------------------------------------------------------*/
 
 #namediv_admin {
 	position: relative;
-	min-width: 500px
+	min-width: 500px;
 }
 
 body #namediv table.entry-details td.detail-view label.detail-label,.ginput_full_admin label {display: block; font-weight: bold; font-size: 13px; margin-bottom: 4px}
 body #namediv div.ginput_complex_admin .ginput_full_admin label {
 	font-weight: normal;
-	font-size: 11px
+	font-size: 11px;
 }
 
 body #namediv table.entry-details input[type="text"],
 body #namediv table.entry-details input {
-	width: 99%
+	width: 99%;
 }
 
 body #namediv .ginput_complex_admin.ginput_container span.ginput_left,
@@ -1336,36 +1426,35 @@ body #namediv .ginput_complex_admin.ginput_container span.ginput_right_admin {
 	display: -moz-inline-stack;
 	display: inline-block;
 	zoom: 1;
-	*display: inline
 }
 
 body #namediv .ginput_complex_admin.ginput_container span.ginput_left,
 body #namediv .ginput_complex_admin.ginput_container span.ginput_left_admin {
-	margin-right: 1em
+	margin-right: 1em;
 }
 
 body #namediv .ginput_left_admin label,
 body #namediv .ginput_right_admin label {
-	display: block
+	display: block;
 }
 
 body #namediv .ginput_container ul.gfield_radio li input,
 body #namediv .ginput_container ul.gfield_checkbox li input {
-	width: auto !important
+	width: auto !important;
 }
 
 body #namediv .ginput_left_admin input[type="text"] {
-	width: 99% !important
+	width: 99% !important;
 }
 
 body #namediv select.medium_admin {
-	max-width: 400px
+	max-width: 400px;
 }
 
 body #namediv textarea.medium_admin {
 	width: 98%;
 	min-width: 475px;
-	min-height: 250px
+	min-height: 250px;
 }
 
 body #namediv h2.detail_gsection_title {
@@ -1375,7 +1464,7 @@ body #namediv h2.detail_gsection_title {
 	font-weight: bold;
 	letter-spacing: normal !important;
 	margin: 0 !important;
-	padding: 0 !important
+	padding: 0 !important;
 }
 
 /* notifications page styles ------------------------------------------------------*/
@@ -1386,51 +1475,56 @@ ul#form_notification_container,ul#form_autoresponder_container {
 
 ul#form_notification_container li,
 ul#form_autoresponder_container li {
-	margin-bottom: 15px !important
+	margin-bottom: 15px !important;
 }
 
 ul#form_notification_container li label,
 ul#form_autoresponder_container li label {
 	margin-bottom: 8px !important;
-	display: block
+	display: block;
+}
+
+#confirmation_list_form .check-column,
+#notification_list_form .check-column{
+    width:50px;
 }
 
 /* set some widths and heights ------------------------------------------------------*/
 
 .fieldwidth-1,input.fieldwidth-1 {
-	width: 100%
+	width: 100%;
 }
 
 .fieldwidth-2,input.fieldwidth-2 {
-	width: 350px
+	width: 350px;
 }
 
 .fieldwidth-3,input.fieldwidth-3 {
-	width: 375px
+	width: 375px;
 }
 
 .fieldwidth-4,input.fieldwidth-4 {
-	width: 250px
+	width: 250px;
 }
 
 .fieldheight-1,input.fieldheight-1 {
-	height: 160px
+	height: 160px;
 }
 
 .fieldheight-2,input.fieldheight-2 {
-	height: 80px
+	height: 80px;
 }
 
 .gform_merge_tags{
-    width: 200px
+    width: 200px;
 }
 
 .gform_editor_merge_tags{
-    width: 190px
+    width: 190px;
 }
 
 .gform_content_template_merge_tags{
-    width: 165px
+    width: 165px;
 }
 
 /* bulk add panel ------------------------------------------------------*/
@@ -1440,7 +1534,7 @@ ul#form_autoresponder_container li label {
 	color: #555;
 	font-size: 11px;
 	padding: 4px 0;
-	margin-bottom: 6px
+	margin-bottom: 6px;
 }
 
 .bulk-left-panel {
@@ -1448,12 +1542,12 @@ ul#form_autoresponder_container li label {
 	overflow-y: auto;
 	height: 330px;
 	width: 220px;
-	padding: 0
+	padding: 0;
 }
 
 .bulk-left-panel ul li {
 	padding: 0;
-	margin: 0
+	margin: 0;
 }
 
 .bulk-left-panel ul li a.bulk-choice {
@@ -1465,27 +1559,27 @@ ul#form_autoresponder_container li label {
 	border-bottom: 1px solid #D7D7D7;
 	padding: 5px;
 	text-align: center;
-	text-decoration: none
+	text-decoration: none;
 }
 
 .bulk-left-panel ul li a.bulk-choice:hover {
-	background-color: #DADADA
+	background-color: #DADADA;
 }
 
 .bulk-left-panel ul li.choice_section_header {
-	background-color: #DFEFFF;
+	background-color: #F6FBFD;
 	color: #21759B;
 	display: block;
 	width: 190px;
 	border-top: 1px solid #FFF;
-	border-bottom: 1px solid #C2D7EF;
+	border-bottom: 1px solid #D2E0EB;
 	padding: 5px;
 	text-align: center;
-	text-decoration: none
+	text-decoration: none;
 }
 
 a.bulk-choice:first-child {
-	border-top: none
+	border-top: none;
 }
 
 .bulk-arrow-mid {
@@ -1494,29 +1588,28 @@ a.bulk-choice:first-child {
 	height: 330px;
 	background-image: url(../images/arrow-right.jpg);
 	background-position: 100% 50%;
-	background-repeat: no-repeat
+	background-repeat: no-repeat;
 }
 
 textarea#gfield_bulk_add_input {
 	width: 320px;
 	height: 330px;
 	float: right;
-	padding: 6px
+	padding: 6px;
 }
 
 div.panel-buttons {
-	margin-top: 8px
+	margin-top: 8px;
 }
 
 .bulk-left-panel {
-	height: 300px
+	height: 300px;
 }
 
 div.panel-buttons {
 	display: -moz-inline-stack;
 	display: inline-block;
 	zoom: 1;
-	*display: inline
 }
 
 div.panel-custom {
@@ -1524,40 +1617,36 @@ div.panel-custom {
 	display: -moz-inline-stack;
 	display: inline-block;
 	zoom: 1;
-	*display: inline
 }
 
 div#bulk_custom_message {
-	position: absolute
+	position: absolute;
 }
 
 /* after update form panel ------------------------------------------------------*/
 
 .updated_base {
-	background-color: #FFFFE0;
-	border-color: #E6DB55
-	border-width: 1px;
-	border-style: solid;
+	background-color: #FFF;
+	border: 1px solid #FFF;
+	border-left: 4px solid #FFBA00;
 	padding: 0 0.6em;
 	margin: 10px 15px 10px 0;
-	-moz-border-radius: 3px;
-	-khtml-border-radius: 3px;
-	-webkit-border-radius: 3px;
-	border-radius: 3px
+	-webkit-box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
+	box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
 }
 
 .updated_base p {
 	margin: 0.5em 0;
 	line-height: 1;
-	padding: 2px
+	padding: 2px;
 }
 
 .wrap .updated_base {
-	margin: 10px 15px 24px 0
+	margin: 10px 15px 24px 0;
 }
 
 table.form-table td .updated_base {
-	font-size: 13px
+	font-size: 13px;
 }
 
 #gform_no_product_field_message{
@@ -1579,21 +1668,21 @@ table.form-table td .updated_base {
 	-moz-border-radius: 3px;
 	-khtml-border-radius: 3px;
 	-webkit-border-radius: 3px;
-	border-radius: 3px
+	border-radius: 3px;
 }
 
 .error_base p {
 	margin: 0.5em 0;
 	line-height: 1;
-	padding: 2px
+	padding: 2px;
 }
 
 .wrap .error_base {
-	margin: 10px 15px 10px 0
+	margin: 10px 15px 10px 0;
 }
 
 table.form-table td .error_base {
-	font-size: 13px
+	font-size: 13px;
 }
 
 .gf_input_error_icon {
@@ -1608,32 +1697,31 @@ table.form-table td .error_base {
 	display: -moz-inline-stack;
 	display: inline-block;
 	zoom: 1;
-	*display: inline;
 }
 
 
 /*html block ------------------------------------------------------*/
 
 li.gfield_html label.gfield_label {
-	height: 18px
+	height: 18px;
 }
 
 /* simple captcha fields ------------------------------------------------------*/
 
 .gfield_captcha_input_container{
-	padding-top: 3px
+	padding-top: 3px;
 }
 
 .simple_captcha_small input {
-	width: 100px
+	width: 100px;
 }
 
 .simple_captcha_medium input {
-	width: 150px
+	width: 150px;
 }
 
 .simple_captcha_large input {
-	width: 200px
+	width: 200px;
 }
 
 .left_label .simple_captcha_small,
@@ -1642,21 +1730,21 @@ li.gfield_html label.gfield_label {
 .right_label .simple_captcha_medium,
 .left_label .simple_captcha_large,
 .right_label .simple_captcha_large {
-	margin-left: 32%
+	margin-left: 32%;
 }
 
 /* math challenge fields ------------------------------------------------------*/
 
 .math_small input {
-	width: 69px
+	width: 69px;
 }
 
 .math_medium input {
-	width: 90px
+	width: 90px;
 }
 
 .math_large input {
-	width: 108px
+	width: 108px;
 }
 
 .left_label .math_small,
@@ -1665,7 +1753,7 @@ li.gfield_html label.gfield_label {
 .right_label .math_medium,
 .left_label .math_large,
 .right_label .math_large {
-	margin-left: 32%
+	margin-left: 32%;
 }
 
 /* transaction table ------------------------------------------------------*/
@@ -1674,40 +1762,40 @@ table.entry-products {
 	border: 1px solid #DFDFDF;
 	border-right: none;
 	border-bottom: none;
-	margin: 10px 0
+	margin: 10px 0;
 }
 
 table.entry-products th[scope=col] {
 	background-color: #F4F4F4;
-	border-right: 1px solid #DFDFDF !important
+	border-right: 1px solid #DFDFDF !important;
 }
 
 table.entry-products col.entry-products-col2 {
-	width: 50px
+	width: 50px;
 }
 
 table.entry-products col.entry-products-col3 {
-	width: 155px
+	width: 155px;
 }
 
 table.entry-products col.entry-products-col4 {
-	width: 155px
+	width: 155px;
 }
 
 table.entry-products td {
 	border-right: 1px solid #DFDFDF !important;
 	padding-top: 7px;
-	padding-bottom: 8px
+	padding-bottom: 8px;
 }
 
 table.entry-products td.textcenter,
 table.entry-products th.textcenter {
-	text-align: center
+	text-align: center;
 }
 
 table.entry-products td.textright,
 table.entry-products th.textright {
-	text-align: right
+	text-align: right;
 }
 
 table.entry-products td.grandtotal,
@@ -1717,18 +1805,18 @@ table.entry-products td.shipping_amount {
 	font-weight: bold;
 	font-size: 13px;
 	padding-top: 7px;
-	padding-bottom: 8px
+	padding-bottom: 8px;
 }
 
 table.entry-products td.emptycell {
-	background-color: #F4F4F4
+	background-color: #F4F4F4;
 }
 
 table.entry-products td div.product_name {
 	font-weight: bold;
 	color: #BF461E;
 	font-size: 13px;
-	margin-bottom: 5px
+	margin-bottom: 5px;
 }
 
 table.entry-products td ul.product_options li {
@@ -1737,11 +1825,11 @@ table.entry-products td ul.product_options li {
 	background-repeat: no-repeat;
 	overflow: visible;
 	margin: 0 0 0 2px !important;
-	padding: 4px 0 4px 16px
+	padding: 4px 0 4px 16px;
 }
 
 table.entry-products td ul.product_options li.lastitem {
-	background-image: url(../images/prodlist-last.png)
+	background-image: url(../images/prodlist-last.png);
 }
 
 /* additional button styles ------------------------------------------------------*/
@@ -1756,7 +1844,6 @@ a.button-primary.gfbutton {
 	-webkit-border-radius: 4px;
 	-moz-border-radius: 4px;
 	border-radius: 4px;
-	padding: 3px 8px 4px 8px !important
 }
 
 .menu.collapsible ol.field_type li input.button:hover {
@@ -1764,7 +1851,7 @@ a.button-primary.gfbutton {
 	border-color: #8F8F8F;
 	-webkit-border-radius: 16px !important;
 	-moz-border-radius: 16px !important;
-	border-radius: 16px !important
+	border-radius: 16px !important;
 }
 
 /* multi-page progress bar  ------------------------------------------------------*/
@@ -1778,12 +1865,12 @@ h3.gf_progressbar_title {
 	filter: alpha(opacity=60);
 	-moz-opacity: 0.6;
 	-khtml-opacity: 0.6;
-	opacity: 0.6
+	opacity: 0.6;
 }
 
 .gform_wrapper .gf_progressbar_wrapper {
 	clear: both;
-	margin: 0 0 14px 0
+	margin: 0 0 14px 0;
 }
 
 .gform_wrapper .gf_progressbar {
@@ -1920,7 +2007,7 @@ div#gform_heading.selectable.field_selected {
 	background-image: url(../images/gf-fieldsettings-header.jpg);
 	background-position: 0 0;
 	background-repeat: repeat-x;
-	background-color: #DFEFFF;
+	background-color: #F6FBFD;
 	padding-top: 8px
 }
 
@@ -1934,7 +2021,7 @@ div.gf_renew_license {
 }
 
 p.gform_renew_expired strong {
-	color: #790000;
+	color: #9E0B0F;
 }
 
 div.gf_upgrade_license h4 {
@@ -1978,56 +2065,90 @@ p.gform_renew_not_expired {
 	margin-top: 20px;
 }
 
-/* alert styles to reuse ----------------------------------------------------*/
+/* alert styles ----------------------------------------------------*/
 
 .alert_green,
 .alert_red,
 .alert_yellow,
 .alert_gray,
-.alert_blue {
-	background-image: url(../images/top-highlight.png);
-	background-position: 0 0;
-	background-repeat: repeat-x;
-	-webkit-border-radius: 3px;
-	-moz-border-radius: 3px;
-	border-radius: 3px;
+.alert_blue,
+ul#gform_fields li#no-fields div.newform_notice {
+	position: relative;
+	-webkit-box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
+	-moz-box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
+	box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
 }
 
 .alert_green {
-	border: 1px solid #97B48A;
-	background-color: #CBECA0;
-}
-
-.alert_red {
-	border: 1px solid #CC0000;
-	color: #832525;
-	background-color: #FFEBE8;
+	border-left: 4px solid #7AD03A;
+	border-top: none;
+	border-right: none;
+	border-bottom: none;
+	color: #424242;
+	background-color: #FFF;
 }
 
 .alert_yellow {
-	border: 1px solid #E6DB55;
-	background-color: #FFFBCC;
+	border-left: 4px solid #FFBA00;
+	border-top: none;
+	border-right: none;
+	border-bottom: none;
+	background-color: #FFF;
 	color: #424242;
 }
 
 .alert_gray {
-	border: 1px solid #CCC;
+	border-left: 4px solid #CCC;
+	border-top: none;
+	border-right: none;
+	border-bottom: none;
 	color: #424242;
-	background-color: #EEE;
+	background-color: #FFF;
 }
 
 .alert_blue {
-	border: 1px solid #a7c2e7;
-	color: #465d7c;
-	background-color: #D1E4F3;
+	border-left: 4px solid #2EA2CC;
+	border-top: none;
+	border-right: none;
+	border-bottom: none;
+	color: #424242;
+	background-color: #FFF;
 }
 
-/* adjust key indicator positions ----------------------------------------------------*/
+.alert_red,
+ul#gform_fields li#no-fields div.newform_notice {
+	border-left: 4px solid #dd3d36;
+	border-top: none;
+	border-right: none;
+	border-bottom: none;
+	color: #424242;
+	background-color: #FFF;
+}
 
-img.gf_keystatus_invalid,
-img.gf_keystatus_valid {
-	position: relative;
-	top: 2px;
+/* validation indicators ----------------------------------------------------*/
+
+span.gf_keystatus_valid_text,
+span.gf_keystatus_invalid_text {
+	display: -moz-inline-stack;
+	display: inline-block;
+	zoom: 1;
+}
+
+i.gf_keystatus_valid,
+i.gf_valid,
+span.gf_keystatus_valid_text {
+	color: #008000;
+}
+
+i.gf_keystatus_invalid,
+i.gf_invalid,
+span.gf_invalid,
+span.gf_keystatus_invalid_text {
+	color: #9E0B0F;
+}
+
+span.gf_keystatus_invalid_text {
+	color: #9E0B0F;
 }
 
 /* note for truncated radio and checkbox lists ----------------------------------------------------*/
@@ -2059,30 +2180,27 @@ div#pagination_settings.ui-tabs {
 
 div.ui-tabs div.ui-tabs-panel {
 	background-color: #FFF;
-	border-right: 1px solid #C2D7EF;
-	border-bottom: 1px solid #C2D7EF;
-	border-left: 1px solid #C2D7EF;
+	border-right: 1px solid #D2E0EB;
+	border-bottom: 1px solid #D2E0EB;
+	border-left: 1px solid #D2E0EB;
 }
 
 div.ui-widget-content li.ui-state-active {
-	border-left: 1px solid #C2D7EF !important;
-	border-top: 1px solid #C2D7EF !important;
-	border-right: 1px solid #C2D7EF !important;
+	border-left: 1px solid #D2E0EB !important;
+	border-top: 1px solid #D2E0EB !important;
+	border-right: 1px solid #D2E0EB !important;
 }
 
 ul.ui-widget-header {
-	border-bottom: 1px solid #C2D7EF !important;
+	border-bottom: 1px solid #D2E0EB !important;
 }
 
 div.ui-widget-content li.ui-state-default {
-	background-color: #d2e3f4 !important;
-	border-left: 1px solid #C2D7EF !important;
-	border-top: 1px solid #C2D7EF !important;
-	border-right: 1px solid #C2D7EF !important;
-	border-bottom: 1px solid #C2D7EF;
-	background-image: url(../images/gf-taboff-bg.png);
-	background-position: bottom;
-	background-repeat: repeat-x;
+	background-color: #D2E0EB !important;
+	border-left: 1px solid #D2E0EB !important;
+	border-top: 1px solid #D2E0EB !important;
+	border-right: 1px solid #D2E0EB !important;
+	border-bottom: 1px solid #D2E0EB;
 	-webkit-border-top-left-radius: 4px;
 	-webkit-border-top-right-radius: 4px;
 	-moz-border-radius-topleft: 4px;
@@ -2114,7 +2232,6 @@ li.gform_setting_left_half {
 	display: -moz-inline-stack;
 	display: inline-block;
 	zoom: 1;
-	*display: inline;
 }
 
 li.gform_setting_right_half {
@@ -2125,7 +2242,6 @@ li.gform_setting_right_half {
 	display: -moz-inline-stack;
 	display: inline-block;
 	zoom: 1;
-	*display: inline;
 }
 
 li.gform_setting_left_half select,
@@ -2153,14 +2269,23 @@ ul#gf_form_toolbar_links {
 	min-width: 790px;
 	padding: 0 0 0 6px;
 	border: 1px solid #DFDFDF;
-	background-color: #EFEFEF;
 	margin: 0;
 	-webkit-border-radius: 3px;
 	-moz-border-radius: 3px;
 	border-radius: 3px;
-	background-image: url(../images/gf-toolbar-bg.jpg);
-	background-repeat: repeat-x;
+	-webkit-box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
+	-moz-box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
+	box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
+	background: #ffffff;
+	background: -moz-linear-gradient(top,  #ffffff 0%, #f8f8f8 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(100%,#f8f8f8));
+	background: -webkit-linear-gradient(top,  #ffffff 0%,#f8f8f8 100%);
+	background: -o-linear-gradient(top,  #ffffff 0%,#f8f8f8 100%);
+	background: -ms-linear-gradient(top,  #ffffff 0%,#f8f8f8 100%);
+	background: linear-gradient(to bottom,  #ffffff 0%,#f8f8f8 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#f8f8f8',GradientType=0 );
 }
+
 
 ul#gf_form_toolbar_links li {
 	margin: 0;
@@ -2169,7 +2294,6 @@ ul#gf_form_toolbar_links li {
 	display: -moz-inline-stack;
 	display: inline-block;
 	zoom: 1;
-	*display: inline;
 }
 
 ul#gf_form_toolbar_links li.gf_form_toolbar_selectform {
@@ -2184,9 +2308,7 @@ ul#gf_form_toolbar_links li.gf_form_toolbar_notifications a,
 ul#gf_form_toolbar_links li.gf_form_toolbar_entries a,
 ul#gf_form_toolbar_links li.gf_form_toolbar_preview a,
 ul#gf_form_toolbar_links li.gf_form_toolbar_results a  {
-	background-image: url(../images/gf-toolbar-iconsprite.png);
-	background-repeat: no-repeat;
-	padding: 1px 0 0 20px;
+	padding: 1px 0 0 0;
 	text-decoration: none;
 	text-shadow: 0 1px 1px #FFF;
 	line-height: 16px;
@@ -2194,7 +2316,9 @@ ul#gf_form_toolbar_links li.gf_form_toolbar_results a  {
 }
 
 ul#gf_form_toolbar_links li a {
-	display: block;
+	display: -moz-inline-stack;
+	display: inline-block;
+	zoom: 1;
 }
 
 ul#gf_form_toolbar_links li a:hover,
@@ -2205,6 +2329,12 @@ ul#gf_form_toolbar_links li a.gf_toolbar_active {
 
 ul#gf_form_toolbar_links li a.gf_toolbar_active {
 	font-weight: bold;
+}
+
+ul#gf_form_toolbar_links li a:hover i,
+ul#gf_form_toolbar_links li a:focus i,
+ul#gf_form_toolbar_links li a.gf_toolbar_active i {
+	color: #0074A2;
 }
 
 ul#gf_form_toolbar_links li a.gf_toolbar_disabled {
@@ -2219,6 +2349,7 @@ ul#gf_form_toolbar_links li a.gf_toolbar_disabled {
 ul#gf_form_toolbar_links li a.gf_toolbar_disabled {
 	cursor: default;
 }
+
 
 ul#gf_form_toolbar_links li.gf_form_toolbar_settings a {
 	background-position: 0 0;
@@ -2357,7 +2488,6 @@ div#wpbody-content div.wrap div#after_update_dialog.updated_base.gform_editor_st
 div.gform_editor_status {
 	max-width: 480px !important;
 	padding: 10px;
-	border: 1px solid #E6DB55 !important;
 }
 
 /* new update and delete button positions for 1.6 ----------------------------------------------------*/
@@ -2380,7 +2510,6 @@ div.gform_editor_status {
 	display: -moz-inline-stack;
 	display: inline-block;
 	zoom: 1;
-	*display: inline;
 }
 
 #floatMenu a.submitdelete:hover {
@@ -2529,7 +2658,7 @@ input.headercb {
 }
 
 .validation_message {
-	color: #790000 !important;
+	color: #9E0B0F !important;
 	font-size: 11px;
 	font-family: sans-serif;
 	letter-spacing: normal;
@@ -2754,7 +2883,6 @@ div.gform_card_icon {
 	display: -moz-inline-stack;
 	display: inline-block;
 	zoom: 1;
-	*display: inline;
 }
 
 .ginput_complex select.ginput_card_expiration.ginput_card_expiration_month {
@@ -2778,7 +2906,6 @@ div.gform_card_icon {
 	display: -moz-inline-stack;
 	display: inline-block;
 	zoom: 1;
-	*display: inline;
 }
 
 div.gfield_creditcard_warning_message {
@@ -2848,13 +2975,10 @@ div.gf_entry_detail_pagination ul li {
 }
 
 div.gf_entry_detail_pagination ul li {
-	line-height: 24px;
 	height: 26px;
-	overflow: hidden;
 	display: -moz-inline-stack;
 	display: inline-block;
 	zoom: 1;
-	*display: inline;
 }
 
 div.gf_entry_detail_pagination ul li.gf_entry_count span {
@@ -2870,48 +2994,42 @@ div.gf_entry_detail_pagination ul li.gf_entry_count span strong {
 
 div.gf_entry_detail_pagination ul li.gf_entry_pagination a {
 	display: block;
-	width: 24px;
-	height: 24px;
-	overflow: hidden;
 	padding: 0;
-	text-indent: -9000px;
 	text-decoration: none;
-	background-color: #EFEFEF;
 	margin: 0;
-	border: 1px solid #DFDFDF;
-	-webkit-border-radius: 3px;
-	-moz-border-radius: 3px;
-	border-radius: 3px;
-	background-image: url(../images/gf-entry-paging-sprite.jpg);
-	background-repeat: no-repeat;
 }
 
 /* entry paging ----------------------------------------------------*/
 
-a.gf_entry_prev_link.gf_entry_pagination_link.gf_entry_pagination_link_inactive {
-	background-position: -24px 0;
+a.gf_entry_prev_link.gf_entry_pagination_link.gf_entry_pagination_link_inactive,
+a.gf_entry_next_link.gf_entry_pagination_link.gf_entry_pagination_link_inactive {
+ 	color: #424242;
+ 	zoom: 1;
+	filter: alpha(opacity=20);
+	opacity: 0.2;
 }
 
-a.gf_entry_prev_link.gf_entry_pagination_link.gf_entry_pagination_link_active {
-	background-position: 0 0;
+a.gf_entry_prev_link.gf_entry_pagination_link.gf_entry_pagination_link_active,
+a.gf_entry_next_link.gf_entry_pagination_link.gf_entry_pagination_link_active {
+	color: #424242;
+	zoom: 1;
+	filter: alpha(opacity=50);
+	opacity: 0.5;
 }
 
 a.gf_entry_prev_link.gf_entry_pagination_link.gf_entry_pagination_link_active:hover,
-a.gf_entry_prev_link.gf_entry_pagination_link.gf_entry_pagination_link_active:focus {
-	background-position: -48px 0;
-}
-
-a.gf_entry_next_link.gf_entry_pagination_link.gf_entry_pagination_link_active {
-	background-position: -72px 0;
-}
-
-a.gf_entry_next_link.gf_entry_pagination_link.gf_entry_pagination_link_inactive {
-	background-position: -96px 0;
-}
-
+a.gf_entry_prev_link.gf_entry_pagination_link.gf_entry_pagination_link_active:focus,
 a.gf_entry_next_link.gf_entry_pagination_link.gf_entry_pagination_link_active:hover,
 a.gf_entry_next_link.gf_entry_pagination_link.gf_entry_pagination_link_active:focus {
-	background-position: -120px 0;
+	color: #0074A2;
+	zoom: 1;
+	filter: alpha(opacity=100);
+	opacity: 1.0;
+}
+
+li.gf_entry_prev i,
+li.gf_entry_next i {
+	display: block;
 }
 
 /* notification WYSIWYG styles ----------------------------------------------------*/
@@ -2966,7 +3084,6 @@ html body.wp-admin div#wpwrap div#tab_notification div#wp-form_notification_mess
 	display: -moz-inline-stack;
 	display: inline-block;
 	zoom: 1;
-	*display: inline;
 }
 
 html body.wp-admin div#wpwrap div#tab_notification div#wp-form_notification_message-wrap.wp-editor-wrap div#wp-form_notification_message-editor-tools.wp-editor-tools div#wp-form_notification_message-media-buttons.hide-if-no-js a#form_notification_message-add_media img {
@@ -2982,8 +3099,6 @@ html body.wp-admin div#wpwrap div#tab_notification div#wp-form_notification_mess
 	line-height: 18px;
 }
 
-/* New Stuff for Kevin  ----------------------------------------------------*/
-
 .gf_toggle_submenu {
 	width: 11px;
 	height: 11px;
@@ -2995,7 +3110,6 @@ html body.wp-admin div#wpwrap div#tab_notification div#wp-form_notification_mess
 	display: -moz-inline-stack;
 	display: inline-block;
 	zoom: 1;
-	*display: inline;
 }
 
 .gf_submenu {
@@ -3013,6 +3127,10 @@ html body.wp-admin div#wpwrap div#tab_notification div#wp-form_notification_mess
 .row-actions .gf_submenu,
 .row_actions .gf_submenu {
 	margin-top: -4px;
+}
+
+.row-actions span a i {
+	display: none  !important;
 }
 
 .gf_submenu li {
@@ -3070,7 +3188,6 @@ ul#gf_form_toolbar_links .gf_submenu ul li:hover {
 	display: -moz-inline-stack;
 	display: inline-block;
 	zoom: 1;
-	*display: inline;
 }
 
 .all-merge-tags.textarea {
@@ -3089,7 +3206,6 @@ ul#gf_form_toolbar_links .gf_submenu ul li:hover {
 	display: -moz-inline-stack;
 	display: inline-block;
 	zoom: 1;
-	*display: inline;
 }
 
 .all-merge-tags a.open-list:focus {
@@ -3141,6 +3257,7 @@ ul#gf_merge_tag_list li.group-header:hover {
 ul#gf_merge_tag_list a {
 	display: block;
 	padding: 5px;
+    cursor:pointer;
 }
 
 ul#gf_merge_tag_list a:hover {
@@ -3166,48 +3283,50 @@ ul#gf_merge_tag_list a:hover {
 }
 
 .gform_tab_group {
-	background-color: #fff;
-	background-image: url(../images/gf-tab-container-bg.png);
-	border: 1px solid #DFDFDF;
+	background-color: #FFF;
+	border: 1px solid #DEDEDE;
 	margin-right: 9px;
+	margin-top: 10px;
 	border-radius: 3px;
-	box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+	-webkit-box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
+	-moz-box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
+	box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
 	display: block;
 }
 
 .gform_tabs {
 	width: 150px;
 	float: left;
+	margin-top: 10px;
 }
 
 .gform_tab_container {
 	margin-left: 150px;
-	background-color: #FFF;
 	padding: 20px;
-	border-left: 1px solid #DFDFDF;
 	min-height: 370px;
-}
-
-.gform_tabs {
-	margin-top: 10px;
+	background-color: #F6FBFD;
+	border-left: 1px solid #E1E1E1;
 }
 
 .gform_tabs a {
-	border: 1px solid #f1f1f1;
 	padding: 6px 10px;
 	text-decoration: none;
 	display: block;
+	border: 1px solid #FFF;
+	font-size: 14px;
 }
 
 .gform_tabs li.active a {
-	background-color: #FFF;
-	border: 1px solid #DFDFDF;
-	border-right-color: #FFF;
 	line-height: 18px;
-	margin: 0 0 0 -4px;
-	padding: 6px 0 6px 14px !important;
-    width: 139px;
     z-index: 50 !important;
+    background-color: #F6FBFD;
+	border: 1px solid #E1E1E1;
+	border-right-color: #F6FBFD;
+	border-left: 2px solid #2EA2CC;
+	margin: 0 -1px 0 0;
+	width: 138px;
+	padding: 6px 0 6px 10px !important;
+
 }
 
 .gform_tabs li:last-child {
@@ -3228,20 +3347,8 @@ ul#gform_fields li#no-fields {
 }
 
 ul#gform_fields li#no-fields div.newform_notice {
-	border: 1px solid #E6DB55;
-	background-color: #FFFBCC;
-	color: #424242;
-	background-image: url(../images/top-highlight.png);
-	background-position: 0 0;
-	background-repeat: repeat-x;
-	margin-top: 10px;
-	margin-bottom: 10px;
 	padding: 20px 20px 18px 20px;
-	font-size: 12px;
 	font-weight: bold;
-	-webkit-border-radius: 4px;
-	-moz-border-radius: 4px;
-	border-radius: 4px;
 	margin: 2px 0 40px 0 !important;
 	position: relative;
 }
@@ -3269,6 +3376,10 @@ h4.gf_settings_subheader {
 	padding: 0 0 10px 0;
 	margin: 2px 0 30px 0 !important;
 	font-weight: normal !important;
+}
+
+#export_filters{
+	width:450px;
 }
 
 /* new form instructions ------------------------------------------- */
@@ -3477,12 +3588,7 @@ table.gforms_form_settings th {
 body.wp-admin .wrap .gform_tab_group .gform_tab_container .gform_tab_content input.button-primary {
 	margin: 10px 0 20px 0;
 	letter-spacing: 0.3pt;
-	font-size: 12px !important;
 	font-weight: normal;
-	-webkit-border-radius: 4px;
-	-moz-border-radius: 4px;
-	border-radius: 4px;
-	padding: 3px 8px 4px 8px !important;
 }
 
 .setting-row {
@@ -3520,7 +3626,6 @@ tr#confirmation-editor-row td {
 
 div#confirmation-editor {
 	padding: 20px;
-	background-color: #FFF;
 }
 
 .editing td {
@@ -3549,9 +3654,11 @@ div#confirmation-editor {
 	left: 6px;
 }
 
-.add_field_choice,.delete_field_choice {
+.add_field_choice,
+.delete_field_choice {
 	position: relative;
-	top: 3px;
+	margin-left: 6px;
+	color: #444;
 }
 
 #confirmation_action_type {
@@ -3666,11 +3773,14 @@ h2.gf_admin_page_title span.gf_admin_page_subtitle {
 	line-height: 1.8em !important;
 }
 
-h2.gf_admin_page_title span.gf_admin_page_subtitle span.gf_admin_page_formid {
-	background-color: #F1F1F1;
+h2.gf_admin_page_title span.gf_admin_page_subtitle span.gf_admin_page_formid,
+h2.gf_admin_page_title span.gf_admin_page_subtitle span.gf_admin_page_formname {
+	background-color: #0074A2;
+	color: #FFF;
 	letter-spacing: 0.1em;
 	padding: 0 5px 1px 6px;
 	font-size: 11px !important;
+	font-weight: normal !important;
 	line-height: 1.8em !important;
 	-webkit-border-radius: 4px;
 	-moz-border-radius: 4px;
@@ -3681,7 +3791,14 @@ h2.gf_admin_page_title span.gf_admin_page_subtitle span.gf_admin_page_formid {
 	display: -moz-inline-stack;
 	display: inline-block;
 	zoom: 1;
-	*display: inline;
+}
+
+h2.gf_admin_page_title span.gf_admin_page_subtitle span.gf_admin_page_formid {
+	background-color: #0074A2;
+}
+
+h2.gf_admin_page_title span.gf_admin_page_subtitle span.gf_admin_page_formname {
+	background-color: #333;
 }
 
 #gform_notification_to_routing_container table {
@@ -3745,7 +3862,7 @@ div.gf_clear.gf_clear_complex {
 	margin-bottom: 10px;
 }
 
-/* some new button styles ------------------------------------------------------*/
+/* new button styles ------------------------------------------------------*/
 
 .gf_button.slick_button {
 	display: inline-block;
@@ -3782,6 +3899,91 @@ div.gf_clear.gf_clear_complex {
 	color: #FFF;
 }
 
+/* filter UI ----------------------------------------------------*/
+
+.gform-remove,
+.gform-add {
+    margin-top: 2px;
+    vertical-align: middle;
+    cursor: pointer;
+}
+
+.gform-add {
+    margin-left: 5px;
+}
+
+#gform-no-filters {
+    color: #CCC;
+    cursor: pointer;
+}
+
+.gform-filter-value,
+.gform-filter-field,
+.gform-filter-operator {
+	height: 2em;
+    padding: 4px 2px 0 2px;
+    box-sizing: border-box;
+    -ms-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
+
+.gform-filter-value,
+.gform-filter-field{
+    width: 150px;
+}
+
+.gform-filter-operator {
+    width: 70px;
+}
+
+#gform-field-filters {
+    height: 100%;
+    overflow-y: auto;
+}
+
+.ui-resizable-handle {
+    position: absolute;
+    font-size: 0.1px;
+    z-index: 99999;
+    display: block;
+}
+
+.ui-resizable-s {
+    cursor: s-resize;
+    height: 7px;
+    width: 100%;
+    bottom: -5px;
+    left: 0px;
+}
+
+/* entry edit ----------------------------------------------------*/
+
+#namediv .gform_button_select_files{
+    width: 100px !important;
+}
+
+.gform_fileupload_multifile .gform_drop_area {
+    padding: 25px;
+    border: 2px dashed #ddd;
+    text-align: center;
+    color: #aaa;
+    margin-bottom: 10px;
+}
+
+.gform_delete{
+    vertical-align: middle;
+    cursor: pointer;
+}
+
+tr.gf-locking.wp-locked .locked-info {
+    height: auto;
+}
+
+tr.gf-locking.wp-locked img.gform_active_icon {
+    display: none;
+}
+
 /* Safari & Google Chrome (webkit) specific styles ------------------------------------------------------*/
 
 @media screen and -webkit-min-device-pixel-ratio0#gfield_settings_category_container,
@@ -3814,8 +4016,6 @@ div.wrap.gf_browser_safari .ui-tabs-panel ul li label.inline {
 	margin-bottom: 0 !important;
 }
 
-
-
 /* Firefox specific styles ----------------------------------------------------*/
 
 div.wrap.gf_browser_gecko div.new-form-option a {
@@ -3831,9 +4031,14 @@ div.wrap.gf_browser_gecko .ui-tabs-panel ul li label.inline {
 	margin-top: 1px !important;
 }
 
+
+div.wrap.gf_browser_gecko li.gf_form_switcher select#form_switcher {
+	max-width: 200px;
+	height: 24px;
+}
+
 /* Internet Explorer specific styles ----------------------------------------------------*/
 
-div.wrap.gf_browser_ie {}
 div.wrap.gf_browser_ie .menu.collapsible ol.field_type li {
 	width: 48%;
 }
@@ -3875,7 +4080,7 @@ div.wrap.gf_browser_ie .ginput_complex .ginput_cardinfo_right span.ginput_card_s
 }
 
 div.wrap.gf_browser_ie .menu.collapsible ol.field_type li {
-	width:50%;
+	width: 50%;
 	overflow: hidden;
 }
 
@@ -3924,4 +4129,195 @@ div.wrap.gf_browser_chrome .gfield_checkbox li input[type="checkbox"],
 div.wrap.gf_browser_chrome .gfield_radio li input[type="radio"],
 div.wrap.gf_browser_chrome .gfield_checkbox li input {
 	margin-left: 2px !important;
+}
+
+/* new pagebreak styles  ----------------------------------------------------*/
+
+div.gf-pagebreak-container {
+	display:block;
+	position: relative;
+	text-align: center;
+	padding: 20px 0;
+}
+
+div.gf-pagebreak-first {
+	background-image: url(../images/gf-pagebreak-first.png);
+	background-position: center center;
+	background-repeat: no-repeat;
+}
+
+div.gf-pagebreak-inline {
+	background-image: url(../images/gf-pagebreak-inline.png);
+	background-position: center center;
+	background-repeat: no-repeat;
+}
+
+div.gf-pagebreak-end {
+	background-image: url(../images/gf-pagebreak-end.png);
+	background-position: center center;
+	background-repeat: no-repeat;
+}
+
+div.gf-pagebreak-text-main {
+	font-weight: bold;
+	font-size: 16px;
+	text-transform: uppercase;
+	margin: 10px auto;
+
+}
+
+div.gf-pagebreak-text-main span {
+	background-color: #EEE;
+	padding: 0 10px;
+	display: -moz-inline-stack;
+	display: inline-block;
+	zoom: 1;
+}
+
+.field_hover  div.gf-pagebreak-container div.gf-pagebreak-text-main span,
+.field_selected  div.gf-pagebreak-container  div.gf-pagebreak-text-main span {
+	background-color: #F6FBFD !important;
+}
+
+.gf-pagebreak-text-before,
+.gf-pagebreak-text-after {
+	font-family: 'Shadows Into Light Two', "Brush Script MT", helvetica, arial, sans-serif;
+	font-size: 16px;
+	color: #F26522;
+}
+
+li.gfield.gpage label.gfield_label {
+	display: none !important;
+	margin: 0 !important;
+}
+
+/* externalizing some styles previously used inline ----*/
+
+.lead_unread a,
+.lead_unread td {
+	font-weight: bold;
+}
+.lead_spam_trash a,
+.lead_spam_trash td {
+	font-weight: normal;
+}
+.row-actions a {
+	font-weight: normal;
+}
+.entry_nowrap {
+	overflow: hidden;
+	white-space: nowrap;
+}
+.message {
+	margin: 15px 0 0 !important;
+}
+.gform-filter-operator {
+	width: 100px;
+}
+
+/* select columns modal window ----------------------------------------------------*/
+
+body.forms_page_gf_entries div#TB_title[style] {
+	width: 630px !important;
+}
+
+
+table.form-table tr:last-child td,
+table.form-table tr:last-child th {
+	border: none !important;
+}
+
+/* MP6 styles (Wp 3.8)- temporary ----------------------------------------------------*/
+
+
+
+body.mp6 .field_edit_icon,
+body.mp6 .form_edit_icon,
+body.mp6 .field_delete_icon,
+body.mp6 .form_delete_icon,
+body.mp6 .field_duplicate_icon {
+	height: auto !important;
+}
+
+
+body.mp6 table tbody.user-list tr:nth-child(odd) {
+	background-color: #F9F9F9;
+}
+
+body.mp6 #namediv input[type=checkbox],
+body.mp6 #namediv input[type=radio] {
+	width: auto !important;
+}
+
+
+
+
+
+span.gf_settings_description {
+	display: block;
+	margin-top: 6px;
+}
+
+
+div.gf-html-container {
+	border: 1px solid #E4E4E4;
+	padding: 20px;
+	background-color: #F6F6F6;
+}
+
+div.gf-html-container span.gf_blockheader {
+	font-weight: bold;
+	display: block;
+	text-transform: uppercase;
+	margin-bottom: 6px;
+	font-size: 16px;
+	line-height: 16px;
+}
+
+a.gf_insert_field_choice,
+a.gf_delete_field_choice {
+	color: #9B9B9B;
+	text-decoration: none;
+	margin-left: 6px;
+	font-size: 14px;
+}
+
+a.gf_insert_field_choice:hover,
+a.gf_insert_field_choice:active,
+a.gf_delete_field_choice:hover,
+a.gf_delete_field_choice:active {
+	color: #444;
+}
+
+
+/* addon framework styles ----------------------------------------------------*/
+
+.gaddon-section {
+    padding: 20px 0 0;
+    margin: 0 0 20px;
+}
+
+.gaddon-section.gaddon-first-section {
+    padding-top: 0px;
+    border-top: 0px;
+}
+
+.gaddon-setting.large {
+    width: 95%;
+}
+
+.gaddon-setting.medium {
+    width: 50%;
+}
+
+.gaddon-setting.gaddon-checkbox {
+    margin-right: 8px;
+}
+
+.gaddon-section .settings-field-map-table thead tr th {
+    border-bottom: 1px solid #ccc !important;
+}
+
+.gaddon-section .settings-field-map-table tbody tr td {
+    border-bottom: 1px dotted #eee !important;
 }

@@ -2,9 +2,9 @@
 ----------------------------------------------------------------
 
 Gravity Forms Front End Form Styles
-Version 1.7
+Version 1.8
 http: //www.gravityforms.com
-updated: June 3, 2013 5:41 PM
+updated: December 12 2013, 12:07 PM
 
 Gravity Forms is a Rocketgenius project
 copyright 2013 Rocketgenius Inc.
@@ -161,7 +161,6 @@ html>body .entry ul,
 	display: -moz-inline-stack;
 	display: inline-block;
 	zoom: 1;
-	*display: inline;
 }
 
 .gform_wrapper .gfield_date_month,
@@ -177,7 +176,6 @@ html>body .entry ul,
 	display: -moz-inline-stack;
 	display: inline-block;
 	zoom: 1;
-	*display: inline;
 }
 
 .gform_wrapper .gfield_date_dropdown_month,
@@ -191,7 +189,6 @@ html>body .entry ul,
 	display: -moz-inline-stack;
 	display: inline-block;
 	zoom: 1;
-	*display: inline;
 }
 
 .gform_wrapper .gfield_time_ampm select {
@@ -735,7 +732,6 @@ div.gf_page_steps+div.validation_error {
 	display: -moz-inline-stack;
 	display: inline-block;
 	zoom: 1;
-	*display: inline;
 }
 
 /* tame those pesky hidden fields ------------------------------------------------------*/
@@ -1096,7 +1092,6 @@ body .gform_wrapper ul.gform_fields li.gfield.gform_validation_container {
 	display: -moz-inline-stack;
 	display: inline-block;
 	zoom: 1;
-	*display: inline;
 }
 
 .gform_wrapper .gf_step span.gf_step_number {
@@ -1308,7 +1303,6 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
 	margin-bottom: 4px;
 	display: inline-block;
 	zoom: 1;
-	*display: inline;
 }
 
 .gform_wrapper .chzn-container .chzn-drop {
@@ -1907,7 +1901,6 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
 	display: -moz-inline-stack;
 	display: inline-block;
 	zoom: 1;
-	*display: inline;
 }
 
 .gform_wrapper .ginput_complex .ginput_cardinfo_left select.ginput_card_expiration.ginput_card_expiration_month {
@@ -1930,7 +1923,24 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
 	display: -moz-inline-stack;
 	display: inline-block;
 	zoom: 1;
-	*display: inline;
+}
+
+.gform_wrapper .gform_fileupload_multifile .gform_drop_area {
+	padding: 25px;
+	border: 2px dashed #ddd;
+	text-align: center;
+	color: #aaa;
+	margin-bottom: 10px;
+}
+
+.right_label .gform_fileupload_multifile,
+.left_label .gform_fileupload_multifile{
+    margin-left: 31%;
+}
+
+.gform_delete{
+    vertical-align:middle;
+    cursor:pointer;
 }
 
 /* fix recaptcha line height issue ------------------------------------------------------*/

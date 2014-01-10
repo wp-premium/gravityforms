@@ -52,7 +52,7 @@ class GFSelectColumns{
                     .gcolumn_container_left {float:left;}
                     .gcolumn_container_right {float:right;}
                     .gform_select_column_heading{font-weight:bold; padding-bottom:7px; font-size:13px;}
-                    .column-arrow-mid {float:left; width:45px; height:250px; background-image:url(images/arrow-rightleft.jpg); background-repeat:no-repeat; background-position:center center; margin-top:26px;}
+                    .column-arrow-mid {float:left; width:45px; height:250px; background-image:url(<?php echo GFCommon::get_base_url(); ?>/images/arrow-rightleft.jpg); background-repeat:no-repeat; background-position:center center; margin-top:26px;}
                     .panel-instructions {border-bottom: 1px solid #dfdfdf; color:#555; font-size:11px; padding: 10px 20px; margin-bottom:6px}
                     div.panel-buttons {margin-top:8px; padding: 0 20px; }
                     div.panel-buttons {*margin-top:0px} /* ie specific */
@@ -131,7 +131,7 @@ class GFSelectColumns{
 
                                 if(is_array(rgar($field, "inputs"))){
                                     foreach($field["inputs"] as $input){
-                                        if(!in_array($input["id"], $field_ids) && !($field["type"] == "creditcard" && in_array($input["id"], array(floatval("{$field["id"]}.2"), floatval("{$field["id"]}.3")))) ){
+                                        if(!in_array($input["id"], $field_ids) && !($field["type"] == "creditcard" && in_array($input["id"], array(floatval("{$field["id"]}.2"), floatval("{$field["id"]}.3"), floatval("{$field["id"]}.5")))) ){
                                             ?>
                                             <li id="<?php echo $input["id"]?>"><?php echo esc_html(GFCommon::get_label($field, $input["id"])) ?></li>
                                             <?php

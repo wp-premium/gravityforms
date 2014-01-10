@@ -13,9 +13,7 @@ class GFUpdate{
 
         <link rel="stylesheet" href="<?php echo GFCommon::get_base_url() . "/css/admin.css"?>" />
 
-        <div class="wrap">
-
-        	<div class="icon32" id="gravity-update-icon"><br></div>
+        <div class="wrap <?php echo GFCommon::get_browser_class() ?>">
           <h2><?php echo _e("Gravity Forms Updates", "gravityforms") ?></h2>
             <?php
 

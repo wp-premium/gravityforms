@@ -4,7 +4,7 @@
 tooltip.css
 Gravity Forms Admin Tooltip Styles
 http://www.gravityforms.com
-updated: July 25, 2013 9:34 AM
+updated: November 6, 2013 12:42 PM
 
 Gravity Forms is a Rocketgenius project
 copyright 2013 Rocketgenius Inc.
@@ -24,18 +24,22 @@ a.tooltip,
 a.tooltip_left,
 a.tooltip_bottomleft {
 	width: 16px;
-	height: 16px;
-	background-image: url(../images/icon-question.png);
-	background-repeat: no-repeat;
-	display: inline-block;
-	text-indent: -9000px;
-	text-decoration: none
+	text-decoration: none;
+	color: #424242;
+	zoom: 1;
+	filter: alpha(opacity=50);
+	opacity: 0.5;
 }
-li.add_field_button_container a.tooltip_left,
-li.add_field_button_container a.tooltip_bottomleft{
-	background-image: url(../images/icon-question.png);
-	background-repeat: no-repeat
+
+a.tooltip:hover,
+a.tooltip_left:hover,
+a.tooltip_bottomleft:hover {
+	color: #0074A2;
+	zoom: 1;
+	filter: alpha(opacity=100);
+	opacity: 1.0;
 }
+
 .ui-tooltip {
 	padding: 18px;
 	position: absolute;
@@ -50,10 +54,12 @@ li.add_field_button_container a.tooltip_bottomleft{
 	-moz-box-shadow: 0 8px 6px -6px rgba(0,0,0,0.3);
 	box-shadow: 0 8px 6px -6px rgba(0,0,0,0.3);
 }
+
 body .ui-tooltip {
 	border: 4px solid #999;
 	background-color: #ededed;
 }
+
 body .ui-tooltip h6 {
 	color: #0e6085;
 	font-size: 1.1em;

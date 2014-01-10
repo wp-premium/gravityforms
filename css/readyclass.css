@@ -4,7 +4,7 @@
 readyclass.css
 Gravity Forms Ready Class Pre-Set Styles
 http://www.gravityforms.com
-updated: March 17, 2013 8:25 PM
+updated: December 12, 2013 12:14 PM
 
 Gravity Forms is a Rocketgenius project
 copyright 2013 Rocketgenius Inc.
@@ -36,7 +36,6 @@ to no.
 	display: -moz-inline-stack;
 	display: inline-block;
 	zoom: 1;
-	*display: inline;
 }
 
 .gform_wrapper .top_label li.gfield.gf_inline input[type=text].large,
@@ -351,7 +350,6 @@ to no.
 	display: -moz-inline-stack;
 	display: inline-block;
 	zoom: 1;
-	*display: inline;
 }
 
 /* hide am/pm field ready class ------------------------------------------------------*/
@@ -567,7 +565,6 @@ div.gform_confirmation_wrapper.gf_confirmation_green_gradient div#gforms_confirm
 	background: -ms-linear-gradient(top,  rgba(219,242,183,1) 0%,rgba(180,208,136,1) 100%);
 	background: linear-gradient(to bottom,  rgba(219,242,183,1) 0%,rgba(180,208,136,1) 100%);
 	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#dbf2b7', endColorstr='#b4d088',GradientType=0 );
-
 }
 
 div.gform_confirmation_wrapper.gf_confirmation_yellow_gradient:before,

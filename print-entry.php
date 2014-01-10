@@ -29,7 +29,31 @@ if(0 == $leads){
     $star = $filter == "star" ? 1 : null;
     $read = $filter == "unread" ? 0 : null;
     $status = in_array($filter, array("trash", "spam")) ? $filter : "active";
-    $lead_ids = GFFormsModel::get_lead_ids($form_id, $search, $star, $read, null, null, $status);
+    $search_criteria["status"] =  $status;
+
+    if($star)
+        $search_criteria["field_filters"][] = array("key" => "is_starred", "value" => (bool) $star );
+    if(!is_null($read))
+        $search_criteria["field_filters"][] = array("key" => "is_read", "value" => (bool) $read );
+
+    $search_field_id = rgget("field_id");
+    $search_operator = rgget("operator");
+    if(isset($_GET["field_id"]) && $_GET["field_id"] !== ''){
+        $key = $search_field_id;
+        $val = rgget("s");
+        $strpos_row_key       = strpos($search_field_id, "|");
+        if ($strpos_row_key !== false) { //multi-row
+            $key_array = explode("|", $search_field_id);
+            $key       = $key_array[0];
+            $val       = $key_array[1] . ":" . $val;
+        }
+        $search_criteria["field_filters"][] = array(
+            "key" => $key,
+            "operator" => rgempty("operator", $_GET) ? "is" : rgget("operator"),
+            "value" => $val
+        );
+    }
+    $lead_ids = GFFormsModel::search_lead_ids($form_id, $search_criteria);
 } else {
     $lead_ids = explode(',', $leads);
 }

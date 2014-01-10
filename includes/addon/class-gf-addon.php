@@ -3,16 +3,6 @@
 /**
  * Handles all tasks mostly common to any Gravity Forms Add-On, including third party ones
  *
- * Facilitates:
- *   - Initialization
- *   - Enforcing Gravity Forms minimum version requirement
- *   - Creating settings pages (generic and form specific)
- *   - Permissions and the Members plugin integration
- *   - Some of the most important GF events (i.e. validation and after submission)
- *   - Script enqueuing so that it can take care of the no-conflict mode integration
- *   - Creating form feeds
- *   - Standardization of UI elements and styles
- *   - Clean uninstall
  *
  * @package GFAddOn
  * @author Rocketgenius
@@ -32,7 +22,7 @@ abstract class GFAddOn {
      */
     protected $_slug;
     /**
-     * @var string Relative path to the plugin from the plugins folder. Example "gravityformsmailchimp/mailchimp.php"
+     * @var string Relative path to the plugin from the plugins folder. Example "gravityforms/gravityforms.php"
      */
     protected $_path;
     /**
@@ -57,6 +47,7 @@ abstract class GFAddOn {
     protected $_capabilities = array();
 
     private $_saved_settings = array();
+    private $_previous_settings = array();
 
     /**
     * @var array Stores a copy of setting fields that failed validation; only populated after validate_settings() has been called.
@@ -85,6 +76,7 @@ abstract class GFAddOn {
 
     /**
      * @var bool Used by Rocketgenius plugins to activate auto-upgrade.
+     * @ignore
      */
     protected $_enable_rg_autoupgrade = false;
 
@@ -110,7 +102,7 @@ abstract class GFAddOn {
         $this->pre_init();
     }
 
-    /*
+    /**
      * Gets executed before all init functions. Override this function to perform initialization tasks that must be done prior to init
      */
     public function pre_init(){
@@ -194,12 +186,19 @@ abstract class GFAddOn {
             add_filter('members_get_capabilities', array($this, 'members_get_capabilities'));
 
         // Results page
-
         if ($this->method_is_overridden('get_results_page_config')) {
             $results_page_config = $this->get_results_page_config();
             $results_capabilities = rgar($results_page_config, "capabilities");
-            if($this->current_user_can_any($results_capabilities))
+            if($results_page_config && $this->current_user_can_any($results_capabilities))
                 $this->results_page_init($results_page_config);
+        }
+
+        // Locking
+        if ($this->method_is_overridden('get_locking_config')) {
+            require_once(GFCommon::get_base_path() . "/includes/locking/class-gf-locking.php");
+            require_once("class-gf-addon-locking.php");
+            $config = $this->get_locking_config();
+            new GFAddonLocking($config, $this);
         }
 
         // No conflict scripts
@@ -212,6 +211,8 @@ abstract class GFAddOn {
     * Override this function to add initialization code (i.e. hooks) for the public (customer facing) site
     */
     protected function init_frontend(){
+
+        $this->setup();
 
         add_filter('gform_preview_styles', array($this,  "enqueue_preview_styles"), 10, 2);
         add_filter('gform_print_styles', array($this,  "enqueue_print_styles"), 10, 2);
@@ -229,6 +230,11 @@ abstract class GFAddOn {
             $gf_results = new GFResults($this->_slug, $this->get_results_page_config());
             add_action('wp_ajax_gresults_get_results_gf_results_' . $this->_slug, array($gf_results, 'ajax_get_results'));
             add_action('wp_ajax_gresults_get_more_results_gf_results_' . $this->_slug, array($gf_results, 'ajax_get_more_results'));
+        } elseif ($this->method_is_overridden('get_locking_config')) {
+            require_once(GFCommon::get_base_path() . "/includes/locking/class-gf-locking.php");
+            require_once("class-gf-addon-locking.php");
+            $config = $this->get_locking_config();
+            new GFAddonLocking($config, $this);
         }
     }
 
@@ -240,12 +246,20 @@ abstract class GFAddOn {
      */
     protected function setup() {
 
-        //upgrading add-on
+        //Upgrading add-on
         $installed_version = get_option("gravityformsaddon_" . $this->_slug . "_version");
-        if ($installed_version != $this->_version)
-            $this->upgrade($installed_version);
 
-        update_option("gravityformsaddon_" . $this->_slug . "_version", $this->_version);
+        //Making sure version has really changed. Gets around aggressive caching issue on some sites that cause setup to run multiple times.
+        if ($installed_version != $this->_version){
+            $installed_version = GFForms::get_wp_option("gravityformsaddon_" . $this->_slug . "_version");
+        }
+
+        //Upgrade if version has changed
+        if ($installed_version != $this->_version){
+
+            $this->upgrade($installed_version);
+            update_option("gravityformsaddon_" . $this->_slug . "_version", $this->_version);
+        }
     }
 
     /**
@@ -287,7 +301,9 @@ abstract class GFAddOn {
     * Override this function to provide a list of scripts to be enqueued.
     * When overriding this function, be sure to call parent::scripts() to ensure the base class scripts are enqueued.
     * Following is an example of the array that is expected to be returned by this function:
+    *<pre>
     * <code>
+    *
     *    array(
     *        array(  "handle" => "maskedinput",
     *                "src" => GFCommon::get_base_url() . "/js/jquery.maskedinput-1.3.min.js",
@@ -331,6 +347,7 @@ abstract class GFAddOn {
     *  );
     *
     * </code>
+    * </pre>
     */
     protected function scripts(){
         return array(
@@ -352,7 +369,7 @@ abstract class GFAddOn {
             array("handle"   => "gaddon_results_js",
                   "src"      => GFAddOn::get_gfaddon_base_url() . "/js/gaddon_results.js",
                   "version"  => GFCommon::$version,
-                  "deps"     => array('jquery', 'sack', 'jquery-ui-resizable', 'jquery-ui-datepicker' , 'google_charts'),
+                  "deps"     => array('jquery', 'sack', 'jquery-ui-resizable', 'jquery-ui-datepicker' , 'google_charts', 'gform_field_filter'),
                   "callback" => array('GFResults', "localize_results_scripts"),
                   "enqueue"  => array(
                       array("admin_page" => array("results")),
@@ -360,9 +377,6 @@ abstract class GFAddOn {
             )
         );
     }
-
-
-
 
 
     /**
@@ -380,15 +394,14 @@ abstract class GFAddOn {
         //Enqueueing scripts
         $scripts = $this->scripts();
         foreach($scripts as $script){
-            if($this->_can_enqueue_script($script["enqueue"], $form, $is_ajax)){
+            $src = isset($script["src"]) ? $script["src"] : false;
+            $deps = isset($script["deps"]) ? $script["deps"] : array();
+            $version =  isset($script["version"]) ? $script["version"] : false;
+            $in_footer =  isset($script["in_footer"]) ? $script["in_footer"] : false;
+            wp_register_script($script["handle"],$src, $deps, $version, $in_footer);
+            if(isset($script["enqueue"]) && $this->_can_enqueue_script($script["enqueue"], $form, $is_ajax)){
                 $this->add_no_conflict_scripts(array($script["handle"]));
-                $src = isset($script["src"]) ? $script["src"] : false;
-                $deps = isset($script["deps"]) ? $script["deps"] : array();
-                $version =  isset($script["version"]) ? $script["version"] : false;
-                $in_footer =  isset($script["in_footer"]) ? $script["in_footer"] : false;
-
-                wp_enqueue_script($script["handle"],$src, $deps, $version, $in_footer);
-
+                wp_enqueue_script($script["handle"]);
                 if(isset($script["strings"]))
                     wp_localize_script($script["handle"], $script["handle"]."_strings", $script["strings"]);
                 if(isset($script["callback"]) && is_callable($script["callback"])){
@@ -401,13 +414,13 @@ abstract class GFAddOn {
         //Enqueueing styles
         $styles =  $this->styles();
         foreach($styles as $style){
+            $src = isset($style["src"]) ? $style["src"] : false;
+            $deps = isset($style["deps"]) ? $style["deps"] : array();
+            $version =  isset($style["version"]) ? $style["version"] : false;
+            $media =  isset($style["media"]) ? $style["media"] : "all";
+            wp_register_style($style["handle"], $src, $deps, $version, $media);
             if($this->_can_enqueue_script($style["enqueue"], $form, $is_ajax)){
                 $this->add_no_conflict_styles(array($style["handle"]));
-                $src = isset($style["src"]) ? $style["src"] : false;
-                $deps = isset($style["deps"]) ? $style["deps"] : array();
-                $version =  isset($style["version"]) ? $style["version"] : false;
-                $media =  isset($style["media"]) ? $style["media"] : "all";
-                wp_register_style($style["handle"], $src, $deps, $version, $media);
                 if ($this->is_preview()) {
                     $this->_preview_styles[] = $style["handle"];
                 } elseif ($this->is_print()) {
@@ -415,7 +428,6 @@ abstract class GFAddOn {
                 } else {
                     wp_enqueue_style($style["handle"]);
                 }
-
             }
         }
     }
@@ -489,7 +501,7 @@ abstract class GFAddOn {
                 $query_matches = isset($condition["query"]) ? $this->_request_condition_matches($_GET, $condition["query"]) : true;
                 $post_matches  = isset($condition["post"]) ? $this->_request_condition_matches($_POST, $condition["query"]) : true;
                 $admin_page_matches = isset($condition["admin_page"]) ? $this->_page_condition_matches($condition["admin_page"], rgar($condition,"tab")) : true;
-                $field_type_matches = isset($condition["field_type"]) ? $this->_field_condition_matches($condition["field_type"], $form) : true;
+                $field_type_matches = isset($condition["field_types"]) ? $this->_field_condition_matches($condition["field_types"], $form) : true;
 
                 //Scripts will only be enqueued in any admin page if "admin_page", "query" or "post" variable is set.
                 //Scripts will only be enqueued in the front end if "admin_page" is not set.
@@ -562,7 +574,7 @@ abstract class GFAddOn {
 
                     break;
 
-                case "entry_detail" :
+                case "entry_edit" :
                     if($this->is_entry_edit())
                         return true;
 
@@ -662,7 +674,6 @@ abstract class GFAddOn {
         return false;
     }
 
-
     /**
      * Initializes the result page functionality. To activate result page functionality, override the get_results_page_config() function.
      *
@@ -673,6 +684,10 @@ abstract class GFAddOn {
 
         if(isset($results_page_config["callbacks"]["filters"]))
             add_filter("gform_filters_pre_results", $results_page_config["callbacks"]["filters"], 10, 2);
+
+        if(isset($results_page_config["callbacks"]["filter_ui"])){
+            add_filter("gform_filter_ui", $results_page_config["callbacks"]["filter_ui"], 10, 5);
+        }
 
         $gf_results = new GFResults($this->_slug, $results_page_config);
         $gf_results->init();
@@ -725,7 +740,6 @@ abstract class GFAddOn {
     * Renders the UI of all settings page based on the specified configuration array $sections
     *
     * @param array $sections - Configuration array containing all fields to be rendered grouped into sections
-    * @param array $settings - Current saved settings. Will be used to populate the inputs with their current values. Name/Value pair of input name and input value
     */
     protected function render_settings( $sections ) {
 
@@ -733,30 +747,6 @@ abstract class GFAddOn {
             $sections = $this->add_default_save_button( $sections );
 
         ?>
-        <style type="text/css">
-            .gaddon-section {
-                padding:20px 0 0;
-                margin:0 0 20px;
-                border-top:1px solid #f7f7f7;
-            }
-
-            .gaddon-section.gaddon-first-section {
-                padding-top:0px;
-                border-top:0px;
-            }
-
-            .gaddon-setting.large {
-                width:95%;
-            }
-
-            .gaddon-setting.medium {
-                width:50%;
-            }
-
-            .gaddon-setting.gaddon-checkbox {
-                margin-right:8px;
-            }
-        </style>
 
         <form id="gform-settings" action="" method="post">
 
@@ -775,7 +765,7 @@ abstract class GFAddOn {
     protected function settings( $sections ){
         $is_first = true;
         foreach( $sections as $section ) {
-            if( !rgar( $section, 'dependency' ) || $this->setting_dependency_met( rgar( $section, 'dependency' ) ) )
+            if( $this->setting_dependency_met( rgar( $section, 'dependency' ) ) )
                 $this->single_section( $section, $is_first);
 
             $is_first = false;
@@ -789,16 +779,38 @@ abstract class GFAddOn {
     * @param bool $is_first - true for the first section in the list, false for all others
     */
     protected function single_section( $section, $is_first = false) {
+
+        extract( wp_parse_args( $section, array(
+            'title' => false,
+            'description' => false,
+            'id' => '',
+            'class' => false,
+            'style' => '',
+            ''
+        ) ) );
+
+        $classes = array( 'gaddon-section' );
+
+        if( $is_first )
+            $classes[] = 'gaddon-first-section';
+
+        if( $class )
+            $classes[] = $class;
+
         ?>
 
-        <div class="gaddon-section<?php echo $is_first ? " gaddon-first-section" : ""?>">
+        <div
+            id="<?php echo $id; ?>"
+            class="<?php echo implode( ' ', $classes ); ?>"
+            style="<?php echo $style; ?>"
+            >
 
-            <?php if( rgar( $section, 'title' ) ): ?>
-                <h3><?php echo $section['title']; ?></h3>
+            <?php if( $title ): ?>
+                <h4 class="gaddon-section-title gf_settings_subgroup_title"><?php echo $title; ?></h4>
             <?php endif; ?>
 
-            <?php if( rgar( $section, 'description' ) ): ?>
-                <p class="gaddon-section-description"><?php echo $section['description']; ?></p>
+            <?php if( $description ): ?>
+                <p class="gaddon-section-description"><?php echo $description; ?></p>
             <?php endif; ?>
 
             <table class="form-table">
@@ -806,7 +818,7 @@ abstract class GFAddOn {
                 <?php
                 foreach($section['fields'] as $field) {
 
-                    if( rgar( $field, 'dependency' ) && ! $this->setting_dependency_met( rgar( $field, 'dependency' ) ) )
+                    if( ! $this->setting_dependency_met( rgar( $field, 'dependency' ) ) )
                         continue;
 
                     if ( is_callable( array( $this, "single_setting_row_{$field["type"]}") ) ) {
@@ -851,7 +863,7 @@ abstract class GFAddOn {
                 ?>
             </th>
             <td>
-                <?php echo $this->single_setting( $field ); ?>
+                <?php $this->single_setting( $field ); ?>
             </td>
         </tr>
 
@@ -863,7 +875,7 @@ abstract class GFAddOn {
 
         <tr>
             <td colspan="2">
-                <?php echo $this->single_setting( $field ); ?>
+                <?php $this->single_setting( $field ); ?>
             </td>
         </tr>
 
@@ -893,6 +905,22 @@ abstract class GFAddOn {
     protected function set_settings( $settings ) {
         $this->_saved_settings = $settings;
     }
+
+    /***
+    * Sets the previous settings to a class variable so that it can be accessed by lower level functions providing support for
+    * verifying whether a value was changed before executing an action
+    *
+    * @param array $settings: Settings to be stored
+    */
+    protected function set_previous_settings( $settings ) {
+        $this->_previous_settings = $settings;
+    }
+
+    protected function get_previous_settings() {
+        return $this->_previous_settings;
+    }
+
+
 
     /***
     * Gets settings from $_POST variable, returning a name/value collection of setting name and setting value
@@ -947,11 +975,14 @@ abstract class GFAddOn {
     /***
     * Retrieves the setting for a specific field/input
     *
-    * @param string $setting_name: The field or input name
+    * @param string $setting_name The field or input name
+    * @param string $default_value  Optional. The default value
+    * @return string|array
     */
-    protected function get_setting($setting_name, $default_value = "") {
+    protected function get_setting( $setting_name, $default_value = "" , $settings = false ) {
 
-        $settings = $this->get_current_settings();
+        if( ! $settings )
+            $settings = $this->get_current_settings();
 
         if (false === $settings)
             return $default_value;
@@ -982,6 +1013,10 @@ abstract class GFAddOn {
     *
     */
     protected function setting_dependency_met( $dependency ) {
+
+        // if no dependency, always return true
+        if( ! $dependency )
+            return true;
 
         //use a callback if one is specified in the configuration
         if(is_callable($dependency)){
@@ -1032,6 +1067,28 @@ abstract class GFAddOn {
         return $sections;
     }
 
+    protected function get_save_success_message( $sections ) {
+        $save_button = $this->get_save_button($sections);
+        return isset($save_button["messages"]["success"]) ? $save_button["messages"]["success"] : __("Settings updated", "gravityforms") ;
+    }
+
+    protected function get_save_error_message( $sections ) {
+        $save_button = $this->get_save_button($sections);
+        return isset($save_button["messages"]["error"]) ? $save_button["messages"]["error"] : __("There was an error while saving your settings", "gravityforms") ;
+    }
+
+    protected function get_save_button($sections){
+        $fields =  $sections[count($sections) - 1]['fields'];
+
+        foreach($fields as $field){
+            if ($field["type"] == "save")
+                return $field;
+        }
+
+        return false;
+    }
+
+
 
     //------------- Field Types ------------------------------------------------------
 
@@ -1040,8 +1097,10 @@ abstract class GFAddOn {
     *
     * @param array $field - Field array containing the configuration options of this field
     * @param bool $echo = true - true to echo the output to the screen, false to simply return the contents as a string
+    * @return string The HTML for the field
     */
     protected function settings_text($field, $echo = true) {
+
         $field["type"] = "text"; //making sure type is set to text
         $attributes = $this->get_field_attributes($field);
         $default_value = rgar( $field, 'value' ) ? rgar( $field, 'value' ) : rgar( $field, 'default_value' );
@@ -1061,15 +1120,15 @@ abstract class GFAddOn {
 
         $feedback_callback = rgar($field, 'feedback_callback');
         if(is_callable($feedback_callback)){
-            $is_valid = call_user_func($feedback_callback, $value);
+            $is_valid = call_user_func_array( $feedback_callback, array( $value, $field ) );
             $icon = "";
             if($is_valid === true)
-                $icon = "tick.png";
+                $icon = "icon-check fa-check gf_valid"; // check icon
             else if($is_valid === false)
-                $icon = "stop.png";
+                $icon = "icon-remove fa-times gf_invalid"; // x icon
 
             if(!empty($icon))
-                $html .= "&nbsp;&nbsp;<img src='" . GFCommon::get_base_url() . "/images/{$icon}' />";
+                $html .= "&nbsp;&nbsp;<i class=\"fa {$icon}\"></i>";
         }
 
         if( $this->field_failed_validation( $field ) )
@@ -1086,7 +1145,7 @@ abstract class GFAddOn {
     *
     * @param array $field - Field array containing the configuration options of this field
     * @param bool $echo = true - true to echo the output to the screen, false to simply return the contents as a string
-    * @return string
+    * @return string The HTML for the field
     */
     protected function settings_textarea($field, $echo = true) {
         $field["type"] = "textarea"; //making sure type is set to textarea
@@ -1117,7 +1176,7 @@ abstract class GFAddOn {
     *
     * @param array $field - Field array containing the configuration options of this field
     * @param bool $echo = true - true to echo the output to the screen, false to simply return the contents as a string
-    * @return string
+    * @return string The HTML for the field
     */
     protected function settings_hidden($field, $echo = true) {
         $field["type"] = "hidden"; //making sure type is set to hidden
@@ -1147,7 +1206,7 @@ abstract class GFAddOn {
     *
     * @param array $field - Field array containing the configuration options of this field
     * @param bool $echo = true - true to echo the output to the screen, false to simply return the contents as a string
-    * @return string
+    * @return string The HTML for the field
     */
     protected function settings_checkbox( $field, $echo = true ) {
 
@@ -1239,7 +1298,7 @@ abstract class GFAddOn {
     * @param array $field - Field array containing the configuration options of this field
     * @param bool $echo = true - true to echo the output to the screen, false to simply return the contents as a string
     *
-    * @return string
+    * @return string The HTML for the field
     */
     protected function settings_select( $field, $echo = true ) {
 
@@ -1251,6 +1310,10 @@ abstract class GFAddOn {
         $options = "";
         if(is_array($field["choices"])){
             foreach( $field["choices"] as $choice ) {
+
+                if(!isset($choice["value"]))
+                    $choice["value"] = $choice["label"];
+
                 $options .= '<option value="' . esc_attr($choice['value']) . '" ' . selected( $value, $choice['value'], false ) . '>' .
                             $choice['label'] .
                          '</option>';
@@ -1273,6 +1336,14 @@ abstract class GFAddOn {
         return $html;
     }
 
+    /***
+     * Renders the save button for settings pages
+     *
+     * @param array $field - Field array containing the configuration options of this field
+     * @param bool $echo = true - true to echo the output to the screen, false to simply return the contents as a string
+     *
+     * @return string The HTML
+     */
     protected function settings_save( $field, $echo = true ) {
 
         $field['type'] = 'submit';
@@ -1280,7 +1351,7 @@ abstract class GFAddOn {
         $field['class'] = 'button-primary gfbutton';
 
         if( ! rgar( $field, 'value' ) )
-            $field['value'] = __( 'Save Settings', 'gravityforms' );
+            $field['value'] = __( 'Update Settings', 'gravityforms' );
 
         $attributes = $this->get_field_attributes( $field );
 
@@ -1300,7 +1371,8 @@ abstract class GFAddOn {
     /**
     * Helper to create a simple conditional logic set of fields. It creates one row of conditional logic with Field/Operator/Value inputs.
     *
-    * @param mixed $setting_name_root - The root name to be used for inputs. It will be used as a prefix to the inputs that make up the conditional logic fields
+    * @param mixed $setting_name_root - The root name to be used for inputs. It will be used as a prefix to the inputs that make up the conditional logic fields.
+    * @return string The HTML
     */
     protected function simple_condition($setting_name_root){
 
@@ -1321,31 +1393,31 @@ abstract class GFAddOn {
                                     "choices" => array(
                                         array(
                                             "value" => "is",
-                                            "label" => __("is", "gravityformsmailchimp")
+                                            "label" => __("is", "gravityforms")
                                             ),
                                         array(
                                             "value" => "isnot",
-                                            "label" => __("is not", "gravityformsmailchimp")
+                                            "label" => __("is not", "gravityforms")
                                             ),
                                         array(
                                             "value" => ">",
-                                            "label" => __("greater than", "gravityformsmailchimp")
+                                            "label" => __("greater than", "gravityforms")
                                             ),
                                         array(
                                             "value" => "<",
-                                            "label" => __("less than", "gravityformsmailchimp")
+                                            "label" => __("less than", "gravityforms")
                                             ),
                                         array(
                                             "value" => "contains",
-                                            "label" => __("contains", "gravityformsmailchimp")
+                                            "label" => __("contains", "gravityforms")
                                             ),
                                         array(
                                             "value" => "starts_with",
-                                            "label" => __("starts with", "gravityformsmailchimp")
+                                            "label" => __("starts with", "gravityforms")
                                             ),
                                         array(
                                             "value" => "ends_with",
-                                            "label" => __("ends with", "gravityformsmailchimp")
+                                            "label" => __("ends with", "gravityforms")
                                             )
                                         )
                                 ), false);
@@ -1372,7 +1444,7 @@ abstract class GFAddOn {
         // each nonstandard property will be extracted from the $props array so it is not auto-output in the field HTML
         $no_output_props = apply_filters( 'gaddon_no_output_field_properties',
                 array( 'default_value', 'label', 'choices', 'feedback_callback', 'checked', 'checkbox_label', 'value', 'type',
-                    'validation_callback', 'required', 'hidden', 'tooltip' ), $field );
+                    'validation_callback', 'required', 'hidden', 'tooltip', 'dependency' ), $field );
 
         $default_props = array(
             'class' => '',          // will default to gaddon-setting
@@ -1382,7 +1454,6 @@ abstract class GFAddOn {
         // Property switch case
         switch( $field['type'] ) {
         case 'select':
-            $default_props['default_choice'] = array();
             $default_props['choices'] = array();
             break;
         case 'checkbox':
@@ -1396,7 +1467,7 @@ abstract class GFAddOn {
         }
 
         $props = wp_parse_args( $field, $default_props );
-        $props['id'] = rgar( $props, 'name' );
+        $props['id'] = rgempty("id", $props) ? rgar( $props, 'name' ) : rgar( $props, "id");
         $props['class'] = trim("{$props['class']} gaddon-setting gaddon-{$props['type']}");
 
         // extract no-output properties from $props array so they are not auto-output in the field HTML
@@ -1428,7 +1499,6 @@ abstract class GFAddOn {
      * Parses the properties of the $choice meta array and returns a set of HTML attributes to be added to the HTML element.
      * @param array $choice - current choice meta to be parsed.
      * @param array $field_attributes - current field's attributes.
-     * @param array $default - default set of properties. Will be appended to the properties specified in the $field array
      * @return array - resulting HTML attributes ready to be included in the HTML element.
      */
     protected function get_choice_attributes($choice, $field_attributes){
@@ -1455,7 +1525,14 @@ abstract class GFAddOn {
     protected function validate_settings( $fields, $settings ) {
 
         foreach( $fields as $section ) {
+
+            if( ! $this->setting_dependency_met( rgar( $section, 'dependency' ) ) )
+                continue;
+
             foreach( $section['fields'] as $field ) {
+
+                if( ! $this->setting_dependency_met( rgar( $field, 'dependency' ) ) )
+                    continue;
 
                 $field_setting = rgar( $settings, rgar( $field, 'name' ) );
 
@@ -1495,7 +1572,7 @@ abstract class GFAddOn {
     /**
      * Gets the validation errors for a field.
      * Returns validation errors associated with the specified field or a list of all validation messages (if a field isn't specified)
-     * @param array $field - The field meta. When specified, errors for this field will be returned
+     * @param array|boolean $field - Optional. The field meta. When specified, errors for this field will be returned
      * @return mixed - If a field is specified, a string containing the error message will be returned. Otherwise, an array of all errors will be returned
      */
     protected function get_field_errors( $field = false ) {
@@ -1517,9 +1594,10 @@ abstract class GFAddOn {
         $error = $this->get_field_errors( $field );
 
         return '<span
-            class="tooltip_left"
+            class="gf_tooltip tooltip"
             title="<h6>' . __( 'Validation Error', 'gravityforms' ) . '</h6>' . $error . '"
-            style="background-image: url(\'' . GFCommon::get_base_url() . '/images/exclamation.png\');display:inline-block; position:relative;right:-3px;top: 3px;width:16px;height:16px;">
+            style="display:inline-block;position:relative;right:-3px;top:1px;font-size:14px;">
+                <i class="fa fa-exclamation-circle icon-exclamation-sign gf_invalid"></i>
             </span>';
     }
 
@@ -1542,6 +1620,47 @@ abstract class GFAddOn {
     protected function field_failed_validation( $field ) {
         $field_error = $this->get_field_errors( $field );
         return !empty( $field_error ) ? $field_error : false;
+    }
+
+    protected function add_field_before( $name, $fields, $settings ) {
+        return $this->add_field( $name, $fields, $settings, 'before' );
+    }
+
+    protected function add_field_after( $name, $fields, $settings ) {
+        return $this->add_field( $name, $fields, $settings, 'after' );
+    }
+
+    protected function add_field( $name, $fields, $settings, $pos ) {
+
+        if( rgar( $fields, 'name' ) )
+            $fields = array( $fields );
+
+        $pos_mod = $pos == 'before' ? 0 : 1;
+
+        foreach( $settings as &$section ) {
+            for( $i = 0; $i < count( $section['fields'] ); $i++ ) {
+                if( $section['fields'][$i]['name'] == $name ) {
+                    array_splice( $section['fields'], $i + $pos_mod, 0, $fields );
+                    break 2;
+                }
+            }
+        }
+
+        return $settings;
+    }
+
+    protected function remove_field( $name, $settings ) {
+
+        foreach( $settings as &$section ) {
+            for( $i = 0; $i < count( $section['fields'] ); $i++ ) {
+                if( $section['fields'][$i]['name'] == $name ) {
+                    array_splice( $section['fields'], $i, 1 );
+                    break 2;
+                }
+            }
+        }
+
+        return $settings;
     }
 
     //--------------  Form settings  ---------------------------------------------------
@@ -1582,12 +1701,10 @@ abstract class GFAddOn {
      */
     public function create_plugin_page_menu($menus){
 
-        $menus[] = array("name" => $this->_slug, "label" => $this->get_short_title(), "callback" =>  array($this, "plugin_page"), "permission" => $this->_capabilities_plugin_page);
+        $menus[] = array("name" => $this->_slug, "label" => $this->get_short_title(), "callback" =>  array($this, "plugin_page_container"), "permission" => $this->_capabilities_plugin_page);
 
         return $menus;
     }
-
-
 
     /**
      * Renders the form settings page.
@@ -1616,6 +1733,7 @@ abstract class GFAddOn {
                     //enables plugins to override settings page by implementing a form_settings() function
                     $this->form_settings($form);
                 } else {
+
                     //saves form settings if save button was pressed
                     $this->maybe_save_form_settings($form);
 
@@ -1624,7 +1742,9 @@ abstract class GFAddOn {
                     $this->set_settings( $settings );
 
                     //reading addon fields
-                    $sections = $this->form_settings_fields();
+                    $sections = $this->form_settings_fields($form);
+
+                    GFCommon::display_admin_message();
 
                     //rendering settings based on fields and current settings
                     $this->render_settings( $sections );
@@ -1642,13 +1762,34 @@ abstract class GFAddOn {
 
     /***
     * Saves form settings if the submit button was pressed
-    *
+    * @param array $form The form object
+    * @return null|true|false True on success, false on error, null on no action
     */
     public function maybe_save_form_settings($form){
-        if($this->is_save_postback()){
+
+        if( $this->is_save_postback() ){
+
+            // store a copy of the previous settings for cases where action whould only happen if value has changed
+            $this->set_previous_settings( $this->get_form_settings( $form ) );
+
             $settings = $this->get_posted_settings();
-            $this->save_form_settings($form, $settings);
+            $sections = $this->form_settings_fields($form);
+
+            $is_valid = $this->validate_settings( $sections, $settings );
+            $result = false;
+
+            if( $is_valid )
+                $result = $this->save_form_settings($form, $settings);
+
+            if( $result ) {
+                GFCommon::add_message( $this->get_save_success_message($sections) );
+            } else {
+                GFCommon::add_error_message( $this->get_save_error_message($sections) );
+            }
+
+            return $result;
         }
+
     }
 
     /***
@@ -1656,10 +1797,12 @@ abstract class GFAddOn {
     *
     * @param array $form
     * @param array $settings
+    * @return true|false True on success or false on error
     */
     public function save_form_settings($form, $settings){
         $form[$this->_slug] = $settings;
-        GFFormsModel::update_form_meta($form["id"], $form);
+        $result = GFFormsModel::update_form_meta($form["id"], $form);
+        return ! (false === $result);
     }
 
     /**
@@ -1694,6 +1837,44 @@ abstract class GFAddOn {
     }
 
     /**
+     * Override this function to customize the plugin page icon
+     */
+    protected function plugin_page_icon(){
+        return "";
+    }
+
+    protected function plugin_page_title(){
+        return $this->_title;
+    }
+
+    /**
+     * Plugin page container
+     * Target of the plugin menu left nav icon. Displays the outer plugin page markup and calls plugin_page() to render the actual page.
+     * Override plugin_page() in order to provide a custom plugin page
+     */
+    public function plugin_page_container(){
+        ?>
+        <div class="wrap">
+            <?php
+            $icon = $this->plugin_page_icon();
+            if(!empty($icon)){
+                ?>
+                <img alt="<?php echo $this->get_short_title() ?>" style="margin: 15px 7px 0pt 0pt; float: left;" src="<?php echo $icon ?>"/>
+                <?php
+            }
+            ?>
+
+            <h2 class="gf_admin_page_title"><?php echo $this->plugin_page_title() ?></h2>
+            <?php
+
+            $this->plugin_page();
+        ?>
+        </div>
+        <?php
+    }
+
+
+    /**
      * Returns the form settings for the Add-On
      *
      * @param $form
@@ -1720,10 +1901,10 @@ abstract class GFAddOn {
         return $tabs;
     }
 
-    /***
+    /**
     * Override this function to specify the settings fields to be rendered on the form settings page
     */
-    protected function form_settings_fields(){
+    protected function form_settings_fields($form){
         // should return an array of sections, each section contains a title, description and an array of fields
         return array();
     }
@@ -1742,10 +1923,15 @@ abstract class GFAddOn {
         }
     }
 
-    /***
+    /**
     * Plugin settings page
     */
     public function plugin_settings_page() {
+        ?>
+
+        <h3><span><?php echo $this->plugin_settings_title() ?></span></h3>
+
+        <?php
 
         if($this->method_is_overridden('plugin_settings')){
             //enables plugins to override settings page by implementing a plugin_settings() function
@@ -1769,6 +1955,8 @@ abstract class GFAddOn {
             //reading addon fields
             $sections = $this->plugin_settings_fields();
 
+            GFCommon::display_admin_message();
+
             //rendering settings based on fields and current settings
             $this->render_settings( $sections, $settings);
 
@@ -1777,6 +1965,10 @@ abstract class GFAddOn {
 
         }
 
+    }
+
+    public function plugin_settings_title(){
+        return $this->get_short_title() . ' ' . __( "Settings", "gravityforms" );
     }
 
     /**
@@ -1795,13 +1987,23 @@ abstract class GFAddOn {
         return $this->method_is_overridden('plugin_settings_fields') || $this->method_is_overridden('plugin_settings');
     }
 
-    /***
+    /**
     * Returns the currently saved plugin settings
-    *
+    * @return mixed
     */
     protected function get_plugin_settings() {
-        $settings = get_option("gravityformsaddon_" . $this->_slug . "_settings");
-        return $settings;
+        return get_option("gravityformsaddon_" . $this->_slug . "_settings");
+    }
+
+    /**
+     * Get plugin setting
+     * Returns the plugin setting specified by the $setting_name parameter
+     * @param string $setting_name - Plugin setting to be returned
+     * @return mixed  - Returns the specified plugin setting or null if the setting doesn't exist
+     */
+    protected function get_plugin_setting($setting_name){
+        $settings = $this->get_plugin_settings();
+        return isset($settings[$setting_name]) ? $settings[$setting_name] : null;
     }
 
     /**
@@ -1813,25 +2015,43 @@ abstract class GFAddOn {
         update_option("gravityformsaddon_" . $this->_slug . "_settings", $settings);
     }
 
-    /***
-    * Saves teh plugin settings if the submit button was pressed
+    /**
+    * Saves the plugin settings if the submit button was pressed
     *
     */
     protected function maybe_save_plugin_settings(){
-        if($this->is_save_postback()){
+
+        if( $this->is_save_postback() ) {
+
+            // store a copy of the previous settings for cases where action whould only happen if value has changed
+            $this->set_previous_settings( $this->get_plugin_settings() );
+
             $settings = $this->get_posted_settings();
-            $this->update_plugin_settings($settings);
+            $sections = $this->plugin_settings_fields();
+            $is_valid = $this->validate_settings( $sections, $settings );
+
+            if( $is_valid )
+                $this->update_plugin_settings( $settings );
+
+            GFCommon::add_message( $this->get_save_success_message( $sections ) );
         }
+
     }
 
-    /***
+    /**
     * Override this function to specify the settings fields to be rendered on the plugin settings page
+    * @return array
     */
     public function plugin_settings_fields(){
         // should return an array of sections, each section contains a title, description and an array of fields
         return array();
     }
 
+    /**
+     * Returns an flattened array of field settings for the specified settings type ignoring sections.
+     * @param string $settings_type The settings type. e.g. 'plugin'
+     * @return array
+     */
     protected function settings_fields_only($settings_type = 'plugin') {
 
         $fields = array();
@@ -1852,6 +2072,9 @@ abstract class GFAddOn {
 
     //--------------  Uninstall  ---------------
 
+    /**
+     * Override this function to customize the markup for the uninstall section on the plugin settings page
+     */
     public function render_uninstall(){
 
         ?>
@@ -1860,7 +2083,7 @@ abstract class GFAddOn {
             <?php if ($this->current_user_can_any($this->_capabilities_uninstall)) { ?>
                 <div class="hr-divider"></div>
 
-                <h3><?php _e("Uninstall Add-On", "gravityforms") ?></h3>
+                <h3><span><?php _e("Uninstall Add-On", "gravityforms") ?></span></h3>
                 <div class="delete-alert"><?php _e("Warning! This operation deletes ALL settings.", "gravityforms") ?>
                     <?php
                     $uninstall_button = '<input type="submit" name="uninstall" value="' . __("Uninstall  Add-On", "gravityforms") . '" class="button" onclick="return confirm(\'' . __("Warning! ALL settings will be deleted. This cannot be undone. \'OK\' to delete, \'Cancel\' to stop", "gravityforms") . '\');"/>';
@@ -1874,6 +2097,11 @@ abstract class GFAddOn {
         <?php
     }
 
+    /**
+     * Not intended to be overridden or called directly by Add-Ons.
+     *
+     * @ignore
+     */
     public function maybe_uninstall(){
         if (rgpost("uninstall")) {
             check_admin_referer("uninstall", "gf_addon_uninstall");
@@ -1950,7 +2178,7 @@ abstract class GFAddOn {
      *
      * Return false to cancel the uninstall request.
      */
-    public function uninstall() {
+    protected function uninstall() {
         return true;
     }
 
@@ -1977,7 +2205,7 @@ abstract class GFAddOn {
      * Override this method to display a custom message.
      */
     public function plugin_message() {
-        $message = sprintf(__("Gravity Forms " . $this->_min_gravityforms_version . " is required. Activate it now or %spurchase it today!%s", "gravityformsaddon"), "<a href='http://www.gravityforms.com'>", "</a>");
+        $message = sprintf(__("Gravity Forms " . $this->_min_gravityforms_version . " is required. Activate it now or %spurchase it today!%s", "gravityforms"), "<a href='http://www.gravityforms.com'>", "</a>");
 
         return $message;
     }
@@ -1999,6 +2227,13 @@ abstract class GFAddOn {
 
     //--------------- Logging -------------------------------------------------------------
 
+    /**
+     * Writes an error message to the Gravity Forms log. Requires the Gravity Forms logging Add-On.
+     *
+     * Not intended to be overridden by Add-Ons.
+     *
+     * @ignore
+     */
     public function log_error($message){
         if (class_exists("GFLogging")) {
             GFLogging::include_logger();
@@ -2006,6 +2241,13 @@ abstract class GFAddOn {
         }
     }
 
+    /**
+     * Writes an error message to the Gravity Forms log. Requires the Gravity Forms logging Add-On.
+     *
+     * Not intended to be overridden by Add-Ons.
+     *
+     * @ignore
+     */
     public function log_debug($message){
         if (class_exists("GFLogging")) {
             GFLogging::include_logger();
@@ -2013,11 +2255,98 @@ abstract class GFAddOn {
         }
     }
 
+    //--------------- Locking ------------------------------------------------------------
+
+    /**
+     * Returns the configuration for locking
+     *
+     * e.g.
+     *
+     *  array(
+     *     "object_type" => "contact",
+     *     "capabilities" => array("gravityforms_contacts_edit_contacts"),
+     *     "redirect_url" => admin_url("admin.php?page=gf_contacts"),
+     *     "edit_url" => admin_url(sprintf("admin.php?page=gf_contacts&id=%d", $contact_id)),
+     *     "strings" => $strings
+     *     );
+     *
+     * Override this method to implement locking
+     */
+    public function get_locking_config() {
+        return array();
+    }
+
+
+    /**
+     * Returns TRUE if the current page is the edit page. Otherwise, returns FALSE
+     *
+     * Override this method to implement locking on the edit page.
+     */
+    public function is_locking_edit_page() {
+        return false;
+    }
+    /**
+     * Returns TRUE if the current page is the list page. Otherwise, returns FALSE
+     *
+     * Override this method to display locking info on the list page.
+     */
+    public function is_locking_list_page() {
+        return false;
+    }
+    /**
+     * Returns TRUE if the current page is the view page. Otherwise, returns FALSE
+     *
+     * Override this method to display locking info on the view page.
+     */
+    public function is_locking_view_page() {
+        return false;
+    }
+    /**
+     * Returns the ID of the object to be locked. E.g. Form ID
+     *
+     * Override this method to implement locking
+     */
+    public function get_locking_object_id() {
+        return 0;
+    }
+
+    /**
+     * Outputs information about the user currently editing the specified object
+     *
+     * @param int $object_id The Object ID
+     * @param bool $echo Whether to echo
+     * @return string The markup for the lock info
+     */
+    public function lock_info($object_id, $echo = true) {
+        $gf_locking = new GFAddonLocking($this->get_locking_config(),$this);
+        $lock_info = $gf_locking->lock_info($object_id, false);
+        if ($echo)
+            echo $lock_info;
+        return $lock_info;
+    }
+    /**
+     * Outputs class for the row for the specified Object ID on the list page.
+     *
+     * @param int $object_id The object ID
+     * @param bool $echo Whether to echo
+     * @return string The markup for the class
+     */
+    public function list_row_class($object_id, $echo = true) {
+        $gf_locking = new GFAddonLocking($this->get_locking_config(),$this);
+        $class = $gf_locking->list_row_class($object_id, false);
+        if ($echo)
+            echo $class;
+        return $class;
+    }
+
+
+
     //--------------  Helper functions  ---------------------------------------------------
 
-    private function method_is_overridden($method_name){
+    protected final function method_is_overridden($method_name, $base_class="GFAddOn"){
         $reflector = new ReflectionMethod($this, $method_name);
-        return $reflector->getDeclaringClass()->getName() !== 'GFAddOn';
+        $name = $reflector->getDeclaringClass()->getName();
+        return $name !== $base_class;
     }
 
     /**
@@ -2137,7 +2466,7 @@ abstract class GFAddOn {
     *
     */
     protected function get_plugin_settings_url() {
-        return add_query_arg( array( 'page' => 'gf_settings', 'subview' => $this->_short_title ), admin_url('admin.php') );
+        return add_query_arg( array( 'page' => 'gf_settings', 'subview' => $this->get_short_title() ), admin_url('admin.php') );
     }
 
     /**
@@ -2145,15 +2474,15 @@ abstract class GFAddOn {
     * returns the current form object. Otherwise returns false
     */
     protected function get_current_form(){
-        if( $this->is_entry_edit() ||
-            $this->is_entry_view() ||
-            $this->is_form_editor() ||
-            $this->is_form_settings() )
-        {
-            return rgempty("id", $_GET) ? false : GFFormsModel::get_form_meta(rgget('id'));
-        }
 
-        return false;
+//        if( $this->is_entry_edit() ||
+//            $this->is_entry_view() ||
+//            $this->is_entry_list() ||
+//            $this->is_form_editor() ||
+//            $this->is_form_settings() )
+//        {
+
+        return rgempty("id", $_GET) ? false : GFFormsModel::get_form_meta(rgget('id'));
     }
 
     /**
@@ -2185,6 +2514,7 @@ abstract class GFAddOn {
     * Returns TRUE if the current page is the form settings page, or a specific form settings tab (specified by the $tab parameter). Otherwise returns FALSE
     *
     * @param string $tab - Specifies a specific form setting page/tab
+    * @return bool
     */
     protected function is_form_settings($tab = null){
 
@@ -2209,7 +2539,7 @@ abstract class GFAddOn {
         $current_tab = rgempty("subview", $_GET) ? "settings" : rgget("subview");
 
         foreach($tabs as $tab){
-            if(strtolower($tab) == strtolower($current_tab))
+            if( strtolower( $tab ) == strtolower( $current_tab ) )
                 return true;
         }
     }
@@ -2218,6 +2548,7 @@ abstract class GFAddOn {
     * Returns TRUE if the current page is the plugin settings main page, or a specific plugin settings tab (specified by the $tab parameter). Otherwise returns FALSE
     *
     * @param string $tab - Specifies a specific plugin setting page/tab.
+    * @return bool
     */
     protected function is_plugin_settings($tab = ""){
 
@@ -2234,7 +2565,7 @@ abstract class GFAddOn {
 
     /**
      * Returns TRUE if the current page is the plugin page. Otherwise returns FALSE
-     *
+     * @return bool
      */
     protected function is_plugin_page(){
 
@@ -2243,6 +2574,7 @@ abstract class GFAddOn {
 
     /**
     * Returns TRUE if the current page is the entry view page. Otherwise, returns FALSE
+    * @return bool
     */
     protected function is_entry_view(){
         if(rgget("page") == "gf_entries" && rgget("view") == "entry" && (!isset($_POST["screen_mode"]) || rgpost("screen_mode") == "view"))
@@ -2253,9 +2585,17 @@ abstract class GFAddOn {
 
     /**
     * Returns TRUE if the current page is the entry edit page. Otherwise, returns FALSE
+    * @return bool
     */
     protected function is_entry_edit(){
         if(rgget("page") == "gf_entries" && rgget("view") == "entry" && rgpost("screen_mode") == "edit")
+            return true;
+
+        return false;
+    }
+
+    protected function is_entry_list(){
+        if( rgget("page") == "gf_entries" && rgempty("view", $_GET) )
             return true;
 
         return false;
