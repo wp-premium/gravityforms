@@ -1,4 +1,25 @@
 -------------------------------------------------------------------------------------------------------------------
+Version 1.8.1
+
+    - Added the gform_webapi_get_users_settings_page filter to allow the user list to be filtered on the API settings page.
+    - Added the gform_filters_get_users filter to allow the user list to be filtered in the field filters.
+    - Added logging statements for single file upload fields on single page forms and last page of multi-page forms.
+
+    - Fixed issue with gform_display_add_form_button filter.
+    - Fixed issue with state validation failing on product names with leading or trailing spaces.
+	- Fixed notices thrown in the clean_up_files function.
+    - Fixed an issue on the settings where a valid license key appears incorrectly as invalid for up to 24 hours after updating to version 1.8.
+    - Fixed an issue on the confirmation edit page when a conditional logic rule value contains an apostrophe.
+    - Fixed an issue with the multi-file upload field when used on more than one page of a multi-page form and when the max number of files is set.
+    - Fixed JavaScript error when form contains a currency format number field but no calculation.
+    - Fixed the missing edit columns icon on the entry list.
+    - Fixed undefined index notice isRequired in GFFormDisplay::get_field_content().
+    - Fixed the localization of the select files button in the multi-file upload field.
+
+    - Removed the gform_webapi_max_accounts_settings_page filter.
+    - Removed the gform_filters_max_user_accounts filter.
+
+-------------------------------------------------------------------------------------------------------------------
 Version 1.8
 
     - Added API to allow developers to easily perform operations such as read/update/delete/create forms and entries

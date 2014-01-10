@@ -173,15 +173,15 @@ class GFFormDisplay{
                         $price = GFCommon::to_number($price);
 
                         $product_name = !is_array($value) || empty($value[$field["id"] . ".1"]) ? $field["label"] : $value[$field["id"] . ".1"];
-                        $product_fields[$field["id"]. ".1"] = wp_hash($product_name);
-                        $product_fields[$field["id"]. ".2"] = wp_hash($price);
+                        $product_fields[$field["id"]. ".1"] = wp_hash(GFFormsModel::maybe_trim_input($product_name, $form["id"], $field));
+                        $product_fields[$field["id"]. ".2"] = wp_hash(GFFormsModel::maybe_trim_input($price, $form["id"], $field));
                     break;
 
                     case "singleshipping" :
                         $price = !empty($value) ? $value : $field["basePrice"];
                         $price = GFCommon::to_number($price);
 
-                        $product_fields[$field["id"]] = wp_hash($price);
+                        $product_fields[$field["id"]] = wp_hash(GFFormsModel::maybe_trim_input($price, $form["id"], $field));
                     break;
                     case "radio" :
                     case "select" :
@@ -191,7 +191,7 @@ class GFFormDisplay{
                             if($field["enablePrice"])
                                 $field_value .= "|" . GFCommon::to_number(rgar($choice,"price"));
 
-                            $product_fields[$field["id"]][] = wp_hash($field_value);
+                            $product_fields[$field["id"]][] = wp_hash(GFFormsModel::maybe_trim_input($field_value, $form["id"], $field));
                         }
                     break;
                     case "checkbox" :
@@ -204,7 +204,7 @@ class GFFormDisplay{
                             if($index % 10 == 0) //hack to skip numbers ending in 0. so that 5.1 doesn't conflict with 5.10
                                 $index++;
 
-                            $product_fields[$field["id"] . "." . $index++] = wp_hash($field_value);
+                            $product_fields[$field["id"] . "." . $index++] = wp_hash(GFFormsModel::maybe_trim_input($field_value, $form["id"], $field));
                         }
                     break;
 
@@ -962,15 +962,20 @@ class GFFormDisplay{
             return false;
         $target_path = RGFormsModel::get_upload_path($form["id"]) . "/tmp/";
         $filename = $target_path . $unique_form_id . "_input_*";
-        array_map('unlink', glob($filename));
+        $files = glob($filename);
+        if (is_array($files)){
+        	array_map('unlink', $files);
+		}
 
         // clean up file from abandoned submissions older than 48 hours
         $files = glob($target_path."*");
-        foreach($files as $file) {
-            if(is_file($file) && time() - filemtime($file) >= 2*24*60*60) {
-                unlink($file);
-            }
-        }
+        if (is_array($files)){
+	        foreach($files as $file) {
+	            if(is_file($file) && time() - filemtime($file) >= 2*24*60*60) {
+	                unlink($file);
+	            }
+	        }
+		}
     }
 
     public static function handle_confirmation($form, $lead, $ajax=false){
@@ -1611,7 +1616,7 @@ class GFFormDisplay{
             wp_enqueue_script( 'gform_datepicker_init' );
         }
 
-        if( $ajax || self::has_price_field( $form ) || self::has_password_strength( $form ) || GFCommon::has_list_field( $form ) || GFCommon::has_credit_card_field($form) || self::has_conditional_logic( $form ) || self::has_calculation_field( $form ) ) {
+        if( $ajax || self::has_price_field( $form ) || self::has_password_strength( $form ) || GFCommon::has_list_field( $form ) || GFCommon::has_credit_card_field($form) || self::has_conditional_logic( $form ) || self::has_currency_format_number_field($form) || self::has_calculation_field( $form ) ) {
             wp_enqueue_script( 'gform_gravityforms' );
         }
 
@@ -2433,7 +2438,7 @@ class GFFormDisplay{
 
         $field_id = IS_ADMIN || $form_id == 0 ? "input_$id" : "input_" . $form_id . "_$id";
 
-        $required_div = IS_ADMIN || rgar($field, "isRequired") ? sprintf("<span class='gfield_required'>%s</span>", $field["isRequired"] ? "*" : "") : "";
+        $required_div = IS_ADMIN || rgar($field, "isRequired") ? sprintf("<span class='gfield_required'>%s</span>", rgar($field, "isRequired") ? "*" : "") : "";
         $target_input_id = "";
         $is_description_above = rgar($field, "descriptionPlacement") == "above";
 

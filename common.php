@@ -3499,7 +3499,7 @@ class GFCommon{
                         $plupload_init['multi_selection'] = false;
 
                     $plupload_init_json = htmlspecialchars(json_encode($plupload_init), ENT_QUOTES, 'UTF-8');
-                    $upload = sprintf("<div id='%s' data-settings='%s' class='gform_fileupload_multifile'><div id='%s' class='gform_drop_area'><span class='gform_drop_instructions'>%s </span><input id='%s' type='button' value='Select files' class='button gform_button_select_files'/></div></div>",$container_id, $plupload_init_json, $drag_drop_id, __("Drop files here or" ,"gravityforms"), $browse_button_id ) ;
+                    $upload = sprintf("<div id='%s' data-settings='%s' class='gform_fileupload_multifile'><div id='%s' class='gform_drop_area'><span class='gform_drop_instructions'>%s </span><input id='%s' type='button' value='%s' class='button gform_button_select_files'/></div></div>",$container_id, $plupload_init_json, $drag_drop_id, __("Drop files here or" ,"gravityforms"), $browse_button_id, __("Select files", "gravityforms") ) ;
                     if(!IS_ADMIN)
                         $upload .= "<div class='validation_message'><ul id='{$messages_id}'></ul></div>";
 
@@ -5471,8 +5471,8 @@ class GFCommon{
     public static function get_entry_info_filter_columns($get_users = true){
         $account_choices = array();
         if($get_users){
-            $max_accounts    = apply_filters("gform_filters_max_user_accounts", 200);
-            $accounts        = get_users(array("number" => $max_accounts));
+            $args    = apply_filters("gform_filters_get_users", array("number" => 200));
+            $accounts        = get_users();
             $account_choices = array();
             foreach ($accounts as $account) {
                 $account_choices[] = array("text" => $account->user_login, "value" => $account->ID);
