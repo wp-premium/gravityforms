@@ -1,4 +1,9 @@
 <?php
+
+if(!class_exists('GFForms')){
+    die();
+}
+
 class GFAutoUpgrade{
     protected $_version;
     protected $_min_gravityforms_version;

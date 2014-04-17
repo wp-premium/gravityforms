@@ -1,4 +1,8 @@
 <?php
+if(!class_exists('GFForms')){
+    die();
+}
+
 class GFCommon{
 
     // deprecated; set to GFForms::$version in GFForms::init() for backwords compat
@@ -25,6 +29,11 @@ class GFCommon{
 
     public static function is_numeric($value, $number_format=""){
 
+        if($number_format == "currency"){
+
+            $number_format = self::is_currency_decimal_dot() ? "decimal_dot" : "decimal_comma";
+        }
+
         switch($number_format){
             case "decimal_dot" :
                 return preg_match("/^(-?[0-9]{1,3}(?:,?[0-9]{3})*(?:\.[0-9]+)?)$/", $value);
@@ -38,6 +47,19 @@ class GFCommon{
                 return preg_match("/^(-?[0-9]{1,3}(?:,?[0-9]{3})*(?:\.[0-9]{2})?)$/", $value) || preg_match("/^(-?[0-9]{1,3}(?:\.?[0-9]{3})*(?:,[0-9]{2})?)$/", $value);
 
         }
+    }
+
+    public static function is_currency_decimal_dot($currency = null){
+
+        if($currency == null){
+            $code = GFCommon::get_currency();
+            if(empty($code))
+                $code = "USD";
+
+            $currency = RGCurrency::get_currency($code);
+        }
+
+        return rgar($currency, "decimal_separator") == ".";
     }
 
     public static function trim_all($text){
@@ -645,6 +667,12 @@ class GFCommon{
 
                 switch(RGFormsModel::get_input_type($field)){
 
+                    case "number" :
+
+                        $value = GFCommon::format_number($value, rgar($field, "numberFormat"));
+
+                    break;
+
                     case "fileupload" :
                         if(rgar($field, "multipleFiles")){
                             $files = empty($value) ? array() : json_decode($value, true);
@@ -662,8 +690,8 @@ class GFCommon{
                     break;
 
                     case "post_image" :
-                        list($url, $title, $caption, $description) = explode("|:|", $value);
-                        $value = str_replace(" ", "%20", $url);
+                        list( $url, $title, $caption, $description ) = array_pad( explode( '|:|', $value ), 4, false );
+                        $value = str_replace( ' ', '%20', $url );
                     break;
 
                     case "checkbox" :
@@ -804,7 +832,14 @@ class GFCommon{
 
         //pricing fields
         if (strpos($text, "{pricing_fields}") !== false){
-            $text = str_replace("{pricing_fields}", self::get_submitted_pricing_fields($form, $lead, $format), $text);
+            $text = str_replace("{pricing_fields}", '<table width="99%" border="0" cellpadding="1" cellspacing="0" bgcolor="#EAEAEA">
+                                                           <tr><td>
+                                                                <table width="100%" border="0" cellpadding="5" cellspacing="0" bgcolor="#FFFFFF">' .
+                                                                    self::get_submitted_pricing_fields($form, $lead, $format) .
+                                                                '</table>
+                                                           </tr></td>
+                                                     </table>',
+                    $text);
         }
 
         //form id
@@ -1047,18 +1082,18 @@ class GFCommon{
 
                             default:
 
-                                $field_data .= sprintf('<tr bgcolor="#EAF2FA">
+                                $field_data .= sprintf('<tr bgcolor="%3$s">
                                                             <td colspan="2">
-                                                                <font style="font-family: sans-serif; font-size:12px;"><strong>%s</strong></font>
+                                                                <font style="font-family: sans-serif; font-size:12px;"><strong>%1$s</strong></font>
                                                             </td>
                                                        </tr>
-                                                       <tr bgcolor="#FFFFFF">
+                                                       <tr bgcolor="%4$s">
                                                             <td width="20">&nbsp;</td>
                                                             <td>
-                                                                <font style="font-family: sans-serif; font-size:12px;">%s</font>
+                                                                <font style="font-family: sans-serif; font-size:12px;">%2$s</font>
                                                             </td>
                                                        </tr>
-                                                       ', $field_label, empty($field_value) && strlen($field_value) == 0 ? "&nbsp;" : $field_value);
+                                                       ', $field_label, empty($field_value) && strlen($field_value) == 0 ? "&nbsp;" : $field_value, apply_filters("gform_email_background_color_label", '#EAF2FA', $field, $lead), apply_filters("gform_email_background_color_data", '#FFFFFF', $field, $lead) );
                             break;
                         }
                     }
@@ -1382,8 +1417,11 @@ class GFCommon{
 
     public static function send_notifications($notification_ids, $form, $lead, $do_conditional_logic = true, $event = "form_submission"){
         if(!is_array($notification_ids)){
+            GFCommon::log_debug("No notifications to be sent.");
             return;
         }
+
+        GFCommon::log_debug( 'Processing notifications: ' . print_r( $notification_ids, true ) . "\n(only active/applicable notifications are sent)" );
 
         foreach($notification_ids as $notification_id){
             if(!isset($form["notifications"][$notification_id])){
@@ -1417,11 +1455,14 @@ class GFCommon{
             //sending notification
             self::send_notification($notification, $form, $lead);
         }
+
     }
 
     public static function send_form_submission_notifications($form, $lead){
         $notifications = self::get_notifications_to_send("form_submission", $form, $lead);
         $notifications_to_send = array();
+
+
 
         //running through filters that disable form submission notifications
         foreach($notifications as $notification){
@@ -1442,6 +1483,7 @@ class GFCommon{
 
             $notifications_to_send[] = $notification["id"];
         }
+
 
         self::send_notifications($notifications_to_send, $form, $lead, true, "form_submission");
     }
@@ -1537,7 +1579,13 @@ class GFCommon{
             GFCommon::log_debug("Sending email via wp_mail()");
             GFCommon::log_debug(print_r(compact("to", "subject", "message", "headers", "attachments", "abort_email"), true));
             $is_success = wp_mail($to, $subject, $message, $headers, $attachments);
-            GFCommon::log_debug("Result from wp_mail(): {$is_success}");
+            GFCommon::log_debug( "Result from wp_mail(): {$is_success}" );
+            if( $is_success ) {
+                GFCommon::log_debug( 'Mail was passed from WordPress to the mail server.' );
+            } else {
+                GFCommon::log_debug( 'The mail message was passed off to WordPress for processing, but WordPress was unable to send the message.' );
+            }
+
         }
 
         self::add_emails_sent();
@@ -1758,6 +1806,10 @@ class GFCommon{
 
     public static function get_remote_post_params(){
         global $wpdb;
+
+        if(!function_exists('get_plugins')){
+            require_once(ABSPATH . 'wp-admin/includes/plugin.php');
+        }
         $plugin_list = get_plugins();
 		$site_url = get_bloginfo("url");
 		$plugins = array();
@@ -2059,7 +2111,7 @@ class GFCommon{
                 if(rgget("enablePrice", $field))
                     $choice_value .= "|" . GFCommon::to_number(rgar($choice,"price"));
 
-                $choices.= sprintf("<li class='gchoice_$id'><input name='input_%s' type='checkbox' $logic_event value='%s' %s id='choice_%s' $tabindex %s /><label for='choice_%s'>%s</label></li>", $input_id, esc_attr($choice_value), $checked, $id, $disabled_text, $id, $choice["text"]);
+                $choices.= sprintf("<li class='gchoice_$id'><input name='input_%s' type='checkbox' $logic_event value='%s' %s id='choice_%s' $tabindex %s /><label for='choice_%s' id='label_%s'>%s</label></li>", $input_id, esc_attr($choice_value), $checked, $id, $disabled_text, $id, $id, $choice["text"]);
 
                 if(IS_ADMIN && RG_CURRENT_VIEW != "entry" && $count >=5)
                     break;
@@ -2107,7 +2159,7 @@ class GFCommon{
                 }
 
                 $tabindex = self::get_tabindex();
-                $label = sprintf("<label for='choice_%s'>%s</label>", $id, $choice["text"]);
+                $label = sprintf("<label for='choice_%s' id='label_%s'>%s</label>", $id, $id, $choice["text"]);
                 $input_focus = '';
 
                 // handle "other" choice
@@ -2115,6 +2167,7 @@ class GFCommon{
 
                     $onfocus = !IS_ADMIN ? 'jQuery(this).prev("input").attr("checked", true); if(jQuery(this).val() == "' . $other_default_value . '") { jQuery(this).val(""); }' : '';
                     $onblur = !IS_ADMIN ? 'if(jQuery(this).val().replace(" ", "") == "") { jQuery(this).val("' . $other_default_value . '"); }' : '';
+                    $onkeyup = self::get_logic_event($field, "keyup");
 
                     $input_focus = !IS_ADMIN ? "onfocus=\"jQuery(this).next('input').focus();\"" : "";
                     $value_exists = RGFormsModel::choices_value_match($field, $field["choices"], $value);
@@ -2128,7 +2181,7 @@ class GFCommon{
                     } else {
                         $other_value = $other_default_value;
                     }
-                    $label = "<input name='input_{$field["id"]}_other' type='text' value='" . esc_attr($other_value) . "' onfocus='$onfocus' onblur='$onblur' $tabindex $disabled_text />";
+                    $label = "<input id='input_{$field["formId"]}_{$field["id"]}_other' name='input_{$field["id"]}_other' type='text' value='" . esc_attr($other_value) . "' onfocus='$onfocus' onblur='$onblur' $tabindex $onkeyup $disabled_text />";
                 }
 
                 $choices .= sprintf("<li class='gchoice_$id'><input name='input_%d' type='radio' value='%s' %s id='choice_%s' $tabindex %s $logic_event %s />%s</li>", $field["id"], esc_attr($field_value), $checked, $id, $disabled_text, $input_focus, $label);
@@ -2313,7 +2366,7 @@ class GFCommon{
 
     public static function get_countries(){
         return apply_filters("gform_countries", array(
-        __('Afghanistan', 'gravityforms'),__('Albania', 'gravityforms'),__('Algeria', 'gravityforms'), __('American Samoa', 'gravityforms'), __('Andorra', 'gravityforms'),__('Angola', 'gravityforms'),__('Antigua and Barbuda', 'gravityforms'),__('Argentina', 'gravityforms'),__('Armenia', 'gravityforms'),__('Australia', 'gravityforms'),__('Austria', 'gravityforms'),__('Azerbaijan', 'gravityforms'),__('Bahamas', 'gravityforms'),__('Bahrain', 'gravityforms'),__('Bangladesh', 'gravityforms'),__('Barbados', 'gravityforms'),__('Belarus', 'gravityforms'),__('Belgium', 'gravityforms'),__('Belize', 'gravityforms'),__('Benin', 'gravityforms'),__('Bermuda', 'gravityforms'),__('Bhutan', 'gravityforms'),__('Bolivia', 'gravityforms'),__('Bosnia and Herzegovina', 'gravityforms'),__('Botswana', 'gravityforms'),__('Brazil', 'gravityforms'),__('Brunei', 'gravityforms'),__('Bulgaria', 'gravityforms'),__('Burkina Faso', 'gravityforms'),__('Burundi', 'gravityforms'),__('Cambodia', 'gravityforms'),__('Cameroon', 'gravityforms'),__('Canada', 'gravityforms'),__('Cape Verde', 'gravityforms'),__('Cayman Islands', 'gravityforms'),__('Central African Republic', 'gravityforms'),__('Chad', 'gravityforms'),__('Chile', 'gravityforms'),__('China', 'gravityforms'),__('Colombia', 'gravityforms'),__('Comoros', 'gravityforms'),__('Congo, Democratic Republic of the', 'gravityforms'),__('Congo, Republic of the', 'gravityforms'),__('Costa Rica', 'gravityforms'),__('C&ocirc;te d\'Ivoire', 'gravityforms'),__('Croatia', 'gravityforms'),__('Cuba', 'gravityforms'),__('Cyprus', 'gravityforms'),__('Czech Republic', 'gravityforms'),__('Denmark', 'gravityforms'),__('Djibouti', 'gravityforms'),__('Dominica', 'gravityforms'),__('Dominican Republic', 'gravityforms'),__('East Timor', 'gravityforms'),__('Ecuador', 'gravityforms'),__('Egypt', 'gravityforms'),__('El Salvador', 'gravityforms'),__('Equatorial Guinea', 'gravityforms'),__('Eritrea', 'gravityforms'),__('Estonia', 'gravityforms'),__('Ethiopia', 'gravityforms'),__('Fiji', 'gravityforms'),__('Finland', 'gravityforms'),__('France', 'gravityforms'),__('Gabon', 'gravityforms'),
+        __('Afghanistan', 'gravityforms'),__('Albania', 'gravityforms'),__('Algeria', 'gravityforms'), __('American Samoa', 'gravityforms'), __('Andorra', 'gravityforms'),__('Angola', 'gravityforms'),__('Antigua and Barbuda', 'gravityforms'),__('Argentina', 'gravityforms'),__('Armenia', 'gravityforms'),__('Australia', 'gravityforms'),__('Austria', 'gravityforms'),__('Azerbaijan', 'gravityforms'),__('Bahamas', 'gravityforms'),__('Bahrain', 'gravityforms'),__('Bangladesh', 'gravityforms'),__('Barbados', 'gravityforms'),__('Belarus', 'gravityforms'),__('Belgium', 'gravityforms'),__('Belize', 'gravityforms'),__('Benin', 'gravityforms'),__('Bermuda', 'gravityforms'),__('Bhutan', 'gravityforms'),__('Bolivia', 'gravityforms'),__('Bosnia and Herzegovina', 'gravityforms'),__('Botswana', 'gravityforms'),__('Brazil', 'gravityforms'),__('Brunei', 'gravityforms'),__('Bulgaria', 'gravityforms'),__('Burkina Faso', 'gravityforms'),__('Burundi', 'gravityforms'),__('Cambodia', 'gravityforms'),__('Cameroon', 'gravityforms'),__('Canada', 'gravityforms'),__('Cape Verde', 'gravityforms'),__('Cayman Islands', 'gravityforms'),__('Central African Republic', 'gravityforms'),__('Chad', 'gravityforms'),__('Chile', 'gravityforms'),__('China', 'gravityforms'),__('Colombia', 'gravityforms'),__('Comoros', 'gravityforms'),__('Congo, Democratic Republic of the', 'gravityforms'),__('Congo, Republic of the', 'gravityforms'),__('Costa Rica', 'gravityforms'),__('C&ocirc;te d\'Ivoire', 'gravityforms'),__('Croatia', 'gravityforms'),__('Cuba', 'gravityforms'),__('Cyprus', 'gravityforms'),__('Czech Republic', 'gravityforms'),__('Denmark', 'gravityforms'),__('Djibouti', 'gravityforms'),__('Dominica', 'gravityforms'),__('Dominican Republic', 'gravityforms'),__('East Timor', 'gravityforms'),__('Ecuador', 'gravityforms'),__('Egypt', 'gravityforms'),__('El Salvador', 'gravityforms'),__('Equatorial Guinea', 'gravityforms'),__('Eritrea', 'gravityforms'),__('Estonia', 'gravityforms'),__('Ethiopia', 'gravityforms'),__('Fiji', 'gravityforms'),__('Finland', 'gravityforms'),__('France', 'gravityforms'), __('French Polynesia', 'gravityforms'), __('Gabon', 'gravityforms'),
         __('Gambia', 'gravityforms'),__('Georgia', 'gravityforms'),__('Germany', 'gravityforms'),__('Ghana', 'gravityforms'),__('Greece', 'gravityforms'),__('Greenland', 'gravityforms'),__('Grenada', 'gravityforms'),__('Guam', 'gravityforms'),__('Guatemala', 'gravityforms'),__('Guinea', 'gravityforms'),__('Guinea-Bissau', 'gravityforms'),__('Guyana', 'gravityforms'),__('Haiti', 'gravityforms'),__('Honduras', 'gravityforms'),__('Hong Kong', 'gravityforms'),__('Hungary', 'gravityforms'),__('Iceland', 'gravityforms'),__('India', 'gravityforms'),__('Indonesia', 'gravityforms'),__('Iran', 'gravityforms'),__('Iraq', 'gravityforms'),__('Ireland', 'gravityforms'),__('Israel', 'gravityforms'),__('Italy', 'gravityforms'),__('Jamaica', 'gravityforms'),__('Japan', 'gravityforms'),__('Jordan', 'gravityforms'),__('Kazakhstan', 'gravityforms'),__('Kenya', 'gravityforms'),__('Kiribati', 'gravityforms'),__('North Korea', 'gravityforms'),__('South Korea', 'gravityforms'),__('Kosovo', 'gravityforms'),__('Kuwait', 'gravityforms'),__('Kyrgyzstan', 'gravityforms'),__('Laos', 'gravityforms'),__('Latvia', 'gravityforms'),__('Lebanon', 'gravityforms'),__('Lesotho', 'gravityforms'),__('Liberia', 'gravityforms'),__('Libya', 'gravityforms'),__('Liechtenstein', 'gravityforms'),__('Lithuania', 'gravityforms'),__('Luxembourg', 'gravityforms'),__('Macedonia', 'gravityforms'),__('Madagascar', 'gravityforms'),__('Malawi', 'gravityforms'),__('Malaysia', 'gravityforms'),__('Maldives', 'gravityforms'),__('Mali', 'gravityforms'),__('Malta', 'gravityforms'),__('Marshall Islands', 'gravityforms'),__('Mauritania', 'gravityforms'),__('Mauritius', 'gravityforms'),__('Mexico', 'gravityforms'),__('Micronesia', 'gravityforms'),__('Moldova', 'gravityforms'),__('Monaco', 'gravityforms'),__('Mongolia', 'gravityforms'),__('Montenegro', 'gravityforms'),__('Morocco', 'gravityforms'),__('Mozambique', 'gravityforms'),__('Myanmar', 'gravityforms'),__('Namibia', 'gravityforms'),__('Nauru', 'gravityforms'),__('Nepal', 'gravityforms'),__('Netherlands', 'gravityforms'),__('New Zealand', 'gravityforms'),
         __('Nicaragua', 'gravityforms'),__('Niger', 'gravityforms'),__('Nigeria', 'gravityforms'),__('Norway', 'gravityforms'), __('Northern Mariana Islands', 'gravityforms'), __('Oman', 'gravityforms'),__('Pakistan', 'gravityforms'),__('Palau', 'gravityforms'),__('Palestine', 'gravityforms'),__('Panama', 'gravityforms'),__('Papua New Guinea', 'gravityforms'),__('Paraguay', 'gravityforms'),__('Peru', 'gravityforms'),__('Philippines', 'gravityforms'),__('Poland', 'gravityforms'),__('Portugal', 'gravityforms'),__('Puerto Rico', 'gravityforms'),__('Qatar', 'gravityforms'),__('Romania', 'gravityforms'),__('Russia', 'gravityforms'),__('Rwanda', 'gravityforms'),__('Saint Kitts and Nevis', 'gravityforms'),__('Saint Lucia', 'gravityforms'),__('Saint Vincent and the Grenadines', 'gravityforms'),__('Samoa', 'gravityforms'),__('San Marino', 'gravityforms'),__('Sao Tome and Principe', 'gravityforms'),__('Saudi Arabia', 'gravityforms'),__('Senegal', 'gravityforms'),__('Serbia and Montenegro', 'gravityforms'),__('Seychelles', 'gravityforms'),__('Sierra Leone', 'gravityforms'),__('Singapore', 'gravityforms'),__('Slovakia', 'gravityforms'),__('Slovenia', 'gravityforms'),__('Solomon Islands', 'gravityforms'),__('Somalia', 'gravityforms'),__('South Africa', 'gravityforms'),__('Spain', 'gravityforms'),__('Sri Lanka', 'gravityforms'),__('Sudan', 'gravityforms'),__('Sudan, South', 'gravityforms'),__('Suriname', 'gravityforms'),__('Swaziland', 'gravityforms'),__('Sweden', 'gravityforms'),__('Switzerland', 'gravityforms'),__('Syria', 'gravityforms'),__('Taiwan', 'gravityforms'),__('Tajikistan', 'gravityforms'),__('Tanzania', 'gravityforms'),__('Thailand', 'gravityforms'),__('Togo', 'gravityforms'),__('Tonga', 'gravityforms'),__('Trinidad and Tobago', 'gravityforms'),__('Tunisia', 'gravityforms'),__('Turkey', 'gravityforms'),__('Turkmenistan', 'gravityforms'),__('Tuvalu', 'gravityforms'),__('Uganda', 'gravityforms'),__('Ukraine', 'gravityforms'),__('United Arab Emirates', 'gravityforms'),__('United Kingdom', 'gravityforms'),
         __('United States', 'gravityforms'),__('Uruguay', 'gravityforms'),__('Uzbekistan', 'gravityforms'),__('Vanuatu', 'gravityforms'),__('Vatican City', 'gravityforms'),__('Venezuela', 'gravityforms'),__('Vietnam', 'gravityforms'), __('Virgin Islands, British', 'gravityforms'), __('Virgin Islands, U.S.', 'gravityforms'),__('Yemen', 'gravityforms'),__('Zambia', 'gravityforms'),__('Zimbabwe', 'gravityforms')));
@@ -2535,7 +2588,23 @@ class GFCommon{
     }
 
     public static function get_us_states(){
-        return array(__("Alabama","gravityforms"),__("Alaska","gravityforms"),__("Arizona","gravityforms"),__("Arkansas","gravityforms"),__("California","gravityforms"),__("Colorado","gravityforms"),__("Connecticut","gravityforms"),__("Delaware","gravityforms"),__("District of Columbia", "gravityforms"), __("Florida","gravityforms"),__("Georgia","gravityforms"),__("Hawaii","gravityforms"),__("Idaho","gravityforms"),__("Illinois","gravityforms"),__("Indiana","gravityforms"),__("Iowa","gravityforms"),__("Kansas","gravityforms"),__("Kentucky","gravityforms"),__("Louisiana","gravityforms"),__("Maine","gravityforms"),__("Maryland","gravityforms"),__("Massachusetts","gravityforms"),__("Michigan","gravityforms"),__("Minnesota","gravityforms"),__("Mississippi","gravityforms"),__("Missouri","gravityforms"),__("Montana","gravityforms"),__("Nebraska","gravityforms"),__("Nevada","gravityforms"),__("New Hampshire","gravityforms"),__("New Jersey","gravityforms"),__("New Mexico","gravityforms"),__("New York","gravityforms"),__("North Carolina","gravityforms"),__("North Dakota","gravityforms"),__("Ohio","gravityforms"),__("Oklahoma","gravityforms"),__("Oregon","gravityforms"),__("Pennsylvania","gravityforms"),__("Rhode Island","gravityforms"),__("South Carolina","gravityforms"),__("South Dakota","gravityforms"),__("Tennessee","gravityforms"),__("Texas","gravityforms"),__("Utah","gravityforms"),__("Vermont","gravityforms"),__("Virginia","gravityforms"),__("Washington","gravityforms"),__("West Virginia","gravityforms"),__("Wisconsin","gravityforms"),__("Wyoming","gravityforms"), __("Armed Forces Americas","gravityforms"), __("Armed Forces Europe","gravityforms"),__("Armed Forces Pacific","gravityforms"));
+        return apply_filters("gform_us_states", array(
+            __("Alabama","gravityforms"),__("Alaska","gravityforms"),__("Arizona","gravityforms"),__("Arkansas","gravityforms"),
+            __("California","gravityforms"),__("Colorado","gravityforms"),__("Connecticut","gravityforms"),__("Delaware","gravityforms"),
+            __("District of Columbia", "gravityforms"), __("Florida","gravityforms"),__("Georgia","gravityforms"),
+            __("Hawaii","gravityforms"),__("Idaho","gravityforms"),__("Illinois","gravityforms"),__("Indiana","gravityforms"),
+            __("Iowa","gravityforms"),__("Kansas","gravityforms"),__("Kentucky","gravityforms"),__("Louisiana","gravityforms"),
+            __("Maine","gravityforms"),__("Maryland","gravityforms"),__("Massachusetts","gravityforms"),__("Michigan","gravityforms"),
+            __("Minnesota","gravityforms"),__("Mississippi","gravityforms"),__("Missouri","gravityforms"),__("Montana","gravityforms"),
+            __("Nebraska","gravityforms"),__("Nevada","gravityforms"),__("New Hampshire","gravityforms"),__("New Jersey","gravityforms"),
+            __("New Mexico","gravityforms"),__("New York","gravityforms"),__("North Carolina","gravityforms"),
+            __("North Dakota","gravityforms"),__("Ohio","gravityforms"),__("Oklahoma","gravityforms"),__("Oregon","gravityforms"),
+            __("Pennsylvania","gravityforms"),__("Rhode Island","gravityforms"),__("South Carolina","gravityforms"),
+            __("South Dakota","gravityforms"),__("Tennessee","gravityforms"),__("Texas","gravityforms"),__("Utah","gravityforms"),
+            __("Vermont","gravityforms"),__("Virginia","gravityforms"),__("Washington","gravityforms"),__("West Virginia","gravityforms"),
+            __("Wisconsin","gravityforms"),__("Wyoming","gravityforms"), __("Armed Forces Americas","gravityforms"),
+            __("Armed Forces Europe","gravityforms"),__("Armed Forces Pacific","gravityforms"))
+        );
     }
 
     public static function get_us_state_code($state_name){
@@ -2609,18 +2678,24 @@ class GFCommon{
 
     public static function get_state_dropdown($states, $selected_state=""){
         $str = "";
-        foreach($states as $state){
-            $selected = $state == $selected_state ? "selected='selected'" : "";
-            $str .= "<option value='" . esc_attr($state) . "' $selected>" . $state . "</option>";
+        foreach($states as $code => $state){
+            if(is_numeric($code))
+                $code = $state;
+
+            $selected = $code == $selected_state ? "selected='selected'" : "";
+            $str .= "<option value='" . esc_attr($code) . "' $selected>" . $state . "</option>";
         }
         return $str;
     }
 
     public static function get_us_state_dropdown($selected_state = ""){
         $states = array_merge(array(''), self::get_us_states());
-        foreach($states as $state){
-            $selected = $state == $selected_state ? "selected='selected'" : "";
-            $str .= "<option value='" . esc_attr($state) . "' $selected>" . $state . "</option>";
+        foreach($states as $code => $state){
+            if(is_numeric($code))
+                $code = $state;
+
+            $selected = $code == $selected_state ? "selected='selected'" : "";
+            $str .= "<option value='" . esc_attr($code) . "' $selected>" . $state . "</option>";
         }
         return $str;
     }
@@ -2637,9 +2712,12 @@ class GFCommon{
     public static function get_country_dropdown($selected_country = ""){
         $str = "";
         $countries = array_merge(array(''), self::get_countries());
-        foreach($countries as $country){
-            $selected = $country == $selected_country ? "selected='selected'" : "";
-            $str .= "<option value='" . esc_attr($country) . "' $selected>" . $country . "</option>";
+        foreach($countries as $code => $country){
+            if(is_numeric($code))
+                $code = $country;
+
+            $selected = $code == $selected_country ? "selected='selected'" : "";
+            $str .= "<option value='" . esc_attr($code) . "' $selected>" . $country . "</option>";
         }
         return $str;
     }
@@ -2788,8 +2866,9 @@ class GFCommon{
             return "<div class='ginput_container'>" . __("Donations are not editable", "gravityforms") . "</div>";
 
         // add categories as choices for Post Category field
-        if($field['type'] == 'post_category')
+        if($field['type'] == 'post_category'){
             $field = self::add_categories_as_choices($field, $value);
+		}
 
         $max_length = "";
         $html5_attributes = "";
@@ -2986,11 +3065,17 @@ class GFCommon{
                     }
 
                 }
+                else if( RG_CURRENT_VIEW == "entry" ){
+                    $value = GFCommon::format_number($value, rgar($field, "numberFormat"));
+                }
+
                 $is_html5 = RGFormsModel::is_html5_enabled();
-                $html_input_type = $is_html5 && !GFCommon::has_field_calculation($field) && !$field["numberFormat"] == "currency" ? "number" : "text"; // chrome does not allow number fields to have commas, calculations and currency values display numbers with commas
+                $html_input_type = $is_html5 && !GFCommon::has_field_calculation($field) && ($field["numberFormat"] != "currency" && $field["numberFormat"] != "decimal_comma" ) ? "number" : "text"; // chrome does not allow number fields to have commas, calculations and currency values display numbers with commas
                 $step_attr = $is_html5 ? "step='any'" : "";
 
                 $logic_event = self::get_logic_event($field, "keyup");
+
+                $value = GFCommon::format_number($value, $field["numberFormat"]);
 
                 $tabindex = self::get_tabindex();
                 return sprintf("<div class='ginput_container'><input name='input_%d' id='%s' type='{$html_input_type}' {$step_attr} value='%s' class='%s' {$tabindex} {$logic_event} {$read_only} %s/>%s</div>", $id, $field_id, esc_attr($value), esc_attr($class),  $disabled_text, $instruction);
@@ -3357,17 +3442,17 @@ class GFCommon{
                                 $tabindex = self::get_tabindex();
                                 $field_str = $date_type == "datedropdown"
                                             ? "<div class='clear-multi'><div class='gfield_date_dropdown_day ginput_container' id='{$field_id}_2_container'>" . self::get_day_dropdown("input_{$id}[]", "{$field_id}_2", rgar($date_info,"day"), $tabindex, $disabled_text) . "</div>"
-                                            : sprintf("<div class='clear-multi'><div class='gfield_date_day ginput_container' id='%s_2_container'><input type='text' maxlength='2' name='input_%d[]' id='%s_2' value='%s' $tabindex %s/><label for='%s_2'>" . __("DD", "gravityforms") . "</label></div>", $field_id, $id, $field_id, rgget("day", $date_info), $disabled_text, $field_id);
+                                            : sprintf("<div class='clear-multi'><div class='gfield_date_day ginput_container' id='%s_2_container'><input type='text' maxlength='2' name='input_%d[]' id='%s_2' value='%s' $tabindex %s/><label for='%s_2'>" . __("DD", "gravityforms") . "</label></div>", $field_id, $id, $field_id, esc_attr(rgget("day", $date_info)), $disabled_text, $field_id);
 
                                 $tabindex = self::get_tabindex();
                                 $field_str .= $date_type == "datedropdown"
                                             ? "<div class='gfield_date_dropdown_month ginput_container' id='{$field_id}_1_container'>" . self::get_month_dropdown("input_{$id}[]", "{$field_id}_1", rgar($date_info,"month"), $tabindex, $disabled_text) . "</div>"
-                                            : sprintf("<div class='gfield_date_month ginput_container' id='%s_1_container'><input type='text' maxlength='2' name='input_%d[]' id='%s_1' value='%s' $tabindex %s/><label for='%s_1'>" . __("MM", "gravityforms") . "</label></div>", $field_id, $id, $field_id, rgget("month", $date_info), $disabled_text, $field_id);
+                                            : sprintf("<div class='gfield_date_month ginput_container' id='%s_1_container'><input type='text' maxlength='2' name='input_%d[]' id='%s_1' value='%s' $tabindex %s/><label for='%s_1'>" . __("MM", "gravityforms") . "</label></div>", $field_id, $id, $field_id, esc_attr(rgget("month", $date_info)), $disabled_text, $field_id);
 
                                 $tabindex = self::get_tabindex();
                                 $field_str .= $date_type == "datedropdown"
                                         ? "<div class='gfield_date_dropdown_year ginput_container' id='{$field_id}_3_container'>" . self::get_year_dropdown("input_{$id}[]", "{$field_id}_3", rgar($date_info,"year"), $tabindex, $disabled_text) . "</div></div>"
-                                        : sprintf("<div class='gfield_date_year ginput_container' id='%s_3_container'><input type='text' maxlength='4' name='input_%d[]' id='%s_3' value='%s' $tabindex %s/><label for='%s_3'>" . __("YYYY", "gravityforms") . "</label></div></div>", $field_id, $id, $field_id, rgget("year", $date_info), $disabled_text, $field_id);
+                                        : sprintf("<div class='gfield_date_year ginput_container' id='%s_3_container'><input type='text' maxlength='4' name='input_%d[]' id='%s_3' value='%s' $tabindex %s/><label for='%s_3'>" . __("YYYY", "gravityforms") . "</label></div></div>", $field_id, $id, $field_id, esc_attr(rgget("year", $date_info)), $disabled_text, $field_id);
 
                             break;
 
@@ -3375,16 +3460,16 @@ class GFCommon{
                                 $tabindex = self::get_tabindex();
                                 $field_str = $date_type == "datedropdown"
                                         ? "<div class='clear-multi'><div class='gfield_date_dropdown_year ginput_container' id='{$field_id}_3_container'>" . self::get_year_dropdown("input_{$id}[]", "{$field_id}_3", rgar($date_info,"year"), $tabindex, $disabled_text) . "</div>"
-                                        : sprintf("<div class='clear-multi'><div class='gfield_date_year ginput_container' id='%s_3_container'><input type='text' maxlength='4' name='input_%d[]' id='%s_3' value='%s' $tabindex %s/><label for='%s_3'>" . __("YYYY", "gravityforms") . "</label></div>", $field_id, $id, $field_id, rgget("year", $date_info), $disabled_text, $field_id);
+                                        : sprintf("<div class='clear-multi'><div class='gfield_date_year ginput_container' id='%s_3_container'><input type='text' maxlength='4' name='input_%d[]' id='%s_3' value='%s' $tabindex %s/><label for='%s_3'>" . __("YYYY", "gravityforms") . "</label></div>", $field_id, $id, $field_id, esc_attr(rgget("year", $date_info)), $disabled_text, $field_id);
 
                                 $field_str .= $date_type == "datedropdown"
                                             ? "<div class='gfield_date_dropdown_month ginput_container' id='{$field_id}_1_container'>" . self::get_month_dropdown("input_{$id}[]", "{$field_id}_1", rgar($date_info,"month"), $tabindex, $disabled_text) . "</div>"
-                                            : sprintf("<div class='gfield_date_month ginput_container' id='%s_1_container'><input type='text' maxlength='2' name='input_%d[]' id='%s_1' value='%s' $tabindex %s/><label for='%s_1'>" . __("MM", "gravityforms") . "</label></div>", $field_id, $id, $field_id, rgar($date_info,"month"), $disabled_text, $field_id);
+                                            : sprintf("<div class='gfield_date_month ginput_container' id='%s_1_container'><input type='text' maxlength='2' name='input_%d[]' id='%s_1' value='%s' $tabindex %s/><label for='%s_1'>" . __("MM", "gravityforms") . "</label></div>", $field_id, $id, $field_id, esc_attr(rgar($date_info,"month")), $disabled_text, $field_id);
 
                                 $tabindex = self::get_tabindex();
                                 $field_str .= $date_type == "datedropdown"
                                             ? "<div class='gfield_date_dropdown_day ginput_container' id='{$field_id}_2_container'>" . self::get_day_dropdown("input_{$id}[]", "{$field_id}_2", rgar($date_info,"day"), $tabindex, $disabled_text) . "</div></div>"
-                                            : sprintf("<div class='gfield_date_day ginput_container' id='%s_2_container'><input type='text' maxlength='2' name='input_%d[]' id='%s_2' value='%s' $tabindex %s/><label for='%s_2'>" . __("DD", "gravityforms") . "</label></div></div>", $field_id, $id, $field_id, rgar($date_info,"day"), $disabled_text, $field_id);
+                                            : sprintf("<div class='gfield_date_day ginput_container' id='%s_2_container'><input type='text' maxlength='2' name='input_%d[]' id='%s_2' value='%s' $tabindex %s/><label for='%s_2'>" . __("DD", "gravityforms") . "</label></div></div>", $field_id, $id, $field_id, esc_attr(rgar($date_info,"day")), $disabled_text, $field_id);
 
                             break;
 
@@ -3393,17 +3478,17 @@ class GFCommon{
 
                                 $field_str = $date_type == "datedropdown"
                                             ? "<div class='clear-multi'><div class='gfield_date_dropdown_month ginput_container' id='{$field_id}_1_container'>" . self::get_month_dropdown("input_{$id}[]", "{$field_id}_1", rgar($date_info,"month"), $tabindex, $disabled_text) . "</div>"
-                                            : sprintf("<div class='clear-multi'><div class='gfield_date_month ginput_container' id='%s_1_container'><input type='text' maxlength='2' name='input_%d[]' id='%s_1' value='%s' $tabindex %s/><label for='%s_1'>" . __("MM", "gravityforms") . "</label></div>", $field_id, $id, $field_id, rgar($date_info,"month"), $disabled_text, $field_id);
+                                            : sprintf("<div class='clear-multi'><div class='gfield_date_month ginput_container' id='%s_1_container'><input type='text' maxlength='2' name='input_%d[]' id='%s_1' value='%s' $tabindex %s/><label for='%s_1'>" . __("MM", "gravityforms") . "</label></div>", $field_id, $id, $field_id, esc_attr(rgar($date_info,"month")), $disabled_text, $field_id);
 
                                 $tabindex = self::get_tabindex();
                                 $field_str .= $date_type == "datedropdown"
                                             ? "<div class='gfield_date_dropdown_day ginput_container' id='{$field_id}_2_container'>" . self::get_day_dropdown("input_{$id}[]", "{$field_id}_2", rgar($date_info,"day"), $tabindex, $disabled_text) . "</div>"
-                                            : sprintf("<div class='gfield_date_day ginput_container' id='%s_2_container'><input type='text' maxlength='2' name='input_%d[]' id='%s_2' value='%s' $tabindex %s/><label for='%s_2'>" . __("DD", "gravityforms") . "</label></div>", $field_id, $id, $field_id, rgar($date_info,"day"), $disabled_text, $field_id);
+                                            : sprintf("<div class='gfield_date_day ginput_container' id='%s_2_container'><input type='text' maxlength='2' name='input_%d[]' id='%s_2' value='%s' $tabindex %s/><label for='%s_2'>" . __("DD", "gravityforms") . "</label></div>", $field_id, $id, $field_id, esc_attr(rgar($date_info,"day")), $disabled_text, $field_id);
 
                                 $tabindex = self::get_tabindex();
                                 $field_str .= $date_type == "datedropdown"
                                         ? "<div class='gfield_date_dropdown_year ginput_container' id='{$field_id}_3_container'>" . self::get_year_dropdown("input_{$id}[]", "{$field_id}_3", rgar($date_info,"year"), $tabindex, $disabled_text) . "</div></div>"
-                                        : sprintf("<div class='gfield_date_year ginput_container' id='%s_3_container'><input type='text' maxlength='4' name='input_%d[]' id='%s_3' value='%s' $tabindex %s/><label for='%s_3'>" . __("YYYY", "gravityforms") . "</label></div></div>", $field_id, $id, $field_id, rgget("year", $date_info), $disabled_text, $field_id);
+                                        : sprintf("<div class='gfield_date_year ginput_container' id='%s_3_container'><input type='text' maxlength='4' name='input_%d[]' id='%s_3' value='%s' $tabindex %s/><label for='%s_3'>" . __("YYYY", "gravityforms") . "</label></div></div>", $field_id, $id, $field_id, esc_attr(rgget("year", $date_info)), $disabled_text, $field_id);
 
                             break;
                         }
@@ -3465,33 +3550,48 @@ class GFCommon{
                     if(empty($allowed_extensions))
                         $allowed_extensions="*";
                     $disallowed_extensions = GFCommon::get_disallowed_file_extensions();
-                    $plupload_init = defined('DOING_AJAX') && DOING_AJAX && "rg_change_input_type" === rgpost('action') ? array() : array(
-                        'runtimes' => 'html5,flash,html4',
-                        'browse_button' => $browse_button_id,
-                        'container' => $container_id,
-                        'drop_element' => $drag_drop_id,
-                        'filelist' => $file_list_id,
-                        'unique_names' => true,
-                        'file_data_name' => 'file',
-                        'multiple_queues' => true,
-                        /*'chunk_size' => '10mb',*/ // chunking doesn't currently have very good cross-browser support
-                        'max_file_size' => $max_upload_size . 'b',
-                        'url' => $upload_action_url,
-                        'flash_swf_url' => includes_url('js/plupload/plupload.flash.swf'),
-                        'silverlight_xap_url' => includes_url('js/plupload/plupload.silverlight.xap'),
-                        'filters' => array( array('title' => __( 'Allowed Files', 'gravityforms' ), 'extensions' => $allowed_extensions) ),
-                        'multipart' => true,
-                        'urlstream_upload' => false,
-                        'multipart_params' => array(
-                            "form_id" => $form_id,
-                            "field_id" => $id
-                        ),
-                        'gf_vars' => array(
-                            'max_files' => $max_files,
-                            'message_id' => $messages_id,
-                            'disallowed_extensions' => $disallowed_extensions
-                        )
-                    );
+
+                    if( defined('DOING_AJAX') && DOING_AJAX && "rg_change_input_type" === rgpost('action')){
+                        $plupload_init = array();
+                    } else {
+                        $plupload_init = array(
+                            'runtimes' => 'html5,flash,html4',
+                            'browse_button' => $browse_button_id,
+                            'container' => $container_id,
+                            'drop_element' => $drag_drop_id,
+                            'filelist' => $file_list_id,
+                            'unique_names' => true,
+                            'file_data_name' => 'file',
+                            /*'chunk_size' => '10mb',*/ // chunking doesn't currently have very good cross-browser support
+                            'url' => $upload_action_url,
+                            'flash_swf_url' => includes_url('js/plupload/plupload.flash.swf'),
+                            'silverlight_xap_url' => includes_url('js/plupload/plupload.silverlight.xap'),
+                            'filters' => array(
+                                'mime_types' => array(array('title' => __( 'Allowed Files', 'gravityforms' ), 'extensions' => $allowed_extensions)),
+                                'max_file_size' => $max_upload_size . 'b'
+                            ),
+                            'multipart' => true,
+                            'urlstream_upload' => false,
+                            'multipart_params' => array(
+                                "form_id" => $form_id,
+                                "field_id" => $id
+                            ),
+                            'gf_vars' => array(
+                                'max_files' => $max_files,
+                                'message_id' => $messages_id,
+                                'disallowed_extensions' => $disallowed_extensions
+                            )
+                        );
+
+                        // plupload 2 was introduced in WordPress 3.9. Plupload 1 accepts a slightly different init array.
+                        if (version_compare(get_bloginfo('version'), "3.9-RC1", "<")) {
+                            $plupload_init['max_file_size'] = $max_upload_size . 'b';
+                            $plupload_init['filters']       = array(array('title' => __('Allowed Files', 'gravityforms'), 'extensions' => $allowed_extensions));
+                        }
+                    }
+
+
+                    $plupload_init = apply_filters("gform_plupload_settings_{$form_id}", apply_filters('gform_plupload_settings', $plupload_init, $form_id, $field), $form_id, $field);
 
                     // Multi-file uploading doesn't currently work in iOS Safari,
                     // single-file allows the built-in camera to be used as source for images
@@ -3508,7 +3608,7 @@ class GFCommon{
 
                 } else {
                     $upload = sprintf("<input type='hidden' name='MAX_FILE_SIZE' value='%d' />", $max_upload_size);
-                    $upload .= sprintf("<input name='input_%d' id='%s' type='file' value='%s' size='20' class='%s' $tabindex %s/>", $id, $field_id, esc_attr($value), esc_attr($class), $disabled_text);
+                    $upload .= sprintf("<input name='input_%d' id='%s' type='file' class='%s' $tabindex %s/>", $id, $field_id, esc_attr($class), $disabled_text);
                 }
 
                 if(IS_ADMIN && RG_CURRENT_VIEW === "entry" && !empty($value)){ // edit entry
@@ -3519,8 +3619,11 @@ class GFCommon{
                     $preview .= sprintf("<div id='preview_existing_files_%d'>", $id);
 
                     foreach($file_urls as $file_index => $file_url){
+                        if(self::is_ssl() && strpos($file_url, "http:") !== false ){
+                            $file_url = str_replace("http:", "https:", $file_url);
+                        }
                         $file_url = esc_attr($file_url);
-                        $preview .= sprintf("<div id='preview_file_%d' class='ginput_preview'><a href='%s' target='_blank' alt='%s' title='%s'>%s</a><a href='%s' target='_blank' alt='" . __("Download file", "gravityforms") . "' title='" . __("Download file", "gravityforms") . "'><img src='%s' style='margin-left:10px;'/></a><a href='javascript:void(0);' alt='" . __("Delete file", "gravityforms") . "' title='" . __("Delete file", "gravityforms") . "' onclick='DeleteFile(%d,%d,this);' ><img src='%s' style='margin-left:10px;'/></a></div>", $file_index, $file_url, $file_url, $file_url, GFCommon::truncate_url($file_url), $file_url, GFCommon::get_base_url() . "/images/download.png", $lead_id, $id, GFCommon::get_base_url() . "/images/icon-delete.png");
+                        $preview .= sprintf("<div id='preview_file_%d' class='ginput_preview'><a href='%s' target='_blank' alt='%s' title='%s'>%s</a><a href='%s' target='_blank' alt='" . __("Download file", "gravityforms") . "' title='" . __("Download file", "gravityforms") . "'><img src='%s' style='margin-left:10px;'/></a><a href='javascript:void(0);' alt='" . __("Delete file", "gravityforms") . "' title='" . __("Delete file", "gravityforms") . "' onclick='DeleteFile(%d,%d,this);' ><img src='%s' style='margin-left:10px;'/></a></div>", $file_index, $file_url, $file_url, $file_url, GFCommon::truncate_url($file_url), $file_url, GFCommon::get_base_url() . "/images/download.png", $lead_id, $id, GFCommon::get_base_url() . "/images/delete.png");
                     }
 
                     $preview .="</div>";
@@ -3676,7 +3779,7 @@ class GFCommon{
 
                 //card number fields
                 $tabindex = self::get_tabindex();
-                $html5_output = GFFormsModel::is_html5_enabled() ? "pattern='[0-9]*' title='" . __("Only digits are allowed", "gravityforms") .  "'" : "";
+                $html5_output = ! is_admin() && GFFormsModel::is_html5_enabled() ? "pattern='[0-9]*' title='" . __("Only digits are allowed", "gravityforms") .  "'" : "";
                 $card_field =   sprintf("<span class='ginput_full{$class_suffix}' id='{$field_id}_1_container' >{$card_icons}<input type='text' name='input_%d.1' id='%s_1' value='%s' {$tabindex} %s {$onchange} {$onkeyup} {$autocomplete} {$html5_output}/><label for='%s_1' id='{$field_id}_1_label'>" . apply_filters("gform_card_number_{$form_id}", apply_filters("gform_card_number",__("Card Number", "gravityforms"), $form_id), $form_id) . "</label></span>", $id, $field_id, $card_number, $disabled_text, $field_id);
 
                 //expiration date field
@@ -3700,9 +3803,9 @@ class GFCommon{
 
                //security code field
                 $tabindex = self::get_tabindex();
-                $html_input_type = GFFormsModel::is_html5_enabled() ? "number" : "text";
+                $html5_output = GFFormsModel::is_html5_enabled() ? "pattern='[0-9]*' title='" . __("Only digits are allowed", "gravityforms") .  "'" : "";
                 $security_field =        "<span class='ginput_cardinfo_right{$class_suffix}' id='{$field_id}_2_cardinfo_right'>".
-                                            "<input type='{$html_input_type}' name='input_{$id}.3' id='{$field_id}_3' {$tabindex} {$disabled_text} class='ginput_card_security_code' value='{$security_code}' {$autocomplete} />".
+                                            "<input type='text' name='input_{$id}.3' id='{$field_id}_3' {$tabindex} {$disabled_text} class='ginput_card_security_code' value='{$security_code}' {$autocomplete} {$html5_output} />".
                 				            "<span class='ginput_card_security_code_icon'>&nbsp;</span>".
                                             "<label for='{$field_id}_3' >" . apply_filters("gform_card_security_code_{$form_id}", apply_filters("gform_card_security_code",__("Security Code", "gravityforms"), $form_id), $form_id) . "</label>".
                                          "</span>".
@@ -4337,18 +4440,21 @@ class GFCommon{
                 return $value;
 
             case "fileupload" :
-                $output =  $format == "text" ? "" : "<ul>";
+                $output = "";
                 if(!empty($value)){
                     $output_arr = array();
                     $file_paths = rgar($field,"multipleFiles") ? json_decode($value) : array($value);
                     foreach($file_paths as $file_path){
                         $info = pathinfo($file_path);
+                        if(self::is_ssl() && strpos($file_path, "http:") !== false ){
+                            $file_path = str_replace("http:", "https:", $file_path);
+                        }
                         $file_path = esc_attr(str_replace(" ", "%20", $file_path));
                         $output_arr[] = $format == "text" ? $file_path . PHP_EOL: "<li><a href='$file_path' target='_blank' title='" . __("Click to view", "gravityforms") . "'>" . $info["basename"] . "</a></li>";
                     }
                     $output = join(PHP_EOL, $output_arr);
                   }
-                $output .=  $format == "text" ? "" : "</ul>";
+                $output = empty($output) || $format == "text" ? $output : sprintf("<ul>%s</ul>", $output);
                 return $output;
             break;
 
@@ -4691,7 +4797,11 @@ class GFCommon{
         $forms = GFFormDisplay::get_embedded_forms($content, $is_ajax);
 
         foreach($forms as $form){
-            GFFormDisplay::print_form_scripts($form, $is_ajax);
+            if( headers_sent() ) {
+                GFFormDisplay::print_form_scripts( $form, $is_ajax );
+            } else {
+                GFFormDisplay::enqueue_form_scripts( $form, $is_ajax );
+            }
         }
 
         return do_shortcode($content);
@@ -5044,6 +5154,11 @@ class GFCommon{
 
         $field['choices'] = $choices;
 
+        $form_id = IS_ADMIN ? rgget("id") : rgar($field,"formId");
+
+        $field['choices'] = apply_filters("gform_post_category_choices", $field["choices"], $field, $form_id);
+        $field['choices'] = apply_filters("gform_post_category_choices_{$form_id}_{$field["id"]}", $field["choices"], $field, $form_id);
+
         if(RGFormsModel::get_input_type($field) == 'checkbox')
             $field['inputs'] = $inputs;
 
@@ -5088,21 +5203,26 @@ class GFCommon{
 
     public static function calculate($field, $form, $lead) {
 
-        $formula = apply_filters('gform_calculation_formula', rgar($field, 'calculationFormula'), $field, $form, $lead);
+        $formula = (string) apply_filters( 'gform_calculation_formula', rgar( $field, 'calculationFormula' ), $field, $form, $lead );
 
-        preg_match_all('/{[^{]*?:(\d+(\.\d+)?)(:(.*?))?}/mi', $formula, $matches, PREG_SET_ORDER);
+        // replace multiple spaces and new lines with single space
+        // @props: http://stackoverflow.com/questions/3760816/remove-new-lines-from-string
+        $formula = trim( preg_replace( '/\s+/', ' ', $formula ) );
 
-        if(is_array($matches)) {
-            foreach($matches as $match) {
+        preg_match_all( '/{[^{]*?:(\d+(\.\d+)?)(:(.*?))?}/mi', $formula, $matches, PREG_SET_ORDER );
 
-                list($text, $input_id) = $match;
+        if( is_array( $matches ) ) {
+            foreach( $matches as $match ) {
 
-                $value = self::get_calculation_value($match[1], $form, $lead);
-                $formula = str_replace($match[0], $value, $formula);
+                list( $text, $input_id ) = $match;
+                $value = self::get_calculation_value( $input_id, $form, $lead);
+                $formula = str_replace( $text, $value, $formula);
 
             }
         }
-        $result = preg_match("/^[0-9 -\/*\(\)]+$/", $formula) ? eval("return {$formula};") : false;
+
+        $result = preg_match( '/^[0-9 -\/*\(\)]+$/', $formula ) ? eval( "return {$formula};" ) : false;
+
         return $result;
     }
 
@@ -5472,7 +5592,7 @@ class GFCommon{
         $account_choices = array();
         if($get_users){
             $args    = apply_filters("gform_filters_get_users", array("number" => 200));
-            $accounts        = get_users();
+            $accounts        = get_users($args);
             $account_choices = array();
             foreach ($accounts as $account) {
                 $account_choices[] = array("text" => $account->user_login, "value" => $account->ID);
@@ -5626,7 +5746,7 @@ class GFCommon{
                 'file_exceeds_limit' => __("File exceeds size limit", "gravityforms"),
                 'illegal_extension' => __("This type of file is not allowed." , "gravityforms"),
                 "max_reached" => __("Maximum number of files reached", "gravityforms"),
-                "unknown_error" => __("There was an problem while saving the file on the server", "gravityforms"),
+                "unknown_error" => __("There was a problem while saving the file on the server", "gravityforms"),
                 "currently_uploading" => __("Please wait for the uploading to complete", "gravityforms"),
                 "cancel" => __("Cancel", "gravityforms"),
                 "cancel_upload" => __("Cancel this upload", "gravityforms"),

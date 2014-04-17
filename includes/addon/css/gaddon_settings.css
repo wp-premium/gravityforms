@@ -1,0 +1,17 @@
+
+.settings-field-map-table { }
+.settings-field-map-table thead th { font-weight: bold; border-bottom: 1px solid #ccc; }
+.settings-field-map-table tbody td { border-bottom: 1px dotted #eee; }
+.settings-field-map-table select { max-width: 90%; }
+.gaddon-section .required { color: #f00; }
+.gaddon-setting-inline{
+    display:inline;
+    margin-right:6px;
+}
+
+.gaddon-section-description ol { }
+.gaddon-section-description ol li {
+    list-style: decimal;
+}
+
+.repeater-buttons .add-item { margin-right: 6px; }

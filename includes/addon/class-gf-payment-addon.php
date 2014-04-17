@@ -1,4 +1,9 @@
 <?php
+
+if(!class_exists('GFForms')){
+    die();
+}
+
 /**
  * Specialist Add-On class designed for use by Add-Ons that collect payment
  *
@@ -10,7 +15,20 @@
 require_once('class-gf-feed-addon.php' );
 abstract class GFPaymentAddOn extends GFFeedAddOn {
 
-    private $_payment_version = "1.0";
+    private $_payment_version = "1.1";
+
+
+    /**
+     * If set to true, user will not be able to create feeds for a form until a credit card field has been added.
+     * @var bool
+     */
+    protected $_requires_credit_card = false;
+
+    /**
+     * If set to true, callbacks/webhooks/IPN will be enabled and the appropriate database table will be created.
+     * @var bool
+     */
+    protected $_supports_callbacks = false;
 
     protected $authorization = array();
 
@@ -20,7 +38,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
         parent::pre_init();
 
         // Intercepting callback requests
-        add_action('parse_request', array($this, "maybe_process_callback"));
+        add_action( 'parse_request', array( $this, 'maybe_process_callback' ) );
 
         if ($this->payment_method_is_overridden("check_status"))
             $this->setup_cron();
@@ -37,7 +55,9 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
         add_filter("gform_currencies", array($this, "supported_currencies"));
 
         if(rgget("page") == "gf_entries"){
-            add_action('gform_entry_info',array($this, "entry_info"), 10, 2);
+            add_action('gform_payment_details',array($this, "entry_info"), 10, 2);
+
+            add_filter("gform_notes_avatar", array($this, "notes_avatar"), 10, 2);
         }
     }
 
@@ -54,22 +74,37 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
     public function init_ajax(){
         parent::init_ajax();
 
-        add_action('wp_ajax_gaddon_cancel_subscription', array($this, 'start_cancel_subscription'));
+        add_action('wp_ajax_gaddon_cancel_subscription', array($this, 'ajax_cancel_subscription'));
 
     }
 
     protected function setup(){
         parent::setup();
 
-        //upgrading Feed Add-On base class
         $installed_version = get_option("gravityformsaddon_payment_version");
-        if ($installed_version != $this->_payment_version)
+
+        $installed_addons = get_option("gravityformsaddon_payment_addons");
+        if( !is_array($installed_addons) )
+            $installed_addons = array();
+
+        if ( $installed_version != $this->_payment_version ){
             $this->upgrade_payment($installed_version);
 
+            $installed_addons = array($this->_slug);
+            update_option("gravityformsaddon_payment_addons", $installed_addons);
+        }
+        else if( !in_array($this->_slug, $installed_addons) ){
+            $this->upgrade_payment($installed_version);
+
+            $installed_addons[] = $this->_slug;
+            update_option("gravityformsaddon_payment_addons", $installed_addons);
+        }
+
         update_option("gravityformsaddon_payment_version", $this->_payment_version);
+
     }
 
-    private function upgrade_payment($previous_version) {
+    private function upgrade_payment($previous_versions) {
         global $wpdb;
 
         $charset_collate = GFFormsModel::get_db_charset();
@@ -89,6 +124,23 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
                 ) $charset_collate;";
 
         GFFormsModel::dbDelta($sql);
+
+
+        if($this->_supports_callbacks){
+            $sql = "CREATE TABLE {$wpdb->prefix}gf_addon_payment_callback (
+                      id int(10) unsigned not null auto_increment,
+                      lead_id int(10) unsigned not null,
+                      addon_slug varchar(250) not null,
+                      callback_id varchar(250),
+                      date_created datetime,
+                      PRIMARY KEY  (id),
+                      KEY slug_callback_id (addon_slug,callback_id)
+                    ) $charset_collate;";
+
+            GFFormsModel::dbDelta($sql);
+        }
+
+
     }
 
     //--------- Submission Process ------
@@ -99,8 +151,10 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
         $feed = $this->get_payment_feed($entry, $form);
 
-        if(!$feed)
+        if(!$feed){
+        	$this->log_debug("No payment feed was located for form_id = " . $form["id"] . " - NOT sending to " . $this->_slug);
             return $confirmation;
+		}
 
         $submission_data = $this->get_submission_data($feed, $form, $entry);
 
@@ -155,11 +209,13 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
             $this->authorization = $this->authorize($feed, $submission_data, $form, $entry);
         }
         else if($do_subscription){
-            $subscription = $this->subscribe($feed, $submission_data, $form, $entry);
+
+            $subscription = $this->subscribe( $feed, $submission_data, $form, $entry );
 
             $this->authorization["is_authorized"] = $subscription["is_success"];
             $this->authorization["error_message"] = rgar($subscription, "error_message");
             $this->authorization["subscription"] = $subscription;
+
         }
 
 
@@ -241,6 +297,17 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
     }
 
+    /**
+     * Override this method to add integration code to the payment processor in order to cancel a subscription. This method is executed when a subscription is canceled from the Payment Gateway (i.e. Stripe or PayPal)
+     * @param $entry - Current entry array containing entry information (i.e data submitted by users).
+     * @param $feed - Current configured payment feed
+
+     * @return bool - Returns true if the subscription was cancelled successfully and false otherwise.
+     *
+     */
+    protected function cancel($entry, $feed){
+        return false;
+    }
 
     protected function get_validation_result($validation_result, $authorization_result){
 
@@ -284,7 +351,10 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
         else if($feed["meta"]["transactionType"] == "subscription"){
 
             $this->process_subscription($this->authorization, $feed, $this->authorization["submission_data"], $form, $entry);
+
         }
+
+        gform_update_meta($entry["id"], "payment_gateway", $this->_slug);
 
         return $entry;
     }
@@ -308,11 +378,12 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
             $this->insert_transaction($entry["id"], "payment", $entry["transaction_id"], $entry["payment_amount"]);
 
-            GFFormsModel::add_note($entry["id"], 0, "System", sprintf(__("Payment has been captured successfully. Amount: %s. Transaction Id: %s", "gravityforms"), GFCommon::to_money($payment["amount"], $entry["currency"]),$payment["transaction_id"]));
+
+            $this->add_note($entry["id"], sprintf(__("Payment has been captured successfully. Amount: %s. Transaction Id: %s", "gravityforms"), GFCommon::to_money($payment["amount"], $entry["currency"]),$payment["transaction_id"]), "success");
         }
         else{
             $entry["payment_status"] = "Failed";
-            GFFormsModel::add_note($entry["id"], 0, "System", sprintf( __("Payment failed to be captured. Reason: %s", "gravityforms") , $payment["error_message"] ));
+            $this->add_note($entry["id"], sprintf( __("Payment failed to be captured. Reason: %s", "gravityforms") , $payment["error_message"] ), "error");
         }
 
         GFAPI::update_entry($entry);
@@ -323,54 +394,50 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
     protected function process_subscription($authorization, $feed, $submission_data, $form, $entry){
 
-        $subscription = rgar($authorization,"subscription");
-        if(empty($subscription))
+        $subscription = rgar( $authorization, 'subscription' );
+        if( empty( $subscription ) )
             return;
 
-        //If setup fee / trial is captured as part of a separate transaction
-        $payment = rgar($subscription,"captured_payment");
-        $payment_name = rgempty("name", $payment) ? __("Initial payment", "gravityforms") : $payment["name"];
-        if($payment && $payment["is_success"]){
+        // if setup fee / trial is captured as part of a separate transaction
+        $payment = rgar( $subscription, 'captured_payment' );
+        $payment_name = rgempty( 'name', $payment ) ? __( 'Initial payment', 'gravityforms' ) : $payment['name'];
 
-            $this->insert_transaction($entry["id"], "payment", $payment["transaction_id"], $payment["amount"]);
-            GFFormsModel::add_note($entry["id"], 0, "System", sprintf(__("%s has been captured successfully. Amount: %s. Transaction Id: %s", "gravityforms"), $payment_name, GFCommon::to_money($payment["amount"], $entry["currency"]),$payment["transaction_id"]));
+        if( $payment && $payment['is_success'] ) {
 
-        }
-        else if($payment && !$payment["is_success"]){
+            $this->insert_transaction($entry['id'], 'payment', $payment['transaction_id'], $payment['amount'], false );
 
-            GFFormsModel::add_note($entry["id"], 0, "System", sprintf(__("Failed to capture %s. Reason: %s.", "gravityforms"), $payment("error_message"), $payment_name));
-        }
-
-        //Updating subscription information
-        if($subscription["is_success"]){
-
-            $entry["transaction_id"] = $subscription["subscription_id"];
-            $entry["transaction_type"] = "2";
-            $entry["is_fulfilled"] = true;
-            $entry["currency"] = GFCommon::get_currency();
-            $entry["payment_amount"] = $subscription["amount"];
-            $entry["payment_status"] = "Active";
-            $entry["payment_date"] = gmdate("Y-m-d H:i:s");
-
-            GFFormsModel::add_note($entry["id"], 0, "System", sprintf(__("Subscription successfully created. Subscription Id: %s.", "gravityforms"), $subscription["subscription_id"]));
+            $amount_formatted = GFCommon::to_money( $payment['amount'], $entry['currency'] );
+            $note = sprintf( __( '%s has been captured successfully. Amount: %s. Transaction Id: %s', 'gravityforms' ), $payment_name, $amount_formatted, $payment['transaction_id'] );
+            $this->add_note( $entry['id'], $note, "success" );
 
         }
-        else{
-            $entry["payment_status"] = "Failed";
+        else if( $payment && ! $payment['is_success'] ) {
 
-            GFFormsModel::add_note($entry["id"], 0, "System", sprintf( __("Subscription failed to be created. Reason: %s", "gravityforms") , $subscription["error_message"]));
+            $this->add_note( $entry['id'], sprintf( __( 'Failed to capture %s. Reason: %s.', 'gravityforms' ), $payment['error_message'], $payment_name ), "error" );
+
         }
 
-        GFFormsModel::update_lead($entry);
+        // updating subscription information
+        if( $subscription['is_success'] ) {
 
-        return $entry;
+            $this->start_subscription( $entry, $subscription );
+
+        }
+        else {
+
+            $entry['payment_status'] = 'Failed';
+            GFAPI::update_entry( $entry );
+
+            $this->add_note( $entry['id'], sprintf( __( 'Subscription failed to be created. Reason: %s', 'gravityforms' ), $subscription['error_message'] ), "error" );
+
+        }
+
     }
 
-
-
-    protected function insert_transaction($entry_id, $transaction_type, $transaction_id, $amount){
+    protected function insert_transaction( $entry_id, $transaction_type, $transaction_id, $amount, $is_recurring = null ) {
         global $wpdb;
 
+        // @todo: make sure stats does not show setup fee as a recurring payment
         $payment_count = $wpdb->get_var($wpdb->prepare("SELECT count(id) FROM {$wpdb->prefix}gf_addon_payment_transaction WHERE lead_id=%d", $entry_id));
         $is_recurring = $payment_count > 0 && $transaction_type == "payment" ? 1 : 0;
 
@@ -381,16 +448,17 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
         return $wpdb->insert_id;
     }
 
-    public function get_payment_feed($entry, $form) {
-        $submission_feed = GFCache::get("payment_feed");
+    public function get_payment_feed( $entry, $form = false ) {
 
-        if(!$submission_feed){
+        $submission_feed = GFCache::get( 'payment_feed' );
 
-            if(!empty($entry["id"])){
-                $feeds = $this->get_processed_feeds($entry["id"]);
-                $submission_feed = $this->get_feed($feeds[0]);
+        if( ! $submission_feed ) {
+
+            if( $entry['id'] ) {
+                $feeds = $this->get_feeds_by_entry( $entry['id'] );
+                $submission_feed = $this->get_feed( $feeds[0] );
             }
-            else{
+            else if( $form ) {
                 // getting all active feeds
                 $feeds =  $this->get_feeds( $form['id'] );
 
@@ -401,14 +469,19 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
                     }
                 }
             }
-            GFCache::set("payment_feed", $submission_feed);
+
+            // if called without $form, there is assumption that cache has already been set; let's avoid issues where the cache has not been set and form was not provided
+            // so that the cache will only be set when an $entry and $form object are provided
+            if( $entry && $form )
+                GFCache::set( 'payment_feed', $submission_feed );
+
         }
 
         return $submission_feed;
     }
 
     protected function is_payment_gateway($entry_id){
-        $feeds = $this->get_processed_feeds($entry_id);
+        $feeds = $this->get_feeds_by_entry($entry_id);
         return is_array($feeds) && count($feeds) > 0;
     }
 
@@ -426,17 +499,13 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
         }
 
         //getting credit card field data
-        $card_field = $this->get_creditcard_field($form);
+        $card_field = $this->get_credit_card_field($form);
         if($card_field){
 
             $form_data["card_number"] = rgpost("input_{$card_field["id"]}_1");
             $form_data["card_expiration_date"] = rgpost("input_{$card_field["id"]}_2");
             $form_data["card_security_code"] = rgpost("input_{$card_field["id"]}_3");
             $form_data["card_name"] = rgpost("input_{$card_field["id"]}_5");
-
-//            $names = explode(" ", $form_data["card_name"]);
-//            $form_data["card_first_name"] = rgar($names,0);
-//            $form_data["card_last_name"] = rgempty(1,$names) ? rgar($names,0) : rgar($names,1);
 
         }
 
@@ -447,21 +516,26 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
         return $form_data;
     }
 
-    protected function get_creditcard_field($form){
+    protected function get_credit_card_field( $form ) {
         $fields = GFCommon::get_fields_by_type($form, array("creditcard"));
         return empty($fields) ? false : $fields[0];
     }
 
-    private function get_order_data($feed, $form, $entry){
+    protected function has_credit_card_field( $form ) {
+        return $this->get_credit_card_field( $form ) !== false;
+    }
+
+    protected function get_order_data($feed, $form, $entry){
 
         $products = GFCommon::get_product_fields($form, $entry);
 
         $payment_field = $feed["meta"]["transactionType"] == "product" ? $feed["meta"]["paymentAmount"] : $feed["meta"]["recurringAmount"];
         $setup_fee_field = rgar($feed["meta"],"setupFee_enabled") ? $feed["meta"]["setupFee_product"] : false;
-        $trial_field = rgar($feed["meta"], "trial_enabled") ? $feed["meta"]["trial_product"] : false;
+        $trial_field = rgar($feed["meta"], "trial_enabled") ? rgars( $feed, 'meta/trial_product' ) : false;
 
         $amount = 0;
         $line_items = array();
+        $discounts = array();
         $fee_amount = 0;
         $trial_amount = 0;
         foreach($products["products"] as $field_id => $product)
@@ -496,43 +570,301 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
                     $description = __("options: ", "gravityforms") . " " . implode(", ", $options);
 
                 if($product_price >= 0){
-                    $line_items[] = array("id" => $field_id, "name"=>$product["name"], "description" =>$description, "quantity" =>$quantity, "unit_price"=>GFCommon::to_number($product_price));
+                    $line_items[] = array("id" => $field_id, "name"=>$product["name"], "description" =>$description, "quantity" =>$quantity, "unit_price"=>GFCommon::to_number($product_price), "options" => rgar($product, "options"));
+                }
+                else{
+					$discounts[] = array("id" => $field_id, "name"=>$product["name"], "description" =>$description, "quantity" =>$quantity, "unit_price"=>GFCommon::to_number($product_price), "options" => rgar($product, "options"));
                 }
             }
         }
 
+        if ($trial_field == "enter_amount"){
+			$trial_amount = rgar($feed["meta"], "trial_amount") ? rgar($feed["meta"], "trial_amount") : 0;
+        }
+
         if(!empty($products["shipping"]["name"]) && !is_numeric($payment_field)){
-            $line_items[] = array("id" => "", "name"=>$products["shipping"]["name"], "description" =>"", "quantity" =>1, "unit_price"=>GFCommon::to_number($products["shipping"]["price"]));
+            $line_items[] = array("id" => "", "name"=>$products["shipping"]["name"], "description" =>"", "quantity" =>1, "unit_price"=>GFCommon::to_number($products["shipping"]["price"]), "is_shipping" => 1);
             $amount += $products["shipping"]["price"];
         }
 
-        return array("payment_amount" => $amount, "setup_fee" => $fee_amount, "trial" => $trial_amount, "line_items" => $line_items);
+        return array("payment_amount" => $amount, "setup_fee" => $fee_amount, "trial" => $trial_amount, "line_items" => $line_items, "discounts" => $discounts);
     }
 
 
-    //--------- Callback ----------------
-    public function maybe_process_callback(){
+    //--------- Callback (aka Webhook)----------------
 
-        //Ignoring requests that are not this addon's callbacks
-        if( rgget("callback") != $this->_slug || !$this->payment_method_is_overridden("callback"))
+    public function maybe_process_callback() {
+
+        // ignoring requests that are not this addon's callbacks
+        if( rgget( 'callback' ) != $this->_slug )
             return;
+
+        // returns either false or an array of data about the callback request which payment add-on will then use
+        // to generically process the callback data
+        GFCommon::log_debug("Initialing callback processing for: " . $this->_slug);
 
         $result = $this->callback();
 
-        if(is_wp_error($result)){
-            status_header(500);
+        GFCommon::log_debug("Result from gateway callback: " . print_r($result, true));
+
+        if( is_array( $result ) && rgar( $result, 'type' ) ) {
+            $result = $this->process_callback_action( $result );
+        }
+
+        if(is_wp_error( $result )) {
+            $data = $result->get_error_data();
+            $status = !rgempty("status_header", $data) ? $data["status_header"] : 200;
+
+            status_header( $status );
             echo $result->get_error_message();
         }
-        else{
-            status_header(200);
-            echo "Callback processed successfully.";
+        else if( !$result ){
+            status_header( 200 );
+            echo "Callback bypassed";
+        }
+        else {
+
+            status_header( 200 );
+            echo 'Callback processed successfully.';
         }
 
         die();
     }
 
-    protected function callback(){
+    /**
+     * Processes callback based on provided data.
+     *
+     * $action = array(
+     *     'type' => 'cancel_subscription',     // required
+     *     'transaction_id' => '',              // required (if payment)
+     *     'subscription_id' => '',             // required (if subscription)
+     *     'amount' => '0.00',                  // required (some exceptions)
+     *     'entry_id' => 1,                     // required (some exceptions)
+     *     'transaction_type' => '',
+     *     'payment_status' => '',
+     *     'note' => ''
+     * );
+     *
+     * @param  [type] $data [description]
+     * @return [type]       [description]
+     */
+    private function process_callback_action( $action ) {
+        GFCommon::log_debug("Processing callback action: " . print_r($action, true));
+        $action = wp_parse_args( $action, array(
+            'type' => false,
+            'amount' => false,
+            'transaction_type' => false,
+            'transaction_id' => false,
+            'subscription_id' => false,
+            'entry_id' => false,
+            'payment_status' => false,
+            'note' => false
+        ) );
 
+        $result = false;
+
+        if(rgar($action, "id") && $this->is_duplicate_callback($action["id"])){
+            return new WP_Error("duplicate", sprintf(__("This webhook has already been processed (Event Id: %s)", "gravityforms"), $action["id"]));
+        }
+
+        $entry = GFAPI::get_entry( $action['entry_id'] );
+        if( ! $entry || is_wp_error($entry) )
+            return $result;
+
+        switch( $action['type'] ) {
+        case 'complete_payment':
+            $result = $this->complete_payment( $entry, $action );
+            break;
+        case 'refund_payment':
+            $result = $this->refund_payment( $entry, $action );
+            break;
+        case 'cancel_subscription':
+            $feed = $this->get_payment_feed( $entry );
+            $result = $this->cancel_subscription( $entry, $feed, $action["note"] );
+            break;
+        case 'add_subscription_payment':
+            $result = $this->add_subscription_payment( $entry, $action );
+            break;
+        case 'fail_subscription_payment':
+            $result = $this->fail_subscription_payment( $entry, $action );
+            break;
+        default:
+            // handle custom events
+            if( is_callable( array( $this, rgar( $action, 'callback' ) ) ) )
+                $result = call_user_func( array( $this, $action['callback'] ) );
+            break;
+        }
+
+        GFCommon::log_debug("Callback action successfull? {$result}");
+
+        if(rgar($action, "id") && $result){
+            $this->register_callback($action["id"], $action['entry_id']);
+        }
+
+        return $result;
+    }
+
+
+    protected function register_callback($callback_id, $entry_id){
+        global $wpdb;
+
+        $wpdb->insert("{$wpdb->prefix}gf_addon_payment_callback", array("addon_slug" => $this->_slug, "callback_id" => $callback_id, "lead_id" => $entry_id, "date_created" => gmdate("Y-m-d H:i:s")));
+    }
+
+    protected function is_duplicate_callback($callback_id){
+        global $wpdb;
+
+        $sql = $wpdb->prepare("SELECT id FROM {$wpdb->prefix}gf_addon_payment_callback WHERE addon_slug=%s AND callback_id=%s", $this->_slug, $callback_id);
+        if($wpdb->get_var($sql))
+            return true;
+
+        return false;
+    }
+
+    protected function callback() { }
+
+
+    // # PAYMENT INTERACTION FUNCTIONS
+
+    public function complete_payment( $entry, $action ) {
+
+        if( ! $action['payment_status'] )
+            $action['payment_status'] = 'Paid';
+
+        if( ! $action['transaction_type'] )
+            $action['transaction_type'] = 'payment';
+
+        if( ! $action['note'] ) {
+            $amount_formatted = GFCommon::to_money( $action['amount'], $entry['currency'] );
+            $action['note'] = sprintf( __( 'Subscription has been paid. Amount: %s. Transaction Id: %s.', 'gravityforms' ), $amount_formatted, $action['transaction_id'] );
+        }
+
+        GFAPI::update_entry_property( $entry['id'], 'payment_status', $action['payment_status'] );
+        $this->insert_transaction( $entry['id'], $action['transaction_type'], $action['transaction_id'], $action['amount'] );
+        $this->add_note( $entry['id'], $action['note'], "success" );
+
+        return true;
+    }
+
+    public function refund_payment( $entry, $action ) {
+
+        if( ! $action['payment_status'] )
+            $action['payment_status'] = 'Refunded';
+
+        if( ! $action['transaction_type'] )
+            $action['transaction_type'] = 'refund';
+
+        if( ! $action['note'] ) {
+            $amount_formatted = GFCommon::to_money( $action['amount'], $entry['currency'] );
+            $action['note'] = sprintf( __( 'Payment has been refunded. Amount: %s. Transaction Id: %s.', 'gravityforms' ), $amount_formatted, $action['transaction_id'] );
+        }
+
+        GFAPI::update_entry_property( $entry['id'], 'payment_status', $action['payment_status'] );
+        $this->insert_transaction( $entry['id'], $action['transaction_type'], $action['transaction_id'], $action['amount'] );
+        $this->add_note( $entry['id'], $action['note'] );
+
+        return true;
+    }
+
+    /**
+     * Used to start a new subscription. Updates the associcated entry with the payment and transaction details and adds an entry note.
+     *
+     * @param  [array]  $entry           Entry object
+     * @param  [string] $subscription_id ID of the subscription
+     * @param  [float]  $amount          Numeric amount of the initial subscription payment
+     * @return [bool]   $result
+     */
+    public function start_subscription( $entry, $subscription )  {
+
+        $entry['payment_status']   = 'Active';
+        $entry['payment_amount']   = $subscription['amount'];
+        $entry['payment_date']     = gmdate( 'y-m-d H:i:s' );
+        $entry['transaction_id']   = $subscription['subscription_id'];
+        $entry['transaction_type'] = '2'; // subscription
+        $entry['is_fulfilled']     = true;
+
+        $result = GFAPI::update_entry( $entry );
+
+        $this->add_note( $entry['id'], sprintf( __( 'Subscription has been created. Subscription Id: %s.', 'gravityforms' ), $subscription['subscription_id'] ), "success" );
+
+    }
+
+    /**
+     * A payment on an existing subscription.
+     *
+     * @param  [array] $data  Transaction data including 'amount' and 'subscriber_id'
+     * @param  [array] $entry Entry object
+     * @return [null]
+     */
+    public function add_subscription_payment( $entry, $action ) {
+
+        if( ! $action['transaction_type'] )
+            $action['transaction_type'] = 'payment';
+
+        if( ! $action['note'] ) {
+            $amount_formatted = GFCommon::to_money( $action['amount'], $entry['currency'] );
+            $action['note'] = sprintf( __( 'Subscription has been paid. Amount: %s. Subscription Id: %s', 'gravityforms' ), $amount_formatted, $action['subscription_id'] );
+        }
+
+        $transaction_id = !empty($action['transaction_id']) ? $action['transaction_id'] : $action['subscription_id'];
+
+        $this->insert_transaction( $entry['id'], $action['transaction_type'], $transaction_id, $action['amount'] );
+        $this->add_note( $entry['id'], $action['note'], "success" );
+
+        do_action( 'gform_post_add_subscription_payment', $entry, $action );
+
+        return true;
+    }
+
+    public function fail_subscription_payment( $entry, $action ) {
+
+        if( ! $action['note'] ) {
+            $amount_formatted = GFCommon::to_money( $action['amount'], $entry['currency'] );
+            $action['note'] = sprintf( __( 'Subscription payment has failed. Amount: %s. Subscription Id: %s.', 'gravityforms' ), $amount_formatted, $action['subscription_id'] );
+        }
+
+        $this->add_note( $entry['id'], $action['note'], "error" );
+
+        // keep 'gform_subscription_payment_failed' for backward compatability
+        do_action( 'gform_subscription_payment_failed', $entry, $action['subscription_id'] );
+        do_action( 'gform_post_fail_subscription_payment', $entry, $action );
+
+        return true;
+    }
+
+    public function cancel_subscription( $entry, $feed, $note = null ) {
+
+        if( !$note )
+            $note = sprintf( __( 'Subscription has been cancelled. Subscription Id: %s.', 'gravityforms' ), $entry['transaction_id'] );
+
+        if( strtolower( $entry['payment_status'] ) == 'cancelled' ) {
+            $this->log( 'Subscription is already canceled.' );
+            return false;
+        }
+
+        GFAPI::update_entry_property( $entry['id'], 'payment_status', "Cancelled" );
+        $this->modify_post( rgar( $entry, 'post_id' ), rgars( $feed, 'meta/update_post_action' ) );
+        $this->add_note( $entry['id'], $note );
+
+        // include $subscriber_id as 3rd parameter for backwards compatability
+        do_action( 'gform_subscription_canceled', $entry, $feed, $entry['transaction_id'] );
+
+        return true;
+    }
+
+    protected function get_entry_by_transaction_id( $transaction_id ) {
+        global $wpdb;
+
+        $sql = $wpdb->prepare( "SELECT id FROM {$wpdb->prefix}rg_lead WHERE transaction_id = %s", $transaction_id );
+        $entry_id = $wpdb->get_var( $sql );
+
+//        //Try transaction table
+//        if( empty($entry_id) ){
+//            $sql = $wpdb->prepare( "SELECT lead_id FROM {$wpdb->prefix}gf_addon_payment_transaction WHERE transaction_id = %s", $transaction_id );
+//            $entry_id = $wpdb->get_var( $sql );
+//        }
+
+        return $entry_id ? $entry_id : false;
     }
 
 
@@ -571,6 +903,9 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
             case "product" :
                 return __("Products and Services", "gravityforms");
                 break;
+            case "donation" :
+            	return __("Donations", "gravityforms");
+                break;
 
         }
         return __("Unsupported transaction type", "gravityforms");
@@ -578,7 +913,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
     public function get_column_value_amount($feed){
         $form = $this->get_current_form();
-        $field_id = $feed["meta"]["transactionType"] == "subscription" ? $feed["meta"]["recurringAmount"] : $feed["meta"]["paymentAmount"];
+        $field_id = $feed["meta"]["transactionType"] == "subscription" ? rgars ($feed, "meta/recurringAmount") : rgars($feed, "meta/paymentAmount");
         if($field_id == "form_total"){
             $label = __("Form Total", "gravityforms");
         }
@@ -592,11 +927,25 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
 
     //--------- Feed Settings ----------------
+
+    public function feed_list_message(){
+
+        if( $this->_requires_credit_card && ! $this->has_credit_card_field( $this->get_current_form() ) ) {
+            return $this->requires_credit_card_message();
+        }
+        return false;
+    }
+
+    public function requires_credit_card_message() {
+        return sprintf(__( "You must add a Credit Card field to your form before creating a feed. Let's go %sadd one%s!", 'gravityforms' ), "<a href='" . add_query_arg( array("view"=>null, "subview" => null) ) . "'>", "</a>");
+    }
+
     public function feed_settings_fields() {
+
         return array(
 
             array(
-                //"title" => __("Feed Settings", "gravityforms"),
+                //"title" => __("General Settings", "gravityforms"),
                 "description" => '',
                 "fields" => array(
                     array(
@@ -609,7 +958,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
                         "name"=> "transactionType",
                         "label" => __("Transaction Type", "gravityforms"),
                         "type" => "select",
-                        "onchange" => "jQuery(this).parents('form').submit();", //TODO: move this to base class
+                        "onchange" => "jQuery(this).parents('form').submit();", //@TODO: move this to base class
                         "choices" => array(
                             array("label" => __("Select a transaction type", "gravityforms"), "value" => ""),
                             array("label" => __("Products and Services", "gravityforms"), "value" => "product"),
@@ -647,7 +996,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
                     array(
                         "name" => "setupFee",
                         "label" => __("Setup Fee", "gravityforms"),
-                        "type" => "setup_fee",
+                        "type" => "setup_fee"
                     ),
                     array(
                         "name" => "trial",
@@ -659,10 +1008,10 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
             ),
 
             array(
-                'title' => 'Product &amp; Services Settings',
+                'title' => 'Products &amp; Services Settings',
                 'dependency' => array(
                     'field' => 'transactionType',
-                    'values' => array( 'product' )
+                    'values' => array( 'product','donation' )
                 ),
                 'fields' => array(
                     array(
@@ -670,7 +1019,8 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
                         "label" => __("Payment Amount", "gravityforms"),
                         "type" => "select",
                         "choices" => $this->product_amount_choices(),
-                        "required" => true
+                        "required" => true,
+                        "default_value" => "form_total"
                     )
                 )
             ),
@@ -679,30 +1029,41 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
                 'title' => __( 'Other Settings', 'gravityforms' ),
                 'dependency' => array(
                     'field' => 'transactionType',
-                    'values' => array( 'subscription', 'product' )
+                    'values' => array( 'subscription', 'product', 'donation' )
                 ),
-                'fields' => array(
-                    array(
-                        "name" => "billingInformation",
-                        "label" => __("Billing Information", "gravityforms"),
-                        "type" => "field_map",
-                        "field_map" => $this->billing_info_fields()
-                    ),
-                    array(
-                        "name" => "options",
-                        "label" => __("Options", "gravityforms"),
-                        "type" => "checkbox",
-                        "choices" => $this->option_choices()
-                    ),
-                    array(
-                        "name" => "conditionalLogic",
-                        "label" => __("Conditional Logic", "gravityforms"),
-                        "type" => "feed_condition"
-                    )
-                )
+                'fields' => $this->other_settings_fields()
             )
 
         );
+    }
+
+    public function other_settings_fields(){
+        $other_settings = array(
+            array(
+                "name" => "billingInformation",
+                "label" => __("Billing Information", "gravityforms"),
+                "type" => "field_map",
+                "field_map" => $this->billing_info_fields()
+            )
+        );
+
+        $option_choices = $this->option_choices();
+        if(!empty($option_choices)){
+            $other_settings[] = array(
+                "name" => "options",
+                "label" => __("Options", "gravityforms"),
+                "type" => "checkbox",
+                "choices" => $option_choices
+            );
+        }
+
+        $other_settings[] = array(
+            "name" => "conditionalLogic",
+            "label" => __("Conditional Logic", "gravityforms"),
+            "type" => "feed_condition"
+        );
+
+        return $other_settings;
     }
 
     public function settings_billing_cycle( $field, $echo = true ) {
@@ -747,6 +1108,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
     public function settings_setup_fee( $field, $echo = true ) {
 
         $enabled_field = array(
+        	"name" => $field["name"],
             "type" => "checkbox",
             "horizontal" => true,
             "choices" => array(
@@ -778,17 +1140,24 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
         return $html;
     }
 
+    public function set_trial_onchange($field){
+
+    	return "alert('firing onchange');if(jQuery(this).prop('checked')){jQuery('#{$field["name"]}_product').show('slow');if (jQuery('#{$field["name"]}_product').val() == 'enter_amount'){jQuery('#{$field["name"]}_amount').show('slow');}} else {jQuery('#{$field["name"]}_product').hide('slow');jQuery('#{$field["name"]}_amount').hide('slow');}";
+
+    }
+
     public function settings_trial( $field, $echo = true ) {
 
         //--- Enabled field ---
         $enabled_field = array(
+        	"name" => $field["name"],
             "type" => "checkbox",
             "horizontal" => true,
             "choices" => array(
                 array(  "label" => __("Enabled", "gravityforms"),
                     "name" => $field["name"] . "_enabled",
                     "value"=>"1",
-                    "onchange" => "if(jQuery(this).prop('checked')){jQuery('#{$field["name"]}_product').show('slow'); } else {jQuery('#{$field["name"]}_product').hide('slow');}"
+                    "onchange" => $this->set_trial_onchange($field)
                 ))
         );
 
@@ -812,7 +1181,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
         $amount_field = array(
             "type" => "text",
             "name" => "{$field["name"]}_amount",
-            "class" =>  $this->get_setting("{$field["name"]}_product") == "enter_amount" ? "" : "hidden",
+            "class" =>  $this->get_setting("{$field["name"]}_enabled") && $this->get_setting("{$field["name"]}_product") == "enter_amount" ? "" : "hidden",
         );
 
         $html .= "&nbsp;" . $this->settings_text($amount_field, false);
@@ -884,7 +1253,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
         return $billing_cycles;
     }
 
-    private function get_payment_choices($form){
+    protected function get_payment_choices($form){
         $fields = GFCommon::get_fields_by_type($form, array("product"));
         $choices = array(
             array("label" => __("Select a product field", "gravityforms"), "value" => "")
@@ -1326,7 +1695,9 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
         // deleting transactions
         $sql = $wpdb->prepare( "DELETE FROM {$wpdb->prefix}gf_addon_payment_transaction
-                                WHERE feed_id IN (SELECT id FROM {$wpdb->prefix}gf_addon_feed WHERE addon_slug=%s)", $this->_slug);
+                                WHERE lead_id IN
+                                   (SELECT lead_id FROM {$wpdb->prefix}rg_lead_meta WHERE meta_key='payment_gateway' AND meta_value=%s)", $this->_slug);
+
         $wpdb->query($sql);
 
         //clear cron
@@ -1349,9 +1720,10 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
                         "subscriptionCanceled" => __("Canceled", "gravityforms"),
                         "subscriptionError" => __("The subscription could not be canceled. Please try again later.", "gravityforms")
                         ),
-                'enqueue' => array( array( "admin_page" => array("form_settings"), "tab" => "gravityformspaypal" ),
-                                    array( "admin_page" => array("entry_view") )
-                             )
+                'enqueue' => array(
+                    array( "admin_page" => array( "form_settings" ), "tab" => $this->_slug ),
+                    array( "admin_page" => array( "entry_view" ) )
+                )
             )
         );
 
@@ -1373,13 +1745,13 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
     //-------- Cancel Subscription -----------
     public function entry_info($form_id, $entry) {
 
-        //abort if subscription cancelation isn't supported by the addon
-        if(!$this->payment_method_is_overridden("cancel_subscription"))
+        //abort if subscription cancelation isn't supported by the addon or if it has already been canceled
+        if( !$this->payment_method_is_overridden("cancel") )
             return;
 
         // adding cancel subscription button and script to entry info section
         $cancelsub_button = "";
-        if($entry["transaction_type"] == "2" && $entry["payment_status"] <> "Canceled" && $this->is_payment_gateway($entry["id"]))
+        if($entry["transaction_type"] == "2" && $entry["payment_status"] <> "Cancelled" && $this->is_payment_gateway($entry["id"]))
         {
             ?>
             <input id="cancelsub" type="button" name="cancelsub" value="<?php _e("Cancel Subscription", "gravityforms") ?>" class="button" onclick="cancel_subscription(<?php echo $entry["id"] ?>);"/>
@@ -1393,7 +1765,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
         }
     }
 
-    public function start_cancel_subscription() {
+    public function ajax_cancel_subscription() {
         check_ajax_referer("gaddon_cancel_subscription","gaddon_cancel_subscription");
 
         $entry_id = $_POST["entry_id"];
@@ -1402,55 +1774,92 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
         $form = GFAPI::get_form($entry["form_id"]);
         $feed = $this->get_payment_feed($entry, $form);
 
-        if($this->cancel_subscription($entry, $form, $feed))
-        {
-            $this->process_subscription_canceled($entry, $feed);
-            die("1");
+        if( $this->cancel( $entry, $feed ) ) {
+            $this->cancel_subscription($entry, $feed);
+            die( '1' );
         }
-        else{
-            die("0");
-        }
-
-    }
-
-    protected function process_subscription_canceled($entry, $feed){
-
-        //Updating entry payment status
-        $entry["payment_status"] = "Canceled";
-        RGFormsModel::update_lead($entry);
-
-        //Delete post or mark it as a draft based on feed configuration
-        if(rgars($feed, "meta/update_post_action") == "draft" && !rgempty("post_id", $entry)){
-            $post = get_post($entry["post_id"]);
-            $post->post_status = 'draft';
-            wp_update_post($post);
-        }
-        else if(rgars($feed, "meta/update_post_action") == "delete" && !rgempty("post_id", $entry)){
-            wp_delete_post($entry["post_id"]);
+        else {
+            die( '0' );
         }
 
     }
 
-    protected function cancel_subscription($entry, $form, $feed){
-        return true;
+    //--------------- Notes ------------------
+    /**
+     * Override this function to specify a custom avatar (i.e. the payment gateway logo) for entry notes created by the Add-On
+     * @return  string - A fully qualified URL for the avatar
+     */
+    public function note_avatar(){
+        return false;
     }
 
-    //-------- Helpers -----------------------
-    private function payment_method_is_overridden($method_name, $base_class='GFPaymentAddOn'){
-        return parent::method_is_overridden($method_name, $base_class);
+    public function notes_avatar($avatar, $note){
+        if($note->user_name == $this->_short_title && empty($note->user_id) && $this->payment_method_is_overridden("note_avatar")){
+            $new_avatar = $this->note_avatar();
+        }
+
+        return empty($new_avatar) ? $avatar : "<img alt='{$this->_short_title}' src='{$new_avatar}' class='avatar avatar-48' height='48' width='48' />";
+    }
+
+
+    // # HELPERS
+
+    private function payment_method_is_overridden( $method_name, $base_class = 'GFPaymentAddOn' ){
+        return parent::method_is_overridden( $method_name, $base_class );
     }
 
     public function authorization_error( $error_message ) {
-        return array( 'is_authorized' => false, 'error_message' => $error_message );
+        return array( 'error_message' => $error_message, 'is_success' => false, 'is_authorized' => false );
     }
+
+    protected function modify_post( $post_id, $action ) {
+
+        $result = false;
+
+        if( ! $post_id )
+            return $result;
+
+        switch( $action ) {
+        case 'draft':
+            $post = get_post( $post_id );
+            $post->post_status = 'draft';
+            $result = wp_update_post( $post );
+            $this->log( "Set post (#{$post_id}) status to \"draft\"." );
+            break;
+        case 'delete':
+            $result = wp_delete_post( $post_id );
+            $this->log( "Deleted post (#{$post_id})." );
+            break;
+        }
+
+        return $result;
+    }
+
+    public function add_note( $entry_id, $note, $note_type = null ) {
+
+        $user_id = 0;
+        $user_name = $this->_short_title;
+
+
+        GFFormsModel::add_note( $entry_id, $user_id, $user_name, $note, $note_type );
+
+    }
+
+    public function log( $message ) {
+        // log it!
+    }
+
 }
+
+if( ! class_exists( 'WP_List_Table' ) )
+    require_once( ABSPATH . 'wp-admin/includes/class-wp-list-table.php' );
+
 
 class GFPaymentStatsTable extends WP_List_Table {
 
     private $_rows = array();
     private $_page_size = 10;
     private $_total_items = 0;
-
 
     function __construct($columns, $rows, $total_count, $page_size) {
         $this->_rows = $rows;
@@ -1471,7 +1880,6 @@ class GFPaymentStatsTable extends WP_List_Table {
         ));
     }
 
-
     function prepare_items() {
         $this->items = $this->_rows;
 
@@ -1486,14 +1894,13 @@ class GFPaymentStatsTable extends WP_List_Table {
         return rgar($item, $column);
     }
 
-
     function pagination( $which ) {
         if ( empty( $this->_pagination_args ) )
             return;
 
         extract( $this->_pagination_args, EXTR_SKIP );
 
-        $output = '<span class="displaying-num">' . sprintf( _n( '1 item', '%s items', $total_items ), number_format_i18n( $total_items ) ) . '</span>';
+        $output = '<span class="displaying-num">' . sprintf( _n( '1 item', '%s items', $total_items, 'gravityforms' ), number_format_i18n( $total_items ) ) . '</span>';
 
         $current = $this->get_pagenum();
 
@@ -1522,7 +1929,7 @@ class GFPaymentStatsTable extends WP_List_Table {
         $html_current_page = $current;
 
         $html_total_pages = sprintf( "<span class='total-pages'>%s</span>", number_format_i18n( $total_pages ) );
-        $page_links[] = '<span class="paging-input">' . sprintf( _x( '%1$s of %2$s', 'paging' ), $html_current_page, $html_total_pages ) . '</span>';
+        $page_links[] = '<span class="paging-input">' . sprintf( _x( '%1$s of %2$s', 'paging', 'gravityforms' ), $html_current_page, $html_total_pages ) . '</span>';
 
         $page_links[] = sprintf( "<a class='%s' title='%s' style='cursor:pointer;' onclick='gresults.setCustomFilter(\"paged\", \"%s\"); gresults.getResults(); gresults.setCustomFilter(\"paged\", \"1\");'>%s</a>",
             'next-page' . $disable_last,

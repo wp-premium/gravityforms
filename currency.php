@@ -1,4 +1,9 @@
 <?php
+
+if(!class_exists('GFForms')){
+    die();
+}
+
 if(!class_exists("RGCurrency")){
 
 class RGCurrency{

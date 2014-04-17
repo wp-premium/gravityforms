@@ -1,5 +1,9 @@
 <?php
 
+if(!class_exists('GFForms')){
+    die();
+}
+
 /**
  * Handles all tasks related to locking.
  *

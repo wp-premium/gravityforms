@@ -1,4 +1,9 @@
 <?php
+
+if(!class_exists('GFForms')){
+    die();
+}
+
 /**
  * upload.php
  *
@@ -10,7 +15,6 @@
  *
  * Modified by Rocketgenius
  */
-
 class GFAsyncUpload {
 
     public static function upload() {
@@ -150,9 +154,19 @@ class GFAsyncUpload {
 
         $uploaded_filename = $_FILES["file"]["name"];
 
-        $output = '{"status" : "ok", "data" : {"temp_filename" : "' . $tmp_file_name . '", "uploaded_filename" : "' . $uploaded_filename . '"}}';
+
+        $output = array("status"    => "ok",
+                        "data"      => array("temp_filename"     => $tmp_file_name ,
+                                             "uploaded_filename" => str_replace("\\'", "'", urldecode($uploaded_filename)) //Decoding filename to prevent file name mismatch.
+            )
+        );
+
+        $output = json_encode($output);
 
         GFCommon::log_debug(sprintf("GFAsyncUpload::upload() - File upload complete. temp_filename: %s  uploaded_filename: %s ", $tmp_file_name, $uploaded_filename));
+
+        do_action('gform_post_multifile_upload', $form, $field, $uploaded_filename, $tmp_file_name, $file_path);
+        do_action("gform_post_multifile_upload_{$form["id"]}", $form, $field, $uploaded_filename, $tmp_file_name, $file_path);
 
         die($output);
     }

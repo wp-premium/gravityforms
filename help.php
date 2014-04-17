@@ -1,4 +1,9 @@
 <?php
+
+if(!class_exists('GFForms')){
+    die();
+}
+
 class GFHelp {
     public static function help_page() {
         if (!GFCommon::ensure_wp_version())

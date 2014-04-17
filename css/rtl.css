@@ -1,13 +1,14 @@
+
 /*
 ----------------------------------------------------------------
 
 rtl.css
 Gravity Forms RTL Language Support
 http://www.gravityforms.com
-updated: May 7, 2013 10:52 PM
+updated: February 24, 2014 7:49 AM
 
 Gravity Forms is a Rocketgenius project
-copyright 2013 Rocketgenius Inc.
+copyright 2013-2014 Rocketgenius Inc.
 http: //www.rocketgenius.com
 this may not be redistributed without the
 express written permission of the author.
@@ -508,7 +509,6 @@ html[dir="rtl"] body.wp-admin .gform_tabs li.active a {
 html[dir="rtl"] body.wp-admin a.tooltip,
 html[dir="rtl"] body.wp-admin a.tooltip_left,
 html[dir="rtl"] body.wp-admin a.tooltip_bottomleft {
-	text-indent: 9000px;
 	overflow: hidden;
 }
 

@@ -1,5 +1,9 @@
 <?php
 
+if(!class_exists('GFForms')){
+    die();
+}
+
 Class GFNotification {
 
 	private static $supported_fields = array("checkbox", "radio", "select", "text", "website", "textarea", "email", "hidden", "number", "phone", "multiselect", "post_title",
@@ -29,6 +33,9 @@ Class GFNotification {
             $notification_id = rgpost("gform_notification_id");
 
         $form = RGFormsModel::get_form_meta($form_id);
+
+        $form = apply_filters("gform_form_notification_page_{$form_id}", apply_filters("gform_form_notification_page", $form, $notification_id), $notification_id);
+
         $notification = !$notification_id ? array() : self::get_notification($form, $notification_id);
 
         // added second condition to account for new notifications with errors as notification ID will
@@ -74,7 +81,11 @@ Class GFNotification {
                 else
                     $notification["routing"] = null;
 
+                // trim values
+                $notification = GFFormsModel::trim_conditional_logic_values_from_element($notification, $form);
+
                 $form["notifications"][$notification_id] = $notification;
+
                 RGFormsModel::save_form_notifications($form_id, $form['notifications']);
             }
         }
@@ -648,9 +659,9 @@ Class GFNotification {
                                     <option value="ends_with" <?php echo rgar($routing,"operator") == "ends_with" ? "selected='selected'" : "" ?>><?php _e("ends with", "gravityforms") ?></option>
                                 </select>
                                 <?php echo self::get_field_values($i, $form, rgar($routing,"fieldId"), rgar($routing,"value")) ?>
-                                
+
                                 <a class='gf_insert_field_choice' title='add another rule' onclick='SetRouting(<?php echo $i ?>); InsertRouting(<?php echo $i + 1 ?>);'><i class='fa fa-plus-square'></i></a>
-                             
+
                                 <?php if($count > 1 ){ ?>
                                     <img src='<?php echo GFCommon::get_base_url()?>/images/remove.png' id='routing_delete_<?php echo $i?>' title='remove this email routing' alt='remove this email routing' class='delete_field_choice' style='cursor:pointer;' onclick='DeleteRouting(<?php echo $i ?>);' />
                                 <?php } ?>

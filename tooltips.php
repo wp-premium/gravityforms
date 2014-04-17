@@ -1,13 +1,18 @@
 <?php
 
+if(!class_exists('GFForms')){
+    die();
+}
+
 //Prints required tooltip scripts
 add_action("admin_print_scripts", 'print_tooltip_scripts');
 function print_tooltip_scripts(){
 
     wp_enqueue_style( 'gform_tooltip', GFCommon::get_base_url() . '/css/tooltip.css', null, GFCommon::$version );
+    wp_enqueue_style( 'gform_font_awesome', GFCommon::get_base_url() . '/css/font-awesome.css', null, GFCommon::$version );
 
     wp_print_scripts( 'gform_tooltip_init' );
-    wp_print_styles( 'gform_tooltip' );
+    wp_print_styles( 'gform_tooltip','gform_font_awesome' );
 
 }
 
