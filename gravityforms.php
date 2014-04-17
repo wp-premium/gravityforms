@@ -3,9 +3,11 @@
 Plugin Name: Gravity Forms
 Plugin URI: http://www.gravityforms.com
 Description: Easily create web forms and manage form entries within the WordPress admin.
-Version: 1.8.1
+Version: 1.8.7.2
 Author: rocketgenius
 Author URI: http://www.rocketgenius.com
+Text Domain: gravityforms
+Domain Path: /languages
 
 ------------------------------------------------------------------------
 Copyright 2009-2013 Rocketgenius Inc.
@@ -53,6 +55,10 @@ $gf_recaptcha_public_key = "";
 //define('GF_RECAPTCHA_PUBLIC_KEY','YOUR_PUBLIC_KEY_GOES_HERE');
 //------------------------------------------------------------------------------------------------------------------
 
+if(!defined("ABSPATH")){
+    die();
+}
+
 if(!defined("RG_CURRENT_PAGE"))
     define("RG_CURRENT_PAGE", basename($_SERVER['PHP_SELF']));
 
@@ -96,7 +102,7 @@ if(is_admin() && (RGForms::is_gravity_page() || RGForms::is_gravity_ajax_action(
 
 class GFForms {
 
-    public static $version = '1.8.1';
+    public static $version = '1.8.7.2';
 
     public static function has_members_plugin(){
         return function_exists( 'members_get_capabilities' );
@@ -113,8 +119,11 @@ class GFForms {
 
         self::register_scripts();
 
-        //Setting up Gravity Forms
-        self::setup();
+        //Maybe set up Gravity Forms: only on admin requests for single site installation and always for multisite
+        if( (IS_ADMIN && false === ( defined("DOING_AJAX") && true === DOING_AJAX ) ) || is_multisite() ){
+            self::setup();
+        }
+
 
         if(IS_ADMIN){
 
@@ -333,6 +342,7 @@ class GFForms {
             //Auto-importing forms based on GF_IMPORT_FILE AND GF_THEME_IMPORT_FILE
             self::maybe_import_forms();
 
+            //The format the version info changed to JSON. Make sure the old format is not cached.
             if(version_compare(get_option("rg_form_version"), "1.8.0.3", "<" )){
                 delete_transient("gform_update_info");
             }
@@ -439,6 +449,7 @@ class GFForms {
               user_id bigint(20),
               date_created datetime not null,
               value longtext,
+              note_type varchar(50),
               PRIMARY KEY  (id),
               KEY lead_id (lead_id),
               KEY lead_user_key (lead_id,user_id)
@@ -495,6 +506,55 @@ class GFForms {
 
         //fix checkbox value. needed for version 1.0 and below but won't hurt for higher versions
         self::fix_checkbox_value();
+
+        //fix leading and trailing spaces in Form objects and entry values
+        if(version_compare(get_option("rg_form_version"), "1.8.3.1", "<" )){
+            self::fix_leading_and_trailing_spaces();
+        }
+
+    }
+
+    private static function fix_leading_and_trailing_spaces(){
+
+        global $wpdb;
+
+        $meta_table_name =  GFFormsModel::get_meta_table_name();
+        $lead_details_table = GFFormsModel::get_lead_details_table_name();
+        $lead_details_long_table = GFFormsModel::get_lead_details_long_table_name();
+
+        $result = $wpdb->query("UPDATE $lead_details_table SET value = TRIM(value)");
+        $result = $wpdb->query("UPDATE $lead_details_long_table SET value = TRIM(value)");
+
+
+        $results = $wpdb->get_results("SELECT form_id, display_meta, confirmations, notifications FROM {$meta_table_name}", ARRAY_A);
+
+        foreach ($results as &$result) {
+            $form_id = $result["form_id"];
+
+            $form = GFFormsModel::unserialize($result["display_meta"]);
+            $form_updated = false;
+            $form = GFFormsModel::trim_form_meta_values($form, $form_updated);
+            if($form_updated){
+                GFFormsModel::update_form_meta($form_id, $form);
+            }
+
+            $confirmations = GFFormsModel::unserialize($result["confirmations"]);
+            $confirmations_updated = false;
+            $confirmations = GFFormsModel::trim_conditional_logic_values($confirmations, $form, $confirmations_updated);
+            if($confirmations_updated){
+                GFFormsModel::update_form_meta($form_id, $confirmations, "confirmations");
+            }
+
+            $notifications = GFFormsModel::unserialize($result["notifications"]);
+            $notifications_updated = false;
+            $notifications = GFFormsModel::trim_conditional_logic_values($notifications, $form, $notifications_updated);
+            if($notifications_updated){
+                GFFormsModel::update_form_meta($form_id, $notifications, "notifications");
+            }
+
+        }
+
+        return $results;
     }
 
     private static function maybe_import_forms()
@@ -561,7 +621,7 @@ class GFForms {
         return $wpdb->get_var($wpdb->prepare("SELECT option_value FROM {$wpdb->prefix}options WHERE option_name=%s", $option_name));
     }
 
-	//Changes form_id values from default value "0" to the correct value. Neededed when upgrading users from 1.6.11
+	//Changes form_id values from default value "0" to the correct value. Needed when upgrading users from 1.6.11
     private static function fix_lead_meta_form_id_values(){
         global $wpdb;
 
@@ -988,7 +1048,7 @@ class GFForms {
              'ajax' => false,
              'tabindex' => 1,
              'action' => 'form'
-          ), $attributes ) );
+          ), $attributes, 'gravityforms' ) );
 
         $shortcode_string = "";
 
@@ -1043,9 +1103,9 @@ class GFForms {
 
         if (isset($_POST["gform_ajax"])) {
             parse_str($_POST["gform_ajax"]);
-
+            $tabindex = isset($tabindex) ? absint($tabindex) : 1;
             require_once(GFCommon::get_base_path() . "/form_display.php");
-           // GFCommon::$tab_index = $tabindex;
+
             $result = GFFormDisplay::get_form($form_id, $title, $description, false, $_POST["gform_field_values"], true, $tabindex);
             die($result);
         }
@@ -1903,7 +1963,9 @@ class GFForms {
             break;
 
             case "delete" :
-                RGFormsModel::delete_lead($lead_id);
+                if(GFCommon::current_user_can_any("gravityforms_delete_entries")){
+                    RGFormsModel::delete_lead($lead_id);
+                }
             break;
 
             default :
@@ -1968,6 +2030,9 @@ class GFForms {
         check_ajax_referer("rg_select_export_form", "rg_select_export_form");
         $form_id =  intval($_POST["form_id"]);
         $form = RGFormsModel::get_form_meta($form_id);
+
+        $form = apply_filters("gform_form_export_page_{$form_id}", apply_filters("gform_form_export_page", $form));
+
         $filter_settings = GFCommon::get_field_filter_settings($form);
         $filter_settings_json = json_encode($filter_settings);
         $fields = array();

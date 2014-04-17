@@ -1,26 +1,30 @@
 <?php
 
+if(!class_exists('GFForms')){
+    die();
+}
+
 class GFSettings{
 
     public static $addon_pages = array();
 
     public static function add_settings_page($name, $handler, $icon_path){
-        
+
         // if name is an array, assume that an array of args is passed
         if( is_array( $name ) ) {
-            
+
             extract( wp_parse_args( $name, array(
                 'name' => '',
                 'tab_label' => '',
                 'handler' => false,
                 'icon_path' => ''
             ) ) );
-            
+
         }
-            
+
         if( !isset( $tab_label ) || !$tab_label )
             $tab_label = $name;
-        
+
         add_action("gform_settings_" . str_replace(" " , "_", $name), $handler);
         self::$addon_pages[$name] = array("name" => $name, "tab_label" => $tab_label, "icon" => $icon_path);
     }
@@ -418,22 +422,22 @@ class GFSettings{
 
         //build left side options, always have GF Settings first and Uninstall last, put add-ons in the middle
         $setting_tabs = array("10" => array("name" => "settings", "label" => __("Settings", "gravityforms")));
-        
+
         if(!empty(self::$addon_pages)){
-			
+
             $sorted_addons = self::$addon_pages;
 			asort($sorted_addons);
-            
+
 			//add add-ons to menu
             foreach( $sorted_addons as $sorted_addon ) {
                 $setting_tabs[] = array(
-                    "name" => urlencode($sorted_addon["name"]) , 
+                    "name" => urlencode($sorted_addon["name"]) ,
                     "label" => __(esc_html( $sorted_addon["tab_label"] ), "gravityforms")
                     );
             }
 
 		}
-        
+
       	$setting_tabs[] = array("name" => "uninstall" , "label" => __("Uninstall", "gravityforms") );
 
         $setting_tabs = apply_filters("gform_settings_menu", $setting_tabs);
@@ -508,5 +512,3 @@ class GFSettings{
         return $subview;
     }
 }
-
-?>

@@ -1,5 +1,9 @@
 <?php
 
+if(!class_exists('GFForms')){
+    die();
+}
+
 class GFAddonLocking extends GFLocking {
     protected $_strings;
     protected $_addon;
@@ -31,5 +35,9 @@ class GFAddonLocking extends GFLocking {
 
     protected function get_object_id() {
         return $this->_addon->get_locking_object_id();
+    }
+
+    protected function is_object_locked($object_id){
+        return $this->is_object_locked($object_id);
     }
 }

@@ -1,4 +1,9 @@
 <?php
+
+if(!class_exists('GFForms')){
+    die();
+}
+
 class GFUpdate{
     public static function update_page(){
         if(!GFCommon::current_user_can_any("gravityforms_view_updates"))
@@ -76,4 +81,3 @@ class GFUpdate{
 
 
 }
-?>

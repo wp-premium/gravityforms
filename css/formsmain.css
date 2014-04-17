@@ -4,10 +4,10 @@
 Gravity Forms Front End Form Styles
 Version 1.8
 http: //www.gravityforms.com
-updated: December 12 2013, 12:07 PM
+updated: January 31, 2014 3:35 PM
 
 Gravity Forms is a Rocketgenius project
-copyright 2013 Rocketgenius Inc.
+copyright 2008-2014 Rocketgenius Inc.
 http: //www.rocketgenius.com
 this may not be redistributed without the
 express written permission of the author.
@@ -1325,7 +1325,7 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
 	background-image: -webkit-linear-gradient(center bottom, #EEE 0%, white 50%);
 	background-image: -moz-linear-gradient(center bottom, #EEE 0%, white 50%);
 	background-image: -o-linear-gradient(top, #EEE 0%,#FFF 50%);
-	background-image: -ms-linear-gradient(top, #EEE 0%,#FFF 50%); filter: progid: DXImageTransform.Microsoft.gradient( startColorstr='#EEE', endColorstr='#FFF',GradientType=0 );
+	background-image: -ms-linear-gradient(top, #EEE 0%,#FFF 50%); filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#EEE', endColorstr='#FFF',GradientType=0 );
 	background-image: linear-gradient(top, #EEE 0%,#FFF 50%);
 	-webkit-border-radius: 4px;
 	-moz-border-radius: 4px;
@@ -1367,7 +1367,7 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
 	background-image: -moz-linear-gradient(center bottom, #CCC 0%, #EEE 60%);
 	background-image: -o-linear-gradient(bottom, #CCC 0%, #EEE 60%);
 	background-image: -ms-linear-gradient(top, #CCC 0%,#EEE 60%);
-	filter: progid: DXImageTransform.Microsoft.gradient( startColorstr='#CCC', endColorstr='#EEE',GradientType=0 );
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#CCC', endColorstr='#EEE',GradientType=0 );
 	background-image: linear-gradient(top, #CCC 0%,#EEE 60%);
 	border-left: 1px solid #AAA;
 	position: absolute;
@@ -1426,7 +1426,7 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
 	background-image: -moz-linear-gradient(center bottom, white 85%, #EEE 99%);
 	background-image: -o-linear-gradient(bottom, white 85%, #EEE 99%);
 	background-image: -ms-linear-gradient(top, #FFF 85%,#EEE 99%);
-	filter: progid: DXImageTransform.Microsoft.gradient( startColorstr='#FFF', endColorstr='#EEE',GradientType=0 );
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#FFF', endColorstr='#EEE',GradientType=0 );
 	background-image: linear-gradient(top, #FFF 85%,#EEE 99%);
 	border: 1px solid #AAA;
 	margin: 0;
@@ -1478,7 +1478,7 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
 	background-image: -moz-linear-gradient(center bottom, #E4E4E4 0%, #EEE 70%);
 	background-image: -o-linear-gradient(bottom, #E4E4E4 0%, #EEE 70%);
 	background-image: -ms-linear-gradient(top, #E4E4E4 0%,#EEE 70%);
-	filter: progid: DXImageTransform.Microsoft.gradient( startColorstr='#E4E4E4', endColorstr='#EEE',GradientType=0 );
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#E4E4E4', endColorstr='#EEE',GradientType=0 );
 	background-image: linear-gradient(top, #E4E4E4 0%,#EEE 70%);
 	color: #333;
 	border: 1px solid #B4B4B4;
@@ -1509,7 +1509,7 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
 	background-repeat: no-repeat;
 }
 
-.gform_wrapper .chzn-container-multi .chzn-choices .search-choice .search-choice-close: hover {
+.gform_wrapper .chzn-container-multi .chzn-choices .search-choice .search-choice-close:hover {
 	background-position: right -9px;
 }
 
@@ -1594,7 +1594,7 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
 	background-image: -moz-linear-gradient(center bottom, white 0%, #EEE 50%);
 	background-image: -o-linear-gradient(bottom, white 0%, #EEE 50%);
 	background-image: -ms-linear-gradient(top, #FFF 0%,#EEE 50%);
-	filter: progid: DXImageTransform.Microsoft.gradient( startColorstr='#FFF', endColorstr='#EEE',GradientType=0 );
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#FFF', endColorstr='#EEE',GradientType=0 );
 	background-image: linear-gradient(top, #FFF 0%,#EEE 50%);
 	-webkit-border-bottom-left-radius : 0;
 	-webkit-border-bottom-right-radius: 0;

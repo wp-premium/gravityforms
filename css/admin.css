@@ -1400,6 +1400,16 @@ div.detail-note-content p {
 	line-height: 1.8;
 }
 
+div.detail-note-content.gforms_note_success{
+    background-color: #ECFCDE;
+    border: 1px solid #A7C886;
+
+}
+div.detail-note-content.gforms_note_error{
+    background-color: #FFEBE8;
+    border: 1px solid #CC0000;
+
+}
 /* edit details form styles ------------------------------------------------------*/
 
 #namediv_admin {
@@ -2582,13 +2592,6 @@ div#gravity-update-icon {
 
 div#gravity-title-icon {
 	background-position: 0 -350px;
-}
-
-div#publishing-action {
-	float: none !important;
-	text-align: left !important;
-	clear: both;
-	margin: 14px 0 5px
 }
 
 div#major-publishing-actions {

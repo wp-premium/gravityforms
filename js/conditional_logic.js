@@ -72,23 +72,29 @@ function gf_is_match(formId, rule){
     var inputs = jQuery("#input_" + formId + "_" + rule["fieldId"] + " input");
     var fieldValue;
     if(inputs.length > 0){
-        //handling checkboxes/radio
+    	//handling checkboxes/radio
 
         for(var i=0; i< inputs.length; i++){
             fieldValue = gf_get_value(jQuery(inputs[i]).val());
-
+        
             //find specific checkbox/radio item. Skip if this is not the specific item and the operator is not one that targets a range of values (i.e. greater than and less than)
             var isRangeOperator = jQuery.inArray(rule["operator"], ["<", ">", "contains", "starts_with", "ends_with"]) >= 0;
-            if(fieldValue != rule["value"] && !isRangeOperator)
+            if(fieldValue != rule["value"] && !isRangeOperator) {
                 continue;
-
+			}
+		
             //blank value if item isn't checked
-            if(!jQuery(inputs[i]).is(":checked"))
+            if(!jQuery(inputs[i]).is(":checked")) {
                 fieldValue = "";
+			}
+			else if (fieldValue == "gf_other_choice"){
+				//get the value from the associated text box
+				fieldValue = jQuery("#input_" + formId + "_" + rule["fieldId"] + "_other").val();
+			}
 
             if(gf_matches_operation(fieldValue, rule["value"], rule["operator"]))
                 isMatch = true;
-        }
+        }       
     }
     else{
         //handling all other fields (non-checkboxes)
@@ -99,17 +105,39 @@ function gf_is_match(formId, rule){
 
         var matchCount = 0;
 
-        var isCurrencyFormat = window['gf_global'] && gf_global.number_formats && gf_global.number_formats[formId] && gf_global.number_formats[formId][rule["fieldId"]] == 'currency';
+        var fieldNumberFormat = window['gf_global'] && gf_global.number_formats && gf_global.number_formats[formId] && gf_global.number_formats[formId][rule["fieldId"]] ? gf_global.number_formats[formId][rule["fieldId"]] : false;
 
         for(var i=0; i < values.length; i++){
+
+            //fields with pipes in the value will use the label for conditional logic comparison
+            var hasLabel = values[i] ? values[i].indexOf("|") >= 0 : true;
+
             fieldValue = gf_get_value(values[i]);
-            if(isCurrencyFormat){
-                var decimalSeparator = gformGetDecimalSeparator('currency');
+
+            var decimalSeparator = ".";
+            if( fieldNumberFormat && !hasLabel){
+
+                if( fieldNumberFormat == "currency" )
+                    decimalSeparator = gformGetDecimalSeparator('currency');
+                else if( fieldNumberFormat == "decimal_comma")
+                    decimalSeparator = ",";
+                else if( fieldNumberFormat == "decimal_dot")
+                    decimalSeparator = ".";
+
+                //transform to a decimal dot number
                 fieldValue = gformCleanNumber( fieldValue, '', '', decimalSeparator);
+
+                //now transform to number specified by locale
+                if(window['gf_number_format'] && window['gf_number_format'] == "decimal_comma")
+                    fieldValue = gformFormatNumber(fieldValue, -1, ",", ".");
+
                 if( ! fieldValue )
                     fieldValue = 0;
+
                 fieldValue = fieldValue.toString();
             }
+
+
 
             if(gf_matches_operation(fieldValue, rule["value"], rule["operator"])){
                 matchCount++;
@@ -320,10 +348,17 @@ function gf_reset_to_default(targetId, defaultValue){
         //if value changed, trigger click event
         if(isChecked != doCheck){
             //setting input as checked or unchecked appropriately
-            jQuery(this).prop("checked", doCheck);
 
-            //need to set the prop again after the click is triggered
-            jQuery(this).trigger('click').prop('checked', doCheck);
+            if(jQuery(this).attr("type") == "checkbox"){
+                jQuery(this).trigger('click');
+            }
+            else{
+                jQuery(this).prop("checked", doCheck);
+
+                //need to set the prop again after the click is triggered
+                jQuery(this).trigger('click').prop('checked', doCheck);
+            }
+
         }
     });
 

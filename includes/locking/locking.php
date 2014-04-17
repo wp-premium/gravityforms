@@ -1,5 +1,9 @@
 <?php
 
+if(!class_exists('GFForms')){
+    die();
+}
+
 require_once("class-gf-locking.php");
 
 class GFFormLocking extends GFLocking {

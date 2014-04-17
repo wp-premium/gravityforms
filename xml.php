@@ -1,4 +1,8 @@
 <?php
+if(!class_exists('GFForms')){
+    die();
+}
+
 class RGXML{
     private $options = array();
 
@@ -119,7 +123,7 @@ class RGXML{
         if(is_array($children)){
             //if all children have the same tag, add them as regular array items (not associative)
             $is_identical_tags = $this->has_identical_tags($children);
-            $unserialize_as_array = $is_identical_tags 
+            $unserialize_as_array = $is_identical_tags
                                     && isset($children[0]["tag"])
                                     && isset($this->options[$children[0]["tag"]])
                                     && $this->options[$children[0]["tag"]]["unserialize_as_array"];
@@ -218,4 +222,3 @@ function rgar($array, $name){
 }
 }
 
-?>

@@ -19,9 +19,9 @@ table#gquiz-results-summary td.gquiz-results-summary-data {
 }
 
 .gquiz-results-summary-data-box {
-    border: 1px solid silver;
-    padding: 10px;
     width: 75%;
+    padding: 15px 0;
+    min-width: 0;
     margin: auto;
 }
 
@@ -37,7 +37,7 @@ table#gquiz-results-summary td.gquiz-results-summary-data {
 
 .gquiz-field-precentages-correct {
     float: left;
-    margin: 15px 0 0 50px;
+    margin: 8px 0 0 64px;
 }
 
 /* -------------------------------------*/
@@ -85,8 +85,8 @@ table#gaddon-results-summary td.gaddon-results-summary-data {
 }
 
 .gresults-results-field-label {
-    font-size:1.2em;
-    margin-bottom:10px;
+    font-size: 1.2em;
+    padding: 0 0 14px;
 }
 
 .gresults-results-field table{
@@ -251,3 +251,15 @@ td.gresults-rank-field-rank{
 .gsurvey-likert-score{
     margin-top:5px;
 }
+
+/* NEW */
+
+#gquiz-results-summary { margin: 60px 0; }
+
+.gresults-chart-wrapper { border-top: 1px solid #dfdfdf; margin: 0 0 28px; }
+    .gquiz-field-precentages-correct + .gresults-chart-wrapper { margin: 0 0 14px; }
+
+.gresults-label-group { display: block; clear: right; }
+.gresults-label-group .gresults-label { display: inline-block; width: 65px; }
+.gresults-group-correct .gresults-value { color: green; }
+.gresults-group-incorrect .gresults-value { color: red; }
