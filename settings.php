@@ -253,14 +253,14 @@ class GFSettings{
                    <th scope="row"><label for="gforms_captcha_public_key"><?php _e("reCAPTCHA Public Key", "gravityforms"); ?></label>  <?php gform_tooltip("settings_recaptcha_public") ?></th>
                     <td>
                         <input type="text" name="gforms_captcha_public_key" style="width:350px;" value="<?php echo get_option("rg_gforms_captcha_public_key") ?>" /><br />
-                        <span class="gf_settings_description"><?php _e("Required only if you decide to use the reCAPTCHA field.", "gravityforms"); ?> <?php printf(__("%sSign up%s for a free account to get the key.", "gravityforms"), '<a target="_blank" href="http://www.google.com/recaptcha/whyrecaptcha">', '</a>'); ?></span>
+                        <span class="gf_settings_description"><?php _e("Required only if you decide to use the reCAPTCHA field.", "gravityforms"); ?> <?php printf(__("%sSign up%s for a free account to get the key.", "gravityforms"), '<a target="_blank" href="http://www.google.com/recaptcha">', '</a>'); ?></span>
                     </td>
                 </tr>
                 <tr valign="top">
                    <th scope="row"><label for="gforms_captcha_private_key"><?php _e("reCAPTCHA Private Key", "gravityforms"); ?></label>  <?php gform_tooltip("settings_recaptcha_private") ?></th>
                     <td>
                         <input type="text" name="gforms_captcha_private_key" style="width:350px;" value="<?php echo esc_attr(get_option("rg_gforms_captcha_private_key")) ?>" /><br />
-                        <span class="gf_settings_description"><?php _e("Required only if you decide to use the reCAPTCHA field.", "gravityforms"); ?> <?php printf(__("%sSign up%s for a free account to get the key.", "gravityforms"), '<a target="_blank" href="http://www.google.com/recaptcha/whyrecaptcha">', '</a>'); ?></span>
+                        <span class="gf_settings_description"><?php _e("Required only if you decide to use the reCAPTCHA field.", "gravityforms"); ?> <?php printf(__("%sSign up%s for a free account to get the key.", "gravityforms"), '<a target="_blank" href="http://www.google.com/recaptcha">', '</a>'); ?></span>
                     </td>
                 </tr>
 
@@ -395,8 +395,7 @@ class GFSettings{
             'Referer' => get_bloginfo("url")
         );
 
-        $request_url = GRAVITY_MANAGER_URL . "/api.php?op=upgrade_message&key=" . GFCommon::get_key();
-        $raw_response = wp_remote_request($request_url, $options);
+        $raw_response = GFCommon::post_to_manager("api.php", "op=upgrade_message&key=" . GFCommon::get_key(), $options);
 
         if ( is_wp_error( $raw_response ) || 200 != $raw_response['response']['code'] )
             $message = "";

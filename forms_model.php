@@ -816,10 +816,14 @@ class GFFormsModel {
 
     }
 
-    public static function update_form_meta($form_id, $form_meta, $meta_name="display_meta"){
+    public static function update_form_meta( $form_id, $form_meta, $meta_name = 'display_meta' ) {
         global $wpdb;
+
+        $form_meta = apply_filters( 'gform_form_update_meta', $form_meta, $form_id, $meta_name );
+        $form_meta = apply_filters( "gform_form_update_meta_{$form_id}", $form_meta, $form_id, $meta_name );
+
         $meta_table_name = self::get_meta_table_name();
-        $form_meta = json_encode($form_meta);
+        $form_meta = json_encode( $form_meta );
 
         if(intval($wpdb->get_var($wpdb->prepare("SELECT count(0) FROM $meta_table_name WHERE form_id=%d", $form_id))) > 0)
             $result = $wpdb->query( $wpdb->prepare("UPDATE $meta_table_name SET $meta_name=%s WHERE form_id=%d", $form_meta, $form_id) );
@@ -828,8 +832,8 @@ class GFFormsModel {
 
         self::$_current_forms[$form_id] = null;
 
-        add_action( 'gform_after_update_form_meta', $form_meta, $form_id, $meta_name );
-        add_action( "gform_after_update_form_meta_{$form_id}", $form_meta, $form_id, $meta_name );
+        do_action( 'gform_post_update_form_meta', $form_meta, $form_id, $meta_name );
+        do_action( "gform_post_update_form_meta_{$form_id}", $form_meta, $form_id, $meta_name );
 
         return $result;
     }

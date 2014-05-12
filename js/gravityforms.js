@@ -1168,7 +1168,9 @@ var gform = {
         });
 
         gfMultiFileUploader.toggleDisabled = function (settings, disabled){
-            $("#" + settings.browse_button).prop("disabled", disabled);
+
+            var button = typeof settings.browse_button == "string" ? $("#" + settings.browse_button) : $(settings.browse_button);
+            button.prop("disabled", disabled);
         }
 
         function addMessage(messagesID, message){

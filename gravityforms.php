@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms
 Plugin URI: http://www.gravityforms.com
 Description: Easily create web forms and manage form entries within the WordPress admin.
-Version: 1.8.7.2
+Version: 1.8.7.11
 Author: rocketgenius
 Author URI: http://www.rocketgenius.com
 Text Domain: gravityforms
@@ -73,6 +73,9 @@ define("GF_SUPPORTED_WP_VERSION", version_compare(get_bloginfo("version"), GF_MI
 if(!defined("GRAVITY_MANAGER_URL"))
     define("GRAVITY_MANAGER_URL", "http://www.gravityhelp.com/wp-content/plugins/gravitymanager");
 
+if(!defined("GRAVITY_MANAGER_PROXY_URL"))
+    define('GRAVITY_MANAGER_PROXY_URL', 'http://proxy.gravityplugins.com');
+
 require_once( plugin_dir_path( __FILE__ ). '/common.php');
 require_once( plugin_dir_path( __FILE__ ). '/forms_model.php');
 require_once( plugin_dir_path( __FILE__ ). '/widget.php');
@@ -102,7 +105,7 @@ if(is_admin() && (RGForms::is_gravity_page() || RGForms::is_gravity_ajax_action(
 
 class GFForms {
 
-    public static $version = '1.8.7.2';
+    public static $version = '1.8.7.11';
 
     public static function has_members_plugin(){
         return function_exists( 'members_get_capabilities' );
@@ -1269,8 +1272,7 @@ class GFForms {
             'Referer' => get_bloginfo("url")
         );
 
-        $raw_response = wp_remote_request(GRAVITY_MANAGER_URL . "/changelog.php?" . GFCommon::get_remote_request_params(), $options);
-
+       $raw_response = GFCommon::post_to_manager("changelog.php", GFCommon::get_remote_request_params(), $options);
         if ( is_wp_error( $raw_response ) || 200 != $raw_response['response']['code']){
             $page_text = __("Oops!! Something went wrong.<br/>Please try again or <a href='http://www.gravityforms.com'>contact us</a>.", 'gravityforms');
         }
@@ -1702,8 +1704,7 @@ class GFForms {
         $body = array("plugins" => urlencode(serialize($installed_plugins)), "nonces" => urlencode(serialize($nonces)), "key" => GFCommon::get_key());
         $options = array('body' => $body, 'headers' => array('Referer' => get_bloginfo("url")), 'timeout' => 15);
 
-        $request_url = GRAVITY_MANAGER_URL . "/api.php?op=plugin_browser&{$_SERVER["QUERY_STRING"]}";
-        $raw_response = wp_remote_post($request_url, $options);
+        $raw_response = GFCommon::post_to_manager("api.php", "op=plugin_browser&{$_SERVER["QUERY_STRING"]}", $options);
 
          if ( is_wp_error( $raw_response ) || $raw_response['response']['code'] != 200){
             echo "<div class='error' style='margin-top:50px; padding:20px;'>" . __("Add-On browser is currently unavailable. Please try again later.", "gravityforms") . "</div>";
@@ -1716,8 +1717,7 @@ class GFForms {
 
     public static function get_addon_info($api, $action, $args){
         if($action == "plugin_information" && empty($api) && !rgempty("rg", $_GET)){
-            $request_url = GRAVITY_MANAGER_URL . "/api.php?op=get_plugin&slug={$args->slug}";
-            $raw_response = wp_remote_post($request_url);
+            $raw_response = GFCommon::post_to_manager("api.php", "op=get_plugin&slug={$args->slug}", $options);
 
             if ( is_wp_error( $raw_response ) || $raw_response['response']['code'] != 200)
                 return false;
@@ -1733,8 +1733,7 @@ class GFForms {
     }
 
     public static function get_addon_nonces(){
-        $request_url = GRAVITY_MANAGER_URL . "/api.php?op=get_plugins";
-        $raw_response = wp_remote_get($request_url);
+        $raw_response = GFCommon::post_to_manager("api.php", "op=get_plugins", array());
 
         if ( is_wp_error( $raw_response ) || $raw_response['response']['code'] != 200)
             return false;

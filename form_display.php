@@ -1281,14 +1281,19 @@ class GFFormDisplay{
                             // the POST value has already been converted from currency or decimal_comma to decimal_dot and then cleaned in get_field_value()
 
                             $value = GFCommon::maybe_add_leading_zero($value);
+                            $raw_value = $_POST["input_" . $field["id"]]; //Raw value will be tested against the is_numeric() function to make sure it is in the right format.
 
-                            if(!rgblank($value) && !self::validate_range($field, $value) && !GFCommon::has_field_calculation($field)) {
+                            $requires_valid_number = !rgblank($raw_value) && !GFCommon::has_field_calculation($field);
+                            $is_valid_number = self::validate_range($field, $value) && GFCommon::is_numeric($raw_value, $field["numberFormat"]);
+
+                            if( $requires_valid_number && !$is_valid_number ) {
                                 $field["failed_validation"] = true;
                                 $field["validation_message"] = empty($field["errorMessage"]) ? GFCommon::get_range_message($field) : $field["errorMessage"];
                             }
                             else if($field["type"] == "quantity" && intval($value) != $value){
                                 $field["failed_validation"] = true;
                                 $field["validation_message"] = empty($field["errorMessage"]) ? __("Please enter a valid quantity. Quantity cannot contain decimals.", "gravityforms") : $field["errorMessage"];
+
                             }
 
                         break;
@@ -1515,7 +1520,7 @@ class GFFormDisplay{
                                 $field["failed_validation"] = true;
                                 $field["validation_message"] = rgempty("errorMessage", $field) ? __("This field is required.", "gravityforms") : rgar($field, "errorMessage");
                             }
-                            else if(!empty($quantity) && (!is_numeric($quantity) || intval($quantity) != floatval($quantity)) ) {
+                            else if(!empty($quantity) && (!is_numeric($quantity) || intval($quantity) != floatval($quantity) || intval($quantity) < 0) ) {
                                 $field["failed_validation"] = true;
                                 $field["validation_message"] = __("Please enter a valid quantity", "gravityforms");
                             }
@@ -2077,6 +2082,7 @@ class GFFormDisplay{
     public static function get_chosen_init_script($form){
         $chosen_fields = array();
         foreach($form["fields"] as $field){
+            $input_type = GFFormsModel::get_input_type($field);
             if(rgar($field, "enableEnhancedUI") && in_array($input_type, array("select", "multiselect")))
                 $chosen_fields[] = "#input_{$form["id"]}_{$field["id"]}";
         }
