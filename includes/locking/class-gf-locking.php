@@ -27,7 +27,6 @@ abstract class GFLocking {
         $this->_object_type  = $object_type;
         $this->_redirect_url = $redirect_url;
         $this->_capabilities = $capabilities;
-
         if (defined('DOING_AJAX') && DOING_AJAX) {
             $this->init_ajax();
         } else {
@@ -278,7 +277,7 @@ abstract class GFLocking {
         } else {
             $user = get_userdata($lock_holder_user_id);
             $this->update_lock_request_meta($object_id, $user_id);
-            $result["html"]   = sprintf(__("%s has been notified of your request", "gravityforms"), $user->display_name);
+            $result["html"]   = sprintf(__("Your request has been sent to %s.", "gravityforms"), $user->display_name);
             $result["status"] = "lock_requested";
         }
 
@@ -294,7 +293,7 @@ abstract class GFLocking {
     }
 
     protected function update_lock_meta($object_id, $lock_value) {
-        GFCache::set(self::PREFIX_EDIT_LOCK . $this->_object_type . "_" . $object_id, $lock_value, true, 90);
+        GFCache::set(self::PREFIX_EDIT_LOCK . $this->_object_type . "_" . $object_id, $lock_value, true, 150);
     }
 
     protected function update_lock_request_meta($object_id, $lock_request_value) {

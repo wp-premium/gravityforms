@@ -32,6 +32,7 @@ class GFCommon{
         if($number_format == "currency"){
 
             $number_format = self::is_currency_decimal_dot() ? "decimal_dot" : "decimal_comma";
+            $value = self::remove_currency_symbol($value);
         }
 
         switch($number_format){
@@ -47,6 +48,21 @@ class GFCommon{
                 return preg_match("/^(-?[0-9]{1,3}(?:,?[0-9]{3})*(?:\.[0-9]{2})?)$/", $value) || preg_match("/^(-?[0-9]{1,3}(?:\.?[0-9]{3})*(?:,[0-9]{2})?)$/", $value);
 
         }
+    }
+
+    public static function remove_currency_symbol($value, $currency = null){
+        if($currency == null){
+            $code = GFCommon::get_currency();
+            if(empty($code))
+                $code = "USD";
+
+            $currency = RGCurrency::get_currency($code);
+        }
+
+        $value = str_replace($currency["symbol_left"], "", $value);
+        $value = str_replace($currency["symbol_right"], "", $value);
+
+        return $value;
     }
 
     public static function is_currency_decimal_dot($currency = null){
@@ -1752,8 +1768,7 @@ class GFCommon{
             'User-Agent' => 'WordPress/' . get_bloginfo("version"),
             'Referer' => get_bloginfo("url")
         );
-        $request_url = GRAVITY_MANAGER_URL . "/api.php?op=get_key&key={$key}";
-        $raw_response = wp_remote_request($request_url, $options);
+       $raw_response = self::post_to_manager("api.php", "op=get_key&key={$key}", $options);
         if ( is_wp_error( $raw_response ) || $raw_response['response']['code'] != 200)
             return array();
 
@@ -1778,10 +1793,9 @@ class GFCommon{
             $options['body'] = self::get_remote_post_params();
             $options['timeout'] = 15;
 
-            $nocache = $cache ? "" : "?nocache=1"; //disabling server side caching
-            $request_url = GRAVITY_MANAGER_URL . "/version.php{$nocache}";
-
-            $raw_response = wp_remote_request($request_url, $options);
+            $nocache = $cache ? "" : "nocache=1"; //disabling server side caching
+            
+            $raw_response = self::post_to_manager("version.php", $nocache, $options);
 
             //caching responses.
             set_transient("gform_update_info", $raw_response, 86400); //caching for 24 hours
@@ -1898,8 +1912,7 @@ class GFCommon{
             'Referer' => get_bloginfo("url")
         );
 
-        $request_url = GRAVITY_MANAGER_URL . "/message.php?" . GFCommon::get_remote_request_params();
-        $raw_response = wp_remote_request($request_url, $options);
+        $raw_response = self::post_to_manager("message.php", GFCommon::get_remote_request_params(), $options);
 
         if ( is_wp_error( $raw_response ) || 200 != $raw_response['response']['code'] )
             $message = "";
@@ -1911,6 +1924,19 @@ class GFCommon{
             $message = "";
 
         update_option("rg_gforms_message", $message);
+    }
+
+    public static function post_to_manager($file, $query, $options){
+
+        $request_url = GRAVITY_MANAGER_URL . "/" . $file . "?" . $query;
+        $raw_response = wp_remote_post($request_url, $options);
+
+        if ( is_wp_error( $raw_response ) || 200 != $raw_response['response']['code'] ){
+            $request_url = GRAVITY_MANAGER_PROXY_URL . "/proxy.php?f=" . $file . "&" . $query;
+            $raw_response = wp_remote_post($request_url, $options);
+        }
+
+        return $raw_response;
     }
 
     public static function get_local_timestamp($timestamp = null){
@@ -3689,7 +3715,7 @@ class GFCommon{
                         $privatekey = get_option("rg_gforms_captcha_private_key");
                         if(IS_ADMIN){
                             if(empty($publickey) || empty($privatekey)){
-                                return "<div class='captcha_message'>" . __("To use the reCaptcha field you must first do the following:", "gravityforms") . "</div><div class='captcha_message'>1 - <a href='http://www.google.com/recaptcha/whyrecaptcha' target='_blank'>" . sprintf(__("Sign up%s for a free reCAPTCHA account", "gravityforms"), "</a>") . "</div><div class='captcha_message'>2 - " . sprintf(__("Enter your reCAPTCHA keys in the %ssettings page%s", "gravityforms"), "<a href='?page=gf_settings'>", "</a>") . "</div>";
+                                return "<div class='captcha_message'>" . __("To use the reCaptcha field you must first do the following:", "gravityforms") . "</div><div class='captcha_message'>1 - <a href='http://www.google.com/recaptcha' target='_blank'>" . sprintf(__("Sign up%s for a free reCAPTCHA account", "gravityforms"), "</a>") . "</div><div class='captcha_message'>2 - " . sprintf(__("Enter your reCAPTCHA keys in the %ssettings page%s", "gravityforms"), "<a href='?page=gf_settings'>", "</a>") . "</div>";
                             }
                             else{
                                 return "<div class='ginput_container'><img class='gfield_captcha' src='" . GFCommon::get_base_url() . "/images/captcha_$theme.jpg' alt='reCAPTCHA' title='reCAPTCHA'/></div>";

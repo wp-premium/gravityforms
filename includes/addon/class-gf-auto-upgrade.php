@@ -158,8 +158,7 @@ class GFAutoUpgrade{
             'Referer' => get_bloginfo("url")
         );
 
-        $raw_response = wp_remote_request(GRAVITY_MANAGER_URL . "/changelog.php?" . $this->get_remote_request_params($this->_slug, $key, $this->_version), $options);
-
+        $raw_response = GFCommon::post_to_manager("changelog.php", $this->get_remote_request_params($this->_slug, $key, $this->_version), $options);
         if ( is_wp_error( $raw_response ) || 200 != $raw_response['response']['code']){
             $page_text = sprintf(__("Oops!! Something went wrong.%sPlease try again or %scontact us%s.", 'gravityforms'), "<br/>", "<a href='http://www.gravityforms.com'>", "</a>");
         }

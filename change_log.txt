@@ -1,4 +1,73 @@
 -------------------------------------------------------------------------------------------------------------------
+Version 1.8.7.11
+    - Fixed issue with quantity of single product fields allowing negative values to be entered
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.7.10
+    - Fixed issue with number field validation
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.7.9	
+	- AF: Added more logging statements to the Payment Add-On
+	- AF: Added the function is_callback_valid which can be overwritten for use by Payment plugins for the Payment Add-On
+	- AF: Added entry and action objects to be passed as parameters for custom events for the Payment Add-On
+	- AF: Updated logging to go to the plugins log instead of Gravity Forms' log for the Payment Add-on
+	- AF: Updated to remove caching the feed in the Payment Add-On
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.7.8
+    - Fixed issue with multi-file upload field throwing javascript errors when the number of files uploaded reached the max files setting
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.7.7
+    - Fixed issue with Addon Browser not recognizing valid licenses
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.7.6
+    - Fixed notice in GFFormDisplay::get_chosen_init_script() where $input_type was not defined
+    - Updated the Locking API to use a Heartbeat interval of 30 seconds as standard and 5 seconds while waiting for the response to a control request. The lock timeout is now 150 seconds - equivalent to Posts and Pages.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.7.5
+    - Added support for Proxy to resolve issues with sites on blacklisted IPs not being able to access the Gravity Help API
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.7.4
+    - Fixed issue where selecting option from bulk choice menu scrolled page to top
+    - Updated links to sign up page for reCAPTCHA
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.7.3
+    - Added 'gform_export_form' hook to allow modification of the form meta before export
+        add_filter( 'gform_export_form', 'modify_form_for_export' );
+        function modify_form_for_export( $form ) {
+            $form['exported'] = true;
+            return $form;
+        }
+    - Added 'gform_export_options' hook to allow adding custom export options
+        add_filter( 'gform_export_options', 'my_export_options', 10, 2 );
+        function my_export_options( $options, $forms ) {
+            $options["forms/form/myCustomProperty/id"] = array( 'is_attribute' => true );
+            return $options;
+        }
+    - Added 'gform_form_update_meta' hook to allow modifying form meta before it is saved to the database
+        add_filter( 'gform_form_update_meta', 'my_import_form', 10, 3 );
+        function my_import_form( $meta, $form_id, $meta_name ) {
+
+            $is_import_page           = GFForms::get_page() == 'import_form';
+            $is_updating_display_meta = $meta_name == 'display_meta';
+
+            if( ! $is_import_page || ! $is_updating_display_meta )
+                return $meta;
+
+            $form = $meta;
+            $form['isImported'] = true;
+
+            return $form;
+        }
+    - Updated name of "gform_before_update_form_meta" hook to "gform_post_update_form_meta" and changed from "add_action" to "do_action"
+
+-------------------------------------------------------------------------------------------------------------------
 Version 1.8.7.2
     - Fixed issue with chosen script throwing javascript errors on certain situations
 

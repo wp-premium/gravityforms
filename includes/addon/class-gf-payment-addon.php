@@ -449,17 +449,14 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
     }
 
     public function get_payment_feed( $entry, $form = false ) {
-
-        $submission_feed = GFCache::get( 'payment_feed' );
-
-        if( ! $submission_feed ) {
+            $submission_feed = false;
 
             if( $entry['id'] ) {
                 $feeds = $this->get_feeds_by_entry( $entry['id'] );
                 $submission_feed = $this->get_feed( $feeds[0] );
             }
             else if( $form ) {
-                // getting all active feeds
+                // getting all feeds
                 $feeds =  $this->get_feeds( $form['id'] );
 
                 foreach ( $feeds as $feed ) {
@@ -470,14 +467,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
                 }
             }
 
-            // if called without $form, there is assumption that cache has already been set; let's avoid issues where the cache has not been set and form was not provided
-            // so that the cache will only be set when an $entry and $form object are provided
-            if( $entry && $form )
-                GFCache::set( 'payment_feed', $submission_feed );
-
-        }
-
-        return $submission_feed;
+        	return $submission_feed;
     }
 
     protected function is_payment_gateway($entry_id){
@@ -590,22 +580,30 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
         return array("payment_amount" => $amount, "setup_fee" => $fee_amount, "trial" => $trial_amount, "line_items" => $line_items, "discounts" => $discounts);
     }
 
+    protected function is_callback_valid(){
+		if( rgget( 'callback' ) != $this->_slug) {
+            return false;
+		}
+		return true;
+    }
+
 
     //--------- Callback (aka Webhook)----------------
 
     public function maybe_process_callback() {
 
         // ignoring requests that are not this addon's callbacks
-        if( rgget( 'callback' ) != $this->_slug )
+        if (!$this->is_callback_valid()){
             return;
+        }
 
         // returns either false or an array of data about the callback request which payment add-on will then use
         // to generically process the callback data
-        GFCommon::log_debug("Initialing callback processing for: " . $this->_slug);
+        $this->log_debug("Initializing callback processing for: " . $this->_slug);
 
         $result = $this->callback();
 
-        GFCommon::log_debug("Result from gateway callback: " . print_r($result, true));
+        $this->log_debug("Result from gateway callback: " . print_r($result, true));
 
         if( is_array( $result ) && rgar( $result, 'type' ) ) {
             $result = $this->process_callback_action( $result );
@@ -649,7 +647,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
      * @return [type]       [description]
      */
     private function process_callback_action( $action ) {
-        GFCommon::log_debug("Processing callback action: " . print_r($action, true));
+        $this->log_debug("Processing callback action: " . print_r($action, true));
         $action = wp_parse_args( $action, array(
             'type' => false,
             'amount' => false,
@@ -690,12 +688,13 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
             break;
         default:
             // handle custom events
-            if( is_callable( array( $this, rgar( $action, 'callback' ) ) ) )
-                $result = call_user_func( array( $this, $action['callback'] ) );
+			if (is_callable(array($this, rgar($action, 'callback')))){
+                $result = call_user_func_array(array( $this, $action['callback']),array($entry, $action));
+			}
             break;
         }
 
-        GFCommon::log_debug("Callback action successfull? {$result}");
+        $this->log_debug("Callback action successful? {$result}");
 
         if(rgar($action, "id") && $result){
             $this->register_callback($action["id"], $action['entry_id']);
@@ -747,7 +746,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
     }
 
     public function refund_payment( $entry, $action ) {
-
+		$this->log_debug("Processing a Refund request.");
         if( ! $action['payment_status'] )
             $action['payment_status'] = 'Refunded';
 
@@ -833,12 +832,12 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
     }
 
     public function cancel_subscription( $entry, $feed, $note = null ) {
-
+		$this->log_debug("Cancelling subscription");
         if( !$note )
             $note = sprintf( __( 'Subscription has been cancelled. Subscription Id: %s.', 'gravityforms' ), $entry['transaction_id'] );
 
         if( strtolower( $entry['payment_status'] ) == 'cancelled' ) {
-            $this->log( 'Subscription is already canceled.' );
+            $this->log_debug( 'Subscription is already canceled.' );
             return false;
         }
 
@@ -846,7 +845,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
         $this->modify_post( rgar( $entry, 'post_id' ), rgars( $feed, 'meta/update_post_action' ) );
         $this->add_note( $entry['id'], $note );
 
-        // include $subscriber_id as 3rd parameter for backwards compatability
+        // include $subscriber_id as 3rd parameter for backwards compatibility
         do_action( 'gform_subscription_canceled', $entry, $feed, $entry['transaction_id'] );
 
         return true;
@@ -952,6 +951,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
                         "name" => "feedName",
                         "label" => __("Name", "gravityforms"),
                         "type" => "text",
+                        "class" => "medium",
                         "required" => true
                     ),
                     array(
@@ -1108,7 +1108,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
     public function settings_setup_fee( $field, $echo = true ) {
 
         $enabled_field = array(
-        	"name" => $field["name"],
+        	"name" => $field["name"] . "_checkbox",
             "type" => "checkbox",
             "horizontal" => true,
             "choices" => array(
@@ -1150,7 +1150,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
         //--- Enabled field ---
         $enabled_field = array(
-        	"name" => $field["name"],
+        	"name" => $field["name"] . "_checkbox",
             "type" => "checkbox",
             "horizontal" => true,
             "choices" => array(
@@ -1824,11 +1824,11 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
             $post = get_post( $post_id );
             $post->post_status = 'draft';
             $result = wp_update_post( $post );
-            $this->log( "Set post (#{$post_id}) status to \"draft\"." );
+            $this->log_debug( "Set post (#{$post_id}) status to \"draft\"." );
             break;
         case 'delete':
             $result = wp_delete_post( $post_id );
-            $this->log( "Deleted post (#{$post_id})." );
+            $this->log_debug( "Deleted post (#{$post_id})." );
             break;
         }
 
@@ -1844,11 +1844,6 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
         GFFormsModel::add_note( $entry_id, $user_id, $user_name, $note, $note_type );
 
     }
-
-    public function log( $message ) {
-        // log it!
-    }
-
 }
 
 if( ! class_exists( 'WP_List_Table' ) )

@@ -2,6 +2,7 @@
     var objectID, objectType;
 
     $(document).ready( function() {
+
         objectID = gflockingVars.objectID;
         objectType = gflockingVars.objectType;
         gflocking.init();
@@ -12,6 +13,7 @@
     };
 
     function initHeartbeat() {
+        wp.heartbeat.interval( 30 );
         var checkLocksKey = 'gform-check-locked-objects-' + objectType;
         $( document ).on( 'heartbeat-tick.' + checkLocksKey, function( e, data ) {
             var locked = data[checkLocksKey] || {};
