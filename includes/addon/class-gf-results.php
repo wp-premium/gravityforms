@@ -839,7 +839,12 @@ if (!class_exists("GFResults")) {
                 foreach ($leads as $lead) {
 
                     $value   = RGFormsModel::get_lead_field_value($lead, $field);
+
                     $content = apply_filters("gform_entries_field_value", $value, $form_id, $field["id"], $lead);
+
+                    if(is_array($content)){
+                        $content = join(" ", $content);
+                    }
 
                     if (!empty($content)) {
                         $field_results .= "<li>{$content}</li>";

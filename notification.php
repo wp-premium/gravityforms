@@ -47,12 +47,18 @@ Class GFNotification {
         if(rgpost("save")){
 
             check_admin_referer('gforms_save_notification', 'gforms_save_notification');
+            
+            //clear out notification because it could have legacy data populated
+            $notification = array();
 
             $is_update = true;
 
             if($is_new_notification){
                 $notification_id = uniqid();
                 $notification["id"] = $notification_id;
+            }
+            else {
+				$notification["id"] = $notification_id;
             }
 
             $notification["name"] = rgpost("gform_notification_name");

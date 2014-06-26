@@ -26,7 +26,7 @@ abstract class GFFeedAddOn extends GFAddOn {
 
         parent::init_frontend();
 
-        add_action( 'gform_entry_post_save', array( $this, 'maybe_process_feed' ), 10, 2 );
+        add_filter( 'gform_entry_post_save', array( $this, 'maybe_process_feed' ), 10, 2 );
 
     }
 
@@ -129,7 +129,7 @@ abstract class GFFeedAddOn extends GFAddOn {
                 $this->process_feed( $feed, $entry, $form );
                 $processed_feeds[] = $feed["id"];
             } else {
-                self::log_debug( "Opt-in condition not met; not fulfilling entry {$entry["id"]} to list" );
+                $this->log_debug( "Opt-in condition not met; not fulfilling entry {$entry["id"]} to list" );
             }
         }
 
@@ -191,11 +191,6 @@ abstract class GFFeedAddOn extends GFAddOn {
     public function get_feeds( $form_id = null ){
         global $wpdb;
 
-        $cache_key = implode( '_', array_filter( array( $this->_slug, 'get_feeds', $form_id ) ) );
-        $feeds = GFCache::get( $cache_key );
-        if( is_array( $feeds ) )
-            return $feeds;
-
         $form_filter = is_numeric($form_id) ? $wpdb->prepare("AND form_id=%d", absint($form_id)) : "";
 
         $sql = $wpdb->prepare("SELECT * FROM {$wpdb->prefix}gf_addon_feed
@@ -205,8 +200,6 @@ abstract class GFFeedAddOn extends GFAddOn {
         foreach($results as &$result){
             $result["meta"] = json_decode($result["meta"], true);
         }
-
-        GFCache::set( $cache_key, $results );
 
         return $results;
     }
@@ -799,8 +792,27 @@ abstract class GFFeedAddOn extends GFAddOn {
         return $total;
     }
 
-    protected function has_feed( $form_id ) {
-        return $this->get_feeds( $form_id ) != false;
+    protected function has_feed( $form_id, $meets_conditional_logic = null ) {
+
+        $feeds = $this->get_feeds($form_id);
+        if(!$feeds)
+            return false;
+
+        if($meets_conditional_logic){
+            $form = GFFormsModel::get_form_meta($form_id);
+            $entry = GFFormsModel::create_lead($form);
+
+            foreach($feeds as $feed){
+                if($this->is_feed_condition_met($feed, $form, $entry))
+                    return true;
+            }
+
+            //no active feed found, return false
+            return false;
+        }
+
+        //does not require that feed meets conditional logic. return true since there are feeds
+        return true;
     }
 
 }

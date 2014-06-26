@@ -62,6 +62,9 @@ class GFCommon{
         $value = str_replace($currency["symbol_left"], "", $value);
         $value = str_replace($currency["symbol_right"], "", $value);
 
+        //some symbols can't be easily matched up, so this will catch any of them
+        $value = preg_replace('/[^,.\d]/', "", $value);
+
         return $value;
     }
 
@@ -1023,7 +1026,8 @@ class GFCommon{
         $options_array = explode(",", $options);
         $no_admin = in_array("noadmin", $options_array);
         $no_hidden = in_array("nohidden", $options_array);
-        $has_product_fields = false;
+        $display_product_summary = false;
+
         foreach($form["fields"] as $field){
             $field_value = "";
 
@@ -1061,13 +1065,16 @@ class GFCommon{
 
                 default :
 
-                    //ignore product fields as they will be grouped together at the end of the grid
-                    if(self::is_product_field($field["type"])){
-                        $has_product_fields = true;
-                        continue;
+                    if( self::is_product_field( $field['type'] ) ) {
+
+                        // ignore product fields as they will be grouped together at the end of the grid
+                        $display_product_summary = apply_filters( 'gform_display_product_summary', true, $field, $form, $lead );
+                        if( $display_product_summary )
+                            continue;
+
                     }
-                    else if(RGFormsModel::is_field_hidden($form, $field, array(), $lead)){
-                        //ignore fields hidden by conditional logic
+                    else if( GFFormsModel::is_field_hidden( $form, $field, array(), $lead) ){
+                        // ignore fields hidden by conditional logic
                         continue;
                     }
 
@@ -1116,8 +1123,8 @@ class GFCommon{
             }
         }
 
-        if($has_product_fields)
-            $field_data .= self::get_submitted_pricing_fields($form, $lead, $format, $use_text, $use_admin_label);
+        if( $display_product_summary )
+            $field_data .= self::get_submitted_pricing_fields( $form, $lead, $format, $use_text, $use_admin_label );
 
         if($format == "html"){
             $field_data .='</table>
@@ -1884,7 +1891,7 @@ class GFCommon{
 
         $version = rgar($version_info, "version");
         //Empty response means that the key is invalid. Do not queue for upgrade
-        if(!$version_info["is_valid_key"] || version_compare(GFCommon::$version, $version, '>=')){
+        if(!rgar($version_info, "is_valid_key") || version_compare(GFCommon::$version, $version, '>=')){
             unset($option->response[$plugin_path]);
         }
         else{
@@ -4834,13 +4841,15 @@ class GFCommon{
     }
 
     public static function has_akismet(){
-        return function_exists('akismet_http_post');
+    	$akismet_exists = function_exists('akismet_http_post') || function_exists('Akismet::http_post');
+        return $akismet_exists;
     }
 
     public static function akismet_enabled($form_id) {
 
-        if(!self::has_akismet())
+        if(!self::has_akismet()){
             return false;
+		}
 
         // if no option is set, leave akismet enabled; otherwise, use option value true/false
         $enabled_by_setting = get_option('rg_gforms_enable_akismet') === false ? true : get_option('rg_gforms_enable_akismet') == true;
@@ -4856,8 +4865,14 @@ class GFCommon{
 
         $fields = self::get_akismet_fields($form, $lead);
 
-        //Submitting info do Akismet
-        $response = akismet_http_post($fields, $akismet_api_host, '/1.1/comment-check', $akismet_api_port );
+        //Submitting info to Akismet
+        if (defined("AKISMET_VERSION") && AKISMET_VERSION < 3.0 ) {
+        	//Akismet versions before 3.0
+        	$response = akismet_http_post($fields, $akismet_api_host, '/1.1/comment-check', $akismet_api_port );
+		}
+		else{
+			$response = Akismet::http_post($fields, 'comment-check');
+		}
         $is_spam = trim(rgar($response, 1)) == "true";
 
         return $is_spam;
@@ -4870,8 +4885,14 @@ class GFCommon{
         $fields = self::get_akismet_fields($form, $lead);
         $as = $is_spam ? "spam" : "ham";
 
-        //Submitting info do Akismet
-        akismet_http_post($fields, $akismet_api_host,  '/1.1/submit-'.$as, $akismet_api_port );
+        //Submitting info to Akismet
+        if (defined("AKISMET_VERSION") && AKISMET_VERSION < 3.0 ) {
+        	//Akismet versions before 3.0
+        	akismet_http_post($fields, $akismet_api_host,  '/1.1/submit-'.$as, $akismet_api_port );
+		}
+		else{
+			Akismet::http_post($fields, 'submit-'.$as);
+		}
     }
 
     private static function get_akismet_fields($form, $lead){
@@ -5830,6 +5851,22 @@ class GFCommon{
             return ! $is_equal;
         }
 
+    }
+
+    public static function encrypt( $text ) {
+
+        $iv_size = mcrypt_get_iv_size( MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB );
+        $key = substr( md5( wp_salt( 'nonce' ) ), 0, $iv_size );
+
+        return trim( base64_encode( mcrypt_encrypt( MCRYPT_RIJNDAEL_256, $key, $text, MCRYPT_MODE_ECB, mcrypt_create_iv( $iv_size, MCRYPT_RAND ) ) ) );
+    }
+
+    public static function decrypt( $text ) {
+
+        $iv_size = mcrypt_get_iv_size( MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB );
+        $key = substr( md5( wp_salt( 'nonce' ) ), 0, $iv_size );
+
+        return trim( mcrypt_decrypt( MCRYPT_RIJNDAEL_256, $key, base64_decode( $text ), MCRYPT_MODE_ECB, mcrypt_create_iv( $iv_size, MCRYPT_RAND ) ) );
     }
 
 }

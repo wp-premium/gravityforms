@@ -585,6 +585,9 @@ class GFFormsModel {
     }
 
     public static function update_lead($lead){
+
+        _deprecated_function("GFFormsModel::update_lead()", "1.8.8", "GFAPI::update_entry()");
+
         global $wpdb;
         $lead_table = self::get_lead_table_name();
 
@@ -781,6 +784,9 @@ class GFFormsModel {
 
         //copying confirmation meta
         self::update_form_meta($new_id, $confirmations, "confirmations");
+
+        do_action("gform_after_duplicate_form", $form_id, $new_id);
+
         return $new_id;
     }
 
@@ -1628,7 +1634,7 @@ class GFFormsModel {
                 $value[$field["id"] . ".7"] = self::get_input_value($field, "input_" . $field["id"] . "_7", $get_from_post);
             break;
             case "checkbox" :
-                $parameter_values = self::get_parameter_value($field["inputName"], $field_values, $field);
+                $parameter_values = self::get_parameter_value( rgar( $field, 'inputName' ), $field_values, $field);
                 if(!empty($parameter_values) && !is_array($parameter_values)){
                     $parameter_values = explode(",", $parameter_values);
                 }
@@ -2105,13 +2111,23 @@ class GFFormsModel {
 
             break;
 
+            case 'password':
+
+                $encrypt_password = apply_filters( 'gform_encrypt_password', false, $field, $form );
+                if( $encrypt_password ) {
+                    $value = GFCommon::encrypt( $value );
+                    self::set_encrypted_fields( $lead_id, $field['id'] );
+                }
+
+            break;
+
             default:
 
                 // only filter HTML on non-array based values
                 if( ! is_array( $value ) ) {
 
                     //allow HTML for certain field types
-                    $allow_html = in_array($field["type"], array("post_custom_field", "post_title", "post_content", "post_excerpt", "post_tags")) || in_array($input_type, array("checkbox", "radio")) ? true : false;
+                    $allow_html = in_array($field["type"], array("post_custom_field", "post_title", "post_content", "post_excerpt", "post_tags" )) || in_array($input_type, array("checkbox", "radio")) ? true : false;
                     $allowable_tags = apply_filters("gform_allowable_tags_{$form_id}", apply_filters("gform_allowable_tags", $allow_html, $field, $form_id), $field, $form_id);
 
                     if($allowable_tags !== true)
@@ -2536,7 +2552,7 @@ class GFFormsModel {
         //update post_id field if a post was created
         $lead["post_id"] = $post_id;
         GFCommon::log_debug("Updating entry.");
-        self::update_lead($lead);
+        self::update_lead_property($lead["id"], "post_id", $post_id);
 
         do_action( 'gform_after_create_post', $post_id );
 
@@ -3331,6 +3347,7 @@ class GFFormsModel {
 
         //running entry through gform_get_field_value filter
         foreach($leads as &$lead){
+
             foreach($form["fields"] as $field){
                 // skip types html, page and section?
                 if(isset($field["inputs"]) && is_array($field["inputs"])){
@@ -3338,9 +3355,15 @@ class GFFormsModel {
                         $lead[(string)$input["id"]] = apply_filters("gform_get_input_value", rgar($lead, (string)$input["id"]), $lead, $field, $input["id"]);
                     }
                 }
-                else{
+                else {
 
-                    $lead[$field["id"]] = apply_filters("gform_get_input_value", rgar($lead, (string)$field["id"]), $lead, $field, "");
+                    $value = rgar( $lead, (string) $field['id'] );
+
+                    if( self::is_encrypted_field( $lead['id'], $field['id'] ) )
+                        $value = GFCommon::decrypt( $value );
+
+                    $lead[$field["id"]] = apply_filters("gform_get_input_value", $value, $lead, $field, "" );
+
                 }
             }
         }
@@ -3602,7 +3625,8 @@ class GFFormsModel {
             return false;
 
         if(!self::$_current_lead) {
-            $form = self::get_form_meta(rgpost('gform_submit'));
+            $form_id = absint(rgpost('gform_submit'));
+            $form = self::get_form_meta($form_id);
             self::$_current_lead = self::create_lead($form);
         }
 
@@ -4345,6 +4369,33 @@ class GFFormsModel {
         }
         return $element;
     }
+
+    public static function get_encrypted_fields( $entry_id ) {
+
+        $encrypted_fields = gform_get_meta( $entry_id, '_encrypted_fields' );
+        if( empty( $encrypted_fields ) )
+            $encrypted_fields = array();
+
+        return $encrypted_fields;
+    }
+
+    public static function set_encrypted_fields( $entry_id, $field_ids ) {
+
+        if( ! is_array( $field_ids ) )
+            $field_ids = array( $field_ids );
+
+        $encrypted_fields = array_merge( self::get_encrypted_fields( $entry_id ), $field_ids );
+
+        gform_update_meta( $entry_id, '_encrypted_fields', $encrypted_fields );
+
+        return true;
+    }
+
+    public static function is_encrypted_field( $entry_id, $field_id ) {
+        $encrypted_fields = self::get_encrypted_fields( $entry_id );
+        return in_array( $field_id, $encrypted_fields );
+    }
+
 }
 
 class RGFormsModel extends GFFormsModel { }

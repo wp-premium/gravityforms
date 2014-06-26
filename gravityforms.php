@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms
 Plugin URI: http://www.gravityforms.com
 Description: Easily create web forms and manage form entries within the WordPress admin.
-Version: 1.8.7.11
+Version: 1.8.9
 Author: rocketgenius
 Author URI: http://www.rocketgenius.com
 Text Domain: gravityforms
@@ -105,7 +105,7 @@ if(is_admin() && (RGForms::is_gravity_page() || RGForms::is_gravity_ajax_action(
 
 class GFForms {
 
-    public static $version = '1.8.7.11';
+    public static $version = '1.8.9';
 
     public static function has_members_plugin(){
         return function_exists( 'members_get_capabilities' );
@@ -270,7 +270,7 @@ class GFForms {
 
     public static function maybe_process_form(){
 
-        $form_id = isset($_POST["gform_submit"]) ? $_POST["gform_submit"] : 0;
+        $form_id = isset($_POST["gform_submit"]) ? absint($_POST["gform_submit"]) : 0;
         if($form_id){
             $form_info = RGFormsModel::get_form($form_id);
             $is_valid_form = $form_info && $form_info->is_active;
@@ -765,7 +765,7 @@ class GFForms {
             include_once( ABSPATH.'wp-admin/includes/plugin.php');
 
         $update = GFCommon::get_version_info();
-        if( $update["is_valid_key"] == true && version_compare(GFCommon::$version, $update["version"], '<') ){
+        if( rgar($update, "is_valid_key") == true && version_compare(GFCommon::$version, $update["version"], '<') ){
             $gforms = get_plugin_data( __FILE__ );
             $gforms['type'] = 'plugin';
             $gforms['slug'] = 'gravityforms/gravityforms.php';
@@ -783,7 +783,7 @@ class GFForms {
             include_once( ABSPATH.'wp-admin/includes/plugin.php');
 
         $update = GFCommon::get_version_info();
-        if( $update["is_valid_key"] == true && version_compare(GFCommon::$version, $update["version"], '<') ){
+        if( rgar($update,"is_valid_key") == true && version_compare(GFCommon::$version, $update["version"], '<') ){
             $gforms = get_plugin_data( __FILE__ );
             $gforms['slug'] = 'gravityforms/gravityforms.php'; // If not set by default, always pass theme template
             $gforms['type'] = 'plugin';
@@ -1239,7 +1239,7 @@ class GFForms {
         $key = GFCommon::get_key();
         $version_info = GFCommon::get_version_info();
 
-        if(!$version_info["is_valid_key"]){
+        if(!rgar($version_info, "is_valid_key")){
 
             $plugin_name = "gravityforms/gravityforms.php";
 

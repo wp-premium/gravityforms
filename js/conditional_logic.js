@@ -178,14 +178,14 @@ function gf_matches_operation(val1, val2, operation){
             val1 = gf_try_convert_float(val1);
             val2 = gf_try_convert_float(val2);
 
-            return val1 > val2;
+            return gformIsNumber(val1) && gformIsNumber(val2) ? val1 > val2 : false;
         break;
 
         case "<" :
             val1 = gf_try_convert_float(val1);
             val2 = gf_try_convert_float(val2);
 
-            return val1 < val2;
+            return gformIsNumber(val1) && gformIsNumber(val2) ? val1 < val2 : false;
         break;
 
         case "contains" :
@@ -256,23 +256,27 @@ function gf_do_action(action, targetId, useAnimation, defaultValues, isInit, cal
     else{
         //if field is not already hidden, reset its values to the default
         var child = jQuery(targetId).children().first();
-
+		if (child.length > 0){
         if(!gformIsHidden(child)){
             gf_reset_to_default(targetId, defaultValues);
         }
+		}
 
         if(useAnimation && !isInit){
-            if(jQuery(targetId).length > 0)
+            if(jQuery(targetId).length > 0) {
                 jQuery(targetId).slideUp(callback);
-            else if(callback)
+			}
+            else if(callback) {
                 callback();
+        }
         }
         else{
             jQuery(targetId).hide();
-            if(callback)
+            if(callback){
                 callback();
-        }
-    }
+        	}
+    	}
+	}
 }
 
 function gf_reset_to_default(targetId, defaultValue){
@@ -289,10 +293,15 @@ function gf_reset_to_default(targetId, defaultValue){
                 val = "";
             }
 
-            if(jQuery(this).prop("tagName") == "SELECT")
+            var element = jQuery(this);
+            if(element.prop("tagName") == "SELECT")
                 val = parseInt(val);
 
-            jQuery(this).val(val).trigger("change");
+
+            if(element.val() != val)
+                element.val(val).trigger("change");
+            else
+                element.val(val);
 
         });
 
@@ -308,21 +317,22 @@ function gf_reset_to_default(targetId, defaultValue){
     target.each(function(){
         var val = "";
 
-        if(jQuery(this).is('select:not([multiple])')){
-            val = jQuery(this).find('option').eq(0).val();
+        var element = jQuery(this);
+        if(element.is('select:not([multiple])')){
+            val = element.find('option').eq(0).val();
         }
 
         //get name of previous input field to see if it is the radio button which goes with the "Other" text box
         //otherwise field is populated with input field name
-        var radio_button_name = jQuery(this).prev("input").attr("value");
+        var radio_button_name = element.prev("input").attr("value");
         if(radio_button_name == "gf_other_choice"){
-        	val = jQuery(this).attr("value");
+        	val = element.attr("value");
         }
         else if(jQuery.isArray(defaultValue)){
             val = defaultValue[target_index];
         }
         else if(jQuery.isPlainObject(defaultValue)){
-            val = defaultValue[jQuery(this).attr("name")];
+            val = defaultValue[element.attr("name")];
         }
         else if(defaultValue){
 
@@ -330,7 +340,11 @@ function gf_reset_to_default(targetId, defaultValue){
 
         }
 
-        jQuery(this).val(val).trigger('change');
+        if(element.val() != val)
+            element.val(val).trigger('change');
+        else
+            element.val(val);
+
         target_index++;
     });
 
