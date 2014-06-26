@@ -626,7 +626,7 @@ function gformAddListItem(element, max){
     if(jQuery(element).hasClass("gfield_icon_disabled"))
         return;
 
-    var tr = jQuery(element).parent().parent();
+    var tr = jQuery(element).closest('tr');
     var clone = tr.clone();
     clone.find("input, select").val("").attr("tabindex", clone.find('input:last').attr("tabindex"));
     tr.after(clone);
@@ -1295,13 +1295,11 @@ var gform = {
             var fieldID = up.settings.multipart_params["field_id"];
 
             if(file.percent == 100){
-                var inputName = getInputName(fieldID),
-                    tempFileName = uniqueID + "_" + inputName + "_" + file.target_name;
-                if(response.data.uploaded_filename === file.name)
+                if(response.status && response.status == 'ok'){
                     addFile(fieldID, response.data);
-                else
-                    addMessage(up.settings.gf_vars.message_id, strings.unknown_error)
-
+                }  else {
+                    addMessage(up.settings.gf_vars.message_id, strings.unknown_error);
+                }
             }
 
         });

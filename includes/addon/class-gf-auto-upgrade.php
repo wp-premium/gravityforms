@@ -54,7 +54,7 @@ class GFAutoUpgrade{
         } else {
             $version_info = $this->get_version_info($this->_slug);
 
-            if (!$version_info["is_valid_key"]) {
+            if (!rgar($version_info, "is_valid_key")) {
                 $title       = $this->_title;
                 $new_version = version_compare($this->_version, $version_info["version"], '<') ? __("There is a new version of {$title} available.", 'gravityforms') . " <a class='thickbox' title='{$title}' href='plugin-install.php?tab=plugin-information&plugin=" . $this->_slug . "&TB_iframe=true&width=640&height=808'>" . sprintf(__('View version %s Details', 'gravityforms'), $version_info["version"]) . '</a>. ' : '';
                 $message     = $new_version . sprintf(__('%sRegister%s your copy of Gravity Forms to receive access to automatic upgrades and support. Need a license key? %sPurchase one now%s.', 'gravityforms'), '<a href="admin.php?page=gf_settings">', '</a>', '<a href="http://www.gravityforms.com">', '</a>') . '</div></td>';
@@ -70,7 +70,7 @@ class GFAutoUpgrade{
             include_once(ABSPATH . 'wp-admin/includes/plugin.php');
 
         $update = $this->get_version_info($this->_slug);
-        if ($update["is_valid_key"] == true && version_compare($this->_version, $update["version"], '<')) {
+        if (rgar($update, "is_valid_key") == true && version_compare($this->_version, $update["version"], '<')) {
             $plugin_data                = get_plugin_data($this->_full_path);
             $plugin_data['type']        = 'plugin';
             $plugin_data['slug']        = $this->_path;
@@ -88,7 +88,7 @@ class GFAutoUpgrade{
             include_once(ABSPATH . 'wp-admin/includes/plugin.php');
 
         $update = $this->get_version_info($this->_slug);
-        if ($update["is_valid_key"] == true && version_compare($this->_version, $update["version"], '<')) {
+        if (rgar($update, "is_valid_key") == true && version_compare($this->_version, $update["version"], '<')) {
             $plugin_data         = get_plugin_data($this->_full_path);
             $plugin_data['slug'] = $this->_path;
             $plugin_data['type'] = 'plugin';
@@ -124,7 +124,7 @@ class GFAutoUpgrade{
             $option->response[$this->_path] = new stdClass();
 
         //Empty response means that the key is invalid. Do not queue for upgrade
-        if(!$version_info["is_valid_key"] || version_compare($this->_version, $version_info["version"], '>=')){
+        if(!rgar($version_info, "is_valid_key") || version_compare($this->_version, $version_info["version"], '>=')){
             unset($option->response[$this->_path]);
         }
         else{
@@ -175,7 +175,7 @@ class GFAutoUpgrade{
     private function get_version_info($offering, $use_cache=true){
 
         $version_info = GFCommon::get_version_info($use_cache);
-        $is_valid_key = $version_info["is_valid_key"] && rgars($version_info, "offerings/{$offering}/is_available");
+        $is_valid_key = rgar($version_info, "is_valid_key") && rgars($version_info, "offerings/{$offering}/is_available");
 
         $info = array("is_valid_key" => $is_valid_key, "version" => rgars($version_info, "offerings/{$offering}/version"), "url" => rgars($version_info, "offerings/{$offering}/url"));
 

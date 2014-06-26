@@ -367,32 +367,33 @@ class GFEntryDetail{
                                         <?php
                                     }
 
-                                    if(!empty($lead["payment_status"])){
-                                        echo $lead["transaction_type"] != 2 ? __("Payment Status", "gravityforms") : __("Subscription Status", "gravityforms"); ?>: <span id="gform_payment_status"><?php echo apply_filters("gform_payment_status", $lead["payment_status"], $form, $lead) ?></span>
-                                        <br/><br/>
-                                        <?php
-                                        if(!empty($lead["payment_date"])){
-                                            echo $lead["transaction_type"] == 1 ? __("Payment Date", "gravityforms") : __("Start Date", "gravityforms") ?>: <?php echo GFCommon::format_date($lead["payment_date"], false, "Y/m/d", $lead["transaction_type"] == 1) ?>
-                                            <br/><br/>
-                                            <?php
-                                        }
+                                    if(apply_filters("gform_enable_entry_info_payment_details", true, $lead)){
 
-                                        if(!empty($lead["transaction_id"])){
-                                            echo $lead["transaction_type"] == 1 ? __("Transaction Id", "gravityforms") : __("Subscriber Id", "gravityforms"); ?>: <?php echo $lead["transaction_id"]?>
+                                        if(!empty($lead["payment_status"])){
+                                            echo $lead["transaction_type"] == 2 ? __("Subscription Status", "gravityforms") : __("Payment Status", "gravityforms"); ?>: <span id="gform_payment_status"><?php echo apply_filters("gform_payment_status", $lead["payment_status"], $form, $lead) ?></span>
                                             <br/><br/>
                                             <?php
-                                        }
+                                            if(!empty($lead["payment_date"])){
+                                                echo $lead["transaction_type"] == 2 ? __("Start Date", "gravityforms") : __("Payment Date", "gravityforms") ?>: <?php echo GFCommon::format_date($lead["payment_date"], false, "Y/m/d", $lead["transaction_type"] != 2) ?>
+                                                <br/><br/>
+                                                <?php
+                                            }
 
-                                        if(!rgblank($lead["payment_amount"])){
-                                            echo $lead["transaction_type"] == 1 ? __("Payment Amount", "gravityforms") : __("Subscription Amount", "gravityforms"); ?>: <?php echo GFCommon::to_money($lead["payment_amount"], $lead["currency"]) ?>
-                                            <br/><br/>
-                                            <?php
+                                            if(!empty($lead["transaction_id"])){
+                                                echo $lead["transaction_type"] == 2 ? __("Subscriber Id", "gravityforms") : __("Transaction Id", "gravityforms"); ?>: <?php echo $lead["transaction_id"]?>
+                                                <br/><br/>
+                                                <?php
+                                            }
+
+                                            if(!rgblank($lead["payment_amount"])){
+                                                echo $lead["transaction_type"] == 2 ? __("Subscription Amount", "gravityforms") : __("Payment Amount", "gravityforms"); ?>: <?php echo GFCommon::to_money($lead["payment_amount"], $lead["currency"]) ?>
+                                                <br/><br/>
+                                                <?php
+                                            }
                                         }
                                     }
                                     do_action("gform_entry_info", $form["id"], $lead);
 
-                                    //Placing this hook here temporarily so that addons can switch over to it. Then this hook will be moved to the separate (new) Payment Detail box.
-                                    do_action("gform_payment_details", $form["id"], $lead);
                                     ?>
                                 </div>
                                 <div id="major-publishing-actions">
@@ -442,11 +443,6 @@ class GFEntryDetail{
 
                                         }
 
-                                        /*if(GFCommon::current_user_can_any("gravityforms_delete_entries")){
-                                            $delete_link = '<a class="submitdelete deletion" onclick="if ( confirm(\''. __("You are about to delete this entry. \'Cancel\' to stop, \'OK\' to delete.", "gravityforms") .'\') ) { jQuery(\'#action\').val(\'delete\'); jQuery(\'#entry_form\')[0].submit();} return false;" href="#">' . __("Delete", "gravityforms") . '</a>';
-                                            echo apply_filters("gform_entrydetail_delete_link", $delete_link);
-                                        }*/
-
                                         ?>
                                     </div>
                                     <div id="publishing-action">
@@ -468,9 +464,9 @@ class GFEntryDetail{
                     </div>
 
                     <?php
-//                    if (!empty($lead["payment_status"])) {
-//                        self::payment_details_box($lead, $form);
-//                    }
+                    if (!empty($lead["payment_status"]) && !apply_filters("gform_enable_entry_info_payment_details", true, $lead) ) {
+                        self::payment_details_box($lead, $form);
+                    }
                     ?>
 
                     <?php do_action("gform_entry_detail_sidebar_middle", $form, $lead); ?>
@@ -962,7 +958,7 @@ class GFEntryDetail{
         <div id="submitdiv" class="stuffbox">
             <h3>
                 <span
-                    class="hndle"><?php echo $lead["transaction_type"] == 1 ? __("Payment Details", "gravityforms") : __("Subscription Details", "gravityforms"); ?></span>
+                    class="hndle"><?php echo $lead["transaction_type"] == 2 ? __("Subscription Details", "gravityforms") : __("Payment Details", "gravityforms"); ?></span>
             </h3>
 
             <div class="inside">
@@ -976,19 +972,19 @@ class GFEntryDetail{
                             <br/><br/>
                             <?php
                             if (!empty($lead["payment_date"])) {
-                                echo __("Date", "gravityforms") ?>: <?php echo GFCommon::format_date($lead["payment_date"], false, "Y/m/d", $lead["transaction_type"] == 1) ?>
+                                echo $lead["transaction_type"] == 2 ? __("Start Date", "gravityforms") : __("Date", "gravityforms") ?>: <?php echo GFCommon::format_date($lead["payment_date"], false, "Y/m/d", $lead["transaction_type"] != 2) ?>
                                 <br/><br/>
                             <?php
                             }
 
                             if (!empty($lead["transaction_id"])) {
-                                echo $lead["transaction_type"] == 1 ? __("Transaction Id", "gravityforms") : __("Subscription Id", "gravityforms"); ?>: <?php echo $lead["transaction_id"] ?>
+                                echo $lead["transaction_type"] == 2 ? __("Subscription Id", "gravityforms") : __("Transaction Id", "gravityforms"); ?>: <?php echo $lead["transaction_id"] ?>
                                 <br/><br/>
                             <?php
                             }
 
                             if (!rgblank($lead["payment_amount"])) {
-                                echo $lead["transaction_type"] == 1 ? __("Amount", "gravityforms") : __("Recurring Amount", "gravityforms"); ?>: <?php echo GFCommon::to_money($lead["payment_amount"], $lead["currency"]) ?>
+                                echo $lead["transaction_type"] == 2 ? __("Recurring Amount", "gravityforms") : __("Amount", "gravityforms"); ?>: <?php echo GFCommon::to_money($lead["payment_amount"], $lead["currency"]) ?>
                                 <br/><br/>
                             <?php
                             }

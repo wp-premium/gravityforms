@@ -1230,7 +1230,7 @@ abstract class GFAddOn {
         $html .= '<input
                     type="text"
                     name="_gaddon_setting_' . esc_attr($field["name"]) . '"
-                    value="' . esc_attr($value) . '"' .
+                    value="' . esc_attr($value) . '" ' .
                     implode( ' ', $attributes ) .
                 ' />';
 
@@ -1274,7 +1274,7 @@ abstract class GFAddOn {
         $html = "";
 
         $html .= '<textarea
-                    name="_gaddon_setting_' . $name . '"' .
+                    name="_gaddon_setting_' . $name . '" ' .
                     implode( ' ', $attributes ) .
                  '>' .
                     esc_html($value) .
@@ -1310,7 +1310,7 @@ abstract class GFAddOn {
         $html = '<input
                     type="hidden"
                     name="_gaddon_setting_' . esc_attr($field["name"]) . '"
-                    value="' . esc_attr($value) . '"' .
+                    value="' . esc_attr($value) . '" ' .
                     implode( ' ', $attributes ) .
                 ' />';
 
@@ -1348,7 +1348,7 @@ abstract class GFAddOn {
                     <div id="gaddon-setting-checkbox-choice-' . $choice['id'] . '" class="gaddon-setting-checkbox' . $horizontal . '">
                         <input type=hidden name="_gaddon_setting_' . esc_attr($choice["name"]) . '" value="' . $hidden_field_value . '" />
                         <input
-                            type = "checkbox"' .
+                            type = "checkbox" ' .
                             implode( ' ', $choice_attributes ) . ' ' .
                             checked( $value, "1", false ) .
                         ' />

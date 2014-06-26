@@ -141,9 +141,6 @@ class GFAPI {
         if (false === $result)
             return new WP_Error("error_updating_form", __("Error updating form", "gravityforms"), $wpdb->last_error);
 
-        if (0 === $result)
-            return new WP_Error("not_found", sprintf(__("Form with id %s not found", "gravityforms"), $form_id), $form_id);
-
         //updating form title and is_active flag
         $is_active = rgar($form_meta, "is_active") ? "1" : "0";
         $result    = $wpdb->query($wpdb->prepare("UPDATE $form_table_name SET title=%s, is_active=%s WHERE id=%d", $form_meta["title"], $is_active, $form_meta["id"]));
@@ -489,7 +486,7 @@ class GFAPI {
         if (empty($entry_id))
             return new WP_Error("missing_entry_id", __("Missing entry id", "gravityforms"));
 
-        $current_entry = self::get_entry($entry_id);
+        $current_entry = $original_entry = self::get_entry($entry_id);
 
         if(!$current_entry)
             return new WP_Error("not_found", __("Entry not found", "gravityforms"), $entry_id);
@@ -505,6 +502,9 @@ class GFAPI {
 
         if (false === self::form_id_exists($form_id))
             return new WP_Error("invalid_form_id", __("The form for this entry does not exist", "gravityforms"));
+
+
+        $entry = apply_filters("gform_entry_pre_update", $entry, $original_entry);
 
         // use values in the entry object if present
         $post_id        = isset($entry["post_id"]) ? intval($entry["post_id"]) : 'NULL';
@@ -620,6 +620,8 @@ class GFAPI {
             if (false === $result)
                 return new WP_Error("update_field_values_failed", __("There was a problem while updating the field values", "gravityforms"), $wpdb->last_error);
         }
+
+        do_action("gform_post_update_entry", $entry, $original_entry);
 
         return true;
     }
