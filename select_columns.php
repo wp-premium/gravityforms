@@ -125,7 +125,7 @@ class GFSelectColumns{
                             foreach($form["fields"] as $field){
                                 if(RGFormsModel::get_input_type($field) == "checkbox" && !in_array($field["id"], $field_ids)){
                                     ?>
-                                    <li id="<?php echo $field["id"]?>"><?php echo esc_html(rgar($field,"label")) ?></li>
+                                    <li id="<?php echo $field["id"]?>"><?php echo esc_html( GFCommon::get_label( $field ) ) ?></li>
                                     <?php
                                 }
 
@@ -140,7 +140,7 @@ class GFSelectColumns{
                                 }
                                 else if(!rgar($field, "displayOnly") && !in_array($field["id"], $field_ids) && RGFormsModel::get_input_type($field) != "list"){
                                     ?>
-                                    <li id="<?php echo $field["id"]?>"><?php echo  esc_html($field["label"]) ?></li>
+                                    <li id="<?php echo $field["id"]?>"><?php echo esc_html( GFCommon::get_label( $field ) ); ?></li>
                                     <?php
                                 }
                             }

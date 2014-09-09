@@ -41,7 +41,7 @@ class GFSettings{
 	            self::settings_uninstall_page();
 	            break;
 	        default:
-	        	self::page_header(__($subview, "gravityforms"), "");
+	        	self::page_header();
 	            do_action("gform_settings_" . str_replace(" ", "_", $subview));
 	            self::page_footer();
         }
@@ -446,7 +446,7 @@ class GFSettings{
         if(!$title) {
             foreach($setting_tabs as $tab) {
                 if($tab['name'] == $current_tab)
-                    $title = $tab['name'];
+                    $title = $tab['label'];
             }
         }
 

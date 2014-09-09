@@ -4,6 +4,7 @@ if(!class_exists('GFForms')){
     die();
 }
 
+
 /**
  * Handles all tasks mostly common to any Gravity Forms Add-On, including third party ones
  *
@@ -102,6 +103,7 @@ abstract class GFAddOn {
     private $_no_conflict_styles = array();
     private $_preview_styles = array();
     private $_print_styles = array();
+	private static $_registered_addons = array( 'active' => array(), 'inactive' => array() );
 
     /**
      * Class constructor which hooks the instance into the WordPress init action
@@ -118,7 +120,51 @@ abstract class GFAddOn {
         $this->pre_init();
     }
 
-    /**
+	/**
+	 * Registers an addon so that it gets initialized appropriately
+	 *
+	 * @param string $class - The class name
+	 * @param string $overrides - Specify the class to replace/override
+	 */
+	public static function register( $class, $overrides = null ){
+
+		//Ignore classes that have been marked as inactive
+		if ( in_array( $class, self::$_registered_addons['inactive'] ) ) {
+			return;
+		}
+
+		//Mark classes as active. Override existing active classes if they are supposed to be overridden
+		$index = array_search( $overrides, self::$_registered_addons['active'] );
+		if ( $index !== false ){
+			self::$_registered_addons['active'][ $index ] = $class;
+		} else {
+			self::$_registered_addons['active'][] = $class;
+		}
+
+		//Mark overridden classes as inactive.
+		if ( ! empty( $overrides ) ){
+			self::$_registered_addons['inactive'][] = $overrides;
+		}
+
+
+	}
+
+	/**
+	 * Target of gform_init Gravity Forms hook. Initializes all addons.
+	 */
+	public static function init_addons(){
+
+		//Removing duplicate add-ons
+		$active_addons = array_unique(self::$_registered_addons['active']);
+
+		foreach ( $active_addons as $addon ){
+
+			call_user_func( array( $addon, 'get_instance' ) );
+
+		}
+	}
+
+	/**
      * Gets executed before all init functions. Override this function to perform initialization tasks that must be done prior to init
      */
     public function pre_init(){
@@ -1038,21 +1084,24 @@ abstract class GFAddOn {
         if( ! $settings )
             $settings = $this->get_current_settings();
 
-        if (false === $settings)
+        if (false === $settings) {
             return $default_value;
+		}
 
         if (strpos($setting_name, "[") !== false) {
             $path_parts = explode("[", $setting_name);
             foreach ($path_parts as $part) {
                 $part = trim($part, "]");
-                if (false === isset($settings[$part]))
+                if (false === isset($settings[$part])) {
                     return $default_value;
+				}
                 $settings = rgar($settings, $part);
             }
             $setting = $settings;
         } else {
-            if (false === isset($settings[$setting_name]))
+            if (false === isset($settings[$setting_name])) {
                 return $default_value;
+			}
             $setting = $settings[$setting_name];
         }
 
@@ -1320,54 +1369,96 @@ abstract class GFAddOn {
         return $html;
     }
 
-    /***
-    * Renders and initializes a checkbox field or a collection of checkbox fields based on the $field array
-    *
-    * @param array $field - Field array containing the configuration options of this field
-    * @param bool $echo = true - true to echo the output to the screen, false to simply return the contents as a string
-    * @return string The HTML for the field
-    */
-    protected function settings_checkbox( $field, $echo = true ) {
+	/***
+	 * Renders and initializes a checkbox field or a collection of checkbox fields based on the $field array
+	 *
+	 * @param array $field - Field array containing the configuration options of this field
+	 * @param bool  $echo  = true - true to echo the output to the screen, false to simply return the contents as a string
+	 *
+	 * @return string The HTML for the field
+	 */
+	protected function settings_checkbox( $field, $echo = true ) {
 
-        $field["type"] = "checkbox"; //making sure type is set to checkbox
+		$field['type'] = 'checkbox'; //making sure type is set to checkbox
 
-        $default_attributes = array("onclick" => 'jQuery(this).siblings("input[type=hidden]").val(jQuery(this).prop("checked") ? 1 : 0);');
-        $field_attributes = $this->get_field_attributes($field, $default_attributes);
-        $horizontal = rgar($field, "horizontal") ? " gaddon-setting-inline" : "";
+		$default_attributes = array( 'onclick' => 'jQuery(this).siblings("input[type=hidden]").val(jQuery(this).prop("checked") ? 1 : 0);' );
+		$field_attributes   = $this->get_field_attributes( $field, $default_attributes );
+		$horizontal         = rgar( $field, 'horizontal' ) ? ' gaddon-setting-inline' : '';
 
-        $html = "";
+		$html = '';
 
-        if(is_array($field["choices"])){
-            foreach( $field["choices"] as $choice ) {
-                $choice['id'] = $choice['name'];
-                $choice_attributes = $this->get_choice_attributes($choice, $field_attributes);
-                $value        = $this->get_setting($choice['name'], rgar($choice, "default_value"));
-                $tooltip =  isset( $choice['tooltip'] ) ? gform_tooltip( $choice['tooltip'], rgar( $choice, 'tooltip_class'), true ) : "";
-                $hidden_field_value = $value == '1' ? '1' : '0';
-                $html .= '
-                    <div id="gaddon-setting-checkbox-choice-' . $choice['id'] . '" class="gaddon-setting-checkbox' . $horizontal . '">
-                        <input type=hidden name="_gaddon_setting_' . esc_attr($choice["name"]) . '" value="' . $hidden_field_value . '" />
-                        <input
-                            type = "checkbox" ' .
-                            implode( ' ', $choice_attributes ) . ' ' .
-                            checked( $value, "1", false ) .
-                        ' />
-                        <label for="' . esc_attr($choice['id']) . '">' . esc_html($choice['label']) . ' ' . $tooltip .'</label>
-                    </div>
-                    ';
-            }
-        }
+		if ( is_array( $field['choices'] ) ) {
+			foreach ( $field['choices'] as $choice ) {
+				$choice['id']      = sanitize_title($choice['name']);
+				$choice_attributes = $this->get_choice_attributes( $choice, $field_attributes );
+				$value             = $this->get_setting( $choice['name'], rgar( $choice, 'default_value' ) );
+				$tooltip           = isset( $choice['tooltip'] ) ? gform_tooltip( $choice['tooltip'], rgar( $choice, 'tooltip_class' ), true ) : '';
 
-        if( $this->field_failed_validation( $field ) )
-            $html .= $this->get_error_icon( $field );
+				$html .= $this->checkbox_item( $choice, $horizontal, $choice_attributes, $value, $tooltip );
 
-        if ($echo)
-            echo $html;
+			}
+		}
 
-        return $html;
-    }
+		if ( $this->field_failed_validation( $field ) )
+			$html .= $this->get_error_icon( $field );
 
-    /***
+		if ( $echo )
+			echo $html;
+
+		return $html;
+	}
+
+
+	/**
+	 * Returns the markup for an individual checkbox item give the parameters
+	 *
+	 * @param $choice           - Choice array with all configured properties
+	 * @param $horizontal_class - CSS class to style checkbox items horizontally
+	 * @param $attributes       - String containing all the attributes for the input tag.
+	 * @param $value            - Currently selection (1 if field has been checked. 0 or null otherwise)
+	 * @param $tooltip          - String containing a tooltip for this checkbox item.
+	 *
+	 * @return string - The markup of an individual checkbox item
+	 */
+	protected function checkbox_item( $choice, $horizontal_class, $attributes, $value, $tooltip ) {
+		$hidden_field_value = $value == '1' ? '1' : '0';
+		$checkbox_item = '
+                    <div id="gaddon-setting-checkbox-choice-' . $choice['id'] . '" class="gaddon-setting-checkbox' . $horizontal_class . '">
+                        <input type=hidden name="_gaddon_setting_' . esc_attr( $choice['name'] ) . '" value="' . $hidden_field_value . '" />';
+
+		if ( is_callable( array( $this, "checkbox_input_{$choice['name']}" ) ) ) {
+			$markup = call_user_func( array( $this, "checkbox_input_{$choice['name']}" ), $choice, $attributes, $value, $tooltip );
+		} else {
+			$markup = $this->checkbox_input( $choice, $attributes, $value, $tooltip );
+		}
+
+		$checkbox_item .= $markup . '</div>';
+
+		return $checkbox_item;
+	}
+
+	/**
+	 * Returns the markup for an individual checkbox input and its associated label
+	 *
+	 * @param $choice     - Choice array with all configured properties
+	 * @param $attributes - String containing all the attributes for the input tag.
+	 * @param $value      - Currently selection (1 if field has been checked. 0 or null otherwise)
+	 * @param $tooltip    - String containing a tooltip for this checkbox item.
+	 *
+	 * @return string - The markup of an individual checkbox input and its associated label
+	 */
+	protected function checkbox_input( $choice, $attributes, $value, $tooltip ) {
+		$markup = '<input type = "checkbox" ' .
+			implode( ' ', $attributes ) . ' ' .
+			checked( $value, '1', false ) .
+			' />
+            <label for="' . esc_attr( $choice['id'] ) . '">' . esc_html( $choice['label'] ) . ' ' . $tooltip . '</label>';
+
+		return $markup;
+	}
+
+
+	/***
      * Renders and initializes a radio field or a collection of radio fields based on the $field array
      *
      * @param array $field - Field array containing the configuration options of this field
@@ -1483,8 +1574,9 @@ abstract class GFAddOn {
         $html = '';
         $field_map = rgar( $field, 'field_map' );
 
-        if( empty( $field_map ) )
+        if( empty( $field_map ) ) {
             return $html;
+		}
 
         $form_id = rgget( 'id' );
 
@@ -1591,7 +1683,7 @@ abstract class GFAddOn {
     public static function get_field_map_fields( $feed, $field_name ) {
 
         $fields = array();
-        $prefix = "field_map_{$field_name}_";
+        $prefix = "{$field_name}_";
 
         foreach( $feed['meta'] as $name => $value ) {
             if( strpos( $name, $prefix ) === 0 ) {
@@ -1782,14 +1874,13 @@ abstract class GFAddOn {
     protected function simple_condition($setting_name_root){
 
         $conditional_fields = $this->get_conditional_logic_fields();
-        $create_condition_value_script = "";
 
         $str = $this->settings_select(array(
                                     "name" => "{$setting_name_root}_field_id",
                                     "type" => "select",
                                     "choices" => $conditional_fields,
                                     "class" => "optin_select",
-                                    "onchange" => "jQuery('#" . esc_attr($setting_name_root) . "_container').html(GetRuleValues('gf_setting', 0, jQuery(this).val(), '', '_gaddon_setting_" . esc_attr($setting_name_root) . "_value'));"
+                                    "onchange" => "jQuery('#" . esc_attr($setting_name_root) . "_container').html(GetRuleValues('simple_condition_{$setting_name_root}', 0, jQuery(this).val(), '', '_gaddon_setting_" . esc_attr($setting_name_root) . "_value'));"
                                 ), false);
 
         $str .= $this->settings_select(array(
@@ -1831,10 +1922,25 @@ abstract class GFAddOn {
 
         $field_id = $this->get_setting("{$setting_name_root}_field_id");
 
-        if(!empty($field_id)){
-            $current_condition_value = $this->get_setting("{$setting_name_root}_value");
-            $str .= "<script type='text/javascript'>jQuery(document).ready(function(){jQuery('#" . esc_attr($setting_name_root) . "_container').html(GetRuleValues('gf_setting', 0, {$field_id}, '" . esc_attr($current_condition_value) . "', '_gaddon_setting_" . esc_attr($setting_name_root) . "_value'));});</script>";
-        }
+        $value = $this->get_setting("{$setting_name_root}_value");
+		$operator = $this->get_setting("{$setting_name_root}_operator");
+
+        $str .= "<script type='text/javascript'>
+			var " . esc_attr($setting_name_root) . "_object = {'conditionalLogic':{'rules':[{'fieldId':'{$field_id}','operator':'{$operator}','value':'" . esc_attr($value) . "'}]}};
+
+            jQuery(document).ready(
+            	function(){
+            		gform.addFilter( 'gform_conditional_object', 'SimpleConditionObject' );";
+            		
+            		if( ! empty( $field_id ) ){
+            			$str .= "jQuery('#" . esc_attr($setting_name_root) . "_container').html(
+            				GetRuleValues('simple_condition_{$setting_name_root}', 0, {$field_id}, '" . esc_attr($value) . "', '_gaddon_setting_" . esc_attr($setting_name_root) . "_value'));";
+					}
+            		$str .= "}
+            		
+            );
+
+            </script>";
         return $str;
     }
 
@@ -1849,7 +1955,7 @@ abstract class GFAddOn {
         // each nonstandard property will be extracted from the $props array so it is not auto-output in the field HTML
         $no_output_props = apply_filters( 'gaddon_no_output_field_properties',
                 array( 'default_value', 'label', 'choices', 'feedback_callback', 'checked', 'checkbox_label', 'value', 'type',
-                    'validation_callback', 'required', 'hidden', 'tooltip', 'dependency', "messages" ), $field );
+                    'validation_callback', 'required', 'hidden', 'tooltip', 'dependency', 'messages', 'name' ), $field );
 
         $default_props = array(
             'class' => '',          // will default to gaddon-setting
@@ -2667,11 +2773,11 @@ abstract class GFAddOn {
     protected function plugin_settings_init() {
         $subview = rgget("subview");
         RGForms::add_settings_page( array(
-            'name' => $this->get_short_title(),
+            'name' => $this->_slug,
             'tab_label' => $this->get_short_title(),
             'handler' => array($this, 'plugin_settings_page')
             ) );
-        if (rgget("page") == "gf_settings" && $subview == $this->get_short_title() && $this->current_user_can_any($this->_capabilities_settings_page)) {
+        if (rgget("page") == "gf_settings" && $subview == $this->_slug && $this->current_user_can_any($this->_capabilities_settings_page)) {
             require_once(GFCommon::get_base_path() . "/tooltips.php");
         }
 

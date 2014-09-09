@@ -220,13 +220,31 @@ class GFCommon{
         return empty($email) || !self::is_valid_email($email);
     }
 
-    public static function is_valid_url($url){
-        return preg_match('!^(http|https)://([\w-]+\.?)+[\w-]+(:\d+)?(/[\w- ./?~%&=+\']*)?$!', $url);
-    }
+	public static function is_valid_url( $url ) {
+		$url = trim( $url );
 
-    public static function is_valid_email($email){
-        return preg_match('/^(([a-zA-Z0-9_.\-+!#$&\'*+=?^`{|}~])+\@((([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+|localhost) *,? *)+$/', $email);
-    }
+		return ( ( strpos( $url, 'http://' ) === 0 || strpos( $url, 'https://' ) === 0 ) &&
+			filter_var( $url, FILTER_VALIDATE_URL ) !== false );
+	}
+
+	public static function is_valid_email( $email ) {
+		return filter_var( $email, FILTER_VALIDATE_EMAIL );
+	}
+
+	public static function is_valid_email_list( $email_list ) {
+		$emails = explode( ',', $email_list );
+		if ( ! is_array( $emails ) ){
+			return false;
+		}
+
+		foreach( $emails as $email ){
+			if ( ! filter_var( $email, FILTER_VALIDATE_EMAIL ) ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
 
     public static function get_label($field, $input_id = 0, $input_only = false){
         return RGFormsModel::get_label($field, $input_id, $input_only);
@@ -694,17 +712,25 @@ class GFCommon{
 
                     case "fileupload" :
                         if(rgar($field, "multipleFiles")){
-                            $files = empty($value) ? array() : json_decode($value, true);
-                            foreach($files as &$file){
-                                $file = str_replace(" ", "%20", $file);
-                            }
-                            $value = join("\r\n", $files);
-                            if($format == "html"){
-                                $value = nl2br($value);
-                            }
-                        } else {
-                            $value = str_replace(" ", "%20", $value);
-                        }
+
+							$files = empty( $raw_value ) ? array() : json_decode( $raw_value, true );
+							foreach ( $files as &$file ) {
+
+								$file = str_replace( ' ', '%20', $file );
+
+								if ( $esc_html ){
+									$value = esc_html( $value );
+								}
+							}
+							$value = $format == 'html' ? join( "<br />", $files ) : join( ", ", $files );
+
+						} else {
+							$value = str_replace( ' ', '%20', $value );
+						}
+
+						if ( $url_encode ){
+							$value = urlencode( $value );
+						}
 
                     break;
 
@@ -872,14 +898,14 @@ class GFCommon{
         $text = str_replace("{entry_url}", $url_encode ? urlencode($entry_url) : $entry_url, $text);
 
         //post id
-        $text = str_replace("{post_id}", $url_encode ? urlencode($lead["post_id"]) : $lead["post_id"], $text);
+        $text = str_replace("{post_id}", $url_encode ? urlencode(rgar($lead, "post_id")) : rgar($lead, "post_id"), $text);
 
         //admin email
         $wp_email = get_bloginfo("admin_email");
         $text = str_replace("{admin_email}", $url_encode ? urlencode($wp_email) : $wp_email, $text);
 
         //post edit url
-        $post_url = get_bloginfo("wpurl") . "/wp-admin/post.php?action=edit&post=" . $lead["post_id"];
+        $post_url = get_bloginfo("wpurl") . "/wp-admin/post.php?action=edit&post=" . rgar($lead, "post_id");
         $text = str_replace("{post_edit_url}", $url_encode ? urlencode($post_url) : $post_url, $text);
 
         $text = self::replace_variables_prepopulate($text, $url_encode);
@@ -1282,7 +1308,10 @@ class GFCommon{
 
         $message_format = apply_filters("gform_notification_format_{$form["id"]}", apply_filters("gform_notification_format", "html", "user", $form, $lead), "user", $form, $lead);
         $message = GFCommon::replace_variables(rgget("message", $form["autoResponder"]), $form, $lead, false, false, !rgget("disableAutoformat", $form["autoResponder"]), $message_format);
-        $message = do_shortcode($message);
+
+        if(apply_filters("gform_enable_shortcode_notification_message", true, $form, $lead)){
+            $message = do_shortcode($message);
+        }
 
         //Running trough variable replacement
         $to = GFCommon::replace_variables($to, $form, $lead, false, false);
@@ -1314,7 +1343,10 @@ class GFCommon{
 
         $message_format = apply_filters("gform_notification_format_{$form["id"]}", apply_filters("gform_notification_format", "html", "admin", $form, $lead), "admin", $form, $lead);
         $message = GFCommon::replace_variables(rgget("message", $form["notification"]), $form, $lead, false, false, !rgget("disableAutoformat", $form["notification"]), $message_format);
-        $message = do_shortcode($message);
+
+        if(apply_filters("gform_enable_shortcode_notification_message", true, $form, $lead)){
+            $message = do_shortcode($message);
+        }
 
         $version_info = self::get_version_info();
         $is_expired = !rgempty("expiration_time", $version_info) && $version_info["expiration_time"] < time();
@@ -1344,7 +1376,7 @@ class GFCommon{
 
                 $source_field = RGFormsModel::get_field($form, $routing["fieldId"]);
                 $field_value = RGFormsModel::get_lead_field_value($lead, $source_field);
-                $is_value_match = RGFormsModel::is_value_match($field_value, $routing["value"], $routing["operator"], $source_field) && !RGFormsModel::is_field_hidden($form, $source_field, array(), $lead);
+                $is_value_match = RGFormsModel::is_value_match( $field_value, $routing["value"], $routing["operator"], $source_field, $routing, $form ) && !RGFormsModel::is_field_hidden($form, $source_field, array(), $lead);
 
                 if ($is_value_match)
                     $email_to[] = $routing["email"];
@@ -1399,7 +1431,7 @@ class GFCommon{
 
                 $source_field = RGFormsModel::get_field($form, $routing["fieldId"]);
                 $field_value = RGFormsModel::get_lead_field_value($lead, $source_field);
-                $is_value_match = RGFormsModel::is_value_match($field_value, $routing["value"], $routing["operator"], $source_field) && !RGFormsModel::is_field_hidden($form, $source_field, array(), $lead);
+                $is_value_match = RGFormsModel::is_value_match($field_value, $routing["value"], $routing["operator"], $source_field, $routing, $form ) && !RGFormsModel::is_field_hidden($form, $source_field, array(), $lead);
 
                 if ($is_value_match)
                     $email_to[] = $routing["email"];
@@ -1422,7 +1454,10 @@ class GFCommon{
 
         $message_format = rgempty("message_format", $notification) ? "html" : rgar($notification, "message_format");
         $message = GFCommon::replace_variables(rgar($notification, "message"), $form, $lead, false, false, !rgar($notification, "disableAutoformat"), $message_format);
-        $message = do_shortcode($message);
+
+        if(apply_filters("gform_enable_shortcode_notification_message", true, $form, $lead)){
+            $message = do_shortcode($message);
+        }
 
         // allow attachments to be passed as a single path (string) or an array of paths, if string provided, add to array
         $attachments = rgar( $notification, "attachments" );
@@ -1559,28 +1594,30 @@ class GFCommon{
 
     private static function send_email($from, $to, $bcc, $reply_to, $subject, $message, $from_name="", $message_format="html", $attachments=""){
 
-        $to = str_replace(" ", "", $to);
-        $bcc = str_replace(" ", "", $bcc);
+        $to    = str_replace( " ", "", $to );
+        $bcc   = str_replace( " ", "", $bcc );
+        $error = false;
 
-        //invalid to email address or no content. can't send email
-        if(!GFCommon::is_valid_email($to) || (empty($subject) && empty($message))){
-         	GFCommon::log_debug("Cannot send email because either the TO address is invalid or there is no SUBJECT or MESSAGE.");
-         	GFCommon::log_debug(print_r(compact("to", "subject", "message"), true));
+        if( ! GFCommon::is_valid_email( $from ) ) {
+            $from = get_bloginfo( 'admin_email' );
+        }
+
+        if( ! GFCommon::is_valid_email_list( $to ) ) {
+            $error = new WP_Error( 'invalid_to', 'Cannot send email because the TO address is invalid.' );
+        } else if( empty( $subject ) && empty( $message ) ) {
+            $error = new WP_Error( 'missing_subject_and_message', 'Cannot send email because there is no SUBJECT and no MESSAGE.' );
+        } else if( ! GFCommon::is_valid_email( $from ) ) {
+            $error = new WP_Error( 'invalid_from', 'Cannot send email because the FROM address is invalid.' );
+        }
+
+        if( is_wp_error( $error ) ) {
+            GFCommon::log_debug( $error->get_error_message() );
+            GFCommon::log_debug( print_r( compact( 'to', 'subject', 'message' ), true ) );
+            do_action( 'gform_send_email_failed', $error, compact( 'from', 'to', 'bcc', 'reply_to', 'subject', 'message', 'from_name', 'message_format', 'attachments' ) );
             return;
-		}
-
-        if(!GFCommon::is_valid_email($from))
-            $from = get_bloginfo("admin_email");
-
-        //invalid from address. can't send email
-        if(!GFCommon::is_valid_email($from)){
-         	GFCommon::log_debug("Cannot send email because the FROM address is invalid.");
-         	GFCommon::log_debug(print_r(compact("to", "from", "subject"), true));
-            return;
-		}
+        }
 
         $content_type = $message_format == "html" ? "text/html" : "text/plain";
-
         $name = empty($from_name) ? $from : $from_name;
 
         $headers = array();
@@ -1589,7 +1626,7 @@ class GFCommon{
         if(GFCommon::is_valid_email($reply_to))
             $headers["Reply-To"] = "Reply-To: {$reply_to}";
 
-        if(GFCommon::is_valid_email($bcc))
+        if(GFCommon::is_valid_email_list($bcc))
             $headers["Bcc"] = "Bcc: $bcc";
 
         $headers["Content-type"] = "Content-type: {$content_type}; charset=" . get_option('blog_charset');
@@ -1801,15 +1838,16 @@ class GFCommon{
             $options['timeout'] = 15;
 
             $nocache = $cache ? "" : "nocache=1"; //disabling server side caching
-            
+
             $raw_response = self::post_to_manager("version.php", $nocache, $options);
 
             //caching responses.
             set_transient("gform_update_info", $raw_response, 86400); //caching for 24 hours
         }
 
-        if ( is_wp_error( $raw_response ) || $raw_response['response']['code'] != 200 )
+        if ( is_wp_error( $raw_response ) || rgars($raw_response, 'response/code') != 200 ) {
             return array("is_valid_key" => "1", "version" => "", "url" => "", "is_error" => "1");
+		}
 
         $version_info = json_decode($raw_response['body'], true);
 
@@ -1994,9 +2032,14 @@ class GFCommon{
 			return "";
         }
 
-        $ary = explode("|", $value);
-        $val = $ary[0];
-        $price = count($ary) > 1 ? $ary[1] : "";
+		if ( isset( $field['enablePrice'] ) && $field['enablePrice'] ) {
+			$ary   = explode( '|', $value );
+			$val   = $ary[0];
+			$price = count( $ary ) > 1 ? $ary[1] : '';
+		} else {
+			$val = $value;
+			$price = '';
+		}
 
         if($use_text)
             $val = RGFormsModel::get_choice_text($field, $val);
@@ -2350,31 +2393,48 @@ class GFCommon{
         return $choices;
     }
 
-    public static function is_section_empty($section_field, $form, $lead){
-        $cache_key = "GFCommon::is_section_empty_" . $form["id"] . "_" . $section_field["id"];
+    public static function is_section_empty( $section_field, $form, $entry ) {
 
-        $value = GFCache::get($cache_key);
+        $cache_key = "GFCommon::is_section_empty_{$form['id']}_{$section_field['id']}";
+        $value = GFCache::get( $cache_key );
 
-        if($value !== false)
+        if( $value !== false ) {
             return $value == true;
+        }
 
-        $fields = self::get_section_fields($form, $section_field["id"]);
-        if(!is_array($fields)){
-            GFCache::set($cache_key, 1);
+        $fields = self::get_section_fields( $form, $section_field['id'] );
+        if( ! is_array( $fields ) ) {
+            GFCache::set( $cache_key, 1 );
             return true;
         }
 
-        foreach($fields as $field){
-            $val = RGFormsModel::get_lead_field_value($lead, $field);
-            $val = GFCommon::get_lead_field_display($field, $val, rgar($lead, 'currency'));
+        foreach( $fields as $field ) {
 
-            if(!self::is_product_field($field["type"]) && !rgblank($val)){
-                GFCache::set($cache_key, 0);
+            $value = GFFormsModel::get_lead_field_value( $entry, $field );
+            $value = GFCommon::get_lead_field_display( $field, $value, rgar( $entry, 'currency' ) );
+
+            if( rgblank( $value ) ) {
+                continue;
+            }
+
+            // most fields are displayed in the section by default, exceptions are handled below
+            $is_field_displayed_in_section = true;
+
+            // by default, product fields are not displayed in their containing section (displayed in a product summary table)
+            // if the filter is used to disable this, product fields are displayed in the section like other fields
+            if( self::is_product_field( $field['type'] ) ) {
+                $display_product_summary = apply_filters( 'gform_display_product_summary', true, $field, $form, $entry );
+                $is_field_displayed_in_section = ! $display_product_summary;
+            }
+
+            if( $is_field_displayed_in_section ) {
+                GFCache::set( $cache_key, 0 );
                 return false;
             }
+
         }
 
-        GFCache::set($cache_key, 1);
+        GFCache::set( $cache_key, 1 );
 
         return true;
     }
@@ -3861,21 +3921,21 @@ class GFCommon{
 
                 $has_columns = is_array(rgar($field, "choices"));
                 $columns = $has_columns ? rgar($field, "choices") : array(array());
+                $label_target_shim = sprintf( '<input type=\'text\' id=\'input_%1$s_%2$s_shim\' style=\'position:absolute;left:-999em;\' onfocus=\'jQuery( "#field_%1$s_%2$s table tr td:first-child input" ).focus();\' />', $form_id, $field['id'] );
 
                 $list = "<div class='ginput_container ginput_list'>" .
+                        $label_target_shim .
                         "<table class='gfield_list'>";
 
                 $class_attr = "";
                 if($has_columns){
 
-                    $list .= "<colgroup>";
-                    $colnum = 1;
-                    foreach($columns as $column){
-                        $odd_even = ($colnum % 2) == 0 ? "even" : "odd";
-                        $list .= "<col id='gfield_list_{$field["id"]}_col{$colnum}' class='gfield_list_col_{$odd_even}'></col>";
-                        $colnum++;
+                    $list .= '<colgroup>';
+                    for( $colnum = 1; $colnum <= count( $columns ) + 1; $colnum++ ) {
+                        $odd_even = ( $colnum % 2 ) == 0 ? 'even' : 'odd';
+                        $list .= sprintf( "<col id='gfield_list_%d_col_%d' class='gfield_list_col_%s' />", $field['id'], $colnum, $odd_even );
                     }
-                    $list .= "</colgroup>";
+                    $list .= '</colgroup>';
 
                     $list .= "<thead><tr>";
                     foreach($columns as $column){
@@ -3884,7 +3944,11 @@ class GFCommon{
                     $list .= "<th>&nbsp;</th></tr></thead>";
                 }
                 else{
-                    $list .= "<colgroup><col id='gfield_list_{$field["id"]}_col1' class='gfield_list_col_odd'></col></colgroup>";
+                    $list .=
+                        '<colgroup>' .
+                            "<col id='gfield_list_{$field['id']}_col1' class='gfield_list_col_odd' />" .
+                            "<col id='gfield_list_{$field['id']}_col2' class='gfield_list_col_even' />" .
+                        '</colgroup>';
                 }
 
                 $delete_display = count($value) == 1 ? "visibility:hidden;" : "";
@@ -4044,9 +4108,9 @@ class GFCommon{
 
                 foreach($input_info["choices"] as $choice){
                     if(is_array($choice)){
-                        $choice_value = $choice["value"];
-                        $choice_text = $choice["text"];
-                        $choice_selected = $choice["isSelected"];
+                        $choice_value = rgar($choice,"value");
+                        $choice_text = rgar($choice,"text");
+                        $choice_selected = rgar($choice,"isSelected");
                     }
                     else{
                         $choice_value = $choice;
@@ -4081,7 +4145,7 @@ class GFCommon{
     }
 
     public static function get_disallowed_file_extensions(){
-        return array("php", "asp", "exe", "com", "htaccess");
+        return array("php", "asp", "exe", "com", "htaccess", "phtml", "php3", "php4", "php5", "php6");
     }
 
     public static function to_money($number, $currency_code=""){
@@ -4665,9 +4729,8 @@ class GFCommon{
             break;
 
             default :
-            	if (!is_array($value))
-            	{
-                	return nl2br($value);
+            	if (!is_array($value)){
+                	return $format == "html" ? nl2br($value) : $value;
 				}
             break;
         }
@@ -4991,11 +5054,11 @@ class GFCommon{
             foreach($logic["rules"] as $rule) {
 
                 if (in_array($rule["fieldId"], $entry_meta_keys)){
-                        $is_value_match = GFFormsModel::is_value_match(rgar($lead,$rule["fieldId"]), $rule["value"], $rule["operator"]);;
+                        $is_value_match = GFFormsModel::is_value_match(rgar($lead,$rule["fieldId"]), $rule["value"], $rule["operator"], null, $rule, $form );
                 } else {
                     $source_field = GFFormsModel::get_field($form, $rule["fieldId"]);
                     $field_value = empty($lead) ? GFFormsModel::get_field_value($source_field, array()) : GFFormsModel::get_lead_field_value($lead, $source_field);
-                    $is_value_match = GFFormsModel::is_value_match($field_value, $rule["value"], $rule["operator"], $source_field);
+                    $is_value_match = GFFormsModel::is_value_match( $field_value, $rule["value"], $rule["operator"], $source_field, $rule, $form );
                 }
 
                 if($is_value_match)
@@ -5269,6 +5332,7 @@ class GFCommon{
         }
 
         $result = preg_match( '/^[0-9 -\/*\(\)]+$/', $formula ) ? eval( "return {$formula};" ) : false;
+        $result = apply_filters( 'gform_calculation_result', $result, $formula, $field, $form, $lead );
 
         return $result;
     }
@@ -5867,6 +5931,18 @@ class GFCommon{
         $key = substr( md5( wp_salt( 'nonce' ) ), 0, $iv_size );
 
         return trim( mcrypt_decrypt( MCRYPT_RIJNDAEL_256, $key, base64_decode( $text ), MCRYPT_MODE_ECB, mcrypt_create_iv( $iv_size, MCRYPT_RAND ) ) );
+    }
+
+    public static function esc_like( $value ) {
+        global $wpdb;
+
+        if( is_callable( array( $wpdb, 'esc_like' ) ) ) {
+            $value = $wpdb->esc_like( $value );
+        } else {
+            $value = like_escape( $value );
+        }
+
+        return $value;
     }
 
 }

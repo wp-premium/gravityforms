@@ -123,14 +123,15 @@ class GFEntryDetail{
                 RGFormsModel::add_note($lead["id"], $current_user->ID, $user_data->display_name, stripslashes($_POST["new_note"]));
 
                 //emailing notes if configured
-                if(rgpost("gentry_email_notes_to"))
-                {
+                if(rgpost("gentry_email_notes_to")){
+                	GFCommon::log_debug( 'Preparing to email entry notes.' );
                     $email_to = $_POST["gentry_email_notes_to"];
                     $email_from = $current_user->user_email;
                     $email_subject = stripslashes($_POST["gentry_email_subject"]);
-
                     $headers = "From: \"$email_from\" <$email_from> \r\n";
-                    $result = wp_mail($email_to, $email_subject, stripslashes($_POST["new_note"]), $headers);
+                    $body = stripslashes( $_POST["new_note"] );
+                    GFCommon::log_debug( "Emailing notes - TO: $email_to SUBJECT: $email_subject BODY: $body HEADERS: $headers" );
+                    $result = wp_mail( $email_to, $email_subject, $body, $headers );
                 }
             break;
 
@@ -341,7 +342,6 @@ class GFEntryDetail{
                         <div class="inside">
                             <div id="submitcomment" class="submitbox">
                                 <div id="minor-publishing" style="padding:10px;">
-                                    <br/>
                                     <?php _e("Entry Id", "gravityforms"); ?>: <?php echo absint($lead["id"]) ?><br/><br/>
                                     <?php _e("Submitted on", "gravityforms"); ?>: <?php echo esc_html(GFCommon::format_date($lead["date_created"], false, "Y/m/d")) ?>
                                     <br/><br/>
@@ -567,8 +567,8 @@ class GFEntryDetail{
                                             }
                                         }
                                         //displaying notes grid
-                                        $subject = !empty($form["autoResponder"]["subject"]) ? "RE: " . GFCommon::replace_variables($form["autoResponder"]["subject"], $form, $lead) : "";
-                                        self::notes_grid($notes, true, $emails, $subject);
+                                        $subject = '';
+                                        self::notes_grid( $notes, true, $emails, $subject );
                                         ?>
                                     </div>
                                 </form>
@@ -649,7 +649,7 @@ class GFEntryDetail{
         <?php
     }
 
-    public static function notes_grid($notes, $is_editable, $emails = null, $autoresponder_subject=""){
+    public static function notes_grid( $notes, $is_editable, $emails = null, $subject = '' ){
         if(sizeof($notes) > 0 && $is_editable && GFCommon::current_user_can_any("gravityforms_edit_entry_notes")){
             ?>
             <div class="alignleft actions" style="padding:3px 0;">
@@ -737,7 +737,7 @@ class GFEntryDetail{
 
                                 <span id='gentry_email_subject_container' style="display:none;">
                                     <label for="gentry_email_subject"><?php _e("Subject:", "gravityforms") ?></label>
-                                    <input type="text" name="gentry_email_subject" id="gentry_email_subject" value="<?php echo $autoresponder_subject ?>" style="width:35%"/>
+									<input type="text" id="gentry_email_subject" name="gentry_email_subject" value="" style="width:35%">
                                 </span>
                             </span>
                         <?php } ?>
@@ -851,10 +851,10 @@ class GFEntryDetail{
                             <td colspan="2" class="entry-view-field-value lastrow">
                                 <table class="entry-products" cellspacing="0" width="97%">
                                     <colgroup>
-                                          <col class="entry-products-col1">
-                                          <col class="entry-products-col2">
-                                          <col class="entry-products-col3">
-                                          <col class="entry-products-col4">
+                                          <col class="entry-products-col1" />
+                                          <col class="entry-products-col2" />
+                                          <col class="entry-products-col3" />
+                                          <col class="entry-products-col4" />
                                     </colgroup>
                                     <thead>
                                         <th scope="col"><?php echo apply_filters("gform_product_{$form_id}", apply_filters("gform_product", __("Product", "gravityforms"), $form_id), $form_id) ?></th>
@@ -964,28 +964,41 @@ class GFEntryDetail{
             <div class="inside">
                 <div id="submitcomment" class="submitbox">
                     <div id="minor-publishing" style="padding:10px;">
-                        <br/>
                         <?php
-                        if (!empty($lead["payment_status"])) {
-                            echo __("Status", "gravityforms"); ?>: <span
-                                id="gform_payment_status"><?php echo apply_filters("gform_payment_status", $lead["payment_status"], $form, $lead) ?></span>
-                            <br/><br/>
-                            <?php
+							if (!empty($lead["payment_status"])) {
+							?>
+								<div id="gf_payment_status" class="gf_payment_detail">
+								<?php
+									echo __("Status", "gravityforms"); ?>: <span id="gform_payment_status"><?php echo apply_filters("gform_payment_status", $lead["payment_status"], $form, $lead)
+								?></span>
+								</div>
+
+							<?php
                             if (!empty($lead["payment_date"])) {
-                                echo $lead["transaction_type"] == 2 ? __("Start Date", "gravityforms") : __("Date", "gravityforms") ?>: <?php echo GFCommon::format_date($lead["payment_date"], false, "Y/m/d", $lead["transaction_type"] != 2) ?>
-                                <br/><br/>
+								?>
+								<div id="gf_payment_date" class="gf_payment_detail">
+									<?php
+                                	echo $lead["transaction_type"] == 2 ? __("Start Date", "gravityforms") : __("Date", "gravityforms") ?>: <?php echo GFCommon::format_date($lead["payment_date"], false, "Y/m/d", $lead["transaction_type"] != 2)
+                                	?>
+								</div>
                             <?php
                             }
 
                             if (!empty($lead["transaction_id"])) {
+								?>
+								<div id="gf_payment_transaction_id" class="gf_payment_detail">
+								<?php
                                 echo $lead["transaction_type"] == 2 ? __("Subscription Id", "gravityforms") : __("Transaction Id", "gravityforms"); ?>: <?php echo $lead["transaction_id"] ?>
-                                <br/><br/>
+                                </div>
                             <?php
                             }
 
                             if (!rgblank($lead["payment_amount"])) {
+								?>
+								<div id="gf_payment_amount" class="gf_payment_detail">
+									<?php
                                 echo $lead["transaction_type"] == 2 ? __("Recurring Amount", "gravityforms") : __("Amount", "gravityforms"); ?>: <?php echo GFCommon::to_money($lead["payment_amount"], $lead["currency"]) ?>
-                                <br/><br/>
+                                </div>
                             <?php
                             }
                         }

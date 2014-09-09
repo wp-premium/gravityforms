@@ -1080,7 +1080,7 @@ if (class_exists("GFForms")) {
 
             $key = $this->get_results_cache_key_prefix($form_id);
 
-            $key = "%" . like_escape($key) . "%";
+            $key = "%" . GFCommon::esc_like( $key ) . "%";
 
             $sql = $wpdb->prepare("SELECT count(option_id) FROM $wpdb->options WHERE option_name LIKE %s", $key);
 
@@ -1099,7 +1099,7 @@ if (class_exists("GFForms")) {
 
             $key = $this->get_results_cache_key_prefix($form_id);
 
-            $key = "%" . like_escape($key) . "%";
+            $key = "%" . GFCommon::esc_like( $key ) . "%";
 
             $sql = $wpdb->prepare("DELETE FROM $wpdb->options WHERE option_name LIKE %s", $key);
 

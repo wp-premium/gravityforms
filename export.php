@@ -72,15 +72,19 @@ class GFExport{
                         foreach($field["choices"] as &$choice)
                             unset($choice["value"]);
                     }
-
-                    // convert associative array to indexed
-                    if(isset($form['confirmations']))
-                        $form['confirmations'] = array_values($form['confirmations']);
-
-                    if(isset($form['notifications']))
-                        $form['notifications'] = array_values($form['notifications']);
-
                 }
+
+				// convert associative array to indexed
+				if(isset($form['confirmations']))
+					$form['confirmations'] = array_values($form['confirmations']);
+
+				if(isset($form['notifications'])){
+					$form['notifications'] = array_values($form['notifications']);
+
+					foreach( $form["notifications"] as &$notification ){
+						$notification["isActive"] = rgar( $notification, "isActive" ) ? "1" : "0";
+					}
+				}
 
                 $form = apply_filters( 'gform_export_form', $form );
                 $form = apply_filters( "gform_export_form_{$form['id']}", $form );

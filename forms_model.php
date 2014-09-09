@@ -657,6 +657,7 @@ class GFFormsModel {
         $lead_notes_table = self::get_lead_notes_table_name();
         $lead_detail_table = self::get_lead_details_table_name();
         $lead_detail_long_table = self::get_lead_details_long_table_name();
+        $lead_meta_table = self::get_lead_meta_table_name();
 
         do_action("gform_delete_entries", $form_id, $status);
 
@@ -687,6 +688,13 @@ class GFFormsModel {
                                     SELECT id FROM $lead_table WHERE form_id=%d {$status_filter}
                                 )", $form_id);
         $wpdb->query($sql);
+
+        //Delete from lead meta
+        $sql = $wpdb->prepare(" DELETE FROM $lead_meta_table
+        						WHERE lead_id IN (
+        							SELECT id FROM $lead_table WHERE form_id=%d {$status_filter}
+                                )", $form_id);
+    	$wpdb->query($sql);
 
         //Delete from lead
         $sql = $wpdb->prepare("DELETE FROM $lead_table WHERE form_id=%d {$status_filter}", $form_id);
@@ -1472,7 +1480,7 @@ class GFFormsModel {
         return null;
     }
 
-    public static function is_value_match( $field_value, $target_value, $operation="is", $source_field = null, $rule = null ){
+    public static function is_value_match( $field_value, $target_value, $operation="is", $source_field = null, $rule = null, $form = null ) {
 
         $is_match = false;
 
@@ -1500,7 +1508,7 @@ class GFFormsModel {
             $is_match = true;
         }
 
-        return apply_filters( 'gform_is_value_match', $is_match, $field_value, $target_value, $operation, $source_field, $rule );
+        return apply_filters( 'gform_is_value_match', $is_match, $field_value, $target_value, $operation, $source_field, $rule, $form );
     }
 
     private static function try_convert_float($text){
@@ -1582,7 +1590,7 @@ class GFFormsModel {
             $source_field = RGFormsModel::get_field($form, $rule["fieldId"]);
             $field_value = empty($lead) ? self::get_field_value($source_field, $field_values) : self::get_lead_field_value($lead, $source_field);
 
-            $is_value_match = self::is_value_match($field_value, $rule["value"], $rule["operator"], $source_field);
+            $is_value_match = self::is_value_match( $field_value, $rule['value'], $rule['operator'], $source_field, $rule, $form );
 
             if($is_value_match)
                 $match_count++;
@@ -2004,7 +2012,7 @@ class GFFormsModel {
             break;
 
             case "date" :
-                $value = self::prepare_date($field["dateFormat"], $value);
+                $value = self::prepare_date( rgar( $field, 'dateFormat' ), $value);
 
             break;
 
@@ -2792,7 +2800,7 @@ class GFFormsModel {
         }
     }
 
-    private static function set_permissions($path){
+    public static function set_permissions($path){
 
         $permission = apply_filters("gform_file_permission", 0644, $path);
         if($permission){
@@ -4094,7 +4102,60 @@ class GFFormsModel {
                     break;
                 case "global":
 
-                    $sql_array[] = $wpdb->prepare("value $operator %s", $search_term);
+					// include choice text
+					$forms = array();
+					if ( $form_id == 0 ) {
+						$forms = GFAPI::get_forms();
+					} elseif ( is_array( $form_id ) ) {
+						foreach ( $form_id as $id ){
+							$forms[] = GFAPI::get_form( $id );
+						}
+					} else {
+						$forms[] = GFAPI::get_form( $form_id );
+					}
+
+					$choice_texts_clauses = array();
+					foreach ( $forms as $form ) {
+						if ( isset( $form['fields'] ) ) {
+							$choice_texts_clauses_for_form = array();
+							foreach ( $form['fields'] as $field ) {
+								$choice_texts_clauses_for_field = array();
+								if ( isset( $field['choices'] ) && is_array( $field['choices'] ) ) {
+									foreach ( $field['choices'] as $choice ) {
+										if ( ( $operator == '=' && strtolower( $choice['text'] ) == strtolower( $val ) ) || ( $operator == 'like' && strpos( strtolower( $choice['text'] ), strtolower( $val ) ) !== false ) ) {
+											if ( rgar( $field, 'gsurveyLikertEnableMultipleRows' ) ){
+												$choice_value =  '%' . $choice['value'] . '%' ;
+												$choice_search_operator = 'like';
+											} else {
+												$choice_value =  $choice['value'];
+												$choice_search_operator = '=';
+											}
+											$choice_texts_clauses_for_field[] = $wpdb->prepare( "field_number BETWEEN %s AND %s AND value {$choice_search_operator} %s", (float) $field['id'] - 0.0001, (float) $field['id'] + 0.9999, $choice_value );
+										}
+									}
+								}
+								if ( ! empty( $choice_texts_clauses_for_field ) ) {
+									$choice_texts_clauses_for_form[] = join( ' OR ', $choice_texts_clauses_for_field );
+								}
+							}
+						}
+						if ( ! empty( $choice_texts_clauses_for_form ) ) {
+							$choice_texts_clauses[] = '(l.form_id = ' . $form['id'] . ' AND (' . join( ' OR ', $choice_texts_clauses_for_form ) . ' ))';
+						}
+					}
+					$choice_texts_clause = '';
+					if ( ! empty( $choice_texts_clauses) ){
+						$choice_texts_clause = join( ' OR ', $choice_texts_clauses );
+						$choice_texts_clause = "
+						l.id IN (
+                        SELECT
+                        lead_id
+                        FROM {$lead_details_table_name}
+                        WHERE {$choice_texts_clause} ) OR ";
+					}
+
+					$choice_value_clause = $wpdb->prepare( "value {$operator} %s", $search_term );
+					$sql_array[] = '(' . $choice_texts_clause . $choice_value_clause . ')';
                     break;
                 case "meta":
                     /* doesn't support "<>" for multiple values of the same key */

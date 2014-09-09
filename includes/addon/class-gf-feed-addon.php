@@ -30,6 +30,14 @@ abstract class GFFeedAddOn extends GFAddOn {
 
     }
 
+    public function init_ajax() {
+
+		parent::init_ajax();
+
+        add_action( "wp_ajax_gf_feed_is_active_{$this->_slug}", array( $this, 'ajax_toggle_is_active' ) );
+
+	}
+
     protected function setup(){
         parent::setup();
 
@@ -112,35 +120,41 @@ abstract class GFFeedAddOn extends GFAddOn {
 
     public function maybe_process_feed( $entry, $form, $is_delayed = false ) {
 
-        $paypal_feed = $this->get_paypal_feed( $form['id'], $entry );
-        $has_payment = self::get_paypal_payment_amount($form, $entry, $paypal_feed) > 0;
-
-        if( $paypal_feed && rgar( $paypal_feed['meta'], "delay_{$this->_slug}" ) && $has_payment && !$is_delayed ) {
-            self::log_debug( "Feed processing delayed pending PayPal payment received for entry {$entry['id']}" );
-            return $entry;
-        }
-
-        // getting all active feeds
+        //Getting all active feeds for current addon
         $feeds = $this->get_feeds( $form['id'] );
+        
+        //Aborting if delayed payment is configured
+		if ( ! empty( $feeds ) ) {
+			$is_delayed_payment_configured = $this->is_delayed_payment( $entry, $form, $is_delayed );
 
+			if ( $is_delayed_payment_configured ) {
+				$this->log_debug( "Feed processing delayed pending PayPal payment received for entry {$entry['id']}" );
+
+				return $entry;
+			}
+		}
+
+		//Processing feeds
         $processed_feeds = array();
         foreach ( $feeds as $feed ) {
-            if ( $this->is_feed_condition_met( $feed, $form, $entry ) ) {
+            if ( $feed['is_active'] && $this->is_feed_condition_met( $feed, $form, $entry ) ) {
                 $this->process_feed( $feed, $entry, $form );
-                $processed_feeds[] = $feed["id"];
+                $processed_feeds[] = $feed['id'];
             } else {
-                $this->log_debug( "Opt-in condition not met; not fulfilling entry {$entry["id"]} to list" );
+                $this->log_debug( 'Opt-in condition not met or feed is inactive, not processing feed for entry #' . $entry['id'] . ". Feed Status: " . $feed['is_active'] );
             }
         }
 
-        if(!empty($processed_feeds)){
-            $meta = gform_get_meta($entry["id"], "processed_feeds");
-            if(empty($meta))
+        //Saving processed feeds
+        if( ! empty( $processed_feeds ) ){
+            $meta = gform_get_meta( $entry['id'], 'processed_feeds' );
+            if( empty($meta) ) {
                 $meta = array();
+			}
 
             $meta[$this->_slug] = $processed_feeds;
 
-            gform_update_meta( $entry["id"], "processed_feeds", $meta );
+            gform_update_meta( $entry['id'], 'processed_feeds', $meta );
         }
 
         return $entry;
@@ -282,10 +296,6 @@ abstract class GFFeedAddOn extends GFAddOn {
 
     public function form_settings_init(){
         parent::form_settings_init();
-
-        if (RG_CURRENT_PAGE == "admin-ajax.php") {
-            add_action("wp_ajax_gf_feed_is_active_{$this->_slug}", array($this, 'ajax_toggle_is_active'));
-        }
     }
 
     public function ajax_toggle_is_active(){
@@ -814,6 +824,21 @@ abstract class GFFeedAddOn extends GFAddOn {
         //does not require that feed meets conditional logic. return true since there are feeds
         return true;
     }
+    
+    protected function is_delayed_payment( $entry, $form, $is_delayed ) {
+		if ( $this->_slug == 'gravityformspaypal' ) {
+			return false;
+		}
+
+		$paypal_feed = $this->get_paypal_feed( $form['id'], $entry );
+		if ( ! $paypal_feed ) {
+			return false;
+		}
+
+		$has_payment = self::get_paypal_payment_amount( $form, $entry, $paypal_feed ) > 0;
+
+		return rgar( $paypal_feed['meta'], "delay_{$this->_slug}" ) && $has_payment && ! $is_delayed;
+	}
 
 }
 

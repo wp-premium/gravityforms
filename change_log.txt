@@ -1,4 +1,120 @@
 -------------------------------------------------------------------------------------------------------------------
+Version 1.8.13
+	- Added additional check plus user feedback for failed multi-file uploads.
+	- Fixed a potential security vulnerability for some server configurations which could allow code to be executed via the file upload field.
+	- Fixed issue with form export/import setting inactive notifications to active.
+	- Fixed issue with resend notification not accepting a list of emails.
+	- Fixed another issue with field label for Name and Address fields.
+	- Fixed issue with field label for Name and Address fields.
+	- Fixed issue causing checkboxes checked by default to be rendered unchecked in certain situations.
+
+	- AF: Fixed another issue with simple_condition() function/feature creating javascript errors.
+	- AF: Fixed get_field_map_fields function to no longer include the text "field_map" in the mapped fields prefix.
+	- AF: Fixed issue with payments less than $1.00 not being processed.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.12
+    - Added PHP version of the "gform_calculation_result" filter.
+        add_filter( 'gform_calculation_result', 'my_calc_result', 10, 5 );
+        function my_calc_result( $result, $formula, $field, $form, $entry ) {
+            // modify result as needed
+            return $result;
+        }
+    - Updated chosen js, styles and images to latest version.
+	- Fixed issue with multiple file upload merge tag not including a line break when in html format.
+    - Fixed issue with List field markup; more <td> than <col>.
+    - Fixed markup validation issue with List Field where label for attribute did not match a valid input.
+	- AF: Fixed issue with simple_condition() function/feature creating javascript errors.
+	- AF: Added a check in the maybe_process_callback function to see if the callback has been aborted to prevent processing for the Payment Add-On.
+	- API: Added GFAPI::get_forms() method.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.11
+
+    - Fixed issue where <col> tags were closed incorrectly generating invalid HTML markup.
+	- Fixed issue with notifications not being sent when configured with multiple email addresses.
+	- Fixed issue with legacy notifications getting marked as inactive after being edited.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.10
+
+    - Added gform_enable_shortcode_notification_message hook to allow for disabling shortcode processing of notification messages.
+    - Added $field_values as a third paramater for the gform_pre_render filter.
+    - Added new hook: 'gform_send_email_failed'; allows interception when a call to GFCommon::send_email() fails.
+        add_action( 'gform_send_email_failed', 'my_send_email_failed_func', 10, 2 );
+        function my_send_email_failed_func( $error, $email ) {
+            // do what you want with the $error and $email data.
+        }
+    - Added new JS filter: 'gform_calculation_formula' to allow modifying formula before it is processed by GF on frontend.
+        gform.addFilter( 'gform_calculation_formula', function( formula, formulaField, formId, calcObj ) {
+            // custom code here
+            return formula;
+        } );
+    - Added $rule and $form parameters to the gform_is_value_match filter.
+    - Added GFCommon::esc_like() method to fix deprecation notice in WP 4.0 while maintining backwards compatibility with previous WP versions.
+    - Added condition to not include "gform_chosen" if "chosen" is already enqueued.
+
+	- Updated gf_reset_to_default() to not select disabled options in drop downs when reseting default value.
+	- Updated GCommon::is_valid_url() to use filter_var( $url, FILTER_VALIDATE_URL ).
+    - Updated GCommon::is_valid_email() to use filter_var( $email, FILTER_VALIDATE_EMAIL ).
+	- Updated entry details payment information markup.
+    - Updated complete_payment function to update the entry's payment_amount, transaction_id, and payment_date for the Payment Add-On.
+    - Updated process for enqueuing chosen script to check if "chosen" is a registered handle and if so to include it instead of "gform_chosen".
+    - Updated french translation.
+    - Updated product calculation field to allow the label to be changed dynamically like the single product field.
+    - Updated delete_leads_by_form function to include deleting data from the lead meta table.
+
+	- API: Updated GFAPI::get_entries() to include field choice texts in addition to values when performing a global search.
+
+	- Fixed fatal error triggered on some servers.
+	- Fixed Notice message.
+	- Fixed an issue with multi-page, ajax-enabled forms with images as buttons where multiple spinners were displayed during form submission.
+	- Fixed issue with multi file upload merge tag.
+	- Fixed issue with confirmation type "Page" when permalink contains a query string.
+    - Fixed bug with default values for conditional logic where any choice with a 'price' attr set (even if it wasn't a pricing field) was incorrectly treated as a pricing value.
+	- Fixed a issue with GFCommon::esc_like() causing a fatal error on WordPress < 4.0.
+	- Fixed an issue with checkbox, radio button and drop-down fields which caused data to be saved incorrectly if a pipe ("|") was used in a choice value.
+	- Fixed the validation of the website field to accept commas in the path.
+    - Fixed notices thrown in WP 4.0 on pages using/extending WP_List_Table.
+ 	- Fixed an issue affecting the search function on the entry list and the conditional logic on the entry export page where field choice values would be taken into account but not their corresponding texts/labels while performing a global search based on any form field. This affects all radio, checkbox and drop-down fields plus derivative fields in add-ons i.e. Poll, Survey and Quiz fields.
+	- Fixed a bug with conditional logic animation in Firefox.
+    - Fixed "Index too large" error for payment addons.
+    - Fixed issue with inactive notifications getting changed back to active when notification is edited.
+    - Fixed issue where admin label was not used for fields in the inactive column on the "Select Columns" ui.
+    - Fixed issue where is_section_empty() returned true even if section contained a product field and 'gform_display_product_summary' filter returned false.
+    - Fixed issue where <br> tags were being displayed on notifications even when the message type was set to "text".
+    - Fixed notice thrown in update_confirmation function when isDefault not set.
+	- Fixed warnings thrown in get_version_info when the response is not an array.
+
+	- AF: Fixed issue with sales page where payment method drop down displayed blank values.
+	- AF: Fixed issue when creating subscriptions upon first subscription payment.
+	- AF: Fixed issue with payment going to gateway when the amount was negative.
+	- AF: Updated payment Add-On so that redirect_url() is called earlier in the page life-cycle.
+	- AF: Fixed issue with results page displaying an error message for the Stripe Add-On.
+	- AF: Added support for checkbox item callback to allow an individual checkbox item to be customized.
+	- AF: Fixed issue that caused a $0.00 total when selecting the same product field for the subscription payment and trial payment.
+	- AF: Fixed issue with plugin settings page displaying slug instead of Title.
+	- AF: Fixed issue with payment add-on sending requests to payment gateways even when payment was $0.00.
+	- AF: Updated process_capture function to set is_fulfilled to true so complete_payment function uses the entry value for Payment Add-On.
+	- AF: Updated maybe_process_feed function to handle delayed payments for the Payment Add-On.
+	- AF: Added support for formatting inputs as currency.
+	- AF: Fixed notice thrown in the process_callback_action function when logging for the Payment Add-On.
+	- AF: Updated maybe_process_feeds function to not process feeds set as inactive.
+	- AF: Added register and init_addons() function to allow for aid in initializing addons and support overriding them.
+	- AF: Updated process_capture function in the Payment Add-on to call complete_payment.
+    - AF: Updated Payment AF validation to only validate if the validation result is valid.
+	- AF: Fixed misspelling on database key in create table for ...gf_addon_payment_transaction for the Payment Add-On.
+	- AF: Updated confirmation function to set the transaction type on the entry for payment gateways that redirect to a url for the Payment Add-On.
+    - AF: Added code to update the payment_gateway meta for the entry when the gateway is a URL redirect for the Payment Add-On.
+    - AF: Fixed notices thrown in the complete_payment function in the Payment Add-On.
+    - AF: Updated priority of Payment AF validation from 10 to 20 to ensure all validation has passed before payment validation occurs (resolves issue where validation could sometimes fail AFTER a subscription was created).
+    - AF: Fixed issue where "name" attribute was output twice.
+    - AF: Updated 'name' property of plugin settings tabs to use slug rather than short title.
+    - AF: Fixed issue where feed status was not saved.
+	- AF: Added a post_callback function to the Payment Add-On.
+	- AF: Added tooltips to the Payment Add-On.
+
+-------------------------------------------------------------------------------------------------------------------
 Version 1.8.9
     - Added "password" to the list of fields which allow HTML input.
     - Added 'gform_field_container' filter to allow modifying the field container markup.
