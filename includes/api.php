@@ -48,6 +48,33 @@ class GFAPI {
     }
 
     /**
+     * Returns all the form objects
+     *
+     * @since  1.8.11.5
+     * @access public
+     * @static
+     *
+     * @param bool $active
+     * @param bool $trash
+     *
+     * @return mixed The array of Forms
+     */
+    public static function get_forms( $active = true, $trash = false ) {
+
+        $form_ids = GFFormsModel::get_form_ids( $active, $trash );
+        if ( empty( $form_ids ) ) {
+            return array();
+        }
+
+        $forms = array();
+        foreach ( $form_ids as $form_id ) {
+            $forms[] = GFAPI::get_form( $form_id );
+        }
+
+        return $forms;
+    }
+
+    /**
      * Deletes the forms with the given Form IDs
      *
      * @since  1.8

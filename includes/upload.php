@@ -36,6 +36,10 @@ class GFAsyncUpload {
         $form_unique_id = rgpost("gform_unique_id");
         $form           = GFFormsModel::get_form_meta($form_id);
 
+		if ( empty( $form ) ) {
+			die();
+		}
+
         $target_dir = GFFormsModel::get_upload_path($form_id) . DIRECTORY_SEPARATOR . "tmp" . DIRECTORY_SEPARATOR;
 
         wp_mkdir_p($target_dir);
@@ -50,6 +54,11 @@ class GFAsyncUpload {
         $file_name = isset($_REQUEST["name"]) ? $_REQUEST["name"] : '';
         $field_id  = rgpost("field_id");
         $field     = GFFormsModel::get_field($form, $field_id);
+
+		if ( empty( $field ) ) {
+			die();
+		}
+
         // Clean the fileName for security reasons
         $file_name = preg_replace('/[^\w\._]+/', '_', $file_name);
 
@@ -154,6 +163,11 @@ class GFAsyncUpload {
 
         $uploaded_filename = $_FILES["file"]["name"];
 
+		if ( file_exists( $file_path ) ) {
+			GFFormsModel::set_permissions( $file_path );
+		} else {
+			die( '{"status" : "error", "error" : {"code": 105, "message": "' . __( 'Upload unsuccessful:', 'gravityforms' ) . ' '. $uploaded_filename . '"}}' );
+		}
 
         $output = array("status"    => "ok",
                         "data"      => array("temp_filename"     => $tmp_file_name ,

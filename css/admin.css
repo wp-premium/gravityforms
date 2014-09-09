@@ -1305,6 +1305,9 @@ table td.gfield_category_cell {
 }
 
 /* view form styles ------------------------------------------------------*/
+div.gf_payment_detail{
+	margin-bottom: 15px;
+}
 
 table.entry-detail-view {
 	margin-bottom: 16px
