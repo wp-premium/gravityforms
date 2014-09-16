@@ -3234,13 +3234,13 @@ class GFFormsModel {
         $entry_meta_sql_join = "";
         if ( false === empty( $entry_meta ) && array_key_exists( $sort_field, $entry_meta ) ) {
             $entry_meta_sql_join = $wpdb->prepare("INNER JOIN
-                                                    (
-                                                    SELECT
-                                                         lead_id, meta_value as $sort_field
-                                                         from $lead_meta_table_name
-                                                         WHERE meta_key = '$sort_field'
-                                                    ) lead_meta_data ON lead_meta_data.lead_id = l.id
-                                                    ");
+													(
+													SELECT
+														 lead_id, meta_value as $sort_field
+														 from $lead_meta_table_name
+														 WHERE meta_key = %s
+													) lead_meta_data ON lead_meta_data.lead_id = l.id
+													", $sort_field);
             $is_numeric_sort = $entry_meta[$sort_field]['is_numeric'];
         }
         $grid_columns = RGFormsModel::get_grid_columns($form_id);

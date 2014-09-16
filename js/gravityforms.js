@@ -1199,7 +1199,7 @@ var gform = {
                 extension = file.name.split('.').pop();
 
                 if($.inArray(extension, disallowed) > -1){
-                    addMessage(up.settings.gf_vars.message_id, file.name + " - " + strings.illegal_extension)
+                    addMessage(up.settings.gf_vars.message_id, file.name + " - " + strings.illegal_extension);
                     up.removeFile(file);
                     return;
                 }
@@ -1265,9 +1265,9 @@ var gform = {
                     (err.file ? ", File: " + err.file.name : "") +
                     "</li>";
 
-                $("#" + up.settings.gf_vars.message_id).prepend(m);
+				addMessage(up.settings.gf_vars.message_id, m);
             }
-            up.removeFile(err.file);
+			$('#' + err.file.id ).html('');
 
             up.refresh(); // Reposition Flash
         });
@@ -1275,8 +1275,9 @@ var gform = {
         uploader.bind('FileUploaded', function(up, file, result) {
             var response = $.secureEvalJSON(result.response);
             if(response.status == "error"){
-                $('#' + up.settings.filelist).prepend(response.error.message);
-                return;
+				addMessage(up.settings.gf_vars.message_id, file.name + " - " + response.error.message);
+				$('#' + file.id ).html('');
+				return;
             }
 
             var html = '<strong>' + file.name + '</strong>';

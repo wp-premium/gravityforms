@@ -1,4 +1,27 @@
 -------------------------------------------------------------------------------------------------------------------
+Version 1.8.16
+	- Fixed some strings that weren't localized and added localization context to others
+	- Fixed issue with datepicker to prevent user being returned to start of form when tabbing after selecting a date.
+	- Fixed a notice on the WordPress updates page
+	- Fixed a security issue with the file upload field for some server configurations
+	- Fixed an issue with the file upload file not matching uppercase extensions
+	- Updated POT file
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.15
+	- Fixed an issue with the multi-file upload field while uploading multiple files all selected at the same time in the file dialog. If one of the uploads fails due to an HTTP error then the next file in the list will appear as 100% complete but it will be removed from the form submission.
+	- AF: Fixed issue with checkboxes no retaining their values
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.14
+	- Fixed a potential security vulnerability for some servers which could allow code to be parsed via the file upload field.
+	- Fixed a security issue to prevent code injection
+	- Fixed an issue with the file upload field that allows malicious form submissions to bypass the validation for the maximum file size setting.
+
+	- AF: Fixed issue with simple conditional logic
+	- AF: Fixed issue with checkbox fields not supporting custom 'onclick' attributes to be added.
+
+-------------------------------------------------------------------------------------------------------------------
 Version 1.8.13
 	- Added additional check plus user feedback for failed multi-file uploads.
 	- Fixed a potential security vulnerability for some server configurations which could allow code to be executed via the file upload field.

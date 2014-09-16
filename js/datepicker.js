@@ -28,7 +28,7 @@ function gformInitDatepicker(){
                 image = jQuery('#gforms_calendar_icon_' + this.id).val();
             }
 
-            element.datepicker({ yearRange: '-100:+20', showOn: showOn, buttonImage: image, buttonImageOnly: true, dateFormat: format, changeMonth: true, changeYear: true });
+            element.datepicker({ yearRange: '-100:+20', showOn: showOn, buttonImage: image, buttonImageOnly: true, dateFormat: format, changeMonth: true, changeYear: true, onSelect: function (){ element.focus(); } });
         }
     );
 }

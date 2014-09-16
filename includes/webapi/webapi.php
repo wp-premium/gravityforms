@@ -187,7 +187,7 @@ if (class_exists("GFForms")) {
                             "name"    => "activate",
                             "onclick" => 'gfapiToggleSettings(jQuery(this).prop("checked"))',
                             "choices" => array(
-                                array("label" => "Enabled", "name" => "enabled")
+                                array("label" => __("Enabled", "gravityforms"), "name" => "enabled")
                             )
                         ),
                         array(
