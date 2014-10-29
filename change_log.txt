@@ -1,5 +1,56 @@
 -------------------------------------------------------------------------------------------------------------------
+Version 1.8.18
+
+	- Added filters on entry detail to support editing payment related data in the payment info box.
+    - Added the parameter name as a third parameter to the "gform_field_value" filter.
+    - Added "gform_entry_detail_grid_display_empty_fields" filter to allow displaying empty fields even if option is not checked (i.e. print view).
+        add_filter( 'gform_entry_detail_grid_display_empty_fields', '__return_true' );
+	- Added filter to get_form_meta() to allow forms to be filtered globally.
+	- Updated localization of certain strings.
+    - Updated POT file.
+	- Updated the order of marking an entry as spam so that it is done before the gform_entry_created and gform_entry_post_save hooks.
+
+	- Fixed issue with PayPal fulfillment not going through when entry was marked as Paid in the entry detail page.
+    - Fixed issue with trial period amount (fixed amount entered on subscription feed) for currencies other than Dollar.
+	- Fixed issue with Chrome on Android for drop downs with conditional logic.
+    - Fixed an issue with the field filters on the entry list, export entries and results pages where product fields couldn't be filtered.
+	- Fixed issue with complex fields not being properly loaded into array.
+	- Fixed issue where List fields in notifications sometimes displayed incorrectly due to max line size being exceeded.
+	- Fixed issue with quantity fields not defaulting to correct value after being hidden by conditional logic.
+	- Fixed an issue with the single file upload field where validation fails if the max file size is set higher than 2047MB.
+
+	- AF: Added check to framework to prevent sending spam entries to non-payment feeds. This will take effect in feeds as they are migrated to the Add-On Framework.
+	- AF: Fixed issue with feeds not getting executed when configured for delayed payment and the payment amount ends up being $0.00.
+	- AF: Fixed issue with feed addons not preserving current feed when a new feed was getting created.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.17
+	- Added form specific version of 'gform_entry_is_spam' filter.
+	- Added "gform_entry_is_spam" filter.
+	    add_filter( 'gform_entry_is_spam', 'it_is_all_spam', 10, 3 );
+	    function it_is_all_spam( $is_spam, $form, $entry ) {
+	        return true;
+	    }
+	- Updated entry list and detail pages to display spam features if gform_entry_is_spam hook is used when Akismet integration is disabled.
+    - Updated is_duplicate check to work for "long" values as well.
+    - Added 'gform_disable_view_counter' filter to disable counting of form views. Both globally and by form id. Views column remains displayed on the Forms page.
+        add_filter( 'gform_disable_view_counter', '__return_true' );
+        add_filter( 'gform_disable_view_counter_12', '__return_false' );
+	- Fixed XSS vulnerability.
+    - Fixed a notice on the WordPress updates page.
+	- Fixed issue with Add-On manager displaying error when installing Add-Ons.
+	- Fixed notice when $form['pagination']['display_progressbar_on_confirmation'] was not set.
+	- Fixed issue with entry list page payment status drop down containing "Approved" instead of "Paid".
+    - Fixed issue where setting an input-based field value to empty would fail to save.
+	- AF: Added get_feeds_by_slug function.
+    - AF: Added is_delayed function to check whether a feed is delayed processing with PayPal Standard.
+	- AF: Updated maybe_process_feed function to handle processing when add-on is set as delayed in PayPal Standard feed setup.
+	- AF: Updated logging statements to be clearer.
+	- AF: Removed unused function get_feed_by_entry.
+
+-------------------------------------------------------------------------------------------------------------------
 Version 1.8.16
+
 	- Fixed some strings that weren't localized and added localization context to others
 	- Fixed issue with datepicker to prevent user being returned to start of form when tabbing after selecting a date.
 	- Fixed a notice on the WordPress updates page
@@ -9,11 +60,13 @@ Version 1.8.16
 
 -------------------------------------------------------------------------------------------------------------------
 Version 1.8.15
+
 	- Fixed an issue with the multi-file upload field while uploading multiple files all selected at the same time in the file dialog. If one of the uploads fails due to an HTTP error then the next file in the list will appear as 100% complete but it will be removed from the form submission.
 	- AF: Fixed issue with checkboxes no retaining their values
 
 -------------------------------------------------------------------------------------------------------------------
 Version 1.8.14
+
 	- Fixed a potential security vulnerability for some servers which could allow code to be parsed via the file upload field.
 	- Fixed a security issue to prevent code injection
 	- Fixed an issue with the file upload field that allows malicious form submissions to bypass the validation for the maximum file size setting.
@@ -23,6 +76,7 @@ Version 1.8.14
 
 -------------------------------------------------------------------------------------------------------------------
 Version 1.8.13
+
 	- Added additional check plus user feedback for failed multi-file uploads.
 	- Fixed a potential security vulnerability for some server configurations which could allow code to be executed via the file upload field.
 	- Fixed issue with form export/import setting inactive notifications to active.
@@ -37,6 +91,7 @@ Version 1.8.13
 
 -------------------------------------------------------------------------------------------------------------------
 Version 1.8.12
+
     - Added PHP version of the "gform_calculation_result" filter.
         add_filter( 'gform_calculation_result', 'my_calc_result', 10, 5 );
         function my_calc_result( $result, $formula, $field, $form, $entry ) {
@@ -139,6 +194,7 @@ Version 1.8.10
 
 -------------------------------------------------------------------------------------------------------------------
 Version 1.8.9
+
     - Added "password" to the list of fields which allow HTML input.
     - Added 'gform_field_container' filter to allow modifying the field container markup.
         add_action( 'gform_field_container', 'my_field_container', 10, 6 );
@@ -396,6 +452,7 @@ Version 1.8.5
 
 -------------------------------------------------------------------------------------------------------------------
 Version 1.8.4.1
+
     - Fixed issue with tooltips not working on Add On pages. Included font-awesome.css to Add On pages to fix the issue.
     - Fixed issue where old inputs were not removed when adding new choices via bulk add functionality for Post Custom Fields with a "checkbox" field type
     - Fixed an issue with entry export which may result in an empty export file for forms with a large number of entries
@@ -470,6 +527,7 @@ Version 1.8.4
 
 -------------------------------------------------------------------------------------------------------------------
 Version 1.8.3
+
 	- Added new filter "gform_post_category_choices" to alter post category choices sort order. Both globally and form id + field id specific.
         add_filter("gform_post_category_choices", "set_sort", 10, 3);
         function set_sort($choices, $field, $form_id){

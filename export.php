@@ -616,7 +616,7 @@ class GFExport{
         $end_date = empty($_POST["export_date_end"]) ? "" : self::get_gmt_date($_POST["export_date_end"] . " 23:59:59");
 
         $search_criteria["status"] = "active";
-        $search_criteria["field_filters"] = GFCommon::get_field_filters_from_post();
+        $search_criteria["field_filters"] = GFCommon::get_field_filters_from_post($form);
         if(!empty($start_date))
             $search_criteria["start_date"] = $start_date;
 
