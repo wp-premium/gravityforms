@@ -2873,7 +2873,7 @@ abstract class GFAddOn {
     }
 
     public function plugin_settings_title(){
-        return $this->get_short_title() . ' ' . __( "Settings", "gravityforms" );
+        return sprintf( __( "%s Settings", "gravityforms" ), $this->get_short_title() );
     }
 
     protected function plugin_settings_icon(){

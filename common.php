@@ -3700,7 +3700,11 @@ class GFCommon{
                         $upload .= sprintf('<input type="hidden" name="input_%d" value=\'%s\' />', $id, esc_attr($value));
 
                 } else {
-                    $upload = sprintf("<input type='hidden' name='MAX_FILE_SIZE' value='%d' />", $max_upload_size);
+	                $upload = '';
+	                if ( $max_upload_size <= 2047 * 1048576 ) {
+		                //  MAX_FILE_SIZE > 2048MB fails. The file size is checked anyway once uploaded, so it's not necessary.
+		                $upload = sprintf( "<input type='hidden' name='MAX_FILE_SIZE' value='%d' />", $max_upload_size );
+	                }
                     $upload .= sprintf("<input name='input_%d' id='%s' type='file' class='%s' $tabindex %s/>", $id, $field_id, esc_attr($class), $disabled_text);
                 }
 
@@ -4695,48 +4699,48 @@ class GFCommon{
 
                         default :
                             if($media == "email"){
-                                $list = "<table class='gfield_list' style='border-top: 1px solid #DFDFDF; border-left: 1px solid #DFDFDF; border-spacing: 0; padding: 0; margin: 2px 0 6px; width: 100%'><thead><tr>";
+                                $list = "<table class='gfield_list' style='border-top: 1px solid #DFDFDF; border-left: 1px solid #DFDFDF; border-spacing: 0; padding: 0; margin: 2px 0 6px; width: 100%'><thead><tr>\n";
 
                                 //reading columns from entry data
                                 foreach($columns as $column){
-                                    $list .= "<th style='background-image: none; border-right: 1px solid #DFDFDF; border-bottom: 1px solid #DFDFDF; padding: 6px 10px; font-family: sans-serif; font-size: 12px; font-weight: bold; background-color: #F1F1F1; color:#333; text-align:left'>" . esc_html($column) . "</th>";
+                                    $list .= "<th style='background-image: none; border-right: 1px solid #DFDFDF; border-bottom: 1px solid #DFDFDF; padding: 6px 10px; font-family: sans-serif; font-size: 12px; font-weight: bold; background-color: #F1F1F1; color:#333; text-align:left'>" . esc_html($column) . "</th>\n";
                                 }
-                                $list .= "</tr></thead>";
+                                $list .= "</tr></thead>\n";
 
                                 $list .= "<tbody style='background-color: #F9F9F9'>";
                                 foreach($value as $item){
                                     $list .= "<tr>";
                                     foreach($columns as $column){
                                         $val = rgar($item, $column);
-                                        $list .= "<td style='padding: 6px 10px; border-right: 1px solid #DFDFDF; border-bottom: 1px solid #DFDFDF; border-top: 1px solid #FFF; font-family: sans-serif; font-size:12px;'>{$val}</td>";
+                                        $list .= "<td style='padding: 6px 10px; border-right: 1px solid #DFDFDF; border-bottom: 1px solid #DFDFDF; border-top: 1px solid #FFF; font-family: sans-serif; font-size:12px;'>{$val}</td>\n";
                                     }
 
-                                    $list .="</tr>";
+                                    $list .="</tr>\n";
                                 }
 
-                                $list .="<tbody></table>";
+                                $list .="<tbody></table>\n";
                             }
                             else{
-                                $list = "<table class='gfield_list'><thead><tr>";
+                                $list = "<table class='gfield_list'><thead><tr>\n";
 
                                 //reading columns from entry data
                                 foreach($columns as $column){
-                                    $list .= "<th>" . esc_html($column) . "</th>";
+                                    $list .= "<th>" . esc_html($column) . "</th>\n";
                                 }
-                                $list .= "</tr></thead>";
+                                $list .= "</tr></thead>\n";
 
                                 $list .= "<tbody>";
                                 foreach($value as $item){
                                     $list .= "<tr>";
                                     foreach($columns as $column){
                                         $val = rgar($item, $column);
-                                        $list .= "<td>{$val}</td>";
+                                        $list .= "<td>{$val}</td>\n";
                                     }
 
-                                    $list .="</tr>";
+                                    $list .="</tr>\n";
                                 }
 
-                                $list .="<tbody></table>";
+                                $list .="<tbody></table>\n";
                             }
                         break;
                     }
@@ -4920,6 +4924,12 @@ class GFCommon{
 
         return do_shortcode($content);
     }
+
+	public static function spam_enabled( $form_id ) {
+		$spam_enabled = self::akismet_enabled( $form_id ) || has_filter( 'gform_entry_is_spam' ) || has_filter( "gform_entry_is_spam_{$form_id}" );
+
+		return $spam_enabled;
+	}
 
     public static function has_akismet(){
     	$akismet_exists = function_exists('akismet_http_post') || function_exists('Akismet::http_post');
@@ -5638,11 +5648,17 @@ class GFCommon{
 
         foreach ($fields as $field) {
 
+	        $input_type = GFFormsModel::get_input_type( $field );
+
             $field_type  = GFFormsModel::get_input_type($field);
 
             $operators = isset($operators_by_field_type[$field_type]) ? $operators_by_field_type[$field_type] : $operators_by_field_type["default"];
-            if (!isset($field["choices"]) && !in_array("contains", $operators))
-                $operators[] = "contains";
+
+	        if ( $field['type'] == 'product' && in_array( $input_type, array( 'radio', 'select' ) ) ) {
+		        $operators = array( 'is' );
+	        } elseif (!isset($field["choices"]) && !in_array("contains", $operators)){
+		        $operators[] = "contains";
+	        }
 
             $field_filter = array();
             $key          = $field["id"];
@@ -5764,8 +5780,8 @@ class GFCommon{
                 "operators" => array( "is", "isnot"),
                 "values" => array(
                     array(
-                        "text" => "Approved",
-                        "value" => "Approved"
+                        "text" => "Paid",
+                        "value" => "Paid"
                     ),
                     array(
                         "text" => "Failed",
@@ -5825,7 +5841,7 @@ class GFCommon{
     }
 
 
-    public static function get_field_filters_from_post(){
+    public static function get_field_filters_from_post($form){
         $field_filters = array();
         $filter_fields = rgpost("f");
         if (is_array($filter_fields)) {
@@ -5846,6 +5862,15 @@ class GFCommon{
                     $val       = $key_array[1] . ":" . $val;
                 }
                 $field_filter["key"]      = $key;
+
+	            $field = GFFormsModel::get_field( $form, $key );
+	            if ( $field ) {
+		            $input_type = GFFormsModel::get_input_type( $field );
+		            if ( $field['type'] == 'product' && in_array( $input_type, array( 'radio', 'select' ) ) ) {
+			            $operator = 'contains';
+		            }
+	            }
+
                 $field_filter["operator"] = $operator;
                 $field_filter["value"]    = $val;
                 $field_filters[]        = $field_filter;

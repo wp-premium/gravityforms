@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms
 Plugin URI: http://www.gravityforms.com
 Description: Easily create web forms and manage form entries within the WordPress admin.
-Version: 1.8.16
+Version: 1.8.18
 Author: rocketgenius
 Author URI: http://www.rocketgenius.com
 Text Domain: gravityforms
@@ -107,7 +107,7 @@ add_action( 'plugins_loaded', array( 'GFForms', 'loaded' ) );
 
 class GFForms {
 
-    public static $version = '1.8.16';
+	public static $version = '1.8.18';
 
 	public static function loaded(){
 		do_action( 'gform_loaded' );
@@ -1727,8 +1727,9 @@ class GFForms {
     }
 
     public static function get_addon_info($api, $action, $args){
-        if($action == "plugin_information" && empty($api) && $args->slug == 'gravityforms'){
-            $raw_response = GFCommon::post_to_manager("api.php", "op=get_plugin&slug=gravityforms", array());
+
+		if($action == "plugin_information" && empty($api) && ( !rgempty("rg", $_GET) || $args->slug == 'gravityforms')){
+			$raw_response = GFCommon::post_to_manager("api.php", "op=get_plugin&slug={$args->slug}", array());
 
             if ( is_wp_error( $raw_response ) || $raw_response['response']['code'] != 200)
                 return false;
@@ -1739,6 +1740,7 @@ class GFForms {
             $api->name = $plugin["title"];
             $api->version = $plugin["version"];
             $api->download_link = $plugin["download_url"];
+			$api->tested = '10.0';
         }
         return $api;
     }

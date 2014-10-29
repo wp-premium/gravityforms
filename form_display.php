@@ -111,6 +111,7 @@ class GFFormDisplay{
                 //after submission hook
                 do_action("gform_after_submission", $lead, $form);
                 do_action("gform_after_submission_{$form["id"]}", $lead, $form);
+
             }
 
             if(is_array($confirmation) && isset($confirmation["redirect"])){
@@ -118,8 +119,15 @@ class GFFormDisplay{
                 do_action("gform_post_submission", $lead, $form);
                 do_action("gform_post_submission_{$form["id"]}", $lead, $form);
 
-                exit;
+				//GFFormsModel::delete_password( $lead, $form );
+
+				exit;
             }
+//			else{
+//
+//				GFFormsModel::delete_password( $lead, $form );
+//
+//			}
         }
         if(!isset(self::$submission[$form_id]))
             self::$submission[$form_id] = array();
@@ -407,6 +415,9 @@ class GFFormDisplay{
         $confirmation_message = "";
         $page_number = 1;
 
+	    $view_counter_disabled = apply_filters( 'gform_disable_view_counter', false );
+	    $view_counter_disabled = apply_filters( "gform_disable_view_counter_{$form_id}", $view_counter_disabled );
+
         //If form was submitted, read variables set during form submission procedure
         $submission_info = isset(self::$submission[$form_id]) ? self::$submission[$form_id] : false;
         if($submission_info){
@@ -430,7 +441,7 @@ class GFFormDisplay{
                 }
             }
         }
-        else if(!current_user_can("administrator")){
+        else if(!current_user_can("administrator") && !$view_counter_disabled){
             RGFormsModel::insert_form_view($form_id, $_SERVER['REMOTE_ADDR']);
         }
 
@@ -510,7 +521,7 @@ class GFFormDisplay{
 
             $form_css_class = !empty($form["cssClass"]) ? "class='{$form["cssClass"]}'": "";
 
-            $action = esc_attr($action);
+            $action = esc_url($action);
             $form_string .= apply_filters("gform_form_tag_{$form_id}", apply_filters("gform_form_tag", "<form method='post' enctype='multipart/form-data' {$target} id='gform_{$form_id}' {$form_css_class} action='{$action}'>", $form), $form);
 
             if($display_title || $display_description){
@@ -697,11 +708,10 @@ class GFFormDisplay{
 
 			//check admin setting for whether the progress bar should start at zero
         	$start_at_zero = rgars($form, "pagination/display_progressbar_on_confirmation");
-			//check for filter
             $start_at_zero = apply_filters("gform_progressbar_start_at_zero", $start_at_zero, $form);
 
             //show progress bar on confirmation
-            if($start_at_zero && $has_pages && !IS_ADMIN && ($form["confirmation"]["type"] == "message" && $form["pagination"]["type"] == "percentage") && $form["pagination"]["display_progressbar_on_confirmation"])
+            if( $start_at_zero && $has_pages && ! IS_ADMIN && ( $form["confirmation"]["type"] == "message" && $form["pagination"]["type"] == "percentage" ) )
             {
                 $progress_confirmation = self::get_progress_bar($form, $form_id,$confirmation_message);
                 if($ajax)
@@ -717,7 +727,7 @@ class GFFormDisplay{
                 }
                 else
                 {
-                 $progress_confirmation = $confirmation_message;
+                    $progress_confirmation = $confirmation_message;
                 }
             }
 
@@ -951,53 +961,58 @@ class GFFormDisplay{
         return rgempty("input_{$honeypot_id}");
     }
 
-    public static function handle_submission($form, &$lead, $ajax=false){
+	public static function handle_submission($form, &$lead, $ajax=false){
 
-        $lead_id = apply_filters("gform_entry_id_pre_save_lead{$form["id"]}", apply_filters("gform_entry_id_pre_save_lead", null, $form), $form);
+		$lead_id = apply_filters("gform_entry_id_pre_save_lead{$form["id"]}", apply_filters("gform_entry_id_pre_save_lead", null, $form), $form);
 
-        if(!empty($lead_id)){
-            if(empty($lead))
-                $lead = array();
-            $lead["id"] = $lead_id;
-        }
+		if(!empty($lead_id)){
+			if(empty($lead))
+				$lead = array();
+			$lead["id"] = $lead_id;
+		}
 
-        //creating entry in DB
-        RGFormsModel::save_lead($form, $lead);
+		//creating entry in DB
+		RGFormsModel::save_lead($form, $lead);
 
-        //reading entry that was just saved
-        $lead = RGFormsModel::get_lead($lead["id"]);
+		//reading entry that was just saved
+		$lead = RGFormsModel::get_lead($lead["id"]);
 
 		$lead = GFFormsModel::set_entry_meta($lead, $form);
 
-        do_action('gform_entry_created', $lead, $form);
-        $lead = apply_filters('gform_entry_post_save', $lead, $form);
+		//if Akismet plugin is installed, run lead through Akismet and mark it as Spam when appropriate
+		$is_spam = GFCommon::akismet_enabled($form['id']) && GFCommon::is_akismet_spam($form, $lead);
+		$is_spam = apply_filters( 'gform_entry_is_spam', $is_spam, $form, $lead );
+		$is_spam = apply_filters( "gform_entry_is_spam_{$form['id']}", $is_spam, $form, $lead );
 
-        RGFormsModel::set_current_lead($lead);
+		GFCommon::log_debug("Checking for spam...");
+		GFCommon::log_debug("Is entry considered spam? {$is_spam}.");
 
-        //if Akismet plugin is installed, run lead through Akismet and mark it as Spam when appropriate
-        $is_spam = GFCommon::akismet_enabled($form['id']) && GFCommon::is_akismet_spam($form, $lead);
+		if( $is_spam ){
 
-        GFCommon::log_debug("Checking for spam...");
-        GFCommon::log_debug("Is entry considered spam? {$is_spam}.");
+			//marking entry as spam
+			RGFormsModel::update_lead_property($lead["id"], "status", "spam", false, true);
+			$lead["status"] = "spam";
 
-        if(!$is_spam){
-            GFCommon::create_post($form, $lead);
-            //send notifications
-            GFCommon::send_form_submission_notifications($form, $lead);
-        }
-        else {
-            //marking entry as spam
-            RGFormsModel::update_lead_property($lead["id"], "status", "spam", false, true);
-            $lead["status"] = "spam";
-        }
+		}
 
-        self::clean_up_files($form);
+		do_action('gform_entry_created', $lead, $form);
+		$lead = apply_filters('gform_entry_post_save', $lead, $form);
 
-        //display confirmation message or redirect to confirmation page
-        return self::handle_confirmation($form, $lead, $ajax);
-    }
+		RGFormsModel::set_current_lead($lead);
 
-    public static function clean_up_files($form){
+		if(!$is_spam){
+			GFCommon::create_post($form, $lead);
+			//send notifications
+			GFCommon::send_form_submission_notifications($form, $lead);
+		}
+
+		self::clean_up_files($form);
+
+		//display confirmation message or redirect to confirmation page
+		return self::handle_confirmation($form, $lead, $ajax);
+	}
+
+	public static function clean_up_files($form){
         $unique_form_id = rgpost("gform_unique_id");
         if(!ctype_alnum($unique_form_id))
             return false;
@@ -1911,7 +1926,7 @@ class GFFormDisplay{
 					}
 
                     if(rgar($choice,"isSelected") && $input_type == "select"){
-                        $val = $is_pricing_field ? $choice["value"] . "|" . GFCommon::to_number($choice["price"]) :  $choice["value"];
+                        $val = $is_pricing_field && $field['type'] != 'quantity' ? $choice["value"] . "|" . GFCommon::to_number($choice["price"]) :  $choice["value"];
                         $default_values[$field["id"]] = $val;
                     }
                     else if(rgar($choice,"isSelected")){

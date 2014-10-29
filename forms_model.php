@@ -321,6 +321,8 @@ class GFFormsModel {
         //load notifications to legacy structure to maintain backward compatibility with legacy hooks and functions
         $form = self::load_notifications_to_legacy($form);
 
+		$form = apply_filters('gform_form_post_get_meta', $form);
+
         // cached form meta for cheaper retrieval on subsequent requests
         self::$_current_forms[$form_id] = $form;
 
@@ -1759,7 +1761,7 @@ class GFFormsModel {
             }
         }
 
-        return apply_filters("gform_field_value_$name", apply_filters("gform_field_value", $value, $field), $field);
+        return apply_filters( "gform_field_value_$name", apply_filters( 'gform_field_value', $value, $field, $name ), $field, $name );
     }
 
     public static function get_default_value($field, $input_id){
@@ -2049,8 +2051,9 @@ class GFFormsModel {
                         $value = "";
                     }
 
-                } else
+                } else {
                     $value = self::get_fileupload_value($form_id, $input_name);
+                }
             break;
 
             case "number" :
@@ -2696,10 +2699,9 @@ class GFFormsModel {
         $value = self::prepare_value($form, $field, $value, $input_name, rgar($lead, "id"));
 
         //ignore fields that have not changed
-        if($lead != null && $value === rgget($input_id, $lead)){
+        if( $lead != null && $value === rgget( (string) $input_id, $lead ) ){
             return;
 		}
-
 
         $lead_detail_id = self::get_lead_detail_id($current_fields, $input_id);
         self::update_lead_field_value($form, $lead, $field, $lead_detail_id, $input_id, $value);
@@ -2967,31 +2969,39 @@ class GFFormsModel {
 
     public static function is_duplicate($form_id, $field, $value){
         global $wpdb;
-        $lead_detail_table_name = self::get_lead_details_table_name();
-        $lead_table_name = self::get_lead_table_name();
-        $sql_comparison = "ld.value=%s";
 
-        switch(RGFormsModel::get_input_type($field)){
-            case "time" :
+        $lead_detail_table_name = self::get_lead_details_table_name();
+        $lead_table_name        = self::get_lead_table_name();
+        $lead_detail_long       = self::get_lead_details_long_table_name();
+        $is_long                = ! is_array( $value ) && strlen( $value ) > GFORMS_MAX_FIELD_LENGTH - 10;
+
+        $sql_comparison = $is_long ? '( ld.value = %s OR ldl.value = %s )' : 'ld.value = %s';
+
+        switch( GFFormsModel::get_input_type( $field ) ) {
+            case 'time':
                 $value = sprintf("%02d:%02d %s", $value[0], $value[1], $value[2]);
             break;
-            case "date" :
+            case 'date':
                 $value = self::prepare_date(rgar($field, "dateFormat"), $value);
             break;
-            case "number" :
+            case 'number':
                 $value = GFCommon::clean_number($value, rgar($field, 'numberFormat'));
             break;
-            case "phone" :
+            case 'phone':
                 $value = str_replace(array(")", "(", "-", " "), array("", "", "", ""), $value);
-                $sql_comparison = 'replace(replace(replace(replace(ld.value, ")", ""), "(", ""), "-", ""), " ", "") = %s';
+                $sql_comparison = 'replace( replace( replace( replace( ld.value, ")", "" ), "(", "" ), "-", "" ), " ", "" ) = %s';
             break;
-         }
+        }
 
+        $inner_sql_template =  "SELECT %s as input, ld.lead_id
+                                FROM {$lead_detail_table_name} ld
+                                INNER JOIN {$lead_table_name} l ON l.id = ld.lead_id\n";
 
-        $inner_sql_template = " SELECT %s as input, ld.lead_id
-                                FROM $lead_detail_table_name ld
-                                INNER JOIN $lead_table_name l ON l.id = ld.lead_id
-                                WHERE l.form_id=%d AND ld.form_id=%d
+        if( $is_long ) {
+            $inner_sql_template .= "INNER JOIN {$lead_detail_long} ldl ON ldl.lead_detail_id = ld.id\n";
+        }
+
+        $inner_sql_template .= "WHERE l.form_id=%d AND ld.form_id=%d
                                 AND ld.field_number between %s AND %s
                                 AND status='active' AND {$sql_comparison}";
 
@@ -3002,11 +3012,11 @@ class GFFormsModel {
             $input_count = sizeof($field["inputs"]);
             foreach($field["inputs"] as $input){
                 $union = empty($inner_sql) ? "" : " UNION ALL ";
-                $inner_sql .= $union . $wpdb->prepare($inner_sql_template, $input["id"], $form_id, $form_id, $input["id"] - 0.001, $input["id"] + 0.001, $value[$input["id"]]);
+                $inner_sql .= $union . $wpdb->prepare($inner_sql_template, $input["id"], $form_id, $form_id, $input["id"] - 0.001, $input["id"] + 0.001, $value[ $input['id'] ], $value[ $input['id'] ] );
             }
         }
         else{
-            $inner_sql = $wpdb->prepare($inner_sql_template, $field["id"], $form_id, $form_id, doubleval($field["id"]) - 0.001, doubleval($field["id"]) + 0.001, $value);
+            $inner_sql = $wpdb->prepare($inner_sql_template, $field["id"], $form_id, $form_id, doubleval($field["id"]) - 0.001, doubleval($field["id"]) + 0.001, $value, $value );
         }
 
         $sql .= $inner_sql . "
@@ -3337,13 +3347,14 @@ class GFFormsModel {
 
                 $field_value = $result->value;
                 //using long values if specified
-                if($use_long_values && strlen($field_value) >= (GFORMS_MAX_FIELD_LENGTH-10)){
-                    $field = RGFormsModel::get_field($form, $result->field_number);
-                    $long_text = RGFormsModel::get_field_value_long($lead, $result->field_number, $form, false);
+				$field_number = (string)$result->field_number;
+				if($use_long_values && strlen($field_value) >= (GFORMS_MAX_FIELD_LENGTH-10)){
+                    $field = RGFormsModel::get_field($form, $field_number );
+                    $long_text = RGFormsModel::get_field_value_long($lead, $field_number, $form, false);
                     $field_value = !empty($long_text) ? $long_text : $field_value;
                 }
 
-                $lead[$result->field_number] = $field_value;
+                $lead[$field_number] = $field_value;
                 $prev_lead_id = $result->id;
             }
         }
@@ -4457,6 +4468,17 @@ class GFFormsModel {
         return in_array( $field_id, $encrypted_fields );
     }
 
+	public static function delete_password( $entry, $form ) {
+		$password_fields = GFCommon::get_fields_by_type( $form, array( 'password' ) );
+		if ( is_array( $password_fields ) ) {
+			foreach ( $password_fields as $password_field ) {
+				$entry[$password_field['id']] = '';
+			}
+		}
+		GFAPI::update_entry( $entry );
+
+		return $entry;
+	}
 }
 
 class RGFormsModel extends GFFormsModel { }
