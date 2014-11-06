@@ -23,7 +23,7 @@ class GFExport{
             $charset = get_option('blog_charset');
             header('Content-Description: File Transfer');
             header("Content-Disposition: attachment; filename=$filename");
-            header('Content-Type: text/plain; charset=' . $charset, true);
+            header('Content-Type: text/csv; charset=' . $charset, true);
             $buffer_length = ob_get_length(); //length or false if no buffer
             if ($buffer_length > 1){
             	ob_clean();

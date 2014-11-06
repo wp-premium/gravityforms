@@ -1946,13 +1946,13 @@ class GFFormDisplay{
                     $date_info = GFcommon::parse_date($field_val, $format);
                     switch($format){
                         case "mdy":
-                            $field_val = $date_info["month"] . "/" . $date_info["day"] . "/" . $date_info["year"];
+                            $field_val = rgar($date_info, "month") . "/" . rgar($date_info, "day") . "/" . rgar($date_info, "year");
                             break;
                         case "dmy":
-                            $field_val = $date_info["day"] . "/" . $date_info["month"] . "/" . $date_info["year"];
+                            $field_val = rgar($date_info, "day" ) . "/" . rgar($date_info, "month" ) . "/" . rgar($date_info, "year" );
                             break;
                         case "ymd":
-                            $field_val = $date_info["year"] . "/" . $date_info["month"] . "/" . $date_info["day"];
+                            $field_val = rgar($date_info, "year") . "/" . rgar($date_info, "month" ) . "/" . rgar($date_info, "day" );
                             break;
                     }
                 }
