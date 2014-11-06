@@ -2079,22 +2079,34 @@ class GFFormsModel {
                 if(rgar($field, "adminOnly") && rgar($field, "allowsPrepopulate"))
                     $value = json_decode($value);
 
-                if(GFCommon::is_empty_array($value))
+                if(GFCommon::is_empty_array($value)){
                     $value = "";
+				}
                 else{
+
+					foreach( $value as &$val ){
+						$val = self::sanitize_entry_value( $field, $val, $input_type, $form_id );
+					}
+
                     $value = self::create_list_array($field, $value);
                     $value = serialize($value);
                 }
             break;
 
             case "radio" :
-                if(rgar($field, 'enableOtherChoice') && $value == 'gf_other_choice')
+                if(rgar($field, 'enableOtherChoice') && $value == 'gf_other_choice'){
                     $value = rgpost("input_{$field['id']}_other");
+				}
+				$value = self::sanitize_entry_value( $field, $value, $input_type, $form_id);
+
                 break;
 
             case "multiselect" :
                 $value = empty($value) ? "" : is_array($value) ? implode(",", $value) : $value;
-                break;
+
+				$value = self::sanitize_entry_value( $field, $value, $input_type, $form_id );
+
+				break;
 
             case "creditcard" :
                 //saving last 4 digits of credit card
@@ -2136,15 +2148,8 @@ class GFFormsModel {
 
                 // only filter HTML on non-array based values
                 if( ! is_array( $value ) ) {
-
-                    //allow HTML for certain field types
-                    $allow_html = in_array($field["type"], array("post_custom_field", "post_title", "post_content", "post_excerpt", "post_tags" )) || in_array($input_type, array("checkbox", "radio")) ? true : false;
-                    $allowable_tags = apply_filters("gform_allowable_tags_{$form_id}", apply_filters("gform_allowable_tags", $allow_html, $field, $form_id), $field, $form_id);
-
-                    if($allowable_tags !== true)
-                        $value = strip_tags($value, $allowable_tags);
-
-                }
+					$value = self::sanitize_entry_value( $field, $value, $input_type, $form_id );
+				}
 
             break;
         }
@@ -2178,6 +2183,14 @@ class GFFormsModel {
 
         return $value;
     }
+
+	public static function strip_script_tag( $string ){
+		$allowable_tags = '<a><abbr><acronym><address><area><area /><b><base><base /><bdo><big><blockquote><body><br><br /><button><caption><cite><code><col><col /><colgroup><command><command /><dd><del><dfn><div><dl><DOCTYPE><dt><em><fieldset><form><h1><h2><h3><h4><h5><h6><head><html><hr><hr /><i><img><img /><input><input /><ins><kbd><label><legend><li><link><map><meta><meta /><noscript><ol><optgroup><option><p><param><param /><pre><q><samp><select><small><span><strong><style><sub><sup><table><tbody><td><textarea><tfoot><th><thead><title><tr><tt><ul><var><wbr><wbr />';
+
+		$string = strip_tags( $string, $allowable_tags );
+
+		return $string;
+	}
 
     public static function is_checkbox_checked($field_id, $field_label, $lead, $form){
 
@@ -3551,7 +3564,7 @@ class GFFormsModel {
     public static function get_label($field, $input_id = 0, $input_only = false){
         $field_label = (IS_ADMIN || RG_CURRENT_PAGE == "select_columns.php" || RG_CURRENT_PAGE == "print-entry.php" || rgget("gf_page", $_GET) == "select_columns" || rgget("gf_page", $_GET) == "print-entry") && !rgempty("adminLabel", $field) ? rgar($field,"adminLabel") : rgar($field,"label");
         $input = self::get_input($field, $input_id);
-        if(rgget("type", $field) == "checkbox" && $input != null)
+        if( self::get_input_type($field) == "checkbox" && $input != null)
             return $input["label"];
         else if($input != null)
             return $input_only ? $input["label"] : $field_label . ' (' . $input["label"] . ')';
@@ -4478,6 +4491,31 @@ class GFFormsModel {
 		GFAPI::update_entry( $entry );
 
 		return $entry;
+	}
+
+	/**
+	 * @param $field
+	 * @param $value
+	 * @param $input_type
+	 * @param $form_id
+	 *
+	 * @return string
+	 */
+	public static function sanitize_entry_value( $field, $value, $input_type, $form_id ) {
+		//allow HTML for certain field types
+		$allow_html     = in_array( $field["type"], array( "post_custom_field", "post_title", "post_content", "post_excerpt", "post_tags" ) ) || in_array( $input_type, array( "checkbox", "radio" ) ) ? true : false;
+		$allowable_tags = apply_filters( "gform_allowable_tags_{$form_id}", apply_filters( "gform_allowable_tags", $allow_html, $field, $form_id ), $field, $form_id );
+
+		if ( $allowable_tags !== true ) {
+			$value = strip_tags( $value, $allowable_tags );
+
+			return $value;
+		} else {
+			//removing script tags from value if $allowable_tags variable is not specified.
+			$value = self::strip_script_tag( $value );
+
+			return $value;
+		}
 	}
 }
 

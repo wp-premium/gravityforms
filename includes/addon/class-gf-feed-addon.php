@@ -562,15 +562,18 @@ abstract class GFFeedAddOn extends GFAddOn {
         $is_valid = $this->validate_settings( $sections, $settings );
         $result = false;
 
-        if( $is_valid ) {
+		if ( $is_valid ) {
 			$feed_id = $this->save_feed_settings( $feed_id, $form_id, $settings );
+			if ( $feed_id ){
+				GFCommon::add_message( $this->get_save_success_message( $sections ) );
+			}
+			else{
+				GFCommon::add_error_message( $this->get_save_error_message( $sections ) );
+			}
 		}
-
-        if( $feed_id ) {
-            GFCommon::add_message( $this->get_save_success_message($sections) );
-        } else {
-            GFCommon::add_error_message( $this->get_save_error_message($sections) );
-        }
+		else{
+			GFCommon::add_error_message( $this->get_save_error_message( $sections ) );
+		}
 
         return $feed_id;
     }

@@ -1,4 +1,11 @@
 -------------------------------------------------------------------------------------------------------------------
+Version 1.8.19
+	- Fixed Notices
+	- Fixed issue where entry exports were saved with a .txt extension in Safari
+	- Fixed issue when exporting custom post fields of type "checkbox".
+	- AF: Fixed issue where feed saved successfully message still displayed when fields failed validation.
+
+-------------------------------------------------------------------------------------------------------------------
 Version 1.8.18
 
 	- Added filters on entry detail to support editing payment related data in the payment info box.
