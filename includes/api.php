@@ -507,8 +507,11 @@ class GFAPI {
     public static function update_entry($entry, $entry_id = null) {
         global $wpdb;
 
-        if (empty($entry_id))
-            $entry_id = $entry["id"];
+        if (empty($entry_id)) {
+            $entry_id = $entry['id'];
+        } else {
+            $entry["id"] = $entry_id;
+        }
 
         if (empty($entry_id))
             return new WP_Error("missing_entry_id", __("Missing entry id", "gravityforms"));

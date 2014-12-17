@@ -2221,7 +2221,7 @@ class GFFormDetail{
         <select id="<?php echo $element_id?>_variable_select" onchange="InsertVariable('<?php echo $element_id?>', '<?php echo $callback?>'); ">
             <option value=''><?php _e("Insert Merge Tag", "gravityforms"); ?></option>
 
-            <option value='{ip}'><?php _e("Client IP Address", "gravityforms"); ?></option>
+            <option value='{ip}'><?php _e("User IP Address", "gravityforms"); ?></option>
             <option value='{date_mdy}'><?php _e("Date", "gravityforms"); ?> (mm/dd/yyyy)</option>
             <option value='{date_dmy}'><?php _e("Date", "gravityforms"); ?> (dd/mm/yyyy)</option>
             <option value='{embed_post:ID}'><?php _e("Embed Post/Page Id", "gravityforms"); ?></option>

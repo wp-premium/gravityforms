@@ -32,11 +32,11 @@ class GFAsyncUpload {
             die('{"status" : "error", "error" : {"code": 500, "message": "' . __("Failed to upload file.", "gravityforms") . '"}}');
         }
 
-        $form_id        = $_REQUEST["form_id"];
+        $form_id        = intval($_REQUEST["form_id"]);
         $form_unique_id = rgpost("gform_unique_id");
         $form           = GFFormsModel::get_form_meta($form_id);
 
-		if ( empty( $form ) ) {
+		if ( empty( $form ) || ! ctype_alnum($form_unique_id)  ) {
 			die();
 		}
 

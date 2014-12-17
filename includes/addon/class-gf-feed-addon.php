@@ -19,7 +19,7 @@ abstract class GFFeedAddOn extends GFAddOn {
     /**
      * @var string Version number of the Add-On Framework
      */
-    private $_feed_version = "0.11";
+    private $_feed_version = '0.3';
     private $_feed_settings_fields = array();
 	private $_current_feed_id = false;
 
@@ -40,14 +40,16 @@ abstract class GFFeedAddOn extends GFAddOn {
 	}
 
     protected function setup(){
-        parent::setup();
 
         //upgrading Feed Add-On base class
         $installed_version = get_option("gravityformsaddon_feed-base_version");
-        if ($installed_version != $this->_feed_version)
+        if ($installed_version != $this->_feed_version){
             $this->upgrade_base($installed_version);
+		}
 
         update_option("gravityformsaddon_feed-base_version", $this->_feed_version);
+
+		parent::setup();
     }
 
     private function upgrade_base($previous_version) {

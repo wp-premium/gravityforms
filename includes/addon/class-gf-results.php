@@ -440,12 +440,14 @@ if (!class_exists("GFResults")) {
             $form           = RGFormsModel::get_form_meta($form_id);
             $form_id        = $form["id"];
             $field          = RGFormsModel::get_field($form, $field_id);
+
             $more_remaining = false;
             $html           = self::get_default_field_results($form_id, $field, $search_criteria, $offset, $page_size, $more_remaining);
 
             $response                   = array();
             $response["more_remaining"] = $more_remaining;
             $response['html']           = $html;
+	        $response['offset']         = $offset;
 
             echo json_encode($response);
             die();
@@ -642,16 +644,18 @@ if (!class_exists("GFResults")) {
                     $page_size = 5;
                     $offset    = 0;
                     $field_id  = $field["id"];
+                    $more_remaining = false;
+                    $default_field_results = self::get_default_field_results( $form_id, $field, $search_criteria, $offset, $page_size, $more_remaining );
 
                     $field_results .= "<div class='gresults-results-field-sub-label'>" . __("Latest values:", "gravityforms") . "</div>";
 
-                    $field_results .= "<ul id='gresults-results-field-content-{$field_id}' class='gresults-results-field-content' data-offset='{$page_size}'>";
-                    $more_remaining = false;
-                    $field_results .= self::get_default_field_results($form_id, $field, $search_criteria, $offset, $page_size, $more_remaining);
+                    $field_results .= "<ul id='gresults-results-field-content-{$field_id}' class='gresults-results-field-content' data-offset='{$offset}'>";
+
+                    $field_results .= $default_field_results;
                     $field_results .= "</ul>";
 
                     if ($more_remaining) {
-                        $field_results .= "<a id='gresults-results-field-more-link-{$field_id}' class='gresults-results-field-more-link' href='javascript:void(0)' onclick='gresults.getMoreResults({$form_id},{$field_id})'>Show more</a>";
+	                    $field_results .= "<a id='gresults-results-field-more-link-{$field_id}' class='gresults-results-field-more-link' href='javascript:void(0)' onclick='gresults.getMoreResults({$form_id},{$field_id})'>" . __('Show more', 'gravityforms') . "</a>";
                     }
                     break;
             }
@@ -824,9 +828,8 @@ if (!class_exists("GFResults")) {
         }
 
 
-        public static function get_default_field_results($form_id, $field, $search_criteria, $offset, $page_size, &$more_remaining = false) {
+        public static function get_default_field_results($form_id, $field, $search_criteria, &$offset, $page_size, &$more_remaining = false) {
             $field_results = "";
-
 
             $sorting = array('key' => "date_created", 'direction' => "DESC");
 

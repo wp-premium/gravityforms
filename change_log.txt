@@ -1,4 +1,54 @@
 -------------------------------------------------------------------------------------------------------------------
+Version 1.8.20.5
+	- Fixed issue with exporting/importing some post field settings.
+	- Fixed notice when filter entries with empty filter value
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.20.4
+	- Fixed issue with password field on multi-page forms
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.20.3
+	- Fixed an issue with list field shim when RTL was enabled
+	- Fixed an issue with the results page where the 'show more' link retrieves duplicate values if some values of that field are empty.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.20.2
+	- Fixed issue with section breaks getting displayed on {all_fields_display_empty} even when hidden by conditional logic.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.20.1
+	- Fixed an issue where exporting lead data for checkbox fields did not work when the choice label included quotes.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.20
+	- Added extra logging statements.
+	- Added South African Rand currency.
+	- Added portuguese translation.
+	- Added support for mysql encryption.
+	- Added "Processing" as an option for payment status when adding conditional logic rules.
+	- Added hook to allow users to disable script tag stripping.
+	- Updated merge tag list to exclude credit card field options, except the credit card number (last 4 digits) and credit card type for Confirmations and Notifications.
+	- Updated notification's From Name and Subject to use the Text version of merge tags.
+	- Updated notification's From Name so that it is sanitized before being used.
+	- Fixed conflict with WP-reCAPTCHA plugin.
+	- Fixed an issue with the multi-file upload field where the paths to the uploaded files can get removed from the entry if a third party add-on processes the entry before Gravity Forms. This fixes a compatibility issue with the Gravity Perks Conditional Logic Perk.
+	- Fixed a security issue with the file upload field.
+	- Fixed issue with outdated cached version of total field not getting refreshed.
+	- Fixed notice message.
+	- Fixed issue with {ip} merge tag replacing "wrong" IP when resending notifications.
+	- Fixed issue with the id attribute for the address field city label.
+	- Fixed issue when updating entry with conditional logic fields via the gform_entry_id_pre_save_lead.
+	- Fixed issue with conditional logic and the gf_inline class.
+	- Fixed an issue with the entry list filter, results page filters, export conditional logic where number field values would be treated as strings by the entry search query.
+	- AF: Fixed issue causing feeds not to get created when updating add-ons to the framework version.
+	- AF: Updated feed field mapping to include credit card number (last 4 digits) and credit card type as choices.
+	- AF: Updated feed field mapping to exclude credit card fields as choices.
+	- AF: Fixed an issue with the URL for the add-on settings tab.
+	- API: Fixed an issue with GFAPI::update_entry() where empty values are ignored when specifying a different entry ID to the ID in the entry array.
+	- API: Fixed an issue with GFAPI:get_entries() where number field values would be treated as strings.
+
+-------------------------------------------------------------------------------------------------------------------
 Version 1.8.19
 	- Fixed Notices
 	- Fixed issue where entry exports were saved with a .txt extension in Safari
