@@ -145,13 +145,12 @@ var gresults = {
                     if (!response.more_remaining)
                         jQuery('#gresults-results-field-more-link-' + fieldId).hide();
 
-                    jQuery(container).data('offset', offset + 10);
+                    jQuery(container).data('offset', response.offset);
                 }
             }
         });
 
         return false;
-
     },
 
     clearFilterForm: function () {

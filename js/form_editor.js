@@ -77,6 +77,8 @@ function InitializeForm(form){
     //default to checked
     if(form.useCurrentUserAsAuthor == undefined)
         form.useCurrentUserAsAuthor = true;
+	else if(form.useCurrentUserAsAuthor == '0')
+		form.useCurrentUserAsAuthor = false;
 
     jQuery('#gfield_current_user_as_author').prop('checked', form.useCurrentUserAsAuthor ? true : false);
 
@@ -86,7 +88,7 @@ function InitializeForm(form){
     if(form.postFormat)
         jQuery('#field_post_format').val(form.postFormat);
 
-    if(form.postContentTemplateEnabled){
+    if(form.postContentTemplateEnabled && form.postContentTemplateEnabled != '0' ){
         jQuery('#gfield_post_content_enabled').prop("checked", true);
         jQuery('#field_post_content_template').val(form.postContentTemplate);
     }
@@ -96,7 +98,7 @@ function InitializeForm(form){
     }
     TogglePostContentTemplate(true);
 
-    if(form.postTitleTemplateEnabled){
+    if(form.postTitleTemplateEnabled && form.postTitleTemplateEnabled != '0'){
         jQuery('#gfield_post_title_enabled').prop("checked", true);
         jQuery('#field_post_title_template').val(form.postTitleTemplate);
     }

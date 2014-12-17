@@ -1172,7 +1172,6 @@ class GFFormsModel {
         }
 
         $current_fields = $wpdb->get_results($wpdb->prepare("SELECT id, field_number FROM $lead_detail_table WHERE lead_id=%d", $lead["id"]));
-        $original_post_id = rgget("post_id", $lead);
 
         $total_fields = array();
         $calculation_fields = array();
@@ -1199,8 +1198,12 @@ class GFFormsModel {
                 continue;
             }
 
+			$is_entry_update = RG_CURRENT_VIEW == 'entry' || ! $is_new_lead;
+
+			$read_value_from_post = $is_new_lead || ! isset( $lead[ 'date_created' ] );
+
             //only save fields that are not hidden (except on entry screen)
-            if( RG_CURRENT_VIEW == 'entry' || ! GFFormsModel::is_field_hidden( $form, $field, array(), $is_new_lead ? null : $lead ) ) {
+            if( $is_entry_update || ! GFFormsModel::is_field_hidden( $form, $field, array(), $read_value_from_post ? null : $lead ) ) {
 
                 // process calculation fields after all fields have been saved (moved after the is hidden check)
                 if( GFCommon::has_field_calculation($field) ) {
@@ -1249,6 +1252,7 @@ class GFFormsModel {
             foreach($total_fields as $total_field){
                 GFCommon::log_debug("Saving total field.");
                 self::save_input($form, $total_field, $lead, $current_fields, $total_field["id"]);
+				self::refresh_lead_field_value($lead["id"], $total_field["id"]);
             }
         }
     }
@@ -1778,7 +1782,7 @@ class GFFormsModel {
             for($i=0, $count=sizeof($field["inputs"]); $i<$count; $i++){
                 $input = $field["inputs"][$i];
                 $choice = $field["choices"][$i];
-                if($input["id"] == $input_id && $choice["isSelected"]){
+                if($input["id"] == $input_id && rgar($choice, "isSelected")){
                     return $choice["value"];
                 }
             }
@@ -1870,8 +1874,10 @@ class GFFormsModel {
                 break;
 
                 case "post_category" :
+					GFCommon::log_debug('post category:' . $value);
                     foreach(explode(',', $value) as $cat_string) {
                         list($cat_name, $cat_id) = rgexplode(":", $cat_string, 2);
+						GFCommon::log_debug("adding cat:{$cat_name}({$cat_id})");
                         array_push($categories, $cat_id);
                     }
                 break;
@@ -2029,27 +2035,34 @@ class GFFormsModel {
 
             case "fileupload" :
                 if(rgar($field, "multipleFiles")){
-                    if(isset(GFFormsModel::$uploaded_files[$form_id][$input_name])){
-                        $uploaded_temp_files = GFFormsModel::$uploaded_files[$form_id][$input_name];
-                        $uploaded_files = array();
-                        foreach($uploaded_temp_files as $i => $file_info){
-                            $temp_filepath = self::get_upload_path($form_id) . "/tmp/" . $file_info["temp_filename"];
-                            if($file_info && file_exists($temp_filepath)){
-                                $uploaded_files[$i] = self::move_temp_file($form_id, $file_info);
-                            }
-                        }
 
-                        if(!empty($value)){ // merge with existing files (admin edit entry)
-                            $value = json_decode($value, true);
-                            $value = array_merge($value, $uploaded_files);
-                            $value = json_encode($value);
-                        } else {
-                            $value = json_encode($uploaded_files);
-                        }
+	                global $_gf_uploaded_files;
 
-                    } else {
-                        $value = "";
-                    }
+	                if ( isset( $_gf_uploaded_files[ $input_name ] ) ) {
+		                $value = $_gf_uploaded_files[ $input_name ];
+	                } else {
+		                if ( isset( GFFormsModel::$uploaded_files[ $form_id ][ $input_name ] ) ) {
+			                $uploaded_temp_files = GFFormsModel::$uploaded_files[ $form_id ][ $input_name ];
+			                $uploaded_files      = array();
+			                foreach ( $uploaded_temp_files as $i => $file_info ) {
+				                $temp_filepath = self::get_upload_path( $form_id ) . '/tmp/' . $file_info['temp_filename'];
+				                if ( $file_info && file_exists( $temp_filepath ) ) {
+					                $uploaded_files[ $i ] = self::move_temp_file( $form_id, $file_info );
+				                }
+			                }
+
+			                if ( ! empty( $value ) ) { // merge with existing files (admin edit entry)
+				                $value = json_decode( $value, true );
+				                $value = array_merge( $value, $uploaded_files );
+				                $value = json_encode( $value );
+			                } else {
+				                $value = json_encode( $uploaded_files );
+			                }
+		                } else {
+			                $value = '';
+		                }
+		                $_gf_uploaded_files[ $input_name ] = $value;
+	                }
 
                 } else {
                     $value = self::get_fileupload_value($form_id, $input_name);
@@ -2185,7 +2198,13 @@ class GFFormsModel {
     }
 
 	public static function strip_script_tag( $string ){
-		$allowable_tags = '<a><abbr><acronym><address><area><area /><b><base><base /><bdo><big><blockquote><body><br><br /><button><caption><cite><code><col><col /><colgroup><command><command /><dd><del><dfn><div><dl><DOCTYPE><dt><em><fieldset><form><h1><h2><h3><h4><h5><h6><head><html><hr><hr /><i><img><img /><input><input /><ins><kbd><label><legend><li><link><map><meta><meta /><noscript><ol><optgroup><option><p><param><param /><pre><q><samp><select><small><span><strong><style><sub><sup><table><tbody><td><textarea><tfoot><th><thead><title><tr><tt><ul><var><wbr><wbr />';
+
+		$do_strip = apply_filters("gform_strip_script_tag", true, $string);
+		if ( ! $do_strip ){
+			return $string;
+		}
+
+		$allowable_tags = '<a><abbr><acronym><address><area><area /><b><base><base /><bdo><big><blockquote><body><br><br /><button><caption><cite><code><col><col /><colgroup><command><command /><dd><del><dfn><div><dl><DOCTYPE><dt><em><fieldset><form><h1><h2><h3><h4><h5><h6><head><html><hr><hr /><i><img><img /><input><input /><ins><kbd><label><legend><li><link><map><meta><meta /><noscript><ol><optgroup><option><p><param><param /><pre><q><samp><select><small><span><strong><style><sub><sup><table><tbody><td><textarea><tfoot><th><thead><title><tr><tt><ul><var><wbr><wbr /><3>';
 
 		$string = strip_tags( $string, $allowable_tags );
 
@@ -2691,7 +2710,7 @@ class GFFormsModel {
         $input_name = "input_" . str_replace('.', '_', $input_id);
         $value = rgpost($input_name);
 
-        $value = self::maybe_trim_input($value, $form["id"], $field);
+		$value = self::maybe_trim_input($value, $form["id"], $field);
 
         //ignore file upload when nothing was sent in the admin
         //ignore post fields in the admin
@@ -2712,7 +2731,7 @@ class GFFormsModel {
         $value = self::prepare_value($form, $field, $value, $input_name, rgar($lead, "id"));
 
         //ignore fields that have not changed
-        if( $lead != null && $value === rgget( (string) $input_id, $lead ) ){
+        if( $lead != null && isset( $lead[ $input_id ] ) && $value === rgget( (string) $input_id, $lead ) ){
             return;
 		}
 
@@ -4081,28 +4100,43 @@ class GFFormsModel {
 
             switch ($search_type) {
                 case "field":
-                    $upper_field_number_limit = (string)(int)$key === $key ? (float)$key + 0.9999 : (float)$key + 0.0001;
+                    $is_number_field = false;
+                    if ( $operator != 'like' && ! is_array( $form_id ) && $form_id > 0 ) {
+                        $form               = GFAPI::get_form( $form_id );
+                        $field              = self::get_field( $form, $key );
+                        if (  self::get_input_type( $field ) == 'number' ){
+                            $is_number_field = true;
+                        }
+                    }
+
+                    $search_term_format = rgar( $search, 'is_numeric' ) || $is_number_field ? '%f' : '%s';
+
+                    $upper_field_number_limit = (string) (int) $key === $key ? (float) $key + 0.9999 : (float) $key + 0.0001;
                     /* doesn't support "<>" for checkboxes */
-                    $field_query = $wpdb->prepare("
+                    $field_query = $wpdb->prepare(
+                        "
                         l.id IN
                         (
                         SELECT
                         lead_id
-                        from $lead_details_table_name
-                        WHERE (field_number BETWEEN %s AND %s AND value $operator %s)
-                        $form_id_where
-                        )", (float)$key - 0.0001, $upper_field_number_limit, $search_term);
-                    if(empty($val) || "%%" === $val || "<>" === $operator){
-                        $skipped_field_query = $wpdb->prepare("
+                        from {$lead_details_table_name}
+                        WHERE (field_number BETWEEN %s AND %s AND value {$operator} {$search_term_format})
+                        {$form_id_where}
+                        )", (float) $key - 0.0001, $upper_field_number_limit, $search_term
+                    );
+                    if ( empty( $val ) || '%%' === $val || '<>' === $operator ) {
+                        $skipped_field_query = $wpdb->prepare(
+                            "
                             l.id NOT IN
                             (
                             SELECT
                             lead_id
-                            from $lead_details_table_name
+                            from {$lead_details_table_name}
                             WHERE (field_number BETWEEN %s AND %s)
-                            $form_id_where
-                            )", (float)$key - 0.0001, $upper_field_number_limit, $search_term);
-                        $field_query = "(" . $field_query . " OR " . $skipped_field_query . ")";
+                            {$form_id_where}
+                            )", (float) $key - 0.0001, $upper_field_number_limit, $search_term
+                        );
+                        $field_query = '(' . $field_query . ' OR ' . $skipped_field_query . ')';
                     }
 
                     $sql_array[] = $field_query;
@@ -4146,7 +4180,7 @@ class GFFormsModel {
 								$choice_texts_clauses_for_field = array();
 								if ( isset( $field['choices'] ) && is_array( $field['choices'] ) ) {
 									foreach ( $field['choices'] as $choice ) {
-										if ( ( $operator == '=' && strtolower( $choice['text'] ) == strtolower( $val ) ) || ( $operator == 'like' && strpos( strtolower( $choice['text'] ), strtolower( $val ) ) !== false ) ) {
+										if ( ( $operator == '=' && strtolower( $choice['text'] ) == strtolower( $val ) ) || ( $operator == 'like' && ! empty( $val ) && strpos( strtolower( $choice['text'] ), strtolower( $val ) ) !== false ) ) {
 											if ( rgar( $field, 'gsurveyLikertEnableMultipleRows' ) ){
 												$choice_value =  '%' . $choice['value'] . '%' ;
 												$choice_search_operator = 'like';
@@ -4482,15 +4516,22 @@ class GFFormsModel {
     }
 
 	public static function delete_password( $entry, $form ) {
-		$password_fields = GFCommon::get_fields_by_type( $form, array( 'password' ) );
-		if ( is_array( $password_fields ) ) {
-			foreach ( $password_fields as $password_field ) {
-				$entry[$password_field['id']] = '';
-			}
-		}
-		GFAPI::update_entry( $entry );
 
-		return $entry;
+		$password_fields = GFCommon::get_fields_by_type( $form, array( 'password' ) );
+		if ( empty( $password_fields ) ){
+			return;
+		}
+
+		$field_ids = array();
+		foreach ( $password_fields as $password_field ) {
+			$field_ids[] = $password_field['id'];
+		}
+		$field_id_list = implode( ',', $field_ids );
+
+		global $wpdb;
+		$wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->prefix}rg_lead_detail
+									 WHERE lead_id = %d AND form_id = %d
+									 AND CAST(field_number as DECIMAL(4,2)) IN ($field_id_list)", $entry['id'], $form['id'] ) );
 	}
 
 	/**

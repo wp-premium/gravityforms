@@ -45,7 +45,17 @@ class GFExport{
             //removing the inputs for checkboxes (choices will be used during the import)
             foreach($forms as &$form){
 
-                foreach($form["fields"] as &$field){
+				if ( rgar( $form, 'useCurrentUserAsAuthor' ) === false){
+					$form['useCurrentUserAsAuthor'] = 0;
+				}
+				if ( rgar( $form, 'postContentTemplateEnabled' ) === false){
+					$form['postContentTemplateEnabled'] = 0;
+				}
+				if ( rgar( $form, 'postTitleTemplateEnabled' ) === false){
+					$form['postTitleTemplateEnabled'] = 0;
+				}
+
+				foreach($form["fields"] as &$field){
                     $inputType = RGFormsModel::get_input_type($field);
 
                     if(isset($field["pageNumber"]))
@@ -100,9 +110,8 @@ class GFExport{
                 "forms/form/notification/routing" => array("array_tag" => "routing_item"),
                 "forms/form/useCurrentUserAsAuthor" => array("is_attribute" => true),
                 "forms/form/postAuthor" => array("is_attribute" => true),
-                "forms/form/postCategory" => array("is_attribute" => true),
-                "forms/form/postStatus" => array("is_attribute" => true),
-                "forms/form/postAuthor" => array("is_attribute" => true),
+				"forms/form/postCategory" => array("is_attribute" => true),
+				"forms/form/postStatus" => array("is_attribute" => true),
                 "forms/form/postFormat" => array("is_attribute" => true),
                 "forms/form/labelPlacement" => array("is_attribute" => true),
                 "forms/form/confirmation/type" => array("is_attribute" => true),
@@ -698,9 +707,12 @@ class GFExport{
                             $input_type = RGFormsModel::get_input_type($field);
 
                             if($input_type == "checkbox"){
-                                $value = GFFormsModel::is_checkbox_checked($field_id, $headers[$field_id], $lead, $form);
-                                if($value === false)
+								//pass in label value that has not had quotes escaped so the is_checkbox_checked function compares the unchanged label value with the lead value
+								$header_label_not_escaped = GFCommon::get_label($field, $field_id);
+                                $value = GFFormsModel::is_checkbox_checked($field_id, $header_label_not_escaped, $lead, $form);
+                                if($value === false) {
                                     $value = "";
+								}
                             }
                             else if($input_type == "fileupload" && rgar($field,"multipleFiles") ){
                                 $value = !empty($value) ? implode(" , ", json_decode($value, true)) : "";

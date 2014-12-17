@@ -119,16 +119,17 @@ class GFFormDisplay{
                 do_action("gform_post_submission", $lead, $form);
                 do_action("gform_post_submission_{$form["id"]}", $lead, $form);
 
-				//GFFormsModel::delete_password( $lead, $form );
+				GFFormsModel::delete_password( $lead, $form );
 
 				exit;
             }
-//			else{
-//
-//				GFFormsModel::delete_password( $lead, $form );
-//
-//			}
+			else{
+
+				GFFormsModel::delete_password( $lead, $form );
+
+			}
         }
+
         if(!isset(self::$submission[$form_id]))
             self::$submission[$form_id] = array();
 
@@ -966,8 +967,9 @@ class GFFormDisplay{
 		$lead_id = apply_filters("gform_entry_id_pre_save_lead{$form["id"]}", apply_filters("gform_entry_id_pre_save_lead", null, $form), $form);
 
 		if(!empty($lead_id)){
-			if(empty($lead))
+			if(empty($lead)){
 				$lead = array();
+			}
 			$lead["id"] = $lead_id;
 		}
 
@@ -1657,12 +1659,15 @@ class GFFormDisplay{
             foreach($matches as $match){
                 //parsing shortcode attributes
                 $attr = shortcode_parse_atts($match[1]);
-                $form_id = $attr["id"];
-                if(!is_numeric($form_id))
-                    $form_id = RGFormsModel::get_form_id($attr["name"]);
+                $form_id = rgar($attr, "id");
+                if(!is_numeric($form_id)){
+                    $form_id = RGFormsModel::get_form_id( rgar($attr, "name") );
+				}
 
-                $forms[] = RGFormsModel::get_form_meta($form_id);
-                $ajax = isset($attr["ajax"]) && strtolower(substr($attr["ajax"],0, 4)) == "true";
+				if(!empty($form_id)){
+					$forms[] = RGFormsModel::get_form_meta($form_id);
+					$ajax = isset($attr["ajax"]) && strtolower(substr($attr["ajax"],0, 4)) == "true";
+				}
             }
         }
         return $forms;
