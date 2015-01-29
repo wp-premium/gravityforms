@@ -139,7 +139,6 @@ var gresults = {
                     //permission denied
                 }
                 else {
-
                     if (response.html)
                         jQuery(container).append(response.html);
                     if (!response.more_remaining)
@@ -151,6 +150,7 @@ var gresults = {
         });
 
         return false;
+
     },
 
     clearFilterForm: function () {

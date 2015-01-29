@@ -43,7 +43,7 @@ a.tooltip_bottomleft:hover {
 .ui-tooltip {
 	padding: 18px;
 	position: absolute;
-	z-index: 9999;
+	z-index: 9999999;
 	max-width: 300px;color: #000;
     text-shadow: 1px 1px 1px #fff;
     font-size: 1.0em;

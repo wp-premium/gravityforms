@@ -179,14 +179,14 @@ function gf_matches_operation(val1, val2, operation){
             val2 = gf_try_convert_float(val2);
 
             return gformIsNumber(val1) && gformIsNumber(val2) ? val1 > val2 : false;
-        break;
+            break;
 
         case "<" :
             val1 = gf_try_convert_float(val1);
             val2 = gf_try_convert_float(val2);
 
             return gformIsNumber(val1) && gformIsNumber(val2) ? val1 < val2 : false;
-        break;
+            break;
 
         case "contains" :
             return val1.indexOf(val2) >=0;
@@ -240,49 +240,62 @@ function gf_do_next_button_action(formId, action, fieldId, isInit){
 function gf_do_action(action, targetId, useAnimation, defaultValues, isInit, callback){
 	var $target = jQuery(targetId);
 	if(action == "show"){
-		if(useAnimation && !isInit){
-			if($target.length > 0){
+
+        // reset tabindex for selects
+        $target.find( 'select' ).each( function() {
+            $select = jQuery( this );
+            $select.attr( 'tabindex', $select.data( 'tabindex' ) );
+        } );
+
+    	if(useAnimation && !isInit){
+            if($target.length > 0){
 				$target.slideDown(callback);
 			} else if(callback){
 				callback();
 			}
-		}
-		else{
+        }
+        else{
 			//$target.show();
 			//Getting around an issue with Chrome on Android. Does not like jQuery('xx').show() ...
-            if ($target.hasClass('gf_inline')) {
+            if ($target.is('.gf_inline, input.button')) {
                 $target.css('display', 'inline-block');
             } else {
                 $target.css('display', 'block');
             }
 
-			if(callback){
+            if(callback){
 				callback();
 			}
-		}
-	}
-	else{
-		//if field is not already hidden, reset its values to the default
-		var child = $target.children().first();
+        }
+    }
+    else{
+        //if field is not already hidden, reset its values to the default
+        var child = $target.children().first();
 		if (child.length > 0){
-			if(!gformIsHidden(child)){
-				gf_reset_to_default(targetId, defaultValues);
-			}
+	        if(!gformIsHidden(child)){
+	            gf_reset_to_default(targetId, defaultValues);
+	        }
 		}
 
-		if(useAnimation && !isInit){
-			if($target.length > 0 && $target.is(":visible")) {
+        // remove tabindex and stash as a data attr for selects
+        $target.find( 'select' ).each( function() {
+            $select = jQuery( this );
+            $select.data( 'tabindex', $select.attr( 'tabindex' ) ).removeAttr( 'tabindex' );
+        } );
+
+        if(useAnimation && !isInit){
+            if($target.length > 0 && $target.is(":visible")) {
 				$target.slideUp(callback);
 			} else if(callback) {
-				callback();
+                callback();
 			}
-		} else{
+        } else{
 			$target.hide();
-			if(callback){
-				callback();
+            if(callback){
+                callback();
 			}
-		}
-	}
+        }
+    }
 }
 
 function gf_reset_to_default(targetId, defaultValue){
