@@ -4,3 +4,12 @@
 @import url('readyclass.css');
 @import url('browsers.css');
 @import url('rtl.css');
+
+
+/* 
+
+Note: October 2, 2014 3:51 PM 
+All CSS files are now enqueued directly for better minification support. 
+This file has been left in place temporarily for anyone who may have manually referenced this file in their theme.
+
+*/

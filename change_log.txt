@@ -1,24 +1,339 @@
 -------------------------------------------------------------------------------------------------------------------
-Version 1.8.20.5
+Version 1.9
+
+    - Added drop and drop to the field buttons in the Form Editor.
+    - Added placeholder field settings.
+    - Added default input values field settings.
+    - Added label placement and visibility field settings. These settings are currently hidden by default in the Form Editor. Use the gform_enable_field_label_placement_settings filter to display the settings.
+        add_filter("gform_enable_field_label_placement_settings", "__return_true");
+    - Added support for rendering forms in admin pages with the gravity_form() function and the gravityform shortcode. Use in conjunction with gravity_form_enqueue_scripts().
+    - Added support for retrieving form markup via ajax.
+    - Added save and continue.
+    - Added support for string customization options in the {save_email_input} merge tag. The two options, button_text and validation_message, can be added using shortcode syntax. E.g.,
+        {save_email_input: button_text="Send the link to my email address" validation_message="The link couldn't be sent because the email address is not valid."}
+    - Added automatic background updates. Minor versions only e.g. from 1.9.1 to 1.9.2
+    - Added setting to enable background updates. Use the GFORM_DISABLE_AUTO_UPDATE constant or gform_disable_auto_update filter to override. The filter will override the setting and the constant will override the filter.
+        define( 'GFORM_DISABLE_AUTO_UPDATE', true );
+        add_filter( 'gform_disable_auto_update', '__return_true' );
+    - Added shortcode preview in the post/page editor visual editor. The preview is disabled by default. Use the gform_shortcode_preview_disabled filter to enable.
+        add_filter('gform_shortcode_preview_disabled', '__return_false');
+    - Added gravityforms.min.js. The minified file loads by default unless SCRIPT_DEBUG is active or query param gform_debug is set. e.g. domain.com/?gform_debug
+    - Added the add-ons to the updates page.
+    - Added visual editor to the confirmation message UI.
+    - Added Middle Name input to the name field.
+        - Added Name Prefix drop-down plus sub-setting UI.
+        - Added Name Fields sub-setting to the Name field.
+        - Added Address Fields sub-setting to the Address field.
+    - Added support for translation (.mo) files in the WP_LANG_DIR/gravityforms folder. e.g. /wp-content/languages/gravityforms/gravityforms-es_ES.mo
+    - Added classes to complex fields.
+	- Added HTML5 support for date field when configured with input type "date field".
+    - Added support for 'gform_file_upload_markup' JS and PHP hooks; useful for modifying the multi-file upload "preview".
+    - Added the gform_incomplete_submissions_expiration_days filter to allow the lifetime of saved incomplete submissions to be customized.
+    - Added change event when updating value of total input.
+    - Added min='0' attribute to product field quantity input when HTML5 enabled.
+    - Added input mask to the Phone field (standard format).
+    - Added sub-label setting to Date, Time, Email and Credit Card Fields.
+    - Added min and max attributes to HTML5 number input with values using the fields min and max range setting.
+    - Added support for filtering entries using the contains operator for the name, address, single line and paragraph fields. Applies to the entry list, export entries and results pages.
+    - Added support for date format modifiers (:year, :month, :day, :dmy, :mdy, :ymd etc.) to Date field merge tag.
+    - Added support for :title, :caption, and :description modifiers to Post Image field merge tag.
+    - Added Gravity Font.
+    - Added min, max and step attributes to HTML5 Date Field number inputs. The min and max for the year input can be set using the gform_date_min_year and gform_date_max_year hooks.
+    - Added condition to not include "gform_chosen" if "chosen" is already enqueued.
+    - Added support for the Russian Ruble.
+    - Added Bulgarian translation file.
+    - Added gform_form_args hook to allow modification of the options used to display the form.
+    - Added $field_values as a third parameter for the gform_pre_render filter.
+    - Added form-specific version of "gform_pre_validation" filter.
+    - Added PHP version of the 'gform_merge_tag_value_pre_calculation' filter.
+        add_filter( 'gform_merge_tag_value_pre_calculation', 'merge_tag_value', 10, 6 );
+        function merge_tag_value( $value, $input_id, $modifier, $field, $form, $entry ) {
+            // modify the $value
+            return $value;
+        }
+    - Added the gform_submission_values_pre_save filter to allow submitted values to be modified before saving.
+        add_filter( 'gform_submission_values_pre_save', 'submission_values_pre_save', 10, 2 );
+        function submission_values_pre_save( $submitted_values, $form ) {
+            $submitted_values['custom_value'] = $_POST['custom_value'];
+            return $submitted_values;
+        }
+	- Added 'gform_disable_address_map_link' filter allowing address field map link to be removed.
+        add_filter( 'gform_disable_address_map_link', '__return_true' );
+    - Added 'gform_entry_detail_title' hook for changing the title in the entry detail table.
+        add_filter( 'gform_entry_detail_title', function( $title, $form, $entry ) {
+            return 'Your new title for entry #' . $entry['id'];
+        }, 10, 3 );
+    - Added 'gform_incomplete_submission_post_save' hook for performing custom actions when an incomplete submission has been saved.
+        add_action( 'gform_incomplete_submission_post_save', function ( $submission, $resume_token, $form, $entry ) {
+            // do stuff
+        }, 10, 4 );
+	- Added 'gform_save_and_continue_resume_url' hook to allow modification of the Save & Continue resume URL
+	    add_filter( 'gform_save_and_continue_resume_url', function( $resume_url, $form, $token, $email ) {
+
+            // remove specific query arg
+            //$resume_url = remove_query_arg( array( 'boom' ), $resume_url );
+
+            // remove ALL query args
+            $resume_url = add_query_arg( array( 'gf_token' => $token ), array_shift( explode( '?', $resume_url ) ) );
+
+            return $resume_url;
+        }, 10, 4 );
+    - Added new action 'gform_pre_confirmation_deleted' to allow users to perform custom actions just before deleting a confirmation
+        add_action( 'gform_pre_confirmation_deleted', 'my_pre_confirmation_deleted_func' 10, 2);
+        function my_pre_confirmation_deleted_func( $confirmation_id, $form ) {
+            // perform action before a confirmation is deleted
+        }
+    - Added new action 'gform_post_form_activated' to allow users to perform custom actions just after a form has been activated
+        add_action( 'gform_post_form_activated', 'my_post_form_activated_func', 10);
+        function my_post_form_activated_func( $form_id ) {
+            // perform action after a form has been activated
+        }
+    - Added new action 'gform_post_form_deactivated' to allow users to perform custom actions just after a form has been deactivated
+        add_action( 'gform_post_form_deactivated', 'my_post_form_deactivated_func', 10);
+        function my_post_form_deactivated_func( $form_id ) {
+            // perform action after a form has been deactivated
+        }
+    - Added new action 'gform_post_form_trashed' to allow users to perform custom actions just after a form has been moved to the trash
+        add_action( 'gform_post_form_trashed', 'my_post_form_trashed_func', 10);
+        function my_post_form_trashed_func( $form_id ) {
+            // perform action after a form has been moved to the trash
+        }
+    - Added new action 'gform_post_form_restored' to allow users to perform custom actions just after a form has been restored
+        add_action( 'gform_post_form_restored', 'my_post_form_restored_func', 10);
+        function my_post_form_restored_func( $form_id ) {
+            // perform action after a form has been restored
+        }
+    - Added new action 'gform_post_form_duplicated' to allow users to perform custom actions just after a form has been duplicated. This replaces the deprecated gform_after_duplicate_form action.
+        add_action( 'gform_post_form_duplicated', 'my_post_form_duplicated_func', 10, 2);
+        function my_post_form_duplicated_func( $form_id, $new_form_id ) ) {
+            // perform action after a form has been duplicated
+        }
+    - Added new action 'gform_post_form_views_deleted' to allow users to perform custom actions just after the form view count has been reset to zero
+        add_action( 'gform_post_form_views_deleted', 'my_post_form_views_deleted_func', 10);
+        function my_post_form_views_deleted_func( $form_id ) {
+            // perform action after the form view count has been reset to zero
+        }
+    - Added new action 'gform_post_note_added' to allow users to perform custom actions just after a note has been added
+        add_action( 'gform_post_note_added', 'my_post_note_added_func', 10, 6);
+        function my_post_note_added_func( $note_id, $lead_id, $user_id, $user_name, $note, $note_type ) {
+            // perform action after the note has been added
+        }
+    - Added new action 'gform_pre_note_deleted' to allow users to perform custom actions just before a note has been deleted
+        add_action( 'gform_pre_note_deleted', 'my_pre_note_deleted_func', 10, 2);
+        function my_pre_note_deleted_func( $note_id, $lead_id ) {
+            // perform action just before after the note has been deleted
+        }
+    - Added PHP version of the "gform_calculation_result" filter
+        add_filter( 'gform_calculation_result', 'my_calc_result', 10, 5 );
+        function my_calc_result( $result, $formula, $field, $form, $entry ) {
+            // modify result as needed
+            return $result;
+        }
+    - Added new JS filter: 'gform_calculation_formula' to allow modifying formula before it is processed by GF on frontend
+        gform.addFilter( 'gform_calculation_formula', function( formula, formulaField, formId, calcObj ) {
+            // custom code here
+            return formula;
+        } );
+    - Added JS filter 'gform_list_item_pre_add' to allow new list field row to be modifed before the row is inserted.
+        gform.addFilter( 'gform_list_item_pre_add', function( clone ) {
+            // handle datepicker
+            clone.find( '.ui-datepicker-trigger' ).remove();
+            clone.find( 'input.datepicker' ).removeClass( 'hasDatepicker' ).removeAttr( 'id' );
+            return clone;
+        });
+    - Added JS 'gform_post_calculation_events' action hook to allow custom methods for triggering calculations.
+        gform.addAction( 'gform_post_calculation_events', function( mergeTagArr, formulaField, formId, calcObj ){
+            var fieldId = parseInt( mergeTagArr[1] ),
+                fieldSelector = '#field_' + formId + '_' + fieldId;
+
+            if ( jQuery( fieldSelector + ' table.gfield_list' ).length == 1 ) {
+                jQuery( fieldSelector )
+                    .on( 'click', '.add_list_item', function () {
+                        jQuery( fieldSelector + ' .delete_list_item' ).removeProp( 'onclick' );
+                        calcObj.bindCalcEvent( fieldId, formulaField, formId, 0 );
+                    })
+                    .on( 'click', '.delete_list_item', function () {
+                        gformDeleteListItem( this, 0 );
+                        calcObj.bindCalcEvent( fieldId, formulaField, formId, 0 );
+                    });
+
+                if ( mergeTagArr[2] != null ) {
+                    var columnNo = mergeTag[2].substr( 1 ),
+                        columnSelector = '.gfield_list_' + fieldId + '_cell' + columnNo + ' :input';
+                    jQuery( fieldSelector ).on( 'change', columnSelector, function () {
+                        calcObj.bindCalcEvent( fieldId, formulaField, formId, 0 );
+                    });
+                }
+            }
+        });
+    - Added JS 'gform_merge_tag_value_pre_calculation' hook to allow merge tag value to be modified before calculation is performed.
+        gform.addFilter( 'gform_merge_tag_value_pre_calculation', function( value, mergeTagArr, isVisible, formulaField, formId ){
+            var fieldId = parseInt( mergeTagArr[1] ),
+                fieldSelector = '#field_' + formId + '_' + fieldId;
+
+            // check if merge tag belongs to a List field and that it isn't hidden by conditional logic
+            if ( jQuery( fieldSelector + ' table.gfield_list' ).length == 1 && isVisible ) {
+
+                if ( mergeTagArr[2] == null ) {
+                    // if no column specified count the rows
+                    value = jQuery( fieldSelector + ' tbody tr' ).length;
+                } else {
+                    var columnNo = mergeTagArr[2].substr( 1 ),
+                        columnSelector = '.gfield_list_' + fieldId + '_cell' + columnNo + ' :input',
+                        cellValue = 0;
+
+                    // if column specified get the input values from each row and calculate the sum
+                    jQuery( columnSelector ).each( function () {
+                        cellValue = gformToNumber( jQuery( this ).val() );
+                        value += parseFloat( cellValue ) || 0;
+                    });
+                }
+
+            }
+
+            return value;
+        });
+    - Added JS filter 'gform_datepicker_options_pre_init' to allow datepicker options to be modified before the datepicker is initialized. gform_datepicker_init now has gform_gravityforms as a dependency.
+        gform.addFilter( 'gform_datepicker_options_pre_init', function( optionsObj, formId, fieldId ) {
+            if ( formId == 587 && fieldId == 1 ) {
+                optionsObj.minDate = 2;
+                optionsObj.beforeShowDay = function(date) {
+                    var day = date.getDay();
+                    return [(day > 1)];
+                };
+            }
+            return optionsObj;
+        });
+    - Added $form and $field parameters to the 'gform_date_min_year' and 'gform_date_max_year' filters.
+        add_filter( 'gform_date_max_year', 'change_max_year', 10, 3 );
+        function change_max_year( $max_year, $form, $field ) {
+            // do stuff with the $form and/or $field
+            return $max_year;
+        }
+
+    - Updated GFCommon::replace_variables_prepopulate to support replacing custom merge tags via the 'gform_replace_merge_tags' hook.
+    - Updated set_logging_supported function to be public instead of protected.
+    - Updated register strings with URLs in them to be able to be translated properly.
+    - Updated trim_conditional_logic_values_from_element function to handle when the element's class is GF_Field.
+    - Updated select, radio and checkbox type pricing fields to use 0 for price if choice price is blank, preventing validation error.
+    - Updated the Forms menu icon and Add Form button icon.
+    - Updated the placeholders.js script to the latest version (3.0.2). Removed jquery.placeholders.2.1.1.min.js. Added placeholders.jquery.min.js. This is the jQuery adapter version of the script which patches val() to return an empty string when the placeholder is active. gform_placeholder now has jQuery as a dependency.
+    - Updated name of "gform_before_update_form_meta" hook to "gform_post_update_form_meta" and changed from "add_action" to "do_action".
+    - Updated GFFormsModel::get_form_meta() to return an array of GF_Field objects in the fields array.
+    - Updated the forms import & export tools to use JSON. Legacy XML files are still supported on import.
+    - Updated the update button on the entry edit page to be disabled until the page loads completely.
+    - Updated the field settings to hide the advanced tab if no advanced fields are available for the field.
+    - Updated the Add Field button in the Form Editor to require the field type in the "type" data attribute. Use of the inline onclick attribute to trigger StartAddField() is now deprecated.
+    - Updated the permission check for bulk deleting notes from GFFormsModel to GFEntryDetail.
+    - Updated the gform_pre_confirmation_save filter to send $is_new_confirmation as an additional parameter.
+    - Updated the 'chosen' script and styles to v1.1.0.
+    - Updated the contents of the entries export csv file to use UTF-16LE encoding.
+    - Updated Time field hour and minute inputs to use number type and include min, max and step attributes when HTML5 enabled.
+    - Updated a variety of strings to be translatable.
+    - Updated gravityforms.pot.
+    - Updated Danish translation file.
+    - Updated Spanish (es_ES) translation.
+    - Updated German translation file.
+
+    - Deprecated the gform_after_duplicate_form action. Use the gform_post_form_duplicated action instead.
+    - Deprecated GFCommon::get_us_states() and GFCommon::get_canadian_provinces().
+
+    - Removed RGFormsModel::add_default_properties().
+    - Removed support for legacy post category fields created before version 1.6.3. Post category fields created after version 1.6.3 remain functional and continue to be supported.
+
+    - AF: Added GF_Field for all field objects with support for array notation for backward compatibility (with some limitations).
+    - AF: Added get_form_editor_inline_script() and get_form_inline_script() to GF_Field.
+	- AF: Added fail_payment, add_pending_payment, void_authorization, expire_subscription for the Payment Add-On.
+	- AF: Added tooltips for the Payment Add-On.
+	- AF: Added create_subscription action type for Payment the Add-On.
+	- AF: Added support for array values in the Settings API. Added support for array values to the select setting.
+	- AF: Added has_subscription function to check if a subscription exists for Payment the Add-On.
+	- AF: Added 'title' to the settings tabs array so the title can be customized.
+    - AF: Added form id and form title to the results page title.
+    - AF: Added a warning to the add-on settings page which appears if the add-on contains deprecated methods.
+    - AF: Added support in the results page for score averages by row in multi-row Likert fields.
+    - AF: Added helper function in the Payment Add-On to remove spaces from credit card number.
+
+	- AF: Updated note set in complete_payment for Payment the Add-On.
+	- AF: Updated start_subscription to check if a subscription has already been created for Payment the Add-On.
+	- AF: Updated add_subscription_payment to check is a subscription has already been created for Payment the Add-On.
+	- AF: Updated log messages for Payment the Add-On.
+    - AF: Updated the parameters for the post_callback function to two (the action and the result) for the Payment Add-On.
+    - AF: Updated fail_subscription_payment to set the entry payment status to Failed for Payment the Add-On.
+    - AF: Updated get_setting function to handle when the part is a zero.
+    - AF: Updated localization of certain strings for the Payment Add-On Framework.
+    - AF: Updated feed field mapping to exclude credit card field options, except the credit card number (last 4 digits) and credit card type as choices.
+
+    - AF: Deprecated protected access level for all methods. Use either public or private instead. Deprecation notices are triggered in the admin footer when WP_DEBUG is on.
+
+    - API: Added GFAPI::update_entry_field() to allow updates of individual entry fields.
+    - API: Added GFAPI::get_forms().
+    - API: Added GFAPI::send_notifications().
+    - API: Updated GFAPI::update_entry() to update only changed values.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.22.9
+	- Fixed issue where 'sack' was not available on some pages
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.22.8
+	- Fixed an issue with some entries where the Checkbox field value could be ordered incorrectly when the field has ten or more choices.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.22.7
+	- Fixed issue when search entries with an & character.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.22.6
+	- Fixed issue with gform_confirmation_loaded event not firing under certain conditions.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.22.5
+	- AF: Fixed notice for payment feeds.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.22.4
+	- Fixed issue when searching entries with single quotes under certain scenarios.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.22.3
+	- Fixed issue where extra call to wp_print_scripts was causing issues and removing broke New Form modal
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.22.2
+	- Fixed issue when searching for entries with single quotes.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.22.1
+	- Fixed an issue with positioning of multi-page form buttons following display by conditional logic.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.22
+	- Added logging statements.
+	- Fixed issue when displaying new form modal.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.8.21
+	- Added logging statements around post creation.
+	- Updated translation in Finnish PO file to fix a javascript error thrown on the entry detail page.
+	- Updated notification validation so that it allows a comma separate list of emails in Reply-To (compliant with RFC 5322).
+	- Fixed issue where total was displayed as -$0.00 instead of $0.00 in certain scenarios.
+	- Fixed issue where {admin_email} could not be used in notification "To" fields.
+	- Fixed conflict with Jetpack by removing unneccessary call to wp_print_scripts().
+	- Fixed an issue with the AJAX spinner and the multi-file uploader.
+	- Fixed signup URL for reCAPTCHA in error messages.
+	- Fixed issue with input-based fields with over 100 inputs.
+	- Fixed duplicate choice label causing issues on checkbox and radio button fields when there are multiple forms on one page.
+	- Fixed an issue with the results page for forms with a lot of fields on servers with limited resources.
 	- Fixed issue with exporting/importing some post field settings.
-	- Fixed notice when filter entries with empty filter value
-
--------------------------------------------------------------------------------------------------------------------
-Version 1.8.20.4
-	- Fixed issue with password field on multi-page forms
-
--------------------------------------------------------------------------------------------------------------------
-Version 1.8.20.3
-	- Fixed an issue with list field shim when RTL was enabled
+	- Fixed notice when filter entries with empty filter value.
+	- Fixed issue with password field on multi-page forms.
+	- Fixed an issue with list field shim when RTL was enabled.
 	- Fixed an issue with the results page where the 'show more' link retrieves duplicate values if some values of that field are empty.
-
--------------------------------------------------------------------------------------------------------------------
-Version 1.8.20.2
 	- Fixed issue with section breaks getting displayed on {all_fields_display_empty} even when hidden by conditional logic.
-
--------------------------------------------------------------------------------------------------------------------
-Version 1.8.20.1
 	- Fixed an issue where exporting lead data for checkbox fields did not work when the choice label included quotes.
+	- AF: Fixed issue with Sales results incorrectly calculating refunds.
+	- AF: Fixed issue with the billing cycle length drop down not showing appropriate numbers in some instances in the Payment Add-On.
 
 -------------------------------------------------------------------------------------------------------------------
 Version 1.8.20
@@ -98,7 +413,7 @@ Version 1.8.17
 	- Fixed issue with Add-On manager displaying error when installing Add-Ons.
 	- Fixed notice when $form['pagination']['display_progressbar_on_confirmation'] was not set.
 	- Fixed issue with entry list page payment status drop down containing "Approved" instead of "Paid".
-    - Fixed issue where setting an input-based field value to empty would fail to save.
+    - Fixed issue where setting an input-based field value to empty would fail to field hour and minute inputs tosave.
 	- AF: Added get_feeds_by_slug function.
     - AF: Added is_delayed function to check whether a feed is delayed processing with PayPal Standard.
 	- AF: Updated maybe_process_feed function to handle processing when add-on is set as delayed in PayPal Standard feed setup.
@@ -254,7 +569,7 @@ Version 1.8.9
 
     - Added "password" to the list of fields which allow HTML input.
     - Added 'gform_field_container' filter to allow modifying the field container markup.
-        add_action( 'gform_field_container', 'my_field_container', 10, 6 );
+        add_filter( 'gform_field_container', 'my_field_container', 10, 6 );
         function my_field_container( $field_container, $field, $form, $class_attr, $style, $field_content ) {
             return '<li style="border: 1px solid #f00;">{FIELD_CONTENT}</li>';
         }

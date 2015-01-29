@@ -46,7 +46,4 @@ function cancel_subscription(entryId){
             }
         }
     );
-
-
-
 }

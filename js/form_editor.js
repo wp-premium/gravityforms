@@ -5,13 +5,108 @@
 
 jQuery(document).ready(function() {
 
-    setTimeout("CloseStatus();", 5000)
+    setTimeout("CloseStatus();", 5000);
+
+	jQuery('.field_type input').each(function(){
+		var $this = jQuery(this);
+		var type = $this.data('type');
+		var onClick = $this.attr('onclick');
+		if(typeof type =='undefined'){
+			// deprecate buttons without the type data attribute
+
+			if(onClick.indexOf('StartAddField') > -1){
+				if (/StartAddField\([ ]?'(.*?)[ ]?'/.test( onClick )){
+					type = onClick.match( /'(.*?)'/ )[1];
+					$this.data('type', type);
+				}
+			}
+
+			if(window.console){
+				console.log('Deprecated button for the ' + this.value + ' field. Since v1.9 the field type must be specified in the "type" data attribute.');
+			}
+		}
+		if(typeof type != 'undefined' && (typeof onClick == 'undefined' || onClick == '')){
+			jQuery(this).click(function(){
+				StartAddField(type);
+			})
+		}
+	});
 
     jQuery('#gform_fields').sortable({
-        axis: 'y',
         cancel: '#field_settings',
         handle: '.gfield_admin_icons',
-        start: function(event, ui){gforms_dragging = ui.item[0].id;}
+        start: function(event, ui){
+            gforms_dragging = ui.item[0].id;
+        },
+        containment: 'document',
+        tolerance: "pointer",
+        over: function( event, ui ) {
+            jQuery('#no-fields').hide();
+            if(ui.helper.hasClass('ui-draggable-dragging')){
+                ui.helper.data('original_width', ui.helper.width())
+                ui.helper.data('original_height', ui.helper.height())
+                ui.helper.width(ui.sender.width()-25);
+                ui.helper.height(ui.placeholder.height());
+            } else {
+                var h = ui.helper.height();
+                if(h > 300){
+                    h = 300;
+                }
+                ui.placeholder.height(h);
+            }
+        },
+        out: function( event, ui ) {
+            jQuery('#no-fields').show();
+            if(ui.helper && ui.helper.hasClass('ui-draggable-dragging')){
+                ui.helper.width(ui.helper.data('original_width'));
+                ui.helper.height(ui.helper.data('original_height'));
+            }
+        },
+        placeholder: "field-drop-zone",
+        beforeStop: function( event, ui ) {
+
+            jQuery('#no-fields').remove();
+            jQuery('#gform_fields').height('100%');
+
+            var type = ui.helper.data('type');
+
+            if(typeof type == 'undefined'){
+                return;
+            }
+
+            var li = "<li id='gform_adding_field_spinner'><i class='gficon-gravityforms-spinner-icon gficon-spin'></i></li>";
+            var index = ui.item.index();
+            ui.item.replaceWith( li );
+            StartAddField(type, index);
+        }
+    });
+
+	jQuery('#no-fields').droppable({
+		over: function (event, ui) {
+			jQuery('#gform_fields').height(jQuery('#no-fields').height());
+			jQuery('#no-fields').hide();
+		},
+		out : function (event, ui) {
+			jQuery('#no-fields').show();
+		}
+	});
+
+    jQuery('.field_type input').draggable({
+        connectToSortable: "#gform_fields",
+        helper: function(){
+			return jQuery(this).clone(true);
+		},
+        revert: 'invalid',
+        cancel: false,
+        appendTo: '#wpbody',
+        containment: 'document',
+        start: function(event, ui){
+
+            if(gf_vars["currentlyAddingField"] == true){
+                return false;
+            }
+
+        }
     });
 
     jQuery('#field_choices').sortable({
@@ -23,6 +118,20 @@ jQuery(document).ready(function() {
             MoveFieldChoice(fromIndex, toIndex);
         }
     });
+
+    jQuery('.field_input_choices').sortable({
+        axis: 'y',
+        handle: '.field-choice-handle',
+        update: function(event, ui){
+            var fromIndex = ui.item.data("index");
+            var toIndex = ui.item.index();
+            var inputId = ui.item.data("input_id");
+            var $ul = ui.item.parent();
+            MoveInputChoice($ul, inputId, fromIndex, toIndex);
+        }
+    });
+
+
 
     if(typeof gf_global['view'] == 'undefined' || gf_global['view'] != 'settings')
         InitializeForm(form);
@@ -51,10 +160,245 @@ jQuery(document).ready(function() {
         jQuery(this).data('previousValue', jQuery(this).val());
     });
 
+    InitializeFieldSettings();
 });
 
 function CloseStatus(){
     jQuery('.updated_base, .error_base').slideUp();
+}
+
+function InitializeFieldSettings(){
+
+    jQuery('#field_max_file_size').on('input propertychange', function(){
+        var $this = jQuery(this),
+            inputValue = parseInt($this.val());
+        var value = inputValue ? inputValue : '';
+
+        SetFieldProperty('maxFileSize', value);
+
+    }).on('change', function(){
+		var field = GetSelectedField();
+		var value = field.maxFileSize ? field.maxFileSize : '';
+		var maskedValue = value === '' ? '' : value + "MB"
+		this.value = maskedValue;
+	});
+    jQuery(document).on('input propertychange', '.field_default_value', function(){
+        SetFieldDefaultValue(this.value);
+    });
+    jQuery(document).on('input propertychange', '.field_placeholder, .field_placeholder_textarea', function(){
+        SetFieldPlaceholder(this.value);
+    });
+
+	jQuery('#field_choices').on('change' , '.field-choice-price', function() {
+		var field = GetSelectedField();
+		var i = jQuery(this).parent('li').index();
+		var price = field.choices[i].price;
+		this.value = price;
+	});
+
+	jQuery('.field_input_choices')
+		.on('input propertychange', 'input', function () {
+			var $li = jQuery(this).closest('li'),
+				index = $li.data('index'),
+				inputId = $li.data('input_id'),
+				value = $li.find('.field-choice-value').val(),
+				text = $li.find('.field-choice-text').val();
+			SetInputChoice(inputId, index, value, text);
+		})
+        .on('click', 'input:radio, input:checkbox', function () {
+            var $li = jQuery(this).closest('li'),
+                index = $li.data('index'),
+                inputId = $li.data('input_id'),
+                value = $li.find('.field-choice-value').val(),
+                text = $li.find('.field-choice-text').val();
+            SetInputChoice(inputId, index, value, text);
+        })
+		.on('click', '.field-input-insert-choice', function () {
+			var $li = jQuery(this).closest('li'),
+				$ul = $li.closest('ul'),
+				index = $li.data('index'),
+				inputId = $li.data('input_id');
+			InsertInputChoice($ul, inputId, index + 1);
+		})
+		.on('click', '.field-input-delete-choice', function () {
+			var $li = jQuery(this).closest('li'),
+				$ul = $li.closest('ul'),
+				index = $li.data('index'),
+				inputId = $li.data('input_id');
+			DeleteInputChoice($ul, inputId, index);
+		});
+
+	jQuery('.field_input_choice_values_enabled').on('click', function(){
+        var $container = jQuery(this).parent().siblings('.gfield_settings_input_choices_container');
+        ToggleInputChoiceValue($container, this.checked);
+        var $ul = $container.find('ul');
+        SetInputChoices($ul);
+    });
+
+	jQuery('.input_placeholders_setting')
+		.on('input propertychange', '.input_placeholder', function(){
+			var inputId = jQuery(this).closest('.input_placeholder_row').data('input_id');
+			SetInputPlaceholder(this.value, inputId);
+		})
+		.on('input propertychange', '#field_single_placeholder', function(){
+			SetFieldPlaceholder(this.value);
+		});
+
+	jQuery('.prepopulate_field_setting')
+		.on('input propertychange', '.field_input_name', function(){
+			var inputId = jQuery(this).closest('.field_input_name_row').data('input_id');
+			SetInputName(this.value, inputId);
+		})
+		.on('input propertychange', '#field_input_name', function(){
+			SetInputName(this.value);
+		});
+
+    jQuery('.custom_inputs_setting, .custom_inputs_sub_setting, .sub_labels_setting')
+		.on('click', '.input_active_icon', function(){
+			var inputId = jQuery(this).closest('.field_custom_input_row').data('input_id');
+			ToggleInputHidden(this, inputId);
+    	})
+		.on('input propertychange', '.field_custom_input_default_label', function(){
+			var inputId = jQuery(this).closest('.field_custom_input_row').data('input_id');
+			SetInputCustomLabel(this.value, inputId);
+		})
+		.on('input propertychange', '#field_single_custom_label', function(){
+			SetInputCustomLabel(this.value);
+		});
+
+	jQuery('.default_input_values_setting')
+		.on('input propertychange', '.default_input_value', function(){
+			var inputId = jQuery(this).closest('.default_input_value_row').data('input_id');
+			SetInputDefaultValue(this.value, inputId);
+		})
+		.on('input', '#field_single_default_value', function(){
+			SetFieldDefaultValue(this.value);
+		});
+
+
+	jQuery('.choices_setting, .columns_setting')
+		.on('input propertychange', '.field-choice-input', function(e){
+			var $this = jQuery(this);
+			var li = $this.closest('li.field-choice-row');
+			var inputType = li.data('input_type');
+			var i = li.data('index');
+			SetFieldChoice( inputType, i);
+			if($this.hasClass('field-choice-text') || $this.hasClass('field-choice-value')){
+				CheckChoiceConditionalLogicDependency(this);
+				e.stopPropagation();
+			}
+
+		});
+
+    jQuery('#field_enable_copy_values_option').on('click', function(){
+        SetCopyValuesOptionProperties(this.checked);
+        ToggleCopyValuesOption(false);
+
+        if(this.checked == false){
+            ToggleCopyValuesActivated(false);
+        }
+    });
+
+    jQuery('#field_copy_values_option_label').on('input propertychange', function(){
+        SetCopyValuesOptionLabel(this.value);
+    });
+
+    jQuery('#field_copy_values_option_field').on('change', function(){
+        SetFieldProperty('copyValuesOptionField', jQuery(this).val());
+    });
+
+    jQuery('#field_copy_values_option_default').on('change', function(){
+        SetFieldProperty('copyValuesOptionDefault', this.checked == true ? 1 : 0);
+        ToggleCopyValuesActivated(this.checked);
+    });
+
+	jQuery('#field_label').on('input propertychange', function(){
+		SetFieldLabel(this.value);
+	});
+
+	jQuery('#field_description').on('input propertychange', function(){
+		SetFieldDescription(this.value);
+	});
+
+	jQuery('#field_content').on('input propertychange', function(){
+		SetFieldProperty('content', this.value);
+	});
+
+	jQuery('#next_button_text_input, #next_button_image_url').on('input propertychange', function(){
+		SetPageButton('next');
+	});
+
+	jQuery('#previous_button_image_url, #previous_button_text_input').on('input propertychange', function(){
+		SetPageButton('previous');
+	});
+
+	jQuery('#field_custom_field_name_text').on('input propertychange', function(){
+		SetFieldProperty('postCustomFieldName', this.value);
+	});
+
+	jQuery('#field_customfield_content_template').on('input propertychange', function(){
+		SetCustomFieldTemplate();
+	});
+
+	jQuery('#gfield_calendar_icon_url').on('input propertychange', function(){
+		SetFieldProperty('calendarIconUrl', this.value);
+	});
+
+	jQuery('#field_max_files').on('input propertychange', function(){
+		SetFieldProperty('maxFiles', this.value);
+	});
+
+	jQuery('#field_maxrows').on('input propertychange', function(){
+		SetFieldProperty('maxRows', this.value);
+	});
+
+	jQuery('#field_mask_text').on('input propertychange', function(){
+		SetFieldProperty('inputMaskValue', this.value);
+	});
+
+	jQuery('#field_file_extension').on('input propertychange', function(){
+		SetFieldProperty('allowedExtensions', this.value);
+	});
+
+	jQuery('#field_maxlen')
+		.on('keypress', function(){
+			return ValidateKeyPress(event, GetMaxLengthPattern(), false)
+		})
+		.on('change keyup', function(){
+			SetMaxLength(this);
+		});
+
+	jQuery('#field_range_min').on('input propertychange', function(){
+		SetFieldProperty('rangeMin', this.value);
+	});
+
+	jQuery('#field_range_max').on('input propertychange', function(){
+		SetFieldProperty('rangeMax', this.value);
+	});
+
+	jQuery('#field_calculation_formula').on('input propertychange', function(){
+		SetFieldProperty('calculationFormula', this.value.trim());
+	});
+
+	jQuery('#field_error_message').on('input propertychange', function(){
+		SetFieldProperty('errorMessage', this.value);
+	});
+
+	jQuery('#field_css_class').on('input propertychange', function(){
+		SetFieldProperty('cssClass', this.value);
+	});
+
+	jQuery('#field_admin_label').on('input propertychange', function(){
+		SetFieldProperty('adminLabel', this.value);
+	});
+
+	jQuery('#field_add_icon_url').on('input propertychange', function(){
+		SetFieldProperty('addIconUrl', this.value);
+	});
+
+	jQuery('#field_delete_icon_url').on('input propertychange', function(){
+		SetFieldProperty('deleteIconUrl', this.value);
+	});
 }
 
 function InitializeForm(form){
@@ -77,8 +421,6 @@ function InitializeForm(form){
     //default to checked
     if(form.useCurrentUserAsAuthor == undefined)
         form.useCurrentUserAsAuthor = true;
-	else if(form.useCurrentUserAsAuthor == '0')
-		form.useCurrentUserAsAuthor = false;
 
     jQuery('#gfield_current_user_as_author').prop('checked', form.useCurrentUserAsAuthor ? true : false);
 
@@ -88,7 +430,7 @@ function InitializeForm(form){
     if(form.postFormat)
         jQuery('#field_post_format').val(form.postFormat);
 
-    if(form.postContentTemplateEnabled && form.postContentTemplateEnabled != '0' ){
+    if(form.postContentTemplateEnabled){
         jQuery('#gfield_post_content_enabled').prop("checked", true);
         jQuery('#field_post_content_template').val(form.postContentTemplate);
     }
@@ -98,7 +440,7 @@ function InitializeForm(form){
     }
     TogglePostContentTemplate(true);
 
-    if(form.postTitleTemplateEnabled && form.postTitleTemplateEnabled != '0'){
+    if(form.postTitleTemplateEnabled){
         jQuery('#gfield_post_title_enabled').prop("checked", true);
         jQuery('#field_post_title_template').val(form.postTitleTemplate);
     }
@@ -168,32 +510,40 @@ function LoadFieldSettings(){
     jQuery('#field_force_ssl').prop('checked', field.forceSSL ? true : false);
     jQuery('#credit_card_style').val(field.creditCardStyle ? field.creditCardStyle : "style1");
 
-    if(field.adminOnly)
+    if(typeof field.labelPlacement == 'undefined'){
+        field.labelPlacement = '';
+    }
+    if(typeof field.descriptionPlacement == 'undefined'){
+        field.descriptionPlacement = '';
+    }
+    if(typeof field.subLabelPlacement == 'undefined'){
+        field.subLabelPlacement = '';
+    }
+    jQuery("#field_label_placement").val(field.labelPlacement);
+    jQuery("#field_description_placement").val(field.descriptionPlacement);
+    jQuery("#field_sub_label_placement").val(field.subLabelPlacement);
+    if((field.labelPlacement == 'left_label' || field.labelPlacement == 'right_label' || (field.labelPlacement == '' && form.labelPlacement != 'top_label'))){
+        jQuery('#field_description_placement_container').hide();
+    } else {
+        jQuery('#field_description_placement_container').show();
+    }
+
+    if(field.adminOnly){
         jQuery("#field_visibility_admin").prop("checked", true);
-    else
+    } else {
         jQuery("#field_visibility_everyone").prop("checked", true);
+    }
+
+    if(typeof field.placeholder == 'undefined'){
+        field.placeholder = '';
+    }
+    jQuery("#field_placeholder, #field_placeholder_textarea").val(field.placeholder);
 
     jQuery("#field_file_extension").val(field.allowedExtensions == undefined ? "" : field.allowedExtensions);
     jQuery("#field_multiple_files").prop("checked", field.multipleFiles ? true : false);
     jQuery("#field_max_files").val(field.maxFiles ? field.maxFiles : "" );
     jQuery("#field_max_file_size").val(field.maxFileSize ? field.maxFileSize + "MB" : "" );
     ToggleMultiFile(true);
-
-
-    jQuery(document).on('change', '#field_max_file_size', function(){
-        var $this = jQuery(this),
-            inputValue = parseInt($this.val());
-        var value = inputValue ? inputValue : '';
-        var maskedValue = value === '' ? '' : value + "MB"
-        SetFieldProperty('maxFileSize', value);
-        $this.val( maskedValue );
-    });
-
-    jQuery(document).on('onkeyup', '#field_max_file_size', function(){
-        var value = parseInt(jQuery(this).val()) ? parseInt(jQuery(this).val()) : '';
-        SetFieldProperty('maxFileSize', value);
-    });
-
 
 
     jQuery("#field_phone_format").val(field.phoneFormat);
@@ -245,15 +595,14 @@ function LoadFieldSettings(){
     var rounding = gformIsNumber(field.calculationRounding) ? field.calculationRounding : "norounding";
     jQuery('#field_calculation_rounding').val(rounding);
 
-
-
     jQuery("#option_field_type").val(field.inputType);
     var productFieldType = jQuery("#product_field_type");
     productFieldType.val(field.inputType);
-    if(has_entry(field.id))
+    if(has_entry(field.id)){
         productFieldType.prop("disabled", true);
-    else
+    } else{
         productFieldType.prop("disabled", false);
+    }
 
     jQuery("#donation_field_type").val(field.inputType);
     jQuery("#quantity_field_type").val(field.inputType);
@@ -263,6 +612,8 @@ function LoadFieldSettings(){
         jQuery("#field_base_price").val(field.basePrice == undefined ? "" : field.basePrice);
         SetBasePrice(basePrice);
     }
+
+	jQuery("#shipping_field_type").val(field.inputType);
 
     jQuery("#field_disable_quantity").prop("checked", field.disableQuantity == true ? true : false);
     SetDisableQuantity(field.disableQuantity == true);
@@ -275,8 +626,17 @@ function LoadFieldSettings(){
 
     var addressType = field.addressType == undefined ? "international" : field.addressType;
     jQuery('#field_address_type').val(addressType);
-    jQuery("#field_address_hide_address2").prop("checked", field.hideAddress2 == true ? true : false);
-    jQuery("#field_address_hide_state_" + addressType).prop("checked", field.hideState == true ? true : false);
+
+    if(field.type == 'address'){
+        field = UpgradeAddressField(field);
+    }
+
+    if(field.type == 'email'){
+        field = UpgradeEmailField(field);
+    }
+	if(field.type == 'password'){
+		field = UpgradePasswordField(field);
+	}
 
     var defaultState = field.defaultState == undefined ? "" : field.defaultState;
     var defaultProvince = field.defaultProvince == undefined ? "" : field.defaultProvince; //for backwards compatibility
@@ -284,7 +644,6 @@ function LoadFieldSettings(){
 
     jQuery("#field_address_default_state_" + addressType).val(defaultStateProvince);
     jQuery("#field_address_default_country_" + addressType).val(field.defaultCountry == undefined ? "" : field.defaultCountry);
-    jQuery("#field_address_hide_country_" + addressType).prop("checked", field.hideCountry == true ? true : false);
 
     SetAddressType(true);
 
@@ -343,6 +702,7 @@ function LoadFieldSettings(){
     ToggleInputMaskOptions(true);
 
     if(inputType == "creditcard"){
+        field = UpgradeCreditCardField(field);
         if(!field.creditCards || field.creditCards.length <= 0)
             field.creditCards = ['amex', 'visa', 'discover', 'mastercard'];
 
@@ -354,8 +714,23 @@ function LoadFieldSettings(){
         }
     }
 
-    if(!field["dateType"] && inputType == "date")
+    if(field.type == 'date'){
+        field = UpgradeDateField(field);
+    }
+
+    if(field.type == 'time'){
+        field = UpgradeTimeField(field);
+    }
+
+    CreateDefaultValuesUI(field);
+    CreatePlaceholdersUI(field);
+    CreateCustomizeInputsUI(field);
+    CreateInputLabelsUI(field);
+
+
+    if(!field["dateType"] && inputType == "date"){
         field["dateType"] = "datepicker";
+    }
 
     jQuery("#field_date_input_type").val(field["dateType"]);
     jQuery("#gfield_calendar_icon_url").val(field["calendarIconUrl"] == undefined ? "" : field["calendarIconUrl"]);
@@ -374,6 +749,8 @@ function LoadFieldSettings(){
     CreateInputNames(field);
     ToggleInputName(true);
 
+
+
     var canHaveConditionalLogic = GetFirstRuleField() > 0;
     if(field["type"] == "page"){
         LoadFieldConditionalLogic(canHaveConditionalLogic, "next_button");
@@ -382,6 +759,21 @@ function LoadFieldSettings(){
     else{
         LoadFieldConditionalLogic(canHaveConditionalLogic, "field");
     }
+
+    jQuery("#field_enable_copy_values_option").prop("checked", field.enableCopyValuesOption == true ? true : false);
+    jQuery("#field_copy_values_option_default").prop("checked", field.copyValuesOptionDefault == true ? true : false);
+    var copyValueOptions = GetCopyValuesFieldsOptions(field.copyValuesFieldId, field);
+    if(copyValueOptions.length>0){
+        jQuery("#field_enable_copy_values_option").prop("disabled", false);
+        jQuery("#field_copy_values_disabled").hide();
+        jQuery("#field_copy_values_option_field").html(copyValueOptions);
+
+    } else {
+        jQuery("#field_enable_copy_values_option").prop("disabled", true);
+        jQuery("#field_copy_values_disabled").show();
+    }
+
+    ToggleCopyValuesOption(field.enableCopyValuesOption, true);
 
     if(field.nextButton){
 
@@ -420,9 +812,9 @@ function LoadFieldSettings(){
     });
 
     if(has_entry(field.id))
-        jQuery("#field_type, #field_name_format, #field_multiple_files").prop("disabled", true);
+        jQuery("#field_type, #field_multiple_files").prop("disabled", true);
     else
-        jQuery("#field_type, #field_name_format, #field_multiple_files").prop("disabled", false);
+        jQuery("#field_type, #field_multiple_files").prop("disabled", false);
 
     jQuery("#field_custom_field_name").val(field.postCustomFieldName);
 
@@ -493,11 +885,31 @@ function LoadFieldSettings(){
         jQuery(".customfield_content_template_setting").show();
     }
 
+    if(field["type"] == "name"){
 
-    //Display default value setting and size setting for simple name field
-    if(field["type"] == "name" && field["nameFormat"] == "simple"){
-        jQuery(".default_value_setting").show();
-        jQuery(".size_setting").show();
+        if(typeof field["nameFormat"] == 'undefined' || field["nameFormat"] != "advanced"){
+            field = MaybeUpgradeNameField(field);
+        } else {
+            SetUpAdvancedNameField();
+        }
+
+        if(field["nameFormat"] == "simple"){
+            jQuery(".default_value_setting").show();
+            jQuery(".size_setting").show();
+            jQuery('#field_name_fields_container').html('').hide();
+            jQuery('.sub_label_placement_setting').hide();
+            jQuery('.name_prefix_choices_setting').hide();
+            jQuery('.name_format_setting').hide();
+            jQuery('.name_setting').hide();
+            jQuery('.default_input_values_setting').hide();
+            jQuery('.default_value_setting').show();
+        } else if(field["nameFormat"] == "extended") {
+            jQuery('.name_format_setting').show();
+            jQuery('.name_prefix_choices_setting').hide();
+            jQuery('.name_setting').hide();
+            jQuery('.default_input_values_setting').hide();
+            jQuery('.input_placeholders_setting').hide();
+        }
     }
 
     // if a product or option field, hide "other choice" setting
@@ -520,13 +932,19 @@ function LoadFieldSettings(){
 
     if(field.type == 'product') {
         if(field.inputType == 'singleproduct') {
-            var ff=jQuery(".admin_label_setting");
             jQuery(".admin_label_setting").hide();
         } else {
             jQuery(".admin_label_setting").show();
         }
     }
 
+    if(inputType == "date"){
+        ToggleDateSettings(field);
+    }
+
+    if(inputType == "email"){
+        ToggleEmailSettings(field);
+    }
 
     jQuery(document).trigger('gform_load_field_settings', [field, form]);
 
@@ -540,7 +958,99 @@ function LoadFieldSettings(){
 
     SetProductField(field);
 
+
+	var tabsToHide = [];
+
+	// Hide the appearance tab if it has no settings
+	var $appearanceSettings = jQuery("#gform_tab_3 li.field_setting").filter(function() {
+		return jQuery(this).is(':hidden') && jQuery(this).css('display') != 'none';
+	});
+	if($appearanceSettings.length == 0){
+		tabsToHide.push(1);
+	}
+
+    // Hide the advanced tab if it has no settings
+    var $advancedSettings = jQuery("#gform_tab_2 li.field_setting").filter(function() {
+        return jQuery(this).is(':hidden') && jQuery(this).css('display') != 'none';
+    });
+    if($advancedSettings.length == 0){
+		tabsToHide.push(2);
+    }
+
+
+	if(tabsToHide.length > 0){
+		jQuery("#field_settings").tabs({disabled:tabsToHide});
+	} else {
+		jQuery("#field_settings").tabs({disabled:[]});
+	}
+
+
     Placeholders.enable();
+}
+
+function ToggleDateSettings(field){
+    var isDateField = field["dateType"] == "datefield";
+    var isDatePicker = field["dateType"] == "datepicker";
+    var isDateDropDown = field["dateType"] == "datedropdown";
+    jQuery('.placeholder_setting').toggle(isDatePicker);
+    jQuery('.default_value_setting').toggle(isDatePicker);
+    jQuery('.sub_label_placement_setting').toggle(isDateField);
+    jQuery('.sub_labels_setting').toggle(isDateField);
+    jQuery('.default_input_values_setting').toggle(isDateDropDown || isDateField);
+    jQuery('.input_placeholders_setting').toggle(isDateDropDown || isDateField);
+
+}
+
+function SetUpAdvancedNameField(){
+    field = GetSelectedField();
+    jQuery('.name_format_setting').hide();
+    jQuery('.name_setting').show();
+    jQuery('.name_prefix_choices_setting').show();
+    var nameFields = GetCustomizeInputsUI(field);
+    jQuery('#field_name_fields_container').html(nameFields).show();
+
+    var prefixInput = GetInput(field, field.id + '.2');
+    var prefixChoices = GetInputChoices(prefixInput);
+    jQuery('#field_prefix_choices').html(prefixChoices);
+
+    ToggleNamePrefixUI(!prefixInput.isHidden);
+
+    jQuery('.name_setting .custom_inputs_setting').on('click', '.input_active_icon', function(){
+        var inputId = jQuery(this).data('input_id');
+        if(inputId.toString().indexOf(".2") >=0){
+            var isActive = this.src.indexOf("active1.png") >=0;
+            ToggleNamePrefixUI(isActive);
+        }
+    });
+
+    jQuery('.default_value_setting').hide();
+    jQuery('.default_input_values_setting').show();
+    jQuery('.input_placeholders_setting').show();
+
+    CreateDefaultValuesUI(field);
+    CreatePlaceholdersUI(field);
+    CreateInputNames(field);
+}
+
+function GetCopyValuesFieldsOptions(selectedFieldId, currentField){
+    var options = [], label, field, option, currentType = GetInputType(currentField), selected;
+
+    for(var i = 0; i < form.fields.length;i++){
+        field = form.fields[i];
+        if(field.id != currentField.id && GetInputType(field) == currentType && !field.enableCopyValuesOption){
+            label = GetLabel(field);
+            selected = selectedFieldId == field.id ?  'selected="selected"' : '';
+            option = '<option value="' + field.id + '" ' + selected + '>' + label + '</option>';
+            options.push(option);
+        }
+    }
+
+    return options.join('');
+
+}
+
+function ToggleNamePrefixUI(isActive){
+    jQuery('.name_prefix_choices_setting').toggle(isActive);
 }
 
 
@@ -580,6 +1090,24 @@ function SetBasePrice(number){
     jQuery(".field_selected .ginput_amount").val(price);
 }
 
+function ChangeAddressType(){
+    field = GetSelectedField();
+
+    if(field["type"] != "address")
+        return;
+    var addressType = jQuery("#field_address_type").val();
+    var countryInput = GetInput(field, field.id + ".6");
+    var country = jQuery("#field_address_country_" + addressType).val();
+    if(country == ''){
+        countryInput.isHidden = false
+    } else {
+        countryInput.isHidden = true;
+    }
+
+
+    SetAddressType(false);
+}
+
 function SetAddressType(isInit){
     field = GetSelectedField();
 
@@ -590,30 +1118,45 @@ function SetAddressType(isInit){
     jQuery(".gfield_address_type_container").hide();
     var speed = isInit ? "" : "slow";
     jQuery("#address_type_container_" + jQuery("#field_address_type").val()).show(speed);
+    CreatePlaceholdersUI(field);
 }
 
 function UpdateAddressFields(){
     var addressType = jQuery("#field_address_type").val();
     field = GetSelectedField();
 
+    var address_fields_str = GetCustomizeInputsUI(field);
+    jQuery("#field_address_fields_container").html(address_fields_str);
+
     //change zip label
+    var zipInput = GetInput(field, field.id + ".5");
     var zip_label = jQuery("#field_address_zip_label_" + addressType).val();
-    jQuery(".field_selected #input_" + field["id"] + "_5_label").html(zip_label);
+    jQuery("#field_custom_input_default_label_" + field.id + "_5").text(zip_label);
+    jQuery("#field_custom_input_label_" + field.id + "\\.5").attr("placeholder", zip_label);
+    if(!zipInput.customLabel){
+        jQuery(".field_selected #input_" + field["id"] + "_5_label").html(zip_label);
+    }
 
     //change state label
+    var stateInput = GetInput(field, field.id + ".4");
     var state_label = jQuery("#field_address_state_label_" + addressType).val();
-    jQuery(".field_selected #input_" + field["id"] + "_4_label").html(state_label);
+    jQuery("#field_custom_input_default_label_" + field.id + "_4").text(state_label);
+    jQuery("#field_custom_input_label_" + field.id + "\\.4").attr("placeholder", state_label);
+    if(!stateInput.customLabel){
+        jQuery(".field_selected #input_" + field["id"] + "_4_label").html(state_label);
+    }
 
     //hide country drop down if this address type applies to a specific country
-    var hide_country = jQuery("#field_address_country_" + addressType).val() != "" || jQuery("#field_address_hide_country_" + addressType).is(":checked");
+    var countryInput = GetInput(field, field.id + ".6");
+    var hide_country = jQuery("#field_address_country_" + addressType).val() != "" || countryInput.isHidden;
+
     if(hide_country){
-        //hides country drop down
-        jQuery(".field_selected #input_" + field["id"] + "_6_container").hide();
-    }
-    else{
+        jQuery('.field_custom_input_row_' + field.id + '_6').hide();
+    } else {
         //selects default country and displays drop down
         jQuery(".field_selected #input_" + field["id"] + "_6").val(jQuery("#field_address_default_country_" + addressType).val());
         jQuery(".field_selected #input_" + field["id"] + "_6_container").show();
+        jQuery('.field_selected .field_custom_input_row_' + field.id + '_6').show();
     }
 
     var has_state_drop_down = jQuery("#field_address_has_states_" + addressType).val() != "";
@@ -626,34 +1169,22 @@ function UpdateAddressFields(){
     }
     else{
         jQuery(".field_selected .state_dropdown").hide();
-        jQuery(".field_selected .state_text").val("").show();
+        jQuery(".field_selected .state_text").show();
     }
-
-    //hide/show address line 2
-    if(jQuery("#field_address_hide_address2").is(":checked"))
-        jQuery(".field_selected #input_" + field["id"] + "_2_container").hide();
-    else
-        jQuery(".field_selected #input_" + field["id"] + "_2_container").show();
-
-    //hide/show state field
-    if(jQuery("#field_address_hide_state_" + addressType).is(":checked"))
-        jQuery(".field_selected #input_" + field["id"] + "_4_container").hide();
-    else
-        jQuery(".field_selected #input_" + field["id"] + "_4_container").show();
 }
 
 function SetAddressProperties(){
+    field = GetSelectedField();
+
     var addressType = jQuery("#field_address_type").val();
     SetFieldProperty("addressType", addressType);
-    SetFieldProperty("hideAddress2", jQuery("#field_address_hide_address2").is(":checked"));
-    SetFieldProperty("hideState", jQuery("#field_address_hide_state_" + addressType).is(":checked"));
     SetFieldProperty("defaultState", jQuery("#field_address_default_state_" + addressType).val());
     SetFieldProperty("defaultProvince",""); //for backwards compatibility
 
     //Only save the hide country property for address types that have that option (ones with no country)
     var country = jQuery("#field_address_country_" + addressType).val();
+
     if(country == ""){
-        SetFieldProperty("hideCountry",jQuery("#field_address_hide_country_" + addressType).is(":checked"));
         country = jQuery("#field_address_default_country_" + addressType).val();
     }
 
@@ -661,6 +1192,101 @@ function SetAddressProperties(){
 
     UpdateAddressFields();
 }
+
+function MaybeUpgradeNameField(field){
+
+    if(typeof field.nameFormat == 'undefined' || field.nameFormat == '' || field.nameFormat == 'normal' || (field.nameFormat == 'simple' && !has_entry(field.id))){
+        field = UpgradeNameField(field, true, true, true);
+    }
+
+    return field;
+}
+
+function UpgradeNameField(field, prefixHiddex, middleHidden, suffixHidden){
+
+    field.nameFormat = 'advanced';
+    field.inputs = MergeInputArrays(GetAdvancedNameFieldInputs(field, prefixHiddex, middleHidden, suffixHidden), field.inputs);
+
+    RefreshSelectedFieldPreview(function(){
+        SetUpAdvancedNameField();
+    });
+
+    return field;
+}
+
+function UpgradeDateField(field){
+    if(field.type != 'date'){
+        return field;
+    }
+
+    if(typeof field.dateType != 'undefined' && field.dateType != 'datepicker' && !field.inputs){
+        field.inputs = GetDateFieldInputs(field);
+    }
+
+    return field;
+}
+
+function UpgradeTimeField(field){
+    if(field.type != 'time'){
+        return field;
+    }
+
+    if(!field.inputs){
+        field.inputs = GetTimeFieldInputs(field);
+    }
+
+    return field;
+}
+
+function UpgradeEmailField(field){
+    if(field.type != 'email'){
+        return field;
+    }
+
+    if(field.emailConfirmEnabled && !field.inputs){
+        field.inputs = GetEmailFieldInputs(field);
+		field.inputs[0].placeholder = field.placeholder
+    }
+
+    return field;
+}
+
+function UpgradePasswordField(field){
+	if(field.type != 'password'){
+		return field;
+	}
+
+	if(!field.inputs){
+		field.inputs = GetPasswordFieldInputs(field);
+		field.inputs[0].placeholder = field.placeholder
+	}
+
+	return field;
+}
+
+function UpgradeAddressField(field){
+
+    if(field.hideCountry){
+        var countryInput = GetInput(field, field.id + ".6");
+        countryInput.isHidden = true;
+    }
+    delete field.hideCountry;
+
+    if(field.hideAddress2){
+        var address2Input = GetInput(field, field.id + ".2");
+        address2Input.isHidden = true;
+    }
+    delete field.hideAddress2;
+
+    if(field.hideState){
+        var stateInput = GetInput(field, field.id + ".4");
+        stateInput.isHidden = true;
+    }
+    delete field.hideState;
+
+    return field;
+}
+
 
 function TogglePasswordStrength(isInit){
     var speed = isInit ? "" : "slow";
@@ -685,6 +1311,11 @@ function ToggleCategory(isInit){
         jQuery("#gfield_settings_category_container").show(speed);
         SetFieldProperty("displayAllCategories", false);
     }
+}
+
+function SetCopyValuesOptionLabel(value){
+    SetFieldProperty('copyValuesOptionLabel', value);
+    jQuery('.field_selected .copy_values_option_label').html(value);
 }
 
 function SetCustomFieldTemplate(){
@@ -780,6 +1411,28 @@ function ToggleChoiceValue(isInit){
     else if(field.enablePrice){
         container.addClass("choice_with_price");
     }
+}
+
+function ToggleInputChoiceValue($container, enabled){
+    if(typeof enabled == 'undefined'){
+        enabled = false;
+    }
+    var field = GetSelectedField();
+    var inputId = $container.find('li').data('input_id');
+    var input = GetInput(field, inputId);
+    input.enableChoiceValue = enabled;
+    //removing all classes
+    $container.removeClass("choice_with_value");
+
+    if(enabled){
+        $container.addClass("choice_with_value");
+    }
+}
+
+function ToggleCopyValuesActivated(isActivated){
+    jQuery('.field_selected .copy_values_activated').prop('checked', isActivated);
+    var field = GetSelectedField();
+    jQuery('#input_'+ field.id).toggle(!isActivated);
 }
 
 function TogglePageButton(button_name, isInit){
@@ -1375,18 +2028,31 @@ function GetNextFieldId(){
     return parseFloat(max) + 1;
 }
 
-function EndAddField(field, fieldString){
+function EndAddField(field, fieldString, index){
 
     gf_vars["currentlyAddingField"] = false;
 
+    jQuery('#gform_adding_field_spinner').remove();
+
     //sets up DOM for new field
-    jQuery("#gform_fields").append(fieldString);
+    if(typeof index != 'undefined'){
+        form.fields.splice(index, 0, field);
+        if (index === 0) {
+            jQuery("#gform_fields").prepend(fieldString);
+        } else {
+            jQuery("#gform_fields").children().eq(index - 1).after(fieldString);
+        }
+    } else {
+        jQuery("#gform_fields").append(fieldString);
+        //creates new javascript field
+        form.fields.push(field);
+    }
+
     var newFieldElement = jQuery("#field_" + field.id);
     newFieldElement.animate({ backgroundColor: '#FFFBCC' }, 'fast', function(){jQuery(this).animate({backgroundColor: '#FFF'}, 'fast', function(){jQuery(this).css('background-color', '');})})
     newFieldElement.bind("click", function(){FieldClick(this);});
 
-    //creates new javascript field
-    form.fields.push(field);
+
     jQuery('#no-fields').hide();
 
     //Unselects all fields
@@ -1414,9 +2080,7 @@ function EndAddField(field, fieldString){
 
 function StartChangeNameFormat(format){
     field = GetSelectedField();
-    field["nameFormat"] = format;
-    SetFieldProperty('nameFormat', format);
-    jQuery("#field_settings").slideUp(function(){StartChangeInputType(field["type"], field);});
+    UpgradeNameField(field, false, true, false);
 }
 
 function StartChangeCaptchaType(captchaType){
@@ -1471,7 +2135,8 @@ function StartChangePostCategoryType(type){
 }
 
 
-function EndChangeInputType(fieldId, fieldType, fieldString){
+function EndChangeInputType(params){
+    var fieldId = params.id, fieldType = params.type, fieldString = params.fieldString;
 
     jQuery("#field_" + fieldId).html(fieldString);
 
@@ -1490,8 +2155,6 @@ function EndChangeInputType(fieldId, fieldType, fieldString){
     InitializeFields();
 
     LoadFieldSettings();
-
-    //UpdateDescriptionPlacement();
 }
 
 function InitializeFields(){
@@ -1514,7 +2177,7 @@ function InitializeFields(){
         event.stopPropagation();
     });
 
-    //UpdateLabelPlacement(true);
+
 }
 
 function FieldClick(field){
@@ -1680,6 +2343,16 @@ function LoadFieldChoices(field){
     gform.doAction('gform_load_field_choices', [field]);
 }
 
+function LoadInputChoices($ul, input){
+
+    //loading ui
+    var $container = $ul.parent();
+    $container.find('.field_input_choice_values_enabled').prop("checked", input.enableChoiceValue ? true : false);
+    ToggleInputChoiceValue($container, input.enableChoiceValue);
+
+    jQuery($ul).html(GetInputChoices(input));
+}
+
 function LoadBulkChoices(field){
     LoadCustomChoices();
 
@@ -1716,7 +2389,7 @@ function LoadCustomChoices(){
     jQuery(".choice_section_header, .bulk_custom_choice").remove();
 
     if(!IsEmpty(gform_custom_choices)){
-        var str = "<li class='choice_section_header'>Custom Choices</li>";
+        var str = "<li class='choice_section_header'>" + gf_vars.customChoices + "</li>";
         for(key in gform_custom_choices){
 
             if(!gform_custom_choices.hasOwnProperty(key))
@@ -1724,7 +2397,7 @@ function LoadCustomChoices(){
 
             str += "<li class='bulk_custom_choice'><a href='javascript:void(0);' onclick='SelectCustomChoice(\"" + key + "\");' class='bulk-choice bulk_custom_choice'>" + key + "</a></li>";
         }
-        str += "<li class='choice_section_header'>Predefined Choices</li>";
+        str += "<li class='choice_section_header'>" + gf_vars.predefinedChoices + "</li>";
         jQuery("#bulk_items").prepend(str);
     }
 }
@@ -1822,12 +2495,9 @@ function IsEmpty(array){
 
 function SetFieldChoice(inputType, index){
 
-    text = jQuery("#" + inputType + "_choice_text_" + index).val();
-    value = jQuery("#" + inputType + "_choice_value_" + index).val();
-    price = jQuery("#" + inputType + "_choice_price_" + index).val();
-
-    var element = jQuery("#" + inputType + "_choice_selected_" + index);
-    isSelected = element.is(":checked");
+    var text = jQuery("#" + inputType + "_choice_text_" + index).val();
+    var value = jQuery("#" + inputType + "_choice_value_" + index).val();
+    var price = jQuery("#" + inputType + "_choice_price_" + index).val();
 
     field = GetSelectedField();
 
@@ -1841,7 +2511,7 @@ function SetFieldChoice(inputType, index){
             price = "";
 
         field.choices[index]["price"] = price;
-        jQuery("#" + inputType + "_choice_price_" + index).val(price);
+		//jQuery("#" + inputType + "_choice_price_" + index).val(price);
     }
 
     //set field selections
@@ -1852,6 +2522,22 @@ function SetFieldChoice(inputType, index){
     LoadBulkChoices(field);
 
     UpdateFieldChoices(GetInputType(field));
+}
+
+function SetInputChoice(inputId, index, value, text){
+    var field = GetSelectedField();
+    var input = GetInput(field, inputId);
+    inputId = inputId.toString().replace('.', '_');
+
+    input.choices[index].text = text;
+    input.choices[index].value = input.enableChoiceValue ? value : text;
+
+    //set field selections
+    jQuery(".field-input-choice-" + inputId + ":radio, .field-input-choice-" + inputId + ":checkbox").each(function(index){
+        input.choices[index].isSelected = this.checked;
+    });
+
+    UpdateInputChoices(input);
 }
 
 function UpdateFieldChoices(fieldType){
@@ -1941,6 +2627,19 @@ function UpdateFieldChoices(fieldType){
     jQuery(".field_selected " + selector).html(choices);
 }
 
+function UpdateInputChoices(input){
+    var choices = '';
+
+    for(var i=0; i<input.choices.length; i++) {
+        var selected = input.choices[i].isSelected ? "selected='selected'" : "";
+        var choiceValue = input.choices[i].value ? input.choices[i].value : input.choices[i].text;
+        choices += "<option value='" + choiceValue.replace(/'/g, "&#039;") + "' " + selected + ">" + input.choices[i].text + "</option>";
+    }
+    var inputId = input.id.toString().replace('.', '_');
+
+    jQuery(".field_selected #input_" + inputId).html(choices);
+}
+
 function InsertFieldChoice(index){
     field = GetSelectedField();
 
@@ -1953,6 +2652,18 @@ function InsertFieldChoice(index){
 
     LoadFieldChoices(field);
     UpdateFieldChoices(GetInputType(field));
+}
+
+function InsertInputChoice($ul, inputId, index){
+    var field = GetSelectedField();
+    var input = GetInput(field, inputId);
+
+    var new_choice = new Choice("", "");
+
+    input.choices.splice(index, 0, new_choice);
+
+    LoadInputChoices($ul, input);
+    UpdateInputChoices(input);
 }
 
 function DeleteFieldChoice(index){
@@ -1970,6 +2681,16 @@ function DeleteFieldChoice(index){
     UpdateFieldChoices(GetInputType(field));
 }
 
+function DeleteInputChoice($ul, inputId, index){
+    var field = GetSelectedField();
+    var input = GetInput(field, inputId);
+
+    input.choices.splice(index, 1);
+
+    LoadInputChoices($ul, input);
+    UpdateInputChoices(input);
+}
+
 function MoveFieldChoice(fromIndex, toIndex){
     field = GetSelectedField();
     var choice = field.choices[fromIndex];
@@ -1982,6 +2703,21 @@ function MoveFieldChoice(fromIndex, toIndex){
 
     LoadFieldChoices(field);
     UpdateFieldChoices(GetInputType(field));
+}
+
+function MoveInputChoice($ul, inputId, fromIndex, toIndex){
+    var field = GetSelectedField();
+    var input = GetInput(field, inputId);
+    var choice = input.choices[fromIndex];
+
+    //deleting from old position
+    input.choices.splice(fromIndex, 1);
+
+    //inserting into new position
+    input.choices.splice(toIndex, 0, choice);
+
+    LoadInputChoices($ul, input);
+    UpdateInputChoices(input);
 }
 
 function GetFieldType(fieldId){
@@ -2029,11 +2765,22 @@ function SetTimeFormat(format){
 }
 
 function LoadTimeInputs(){
+    var field = GetSelectedField();
+    if(field.type != 'time'){
+        return;
+    }
     var format = jQuery("#field_time_format").val();
-    if(format == "24")
+
+
+    if(format == "24"){
+        jQuery('#input_default_value_row_input_' + field.id +'_3').hide();
         jQuery(".field_selected .gfield_time_ampm").hide();
-    else
+    } else {
+        jQuery('#input_default_value_row_input_' + field.id +'_3').show();
         jQuery(".field_selected .gfield_time_ampm").show();
+    }
+    jQuery('#input_placeholder_row_input_' + field.id +'_3').hide(); // no support for placeholder
+    jQuery('.field_custom_input_row_' + field.id +'_3').hide();
 }
 
 function SetDateFormat(format){
@@ -2135,7 +2882,17 @@ function SetDateInputType(type){
     if(GetInputType(field) != "date")
         return;
 
-    SetFieldProperty('dateType', type);
+    field.dateType = type;
+    field.inputs = GetDateFieldInputs(field);
+
+    CreateDefaultValuesUI(field);
+    CreatePlaceholdersUI(field);
+    CreateInputLabelsUI(field);
+    ToggleDateSettings(field);
+
+    ResetDefaultInputValues(field);
+    ResetInputPlaceholders(field);
+
     ToggleDateCalendar();
     LoadDateInputs();
 }
@@ -2179,9 +2936,6 @@ function SetFeaturedImage() {
     }
 }
 
-
-
-
 function SetFieldProperty(name, value){
     if(value == undefined)
         value = "";
@@ -2202,7 +2956,127 @@ function SetInputName(value, inputId){
         for(var i=0; i<field["inputs"].length; i++){
             if(field["inputs"][i]["id"] == inputId){
                 field["inputs"][i]["name"] = value;
+                return;
             }
+        }
+    }
+}
+
+function SetInputDefaultValue(value, inputId){
+    var field = GetSelectedField(), $select, elementId, ele;
+
+    if(value)
+        value = value.trim();
+
+    for(var i=0; i<field["inputs"].length; i++){
+        if(field["inputs"][i]["id"] == inputId){
+            field["inputs"][i]["defaultValue"] = value;
+            jQuery('[name="input_' + inputId + '"], #input_' + inputId.toString().replace('.', '_')).each(function(){
+                var type = this.nodeName;
+                if( type == 'INPUT'){
+                    jQuery(this).val(value);
+                } else {
+                    $select = jQuery(this);
+                    value = value.toLowerCase();
+                    $select
+                        .val('')
+                        .children()
+                        .each(function () {
+                            if(this.value.toLowerCase() == value){
+                                $select.val(this.value);
+                                return false;
+                            }
+                        });
+                }
+            });
+            return;
+        }
+    }
+}
+
+function SetInputPlaceholder(value, inputId){
+    var field = GetSelectedField(), ele, elementId;
+
+    if(value)
+        value = value.trim();
+
+    for(var i=0; i<field["inputs"].length; i++){
+        if(field["inputs"][i]["id"] == inputId){
+            field["inputs"][i]["placeholder"] = value;
+            jQuery('[name="input_' + inputId + '"], #input_' + inputId.toString().replace('.', '_')).each(function(){
+                var type = this.nodeName;
+                if( type == 'INPUT'){
+                    jQuery(this).prop("placeholder", value);
+                } else if (type == 'SELECT'){
+                    jQuery(this).find('option[value=""]').text(value);
+                }
+            });
+            return;
+        }
+    }
+}
+
+function ResetInputPlaceholders(field){
+    if(!field){
+        field = GetSelectedField()
+    }
+    if(!field.inputs){
+        return
+    }
+    jQuery(field.inputs).each(function(){
+        var placeholder = typeof this.placeholder != 'undefined' ? this.placeholder : '';
+        SetInputPlaceholder(placeholder, this.id);
+    })
+}
+
+function ResetDefaultInputValues(field){
+    if(!field){
+        field = GetSelectedField()
+    }
+    if(!field.inputs){
+        return
+    }
+    jQuery(field.inputs).each(function(){
+        var defaultValue = typeof this.defaultValue != 'undefined' ? this.defaultValue : '';
+        SetInputDefaultValue(defaultValue, this.id);
+    })
+}
+
+function SetInputCustomLabel(value, inputId){
+    var field = GetSelectedField(), elementID, label, input;
+
+    if(value)
+        value = value.trim();
+
+    for(var i=0; i<field["inputs"].length; i++){
+        input = field["inputs"][i];
+        if(input.id == inputId){
+            if(value == ''){
+                delete input.customLabel;
+                label = typeof input.defaultLabel != 'undefined' ? input.defaultLabel : input.label;
+            } else {
+                input.customLabel = value;
+                label = value;
+            }
+
+            elementID = 'input_' + field.inputs[i].id;
+            elementID = elementID.replace('.', '_');
+            elementID = '.ginput_container label[for=' + elementID + "]";
+            jQuery(elementID).text(label);
+            return;
+        }
+    }
+}
+
+function SetInputHidden(isHidden, inputId){
+    var field = GetSelectedField();
+
+    for(var i=0; i<field["inputs"].length; i++){
+        if(field["inputs"][i]["id"] == inputId){
+            field["inputs"][i]["isHidden"] = isHidden;
+            inputId = inputId.toString().replace('.','_');
+            jQuery("#input_" + inputId + "_container").toggle(!isHidden);
+            return;
         }
     }
 }
@@ -2271,6 +3145,41 @@ function SetFieldSize(size){
     SetFieldProperty("size", size);
 }
 
+function SetFieldLabelPlacement(labelPlacement){
+    var labelPlacementClass = labelPlacement ? labelPlacement : form.labelPlacement;
+    SetFieldProperty("labelPlacement", labelPlacement);
+    jQuery(".field_selected").removeClass("top_label").removeClass("right_label").removeClass("left_label").removeClass("hidden_label").addClass(labelPlacementClass);
+
+    if((field.labelPlacement == 'left_label' || field.labelPlacement == 'right_label' || (field.labelPlacement == '' && form.labelPlacement != 'top_label'))){
+        jQuery('#field_description_placement').val('');
+        SetFieldProperty("descriptionPlacement", '');
+        jQuery('#field_description_placement_container').hide('slow');
+    } else {
+        jQuery('#field_description_placement_container').show('slow');
+    }
+
+    SetFieldProperty("labelPlacement", labelPlacement);
+    RefreshSelectedFieldPreview();
+}
+
+function SetFieldDescriptionPlacement(descriptionPlacement){
+    var isDescriptionAbove = descriptionPlacement == 'above' || (descriptionPlacement == '' && form.descriptionPlacement == 'above)');
+    SetFieldProperty("descriptionPlacement", descriptionPlacement);
+    RefreshSelectedFieldPreview(function(){
+        if(isDescriptionAbove){
+            jQuery(".field_selected").addClass("description_above");
+        } else {
+            jQuery(".field_selected").removeClass("description_above");
+        }
+    });
+}
+
+function SetFieldSubLabelPlacement(subLabelPlacement){
+    SetFieldProperty("subLabelPlacement", subLabelPlacement);
+
+    RefreshSelectedFieldPreview();
+}
+
 function SetFieldAdminOnly(isAdminOnly){
     SetFieldProperty('adminOnly', isAdminOnly);
     if(isAdminOnly)
@@ -2279,10 +3188,37 @@ function SetFieldAdminOnly(isAdminOnly){
         jQuery(".field_selected").removeClass("field_admin_only");
 }
 
-
 function SetFieldDefaultValue(defaultValue){
-    jQuery(".field_selected > div > input, .field_selected > div > textarea").val(defaultValue);
+
+    jQuery(".field_selected > div > input:visible, .field_selected > div > textarea:visible, .field_selected > div > select:visible").val(defaultValue);
+
     SetFieldProperty('defaultValue', defaultValue);
+}
+
+function SetFieldPlaceholder(placeholder){
+
+	jQuery(".field_selected > div > input:visible, .field_selected > div > textarea:visible, .field_selected > div > select:visible").each(function(){
+		var type = this.nodeName;
+		var $this = jQuery(this);
+		if(type == 'INPUT' || type == 'TEXTAREA'){
+			jQuery(this).prop("placeholder", placeholder);
+		} else if (type == 'SELECT'){
+			var $option = $this.find('option[value=""]');
+			if($option.length>0){
+				if(placeholder.length > 0){
+					$option.text(placeholder);
+				} else {
+					$option.remove();
+				}
+
+			} else {
+				$this.prepend('<option value="">' + placeholder + '</option>');
+				$this.val('');
+			}
+		}
+	});
+
+    SetFieldProperty('placeholder', placeholder);
 }
 
 function SetFieldDescription(description){
@@ -2309,7 +3245,18 @@ function SetPasswordStrength(isEnabled){
     SetFieldProperty('passwordStrengthEnabled', isEnabled);
 }
 
+function ToggleEmailSettings(field){
+    var isConfirmEnabled = typeof field.emailConfirmEnabled != 'undefined' && field.emailConfirmEnabled == true;
+    jQuery('.placeholder_setting').toggle(!isConfirmEnabled);
+    jQuery('.default_value_setting').toggle(!isConfirmEnabled);
+    jQuery('.sub_label_placement_setting').toggle(isConfirmEnabled);
+    jQuery('.sub_labels_setting').toggle(isConfirmEnabled);
+    jQuery('.default_input_values_setting').toggle(isConfirmEnabled);
+    jQuery('.input_placeholders_setting').toggle(isConfirmEnabled);
+}
+
 function SetEmailConfirmation(isEnabled){
+    var field = GetSelectedField();
     if(isEnabled){
         jQuery(".field_selected .ginput_single_email").hide();
         jQuery(".field_selected .ginput_confirm_email").show();
@@ -2319,8 +3266,16 @@ function SetEmailConfirmation(isEnabled){
         jQuery(".field_selected .ginput_single_email").show();
     }
 
-    SetFieldProperty('emailConfirmEnabled', isEnabled);
-    //UpdateDescriptionPlacement();
+    field['emailConfirmEnabled'] = isEnabled;
+    field.inputs = GetEmailFieldInputs(field);
+    CreateDefaultValuesUI(field);
+    CreatePlaceholdersUI(field);
+    CreateCustomizeInputsUI(field);
+    CreateInputLabelsUI(field);
+
+
+    ToggleEmailSettings(field);
+
 }
 
 
@@ -2506,6 +3461,29 @@ function SetFieldChoices(){
     for(var i=0; i<field.choices.length; i++){
         SetFieldChoice(GetInputType(field), i);
     }
+}
+
+function SetInputChoices($ul){
+    var field = GetSelectedField(), $this, value, text, inputId;
+    $ul.find('li').each(function(i){
+        $this = jQuery(this);
+        inputId = $this.data('input_id');
+        value = $this.find('.field-choice-value').val();
+        text = $this.find('.field-choice-text').val();
+        SetInputChoice(inputId, i, value, text);
+    });
+}
+
+function MergeInputArrays(inputs1, inputs2){
+    var inputA, inputB;
+    for(var i=0; i<inputs1.length; ++i) {
+        inputA = inputs1[i];
+        inputB = GetInput({inputs: inputs2},inputA.id);
+        if(inputB){
+            inputs1[i] = jQuery.extend(inputA, inputB);
+        }
+    }
+    return inputs1;
 }
 
 /**
