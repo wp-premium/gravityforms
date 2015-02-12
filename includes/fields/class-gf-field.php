@@ -135,8 +135,10 @@ class GF_Field extends stdClass implements ArrayAccess {
 
 	public function get_value_entry_detail( $value, $currency = '', $use_text = false, $format = 'html', $media = 'screen' ) {
 		if ( ! is_array( $value ) && $format == 'html' ) {
-			return nl2br( $value );
+			$value = nl2br( $value );
 		}
+
+		return $value;
 	}
 
 	public function is_description_above( $form ){
@@ -518,7 +520,7 @@ class GF_Field extends stdClass implements ArrayAccess {
 			return $value;
 		} else {
 			//removing script tags from value if $allowable_tags variable is not specified.
-			$value = self::strip_script_tag( $value );
+			$value = $this->strip_script_tag( $value );
 
 			return $value;
 		}

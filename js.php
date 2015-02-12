@@ -160,8 +160,13 @@ if ( ! class_exists( 'GFForms' ) ) {
 	}
 
 	function CreateInputNames(field) {
-		var field_str = "", id, value;
-		if (!field["inputs"] || GetInputType(field) == "checkbox") {
+		var field_str = "", id, value, inputs;
+
+		var inputType = GetInputType(field);
+		var legacy = jQuery.inArray(inputType, ['date', 'email', 'time', 'password'])>-1;
+		inputs = !legacy ? field['inputs'] : null;
+
+		if (!inputs || GetInputType(field) == "checkbox") {
 			field_str = "<label for='field_input_name' class='inline'><?php _e( 'Parameter Name:', 'gravityforms' ); ?>&nbsp;</label>";
 			field_str += "<input type='text' value='" + field["inputName"] + "' id='field_input_name' />";
 		}
@@ -179,9 +184,9 @@ if ( ! class_exists( 'GFForms' ) ) {
 	}
 
 	function CreateDefaultValuesUI(field) {
-		var field_str, defaultValue, inputName, inputId, id;
+		var field_str, defaultValue, inputName, inputId, id, inputs;
 
-		if (!field["inputs"]) {
+		if (!field['inputs']) {
 			field_str = "<label for='field_single_default_value' class='inline'><?php _e( 'Default Value:', 'gravityforms' ); ?>&nbsp;</label>";
 			defaultValue = typeof field["defaultValue"] != 'undefined' ? field["defaultValue"] : '';
 			field_str += "<input type='text' value='" + defaultValue + "' id='field_single_default_value'/>";
@@ -235,7 +240,7 @@ if ( ! class_exists( 'GFForms' ) ) {
 		var imagesUrl = '<?php echo GFCommon::get_base_url() . '/images/'?>';
 		var html, customLabel, isHidden, title, img, input, inputId, id, inputName, defaultLabel, placeholder;
 
-		if (!field["inputs"]) {
+		if (!field['inputs']) {
 			html = "<label for='field_single_input' class='inline'><?php _e( 'Sub-Label:', 'gravityforms' ); ?>&nbsp;</label>";
 			customLabel = typeof field["customInputLabel"] != 'undefined' ? field["customInputLabel"] : '';
 			html += "<input type='text' value='" + customLabel + "' id='field_single_custom_label' />";

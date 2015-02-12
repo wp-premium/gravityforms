@@ -67,7 +67,6 @@ if ( class_exists( 'GFForms' ) ) {
 			add_action( 'gform_after_save_form', array( $this, 'after_save_form' ), 10, 2 );
 		}
 
-
 		public function init_frontend() {
 			$settings           = $this->get_plugin_settings();
 			$this->_enabled     = rgar( $settings, 'enabled' );
@@ -339,6 +338,8 @@ if ( class_exists( 'GFForms' ) ) {
 
 		public function handle_page_request($query) {
 
+
+
 			global $HTTP_RAW_POST_DATA;
 
 			$route = get_query_var( GFWEBAPI_ROUTE_VAR );
@@ -408,7 +409,6 @@ if ( class_exists( 'GFForms' ) ) {
 
 			GFCommon::log_debug( 'GFWebAPI::handle_page_request(): HTTP_RAW_POST_DATA = ' . $HTTP_RAW_POST_DATA );
 
-
 			$data = json_decode( $HTTP_RAW_POST_DATA, true );
 
 			switch ( $collection ) {
@@ -475,7 +475,23 @@ if ( class_exists( 'GFForms' ) ) {
 									$this->die_bad_request();
 							}
 							break;
-
+						case 'submissions' :
+							if ( false == empty( $id2 ) ) {
+								$this->die_bad_request();
+							}
+							switch ( $method ) {
+								case 'POST' :
+									$this->submit_form( $data, $id );
+									break;
+								case 'GET' :
+								case 'PUT' :
+								case 'DELETE' :
+									$this->die_not_implemented();
+									break;
+								default:
+									$this->die_bad_request();
+							}
+							break;
 						case '' :
 							switch ( $method ) {
 								case 'GET':
@@ -705,6 +721,39 @@ if ( class_exists( 'GFForms' ) ) {
 				$status   = 201;
 				$response = $feed_ids;
 
+			}
+
+			$this->end( $status, $response );
+		}
+
+		//----- Form Submissions ----
+
+		public function submit_form( $data, $id) {
+			$form_id = absint( $id );
+
+			if ( $form_id < 1 ) {
+				$this->die_bad_request();
+			}
+
+			$capabilities = apply_filters( 'gform_web_api_capabilities_submit_form', 'gravityforms_edit_entries' );
+			$this->authorize( $capabilities );
+
+			if ( empty( $data['input_values'] ) ) {
+				$this->die_bad_request();
+			}
+
+			$field_values = isset($data['field_values']) ? $data['target_page'] : array() ;
+			$target_page = isset($data['target_page']) ? $data['target_page'] : 0 ;
+			$source_page = isset($data['source_page']) ? $data['source_page'] : 1 ;
+
+			$result = GFAPI::submit_form( $form_id, $data['input_values'], $field_values, $target_page, $source_page );
+
+			if ( is_wp_error( $result ) ) {
+				$response = $this->get_error_response( $result );
+				$status   = $this->get_error_status( $result );
+			} else {
+				$status   = 200;
+				$response = $result;
 			}
 
 			$this->end( $status, $response );
@@ -1444,11 +1493,11 @@ if ( class_exists( 'GFForms' ) ) {
 			$output['response'] = $response;
 
 			// PHP > 5.3
-			if ( function_exists( 'header_remove' ) ) {
+			if ( function_exists( 'header_remove' ) && ! headers_sent() ) {
 				header_remove( 'X-Pingback' );
 			}
 
-
+			send_origin_headers();
 			header( 'Content-Type: application/json; charset=' . get_option( 'blog_charset' ), true );
 			$output_json = json_encode( $output );
 

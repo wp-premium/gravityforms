@@ -4,7 +4,7 @@
 preview.css
 Gravity Forms Form Preview Styles
 http://www.gravityforms.com
-updated: January 28, 2015 1:28 PM
+updated: February 5, 2015 12:15 PM
 
 Gravity Forms is a Rocketgenius project
 copyright 2008-2015 Rocketgenius Inc.
@@ -108,6 +108,7 @@ div#preview_form_container {
     position: relative;
     padding: 0.750em 1.50em;
     border-radius: 4px;
+    -webkit-appearance: none !important;
 }
 
 .gform_wrapper.gf_browser_ie .gform_footer input.button,

@@ -11,7 +11,7 @@ function gformInitDatepicker() {
                 changeMonth: true,
                 changeYear: true,
                 onClose: function () {
-                    element.closest('li').nextAll('li:visible:first').find(':input:first').focus();
+                    element.focus();
                 }
             };
 

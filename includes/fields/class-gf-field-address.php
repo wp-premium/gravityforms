@@ -8,34 +8,6 @@ class GF_Field_Address extends GF_Field {
 
 	public $type = 'address';
 
-	public function get_form_editor_field_title() {
-		return __( 'Address', 'gravityforms' );
-	}
-
-
-	function validate( $value, $form ) {
-
-		if ( $this->isRequired ) {
-			$copy_values_option_activated = $this->enableCopyValuesOption && rgpost( 'input_' . $this->id . '_copy_values_activated' );
-			$field_id = $copy_values_option_activated ? $this->copyValuesOptionField : $this->id;
-			$street  = rgpost( 'input_' . $field_id . '_1' );
-			$city    = rgpost( 'input_' . $field_id . '_3' );
-			$state   = rgpost( 'input_' . $field_id . '_4' );
-			$zip     = rgpost( 'input_' . $field_id . '_5' );
-			$country = rgpost( 'input_' . $field_id . '_6' );
-
-			if ( empty( $street ) && ! $this->get_input_property( $field_id . '.1', 'isHidden' )
-			     || empty( $city ) && ! $this->get_input_property($field_id . '.3', 'isHidden' )
-			     || empty( $zip ) && ! $this->get_input_property( $field_id . '.5', 'isHidden' )
-			     || ( empty( $state ) && ! ( $this->hideState || $this->get_input_property( $field_id . '.4', 'isHidden' ) ) )
-			     || ( empty( $country ) && ! ( $this->hideCountry || $this->get_input_property( $field_id . '.6', 'isHidden' ) ) )
-			) {
-				$this->failed_validation  = true;
-				$this->validation_message = empty( $this->errorMessage ) ? __( 'This field is required. Please enter a complete address.', 'gravityforms' ) : $this->errorMessage;
-			}
-		}
-	}
-
 	function get_form_editor_field_settings() {
 		return array(
 			'conditional_logic_field_setting',
@@ -54,6 +26,37 @@ class GF_Field_Address extends GF_Field {
 			'visibility_setting',
 			'css_class_setting',
 		);
+	}
+
+	public function get_form_editor_field_title() {
+		return __( 'Address', 'gravityforms' );
+	}
+
+	function validate( $value, $form ) {
+
+		if ( $this->isRequired ) {
+			$copy_values_option_activated = $this->enableCopyValuesOption && rgpost( 'input_' . $this->id . '_copy_values_activated' );
+			if ( $copy_values_option_activated ) {
+				// validation will occur in the source field
+				return;
+			}
+
+			$street  = rgpost( 'input_' . $this->id . '_1' );
+			$city    = rgpost( 'input_' . $this->id . '_3' );
+			$state   = rgpost( 'input_' . $this->id . '_4' );
+			$zip     = rgpost( 'input_' . $this->id . '_5' );
+			$country = rgpost( 'input_' . $this->id . '_6' );
+
+			if ( empty( $street ) && ! $this->get_input_property( $this->id . '.1', 'isHidden' )
+			     || empty( $city ) && ! $this->get_input_property( $this->id . '.3', 'isHidden' )
+			     || empty( $zip ) && ! $this->get_input_property( $this->id . '.5', 'isHidden' )
+			     || ( empty( $state ) && ! ( $this->hideState || $this->get_input_property( $this->id . '.4', 'isHidden' ) ) )
+			     || ( empty( $country ) && ! ( $this->hideCountry || $this->get_input_property( $this->id . '.6', 'isHidden' ) ) )
+			) {
+				$this->failed_validation  = true;
+				$this->validation_message = empty( $this->errorMessage ) ? __( 'This field is required. Please enter a complete address.', 'gravityforms' ) : $this->errorMessage;
+			}
+		}
 	}
 
 	public function get_value_submission( $field_values, $get_from_post_global_var = true ) {
@@ -453,6 +456,12 @@ class GF_Field_Address extends GF_Field {
 	}
 
 	public function get_country_code( $country_name ) {
+		$codes = $this->get_country_codes();
+
+		return rgar( $codes, strtoupper( $country_name ) );
+	}
+
+	public function get_country_codes() {
 		$codes = array(
 			__( 'AFGHANISTAN', 'gravityforms' )                       => 'AF',
 			__( 'ALBANIA', 'gravityforms' )                           => 'AL',
@@ -662,8 +671,7 @@ class GF_Field_Address extends GF_Field {
 			__( 'ZAMBIA', 'gravityforms' )                            => 'ZM',
 			__( 'ZIMBABWE', 'gravityforms' )                          => 'ZW',
 		);
-
-		return rgar( $codes, strtoupper( $country_name ) );
+		return $codes;
 	}
 
 	public function get_us_states() {

@@ -1,4 +1,71 @@
 -------------------------------------------------------------------------------------------------------------------
+Version 1.9.1.6
+    - Added 'svg-painter' to list of no conflict scripts
+    - Updated GFForms::get_admin_icon_b64() method to support a $color parameter for fetching the SVG icon in different colors
+        $white_icon = GFForms::get_admin_icon_b64( '#fff' );
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.1.5
+    - Fixed a rare fatal error on some servers.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.1.4
+    - Fixed a fatal error caused by a conflict with some themes.
+    - Fixed a XSS vulnerability.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.1.3
+    - Fixed an issue with the capability required to export forms.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.1.2
+    - Fixed issue where tabbing through Date field would skip the next field in the tabindex
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.1.1
+    - Fixed an issue with validation of the address field when the option to use values from another field is enabled and activated.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.1
+    - Added $failed_validation_page as a 3rd parameter to the gform_validation filter.
+    - Added GFCommon::has_merge_tag() method to determine if a string contains a GF merge tag.
+    - Added $from, $from_name, $bcc and $reply_to to the gform_after_email action.
+    - Added the 'gform_export_lines' to allow the csv entry export lines to be filtered just before sending to the browser. Use this filter to fix an issue on Excel for Mac e.g.:
+    	add_filter( 'gform_export_lines', 'fix_csv_entry_export');
+            function fix_csv_entry_export ( $lines ) {
+                return mb_convert_encoding( $lines, 'UTF-16LE', 'UTF-8' );
+            }
+    - Added conditional logic setting to Post Category field.
+    - Added the 'gform_product_info_name_include_field_label' filter to enable the inclusion of the field label in the product name for radio and select type Product fields.
+        add_filter( 'gform_product_info_name_include_field_label', '__return_true' );
+    - Added the Description Placement field setting which overrides the form setting. Only available when the Label Placement form setting is set to Top.
+    - Added the label placement and sub-label placement field settings in the Form Editor. The options to hide labels and sub-labels are currently hidden by default. Use the gform_enable_field_label_visibility_settings filter to display the options.
+        add_filter("gform_enable_field_label_visibility_settings", "__return_true");
+    - Updated page label to be wrapped in a <span> to allow targeted styling when “Steps” is selected as “Progress Indicator”.
+    - Updated confirmation URL validation to bypass URLs that contain merge tags; this supports using a merge tag as the redirect value.
+    - Fixed issue where extra call to wp_print_scripts was causing issues and removing broke New Form modal.
+    - Fixed an issue with the No Duplicates validation for multi-input Email, Date and Time fields.
+	- Fixed issue whith entry limit where trashed entries were taken into account.
+    - Fixed an issue with logging of file uploads.
+    - Fixed an issue with plain text format notifications where values of some fields are missing from the merge tag output.
+	- Fixed issue with font size on mobile devices.
+	- Fixed issue with conditional logic on mobile devices.
+    - Fixed a fatal error in the Captcha field when the Really Simple Captcha plugin is installed and active.
+    - Fixed a fatal error in the merge tag for the Post Category field using the Multi Select field type.
+    - Fixed a fatal error under PHP 5.2 for single value field types.
+    - Fixed an issue with the single file upload field where the list of allowed file types is ignored on form submission.
+    - Fixed an issue with the the Dynamic Population setting for the date, email and time fields in the Form Editor.
+    - Fixed an issue with email validation when the email confirmation setting is enabled.
+    - Removed the No Duplicates setting from the Password field.
+    - Removed unused private functions GFCommon::get_logic_event() and GFCommon::hex2rgb().
+    - Removed the gform_enable_field_label_placement_settings filter.
+    - AF: Added some additional logging to Payment Add-On Framework.
+	- API: Added GFAPI::submit_form(). Sends input values through the complete form submission process. Supports field validation, notifications, confirmations, multiple-pages and save & continue.
+    - API: Added POST /forms/[ID]/submissions endpoint to the Web API to handle form submissions. Sends form input values through the complete form submission process. Supports field validation, notifications, confirmations, multiple-pages and save & continue.
+    - API: Added support for simple CORS requests in the Web API. Use the allowed_http_origin WordPress filter to activate. e.g.
+        add_filter( 'allowed_http_origin', '__return_true' );
+
+-------------------------------------------------------------------------------------------------------------------
 Version 1.9
 
     - Added drop and drop to the field buttons in the Form Editor.

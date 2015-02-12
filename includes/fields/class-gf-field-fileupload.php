@@ -64,7 +64,7 @@ class GF_Field_FileUpload extends GF_Field {
 
 		foreach ( $file_names as $file_name ) {
 			$info = pathinfo( rgar( $file_name, 'uploaded_filename' ) );
-			$allowed_extensions = isset( $field['allowedExtensions'] ) && ! empty( $field['allowedExtensions'] ) ? GFCommon::clean_extensions( explode( ',', strtolower( $field['allowedExtensions'] ) ) ) : array();
+			$allowed_extensions = ! empty( $this->allowedExtensions ) ? GFCommon::clean_extensions( explode( ',', strtolower( $this->allowedExtensions ) ) ) : array();
 
 			if ( empty( $allowed_extensions ) && GFCommon::file_name_has_disallowed_extension( rgar( $file_name, 'uploaded_filename' ) ) ) {
 				$this->failed_validation  = true;
@@ -234,7 +234,7 @@ class GF_Field_FileUpload extends GF_Field {
 				$preview    = sprintf( "<div id='%s'>", $file_list_id );
 				$file_infos = $multiple_files ? $uploaded_files : array( $file_infos );
 				foreach ( $file_infos as $file_info ) {
-					$file_upload_markup = apply_filters( 'gform_file_upload_markup', "<img class='gform_delete' src='" . GFCommon::get_base_url() . "/images/delete.png' onclick='gformDeleteUploadedFile({$form_id}, {$id}, this);' /> <strong>" . esc_html( $file_info['uploaded_filename'] ) . '</strong>', $file_info, $form_id, $id );
+					$file_upload_markup = apply_filters( 'gform_file_upload_markup', "<img alt='" . __( 'Delete file', 'gravityforms' ) . "' title='" . __( 'Delete file', 'gravityforms' ) . "' class='gform_delete' src='" . GFCommon::get_base_url() . "/images/delete.png' onclick='gformDeleteUploadedFile({$form_id}, {$id}, this);' /> <strong>" . esc_html( $file_info['uploaded_filename'] ) . '</strong>', $file_info, $form_id, $id );
 					$preview .= "<div class='ginput_preview'>{$file_upload_markup}</div>";
 				}
 				$preview .= '</div>';
@@ -273,6 +273,9 @@ class GF_Field_FileUpload extends GF_Field {
 
 	public function get_multifile_value($form_id, $input_name){
 		global $_gf_uploaded_files;
+
+		GFCommon::log_debug( __METHOD__ . '(): Starting.' );
+
 		if ( isset( $_gf_uploaded_files[ $input_name ] ) ) {
 			$value = $_gf_uploaded_files[ $input_name ];
 		} else {
@@ -294,6 +297,8 @@ class GF_Field_FileUpload extends GF_Field {
 					$value = json_encode( $uploaded_files );
 				}
 			} else {
+				GFCommon::log_debug( __METHOD__ . '(): No files uploaded. Exiting.' );
+
 				$value = '';
 			}
 			$_gf_uploaded_files[ $input_name ] = $value;
@@ -305,26 +310,24 @@ class GF_Field_FileUpload extends GF_Field {
 	public function get_single_file_value( $form_id, $input_name ) {
 		global $_gf_uploaded_files;
 
-		GFCommon::log_debug( 'GF_Field_FileUpload::get_fileupload_value(): Starting.' );
+		GFCommon::log_debug( __METHOD__ . '(): Starting.' );
 
 		if ( empty( $_gf_uploaded_files ) ) {
-			GFCommon::log_debug( 'GF_Field_FileUpload::get_fileupload_value(): No files uploaded. Exiting.' );
 			$_gf_uploaded_files = array();
 		}
-
 
 		if ( ! isset( $_gf_uploaded_files[ $input_name ] ) ) {
 
 			//check if file has already been uploaded by previous step
 			$file_info     = GFFormsModel::get_temp_filename( $form_id, $input_name );
 			$temp_filepath = GFFormsModel::get_upload_path( $form_id ) . '/tmp/' . $file_info['temp_filename'];
-			GFCommon::log_debug( 'GF_Field_FileUpload::get_fileupload_value(): Temp file path: ' . $temp_filepath );
+
 			if ( $file_info && file_exists( $temp_filepath ) ) {
-				GFCommon::log_debug( 'GF_Field_FileUpload::get_fileupload_value(): Moving temp file: ' . $temp_filepath );
 				$_gf_uploaded_files[ $input_name ] = $this->move_temp_file( $form_id, $file_info );
 			} else if ( ! empty( $_FILES[ $input_name ]['name'] ) ) {
-				GFCommon::log_debug( 'GF_Field_FileUpload::get_fileupload_value(): Uploading file: ' . $_FILES[ $input_name ]['name'] );
 				$_gf_uploaded_files[ $input_name ] = $this->upload_file( $form_id, $_FILES[ $input_name ] );
+			} else {
+				GFCommon::log_debug( __METHOD__ . '(): No file uploaded. Exiting.' );
 			}
 		}
 
@@ -332,22 +335,21 @@ class GF_Field_FileUpload extends GF_Field {
 	}
 
 	public function upload_file( $form_id, $file ) {
+		GFCommon::log_debug( __METHOD__ . '(): Uploading file: ' . $file['name'] );
 
 		$target = GFFormsModel::get_file_upload_path( $form_id, $file['name'] );
 		if ( ! $target ) {
-			GFCommon::log_debug( 'GF_Field_FileUpload::upload_file(): FAILED (Upload folder could not be created.)' );
+			GFCommon::log_debug( __METHOD__ . '(): FAILED (Upload folder could not be created.)' );
 
 			return 'FAILED (Upload folder could not be created.)';
 		}
 
-
 		if ( move_uploaded_file( $file['tmp_name'], $target['path'] ) ) {
-			GFCommon::log_debug( 'GF_Field_FileUpload::upload_file(): Setting permissions on ' . $target['path'] );
 			$this->set_permissions( $target['path'] );
 
 			return $target['url'];
 		} else {
-			GFCommon::log_debug( 'GF_Field_FileUpload::upload_file(): FAILED (Temporary file could not be copied.)' );
+			GFCommon::log_debug( __METHOD__ . '(): FAILED (Temporary file could not be copied.)' );
 
 			return 'FAILED (Temporary file could not be copied.)';
 		}
@@ -430,16 +432,22 @@ class GF_Field_FileUpload extends GF_Field {
 		$target = GFFormsModel::get_file_upload_path( $form_id, $tempfile_info['uploaded_filename'] );
 		$source = GFFormsModel::get_upload_path( $form_id ) . '/tmp/' . $tempfile_info['temp_filename'];
 
+		GFCommon::log_debug( __METHOD__ . '(): Moving temp file from: ' . $source );
+
 		if ( rename( $source, $target['path'] ) ) {
+			GFCommon::log_debug( __METHOD__ . '(): File successfully moved.' );
 			$this->set_permissions( $target['path'] );
 
 			return $target['url'];
 		} else {
+			GFCommon::log_debug( __METHOD__ . '(): FAILED (Temporary file could not be moved.)' );
+
 			return 'FAILED (Temporary file could not be moved.)';
 		}
 	}
 
 	function set_permissions( $path ) {
+		GFCommon::log_debug( __METHOD__ . '(): Setting permissions on: ' . $path );
 
 		GFFormsModel::set_permissions( $path );
 	}

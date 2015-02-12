@@ -23,7 +23,6 @@ class GF_Field_Password extends GF_Field {
 			'admin_label_setting',
 			'rules_setting',
 			'input_placeholders_setting',
-			'duplicate_setting',
 			'sub_labels_setting',
 			'sub_label_placement_setting',
 			'description_setting',

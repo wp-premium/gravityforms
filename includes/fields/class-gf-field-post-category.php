@@ -28,6 +28,7 @@ class GF_Field_Post_Category extends GF_Field {
 			'duplicate_setting',
 			'description_setting',
 			'css_class_setting',
+			'conditional_logic_field_setting',
 		);
 	}
 

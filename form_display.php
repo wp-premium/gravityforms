@@ -702,7 +702,7 @@ class GFFormDisplay {
 						$classes = GFCommon::trim_all( $classes );
 
 						$form_string .= "
-                        <div id='gf_step_{$form_id}_{$step_number}' class='{$classes}'><span class='gf_step_number'>{$step_number}</span>&nbsp;{$pages[ $i ]}</div>";
+                        <div id='gf_step_{$form_id}_{$step_number}' class='{$classes}'><span class='gf_step_number'>{$step_number}</span>&nbsp;<span class='gf_step_label'>{$pages[ $i ]}</span></div>";
 					}
 
 					$form_string .= "
@@ -1311,9 +1311,10 @@ class GFFormDisplay {
 			}
 		}
 
-		$validation_result = apply_filters( "gform_validation_{$form['id']}", apply_filters( 'gform_validation', array( 'is_valid' => $is_valid, 'form' => $form ) ) );
-		$is_valid          = $validation_result['is_valid'];
-		$form              = $validation_result['form'];
+		$validation_result      = apply_filters( "gform_validation_{$form['id']}", apply_filters( 'gform_validation', array( 'is_valid' => $is_valid, 'form' => $form, 'failed_validation_page' => $failed_validation_page ) ) );
+		$is_valid               = $validation_result['is_valid'];
+		$form                   = $validation_result['form'];
+		$failed_validation_page = $validation_result['failed_validation_page'];
 
 		return $is_valid;
 	}
@@ -2440,7 +2441,7 @@ class GFFormDisplay {
 		if ( rgar( $form, 'limitEntries' ) ) {
 			$period      = rgar( $form, 'limitEntriesPeriod' );
 			$range       = self::get_limit_period_dates( $period );
-			$entry_count = RGFormsModel::get_lead_count( $form['id'], '', null, null, $range['start_date'], $range['end_date'] );
+			$entry_count = RGFormsModel::get_lead_count( $form['id'], '', null, null, $range['start_date'], $range['end_date'], 'active' );
 
 			if ( $entry_count >= $form['limitEntriesCount'] ) {
 				return empty( $form['limitEntriesMessage'] ) ? "<div class='gf_submission_limit_message'><p>" . __( 'Sorry. This form is no longer accepting new submissions.', 'gravityforms' ) . '</p></div>' : '<p>' . GFCommon::gform_do_shortcode( $form['limitEntriesMessage'] ) . '</p>';
