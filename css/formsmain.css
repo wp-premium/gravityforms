@@ -4,7 +4,7 @@
 Gravity Forms Front End Form Styles
 Version 1.9
 http: //www.gravityforms.com
-updated: January 28, 2015 1:28 PM
+updated: February 5, 2015 12:25 PM
 
 Gravity Forms is a Rocketgenius project
 copyright 2008-2015 Rocketgenius Inc.
@@ -2239,6 +2239,10 @@ body .gform_wrapper img.delete_list_item {
 		margin-left: 0 !important;
 		margin-right: 0 !important;
 	}
+
+	body .gform_wrapper ul li.gfield[style="display: none;"] {
+		display:none !important;
+	}
 	
 	body .gform_wrapper .ginput_container,
 	body .gform_wrapper div.ginput_complex,
@@ -2450,7 +2454,7 @@ body .gform_wrapper img.delete_list_item {
 @media all and (max-device-width: 480px) { 
 
 	body .gform_wrapper {
-		font-size: 2.60em;
+		font-size: inherit;
 	}
 
 	body .gform_wrapper .gfield_checkbox li input[type=checkbox],

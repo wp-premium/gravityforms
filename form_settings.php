@@ -1480,7 +1480,7 @@ class GFFormSettings {
 				}
 				break;
 			case 'redirect':
-				if ( empty( $confirmation['url'] ) || ! GFCommon::is_valid_url( $confirmation['url'] ) ) {
+				if ( ( empty( $confirmation['url'] ) || ! GFCommon::is_valid_url( $confirmation['url'] ) ) && ! GFCommon::has_merge_tag( $confirmation['url'] ) ) {
 					$failed_validation = true;
 					GFCommon::add_error_message( __( 'You must specify a valid Redirect URL.', 'gravityforms' ) );
 				}

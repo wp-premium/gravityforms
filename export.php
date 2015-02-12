@@ -348,7 +348,7 @@ class GFExport {
 
 	public static function export_form_page() {
 
-		if ( ! GFCommon::current_user_can_any( 'gravityforçms_edit_forms' ) ) {
+		if ( ! GFCommon::current_user_can_any( 'gravityforms_edit_forms' ) ) {
 			wp_die( 'You do not have permission to access this page' );
 		}
 
@@ -760,11 +760,7 @@ class GFExport {
 				$lines = utf8_encode( $lines );
 			}
 
-			if ( function_exists( 'mb_convert_encoding' ) ) {
-				// Convert the contents to UTF-16LE which has wider support than UTF-8.
-				// This fixes an issue with special characters in Excel for Mac.
-				$lines = mb_convert_encoding( $lines, 'UTF-16LE', 'UTF-8' );
-			}
+			$lines = apply_filters( 'gform_export_lines', $lines );
 
 			echo $lines;
 

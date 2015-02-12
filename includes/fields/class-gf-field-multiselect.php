@@ -100,7 +100,7 @@ class GF_Field_MultiSelect extends GF_Field {
 					$cat    = GFCommon::format_post_category( $item, $use_id );
 					$cats[] = GFCommon::format_variable_value( $cat, $url_encode, $esc_html, $format );
 				}
-				$value = self::implode_non_blank( ', ', $cats );
+				$value = GFCommon::implode_non_blank( ', ', $cats );
 			}
 		}
 		return $value;

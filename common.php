@@ -886,7 +886,7 @@ class GFCommon {
 		$post_url = get_bloginfo( 'wpurl' ) . '/wp-admin/post.php?action=edit&post=' . rgar( $lead, 'post_id' );
 		$text     = str_replace( '{post_edit_url}', $url_encode ? urlencode( $post_url ) : $post_url, $text );
 
-		$text = self::replace_variables_prepopulate( $text, $url_encode, $lead );
+		$text = self::replace_variables_prepopulate( $text, $url_encode, $lead, $esc_html );
 
 		// hook allows for custom merge tags
 		$text = apply_filters( 'gform_replace_merge_tags', $text, $form, $lead, $url_encode, $esc_html, $nl2br, $format );
@@ -947,10 +947,17 @@ class GFCommon {
 	}
 
 
-	public static function replace_variables_prepopulate( $text, $url_encode = false, $entry = false ) {
+	public static function replace_variables_prepopulate( $text, $url_encode = false, $entry = false, $esc_html = false ) {
 
 		//embed url
-		$text = str_replace( '{embed_url}', $url_encode ? urlencode( RGFormsModel::get_current_page_url() ) : RGFormsModel::get_current_page_url(), $text );
+		$current_page_url = RGFormsModel::get_current_page_url();
+		if ( $esc_html ) {
+			$current_page_url = esc_html( $current_page_url );
+		}
+		if ( $url_encode ) {
+			$current_page_url = urlencode( $current_page_url );
+		}
+		$text = str_replace( '{embed_url}', $current_page_url, $text );
 
 		$local_timestamp = self::get_local_timestamp( time() );
 
@@ -986,10 +993,24 @@ class GFCommon {
 		}
 
 		//user agent
-		$text = str_replace( '{user_agent}', $url_encode ? urlencode( RGForms::get( 'HTTP_USER_AGENT', $_SERVER ) ) : RGForms::get( 'HTTP_USER_AGENT', $_SERVER ), $text );
+		$user_agent = RGForms::get( 'HTTP_USER_AGENT', $_SERVER );
+		if ( $esc_html ) {
+			$user_agent = esc_html( $user_agent );
+		}
+		if ( $url_encode ) {
+			$user_agent = urlencode( $user_agent );
+		}
+		$text = str_replace( '{user_agent}', $user_agent, $text );
 
 		//referrer
-		$text = str_replace( '{referer}', $url_encode ? urlencode( RGForms::get( 'HTTP_REFERER', $_SERVER ) ) : RGForms::get( 'HTTP_REFERER', $_SERVER ), $text );
+		$referer = RGForms::get( 'HTTP_REFERER', $_SERVER );
+		if ( $esc_html ) {
+			$referer = esc_html( $referer );
+		}
+		if ( $url_encode ) {
+			$referer = urlencode( $referer );
+		}
+		$text = str_replace( '{referer}',  $referer, $text );
 
 		//logged in user info
 		global $userdata, $wp_version, $current_user;
@@ -1006,7 +1027,7 @@ class GFCommon {
 			$text = str_replace( $full_tag, $value, $text );
 		}
 
-		$text = apply_filters( 'gform_replace_merge_tags', $text, false, false, $url_encode, false, false, false );
+		$text = apply_filters( 'gform_replace_merge_tags', $text, false, $entry, $url_encode, false, false, false );
 
 		return $text;
 	}
@@ -1628,13 +1649,17 @@ class GFCommon {
 			} else {
 				GFCommon::log_error( 'GFCommon::send_email(): The mail message was passed off to WordPress for processing, but WordPress was unable to send the message.' );
 			}
+
+			if ( has_filter( 'phpmailer_init' ) ) {
+				GFCommon::log_debug( __METHOD__ . '(): The WordPress phpmailer_init hook has been detected, usually used by SMTP plugins, it can impact mail delivery.' );
+			}
 		} else {
 			GFCommon::log_debug( 'GFCommon::send_email(): Aborting. The gform_pre_send_email hook was used to set the abort_email parameter to true.' );
 		}
 
 		self::add_emails_sent();
 
-		do_action( 'gform_after_email', $is_success, $to, $subject, $message, $headers, $attachments, $message_format );
+		do_action( 'gform_after_email', $is_success, $to, $subject, $message, $headers, $attachments, $message_format, $from, $from_name, $bcc, $reply_to );
 	}
 
 	public static function add_emails_sent() {
@@ -2426,32 +2451,6 @@ class GFCommon {
 		return $_product_fields[ $key ];
 	}
 
-	private static function get_logic_event( $field, $event ) {
-		_deprecated_function( 'GFCommon::get_logic_event', '1.9', 'GF_Field::get_logic_event' );
-
-		$is_form_editor = GFCommon::is_form_editor();
-		$is_entry_detail = GFCommon::is_entry_detail();
-		$is_admin = $is_form_editor || $is_entry_detail;
-
-		if ( empty( $field->conditionalLogicFields ) || $is_admin ) {
-			return '';
-		}
-
-		switch ( $event ) {
-			case 'keyup' :
-				return "onchange='gf_apply_rules(" . $field->formId . ',' . GFCommon::json_encode( $field->conditionalLogicFields ) . ");' onkeyup='clearTimeout(__gf_timeout_handle); __gf_timeout_handle = setTimeout(\"gf_apply_rules(" . $field->formId . ',' . GFCommon::json_encode( $field->conditionalLogicFields ) . ")\", 300);'";
-				break;
-
-			case 'click' :
-				return "onclick='gf_apply_rules(" . $field->formId . ',' . GFCommon::json_encode( $field->conditionalLogicFields ) . ");'";
-				break;
-
-			case 'change' :
-				return "onchange='gf_apply_rules(" . $field->formId . ',' . GFCommon::json_encode( $field->conditionalLogicFields ) . ");'";
-				break;
-		}
-	}
-
 	/**
 	 * @deprecated
 	 *
@@ -2691,30 +2690,6 @@ class GFCommon {
 		return $field->get_math_captcha( $pos );
 	}
 
-	private static function hex2rgb( $color ) {
-		if ( $color[0] == '#' ) {
-			$color = substr( $color, 1 );
-		}
-
-		if ( strlen( $color ) == 6 ) {
-			list( $r, $g, $b ) = array(
-				$color[0] . $color[1],
-				$color[2] . $color[3],
-				$color[4] . $color[5],
-			);
-		} elseif ( strlen( $color ) == 3 ) {
-			list( $r, $g, $b ) = array( $color[0] . $color[0], $color[1] . $color[1], $color[2] . $color[2] );
-		} else {
-			return false;
-		}
-
-		$r = hexdec( $r );
-		$g = hexdec( $g );
-		$b = hexdec( $b );
-
-		return array( $r, $g, $b );
-	}
-
 	/**
 	 * @param GF_Field $field
 	 * @param          $value
@@ -2799,6 +2774,11 @@ class GFCommon {
 							}
 
 							$products[ $id ]['name']     = ! $use_choice_text ? $name : RGFormsModel::get_choice_text( $field, $name );
+							$include_field_label = apply_filters( 'gform_product_info_name_include_field_label', false );
+							if ( $field->inputType == ( 'radio' || 'select' ) && $include_field_label ) {
+								$products[ $id ]['name'] = $field->label . " ({$products[$id]['name']})";
+							}
+
 							$products[ $id ]['price']    = $price;
 							$products[ $id ]['quantity'] = $quantity;
 							$products[ $id ]['options']  = array();
@@ -4101,6 +4081,10 @@ class GFCommon {
 
 	public static function is_entry_detail_edit(){
 		return GFForms::get_page() == 'entry_detail_edit';
+	}
+
+	public static function has_merge_tag( $string ) {
+		return preg_match( '/{.+}/', $string );
 	}
 }
 

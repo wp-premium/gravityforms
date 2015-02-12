@@ -177,7 +177,7 @@ class GF_Field_CAPTCHA extends GF_Field {
 			return array();
 		}
 
-		$captcha = self::get_simple_captcha();
+		$captcha = $this->get_simple_captcha();
 
 		//If captcha folder does not exist and can't be created, return an empty captcha
 		if ( ! wp_mkdir_p( $captcha->tmp_dir ) ) {
@@ -209,11 +209,11 @@ class GF_Field_CAPTCHA extends GF_Field {
 				break;
 		}
 
-		if ( ! empty( $field['simpleCaptchaFontColor'] ) ) {
-			$captcha->fg = self::hex2rgb( $field['simpleCaptchaFontColor'] );
+		if ( ! empty( $this->simpleCaptchaFontColor ) ) {
+			$captcha->fg = $this->hex2rgb( $this->simpleCaptchaFontColor );
 		}
-		if ( ! empty( $field['simpleCaptchaBackgroundColor'] ) ) {
-			$captcha->bg = self::hex2rgb( $field['simpleCaptchaBackgroundColor'] );
+		if ( ! empty( $this->simpleCaptchaBackgroundColor ) ) {
+			$captcha->bg = $this->hex2rgb( $this->simpleCaptchaBackgroundColor );
 		}
 
 		$word     = $captcha->generate_random_word();
@@ -241,7 +241,7 @@ class GF_Field_CAPTCHA extends GF_Field {
 			return array();
 		}
 
-		$captcha = self::get_simple_captcha();
+		$captcha = $this->get_simple_captcha();
 
 		//If captcha folder does not exist and can't be created, return an empty captcha
 		if ( ! wp_mkdir_p( $captcha->tmp_dir ) ) {
@@ -280,10 +280,10 @@ class GF_Field_CAPTCHA extends GF_Field {
 		}
 
 		if ( ! empty( $this->simpleCaptchaFontColor ) ) {
-			$captcha->fg = self::hex2rgb( $this->simpleCaptchaFontColor );
+			$captcha->fg = $this->hex2rgb( $this->simpleCaptchaFontColor );
 		}
 		if ( ! empty( $this->simpleCaptchaBackgroundColor ) ) {
-			$captcha->bg = self::hex2rgb( $this->simpleCaptchaBackgroundColor );
+			$captcha->bg = $this->hex2rgb( $this->simpleCaptchaBackgroundColor );
 		}
 
 		$word     = $captcha->generate_random_word();
@@ -293,6 +293,30 @@ class GF_Field_CAPTCHA extends GF_Field {
 		$path     = $captcha->tmp_dir . $filename;
 
 		return array( 'path' => $path, 'url' => $url, 'height' => $captcha->img_size[1], 'width' => $captcha->img_size[0], 'prefix' => $prefix );
+	}
+
+	private function hex2rgb( $color ) {
+		if ( $color[0] == '#' ) {
+			$color = substr( $color, 1 );
+		}
+
+		if ( strlen( $color ) == 6 ) {
+			list( $r, $g, $b ) = array(
+				$color[0] . $color[1],
+				$color[2] . $color[3],
+				$color[4] . $color[5],
+			);
+		} elseif ( strlen( $color ) == 3 ) {
+			list( $r, $g, $b ) = array( $color[0] . $color[0], $color[1] . $color[1], $color[2] . $color[2] );
+		} else {
+			return false;
+		}
+
+		$r = hexdec( $r );
+		$g = hexdec( $g );
+		$b = hexdec( $b );
+
+		return array( $r, $g, $b );
 	}
 
 }

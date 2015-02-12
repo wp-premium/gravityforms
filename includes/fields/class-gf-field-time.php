@@ -83,8 +83,9 @@ class GF_Field_Time extends GF_Field {
 			preg_match( '/^(\d*):(\d*) ?(.*)$/', $value, $matches );
 			$hour        = esc_attr( $matches[1] );
 			$minute      = esc_attr( $matches[2] );
-			$am_selected = strtolower( rgar( $matches, 3 ) ) == 'am' ? "selected='selected'" : '';
-			$pm_selected = strtolower( rgar( $matches, 3 ) ) == 'pm' ? "selected='selected'" : '';
+			$the_rest    = strtolower( rgar( $matches, 3 ) );
+			$am_selected = strpos( $the_rest, 'am' ) > -1 ? "selected='selected'" : '';
+			$pm_selected = strpos( $the_rest, 'pm' ) > -1  ? "selected='selected'" : '';
 		} else if ( is_array( $value ) ) {
 			$value       = array_values( $value );
 			$hour        = esc_attr( $value[0] );

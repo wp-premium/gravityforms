@@ -1879,63 +1879,62 @@ class GFFormDetail {
 						$label_placement_form_setting_label = __( 'Top aligned', 'gravityforms' );
 				}
 
-				$enable_label_placement_settings = apply_filters( 'gform_enable_field_label_placement_settings', false );
+				$enable_label_visiblity_settings = apply_filters( 'gform_enable_field_label_visibility_settings', false );
 
-				if ( $enable_label_placement_settings ) {
-					$description_placement_form_setting       = rgar( $form, 'descriptionPlacement' );
-					$description_placement_form_setting_label = $description_placement_form_setting == 'above' ? $description_placement_form_setting_label = __( 'Above inputs', 'gravityforms' ) : $description_placement_form_setting_label = __( 'Below inputs', 'gravityforms' );
-					?>
-					<li class="label_placement_setting field_setting">
-						<label for="field_label_placement">
-							<?php _e( 'Field Label Visibility', 'gravityforms' ); ?>
-							<?php gform_tooltip( 'form_field_label_placement' ) ?>
+				$description_placement_form_setting       = rgar( $form, 'descriptionPlacement' );
+				$description_placement_form_setting_label = $description_placement_form_setting == 'above' ? $description_placement_form_setting_label = __( 'Above inputs', 'gravityforms' ) : $description_placement_form_setting_label = __( 'Below inputs', 'gravityforms' );
+				?>
+				<li class="label_placement_setting field_setting">
+					<?php if ( $enable_label_visiblity_settings ) : ?>
+					<label for="field_label_placement">
+						<?php _e( 'Field Label Visibility', 'gravityforms' ); ?>
+						<?php gform_tooltip( 'form_field_label_placement' ) ?>
+					</label>
+					<select id="field_label_placement" onchange="SetFieldLabelPlacement(jQuery(this).val());">
+						<option value=""><?php printf( __( 'Visible (%s)', 'gravityforms' ), $label_placement_form_setting_label ); ?></option>
+						<option value="hidden_label"><?php _e( 'Hidden', 'gravityforms' ); ?></option>
+					</select>
+					<?php endif ?>
+					<div id="field_description_placement_container" style="display:none; padding-top:10px;">
+						<label for="field_description_placement">
+							<?php _e( 'Description Placement', 'gravityforms' ); ?>
+							<?php gform_tooltip( 'form_field_description_placement' ) ?>
 						</label>
-						<select id="field_label_placement" onchange="SetFieldLabelPlacement(jQuery(this).val());">
+						<select id="field_description_placement"
+						        onchange="SetFieldDescriptionPlacement(jQuery(this).val());">
 							<option
-								value=""><?php printf( __( 'Visible (%s)', 'gravityforms' ), $label_placement_form_setting_label ); ?></option>
-							<option value="hidden_label"><?php _e( 'Hidden', 'gravityforms' ); ?></option>
-						</select>
-
-						<div id="field_description_placement_container" style="display:none; padding-top:10px;">
-							<label for="field_description_placement">
-								<?php _e( 'Description Placement', 'gravityforms' ); ?>
-								<?php gform_tooltip( 'form_field_description_placement' ) ?>
-							</label>
-							<select id="field_description_placement"
-							        onchange="SetFieldDescriptionPlacement(jQuery(this).val());">
-								<option
-									value=""><?php printf( __( 'Use Form Setting (%s)', 'gravityforms' ), $description_placement_form_setting_label ); ?></option>
-								<option value="below"><?php _e( 'Below inputs', 'gravityforms' ); ?></option>
-								<option value="above"><?php _e( 'Above inputs', 'gravityforms' ); ?></option>
-							</select>
-						</div>
-					</li>
-				<?php
-				}
-				do_action( 'gform_field_appearance_settings', 150, $form_id );
-
-				if ( $enable_label_placement_settings ) {
-					$sub_label_placement_form_setting       = rgar( $form, 'subLabelPlacement' );
-					$sub_label_placement_form_setting_label = $sub_label_placement_form_setting == 'above' ? $sub_label_placement_form_setting_label = __( 'Above inputs', 'gravityforms' ) : $sub_label_placement_form_setting_label = __( 'Below inputs', 'gravityforms' );
-					?>
-					<li class="sub_label_placement_setting field_setting">
-						<label for="field_sub_label_placement">
-							<?php _e( 'Sub-Label Placement', 'gravityforms' ); ?>
-							<?php gform_tooltip( 'form_field_sub_label_placement' ) ?>
-						</label>
-						<select id="field_sub_label_placement"
-						        onchange="SetFieldSubLabelPlacement(jQuery(this).val());">
-							<option
-								value=""><?php printf( __( 'Use Form Setting (%s)', 'gravityforms' ), $sub_label_placement_form_setting_label ); ?></option>
+								value=""><?php printf( __( 'Use Form Setting (%s)', 'gravityforms' ), $description_placement_form_setting_label ); ?></option>
 							<option value="below"><?php _e( 'Below inputs', 'gravityforms' ); ?></option>
 							<option value="above"><?php _e( 'Above inputs', 'gravityforms' ); ?></option>
-							<option value="hidden_label"><?php _e( 'Hidden', 'gravityforms' ); ?></option>
 						</select>
-					</li>
+					</div>
+				</li>
 				<?php
-				}
-				do_action( 'gform_field_appearance_settings', 200, $form_id );
+
+				do_action( 'gform_field_appearance_settings', 150, $form_id );
+
+				$sub_label_placement_form_setting       = rgar( $form, 'subLabelPlacement' );
+				$sub_label_placement_form_setting_label = $sub_label_placement_form_setting == 'above' ? $sub_label_placement_form_setting_label = __( 'Above inputs', 'gravityforms' ) : $sub_label_placement_form_setting_label = __( 'Below inputs', 'gravityforms' );
 				?>
+				<li class="sub_label_placement_setting field_setting">
+					<label for="field_sub_label_placement">
+						<?php _e( 'Sub-Label Placement', 'gravityforms' ); ?>
+						<?php gform_tooltip( 'form_field_sub_label_placement' ) ?>
+					</label>
+					<select id="field_sub_label_placement"
+					        onchange="SetFieldSubLabelPlacement(jQuery(this).val());">
+						<option
+							value=""><?php printf( __( 'Use Form Setting (%s)', 'gravityforms' ), $sub_label_placement_form_setting_label ); ?></option>
+						<option value="below"><?php _e( 'Below inputs', 'gravityforms' ); ?></option>
+						<option value="above"><?php _e( 'Above inputs', 'gravityforms' ); ?></option>
+						<?php if ( $enable_label_visiblity_settings ) : ?>
+						<option value="hidden_label"><?php _e( 'Hidden', 'gravityforms' ); ?></option>
+						<?php endif; ?>
+
+					</select>
+				</li>
+
+				<?php do_action( 'gform_field_appearance_settings', 200, $form_id ); ?>
 
 				<li class="error_message_setting field_setting">
                     <label for="field_error_message">

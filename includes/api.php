@@ -910,6 +910,108 @@ class GFAPI {
 		return $result;
 	}
 
+	// FORM SUBMISSIONS -------------------------------------------
+
+	/**
+	 * Submits a form. Use this function to send input values through the complete form submission process.
+	 * Supports field validation, notifications, confirmations, multiple-pages and save & continue.
+	 *
+	 * Example usage:
+	 * $input_values['input_1']   = 'Single line text';
+	 * $input_values['input_2_3'] = 'First name';
+	 * $input_values['input_2_6'] = 'Last name';
+	 * $input_values['input_5']   = 'A paragraph of text.';
+	 * //$input_values['gform_save'] = true; // support for save and continue
+	 *
+	 * $result = GFAPI::submit_form( 52, $input_values );
+	 *
+	 * Example output for a successful submission:
+	 * 'is_valid' => boolean true
+	 * 'page_number' => int 0
+	 * 'source_page_number' => int 1
+	 * 'confirmation_message' => string 'confirmation message [snip]'
+	 *
+	 * Example output for failed validation:
+	 * 'is_valid' => boolean false
+	 * 'validation_messages' =>
+	 *      array (size=1)
+	 *          2 => string 'This field is required. Please enter the first and last name.'
+	 *	'page_number' => int 1
+	 *  'source_page_number' => int 1
+	 *	'confirmation_message' => string ''
+	 *
+	 *
+	 * Example output for save and continue:
+	 * 'is_valid' => boolean true
+	 * 'page_number' => int 1
+	 * 'source_page_number' => int 1
+	 * 'confirmation_message' => string 'Please use the following link to return to your form from any computer. [snip]'
+	 * 'resume_token' => string '045f941cc4c04d479556bab1db6d3495'
+	 *
+	 *
+	 * @param int $form_id The Form ID
+	 * @param array $input_values An array of values.
+	 * @param array $field_values Optional.
+	 * @param int $target_page Optional.
+	 * @param int $source_page Optional.
+	 *
+	 * @return array An array containing the result of the submission.
+	 */
+	public static function submit_form($form_id, $input_values, $field_values = array(), $target_page = 0, $source_page = 1){
+		$form_id = absint( $form_id );
+		$input_values[ 'is_submit_' . $form_id ] = true;
+		$input_values['gform_submit'] = $form_id;
+		$input_values[ 'gform_target_page_number_' . $form_id ] = absint( $target_page );
+		$input_values[ 'gform_source_page_number_' . $form_id ] = absint( $source_page );
+		$input_values['gform_field_values'] = $field_values;
+
+		require_once(GFCommon::get_base_path() . '/form_display.php');
+
+		if ( ! isset( $_POST ) ) {
+			$_POST = array();
+		}
+
+		$_POST = array_merge_recursive( $_POST, $input_values );
+
+		try {
+			GFFormDisplay::process_form( $form_id );
+		} catch ( Exception $ex ) {
+			return new WP_Error( 'error_processing_form', __( 'There was an error while processing the form:', 'gravityforms' ) . ' ' . $ex->getCode() . ' ' . $ex->getMessage() );
+		}
+
+		$submissions_array = GFFormDisplay::$submission;
+
+		$submission_details = $submissions_array[ $form_id ];
+
+		$result = array();
+
+		$result['is_valid'] = $submission_details['is_valid'];
+
+		if ( $result['is_valid'] == false ) {
+			$validation_messages = array();
+			foreach ( $submission_details['form']['fields'] as $field ) {
+				if ( $field->failed_validation ) {
+					$validation_messages[ $field->id ] = $field->validation_message;
+				}
+			}
+			$result['validation_messages'] = $validation_messages;
+		}
+
+		$result['page_number'] = $submission_details['page_number'];
+		$result['source_page_number'] = $submission_details['source_page_number'];
+		$result['confirmation_message'] = $submission_details['confirmation_message'];
+
+		if ( isset( $submission_details['resume_token'] ) ) {
+			$result['resume_token'] = $submission_details['resume_token'];
+
+			$form = self::get_form( $form_id );
+
+			$result['confirmation_message'] = GFFormDisplay::replace_save_variables( $result['confirmation_message'], $form, $result['resume_token'] );
+		}
+
+		return $result;
+	}
+
 	// FEEDS ------------------------------------------------------
 
 	/**
@@ -1050,6 +1152,15 @@ class GFAPI {
 
 	// NOTIFICATIONS ----------------------------------------------
 
+	/**
+	 * Sends all active notifications for a form given an entry object and an event.
+	 *
+	 * @param $form
+	 * @param $entry
+	 * @param string $event Default = 'form_submission'
+	 *
+	 * @return array
+	 */
 	public static function send_notifications( $form, $entry, $event = 'form_submission' ) {
 
 		if ( rgempty( 'notifications', $form ) || ! is_array( $form['notifications'] ) ) {

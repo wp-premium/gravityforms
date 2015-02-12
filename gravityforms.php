@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms
 Plugin URI: http://www.gravityforms.com
 Description: Easily create web forms and manage form entries within the WordPress admin.
-Version: 1.9
+Version: 1.9.1.6
 Author: rocketgenius
 Author URI: http://www.rocketgenius.com
 Text Domain: gravityforms
@@ -112,7 +112,7 @@ add_action( 'plugins_loaded', array( 'GFForms', 'loaded' ) );
 
 class GFForms {
 
-	public static $version = '1.9';
+	public static $version = '1.9.1.5';
 
 	public static function loaded() {
 
@@ -203,7 +203,6 @@ class GFForms {
 
 					if ( self::is_gravity_page() ) {
 						require_once( GFCommon::get_base_path() . '/tooltips.php' );
-						add_action( 'admin_print_scripts', array( 'RGForms', 'print_scripts' ) );
 					} else if ( RG_CURRENT_PAGE == 'media-upload.php' ) {
 						require_once( GFCommon::get_base_path() . '/entry_list.php' );
 					} else if ( in_array( RG_CURRENT_PAGE, array( 'admin.php', 'admin-ajax.php' ) ) ) {
@@ -752,7 +751,7 @@ class GFForms {
 
 		global $wp_scripts;
 
-		$wp_required_scripts = array( 'admin-bar', 'common', 'jquery-color', 'utils' );
+		$wp_required_scripts = array( 'admin-bar', 'common', 'jquery-color', 'utils', 'svg-painter' );
 		$gf_required_scripts = array(
 			'common'                     => array( 'gform_tooltip_init', 'sack' ),
 			'gf_edit_forms'              => array( 'backbone', 'editor', 'gform_floatmenu', 'gform_forms', 'gform_form_admin', 'gform_form_editor', 'gform_gravityforms', 'gform_json', 'gform_menu', 'gform_placeholder', 'jquery-ui-autocomplete', 'jquery-ui-core', 'jquery-ui-datepicker', 'jquery-ui-sortable', 'jquery-ui-draggable', 'jquery-ui-droppable', 'jquery-ui-tabs', 'json2', 'media-editor', 'media-models', 'media-upload', 'media-views', 'plupload', 'plupload-flash', 'plupload-html4', 'plupload-html5', 'quicktags', 'rg_currency', 'thickbox', 'word-count', 'wp-plupload', 'wpdialogs-popup', 'wplink', 'wp-pointer' ),
@@ -984,12 +983,6 @@ class GFForms {
 		}
 	}
 
-	//Prints common admin scripts
-	public static function print_scripts() {
-		wp_enqueue_script( 'sack' );
-		wp_print_scripts();
-	}
-
 	public static function is_gravity_ajax_action() {
 		//Gravity Forms AJAX requests
 		$current_action  = self::post( 'action' );
@@ -1036,7 +1029,7 @@ class GFForms {
 		// Add a top-level left nav
 		$update_icon = GFCommon::has_update() && current_user_can( 'install_plugins' ) ? "<span title='" . esc_attr( __( 'Update Available', 'gravityforms' ) ) . "' class='update-plugins count-1'><span class='update-count'>1</span></span>" : '';
 
-		$admin_icon = self::get_admin_icon_b64();
+		$admin_icon = self::get_admin_icon_b64( GFForms::is_gravity_page() ? '#fff' : false );
 
 		add_menu_page( __( 'Forms', 'gravityforms' ), __( 'Forms', 'gravityforms' ) . $update_icon, $has_full_access ? 'gform_full_access' : $min_cap, $parent_menu['name'], $parent_menu['callback'], $admin_icon, apply_filters( 'gform_menu_position', '16.9' ) );
 
@@ -1066,8 +1059,19 @@ class GFForms {
 
 	}
 
-	public static function get_admin_icon_b64(){
-		return 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IiB2aWV3Qm94PSItMTUgNzcgNTgxIDY0MCIgZW5hYmxlLWJhY2tncm91bmQ9Im5ldyAtMTUgNzcgNTgxIDY0MCIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+PGcgaWQ9IkxheWVyXzIiPjxwYXRoIGZpbGw9IiM5OTk5OTkiIGQ9Ik00ODkuNSwyMjdMNDg5LjUsMjI3TDMxNS45LDEyNi44Yy0yMi4xLTEyLjgtNTguNC0xMi44LTgwLjUsMEw2MS44LDIyN2MtMjIuMSwxMi44LTQwLjMsNDQuMi00MC4zLDY5Ljd2MjAwLjVjMCwyNS42LDE4LjEsNTYuOSw0MC4zLDY5LjdsMTczLjYsMTAwLjJjMjIuMSwxMi44LDU4LjQsMTIuOCw4MC41LDBMNDg5LjUsNTY3YzIyLjItMTIuOCw0MC4zLTQ0LjIsNDAuMy02OS43VjI5Ni44QzUyOS44LDI3MS4yLDUxMS43LDIzOS44LDQ4OS41LDIyN3ogTTQwMSwzMDAuNHY1OS4zSDI0MXYtNTkuM0g0MDF6IE0xNjMuMyw0OTAuOWMtMTYuNCwwLTI5LjYtMTMuMy0yOS42LTI5LjZjMC0xNi40LDEzLjMtMjkuNiwyOS42LTI5LjZzMjkuNiwxMy4zLDI5LjYsMjkuNkMxOTIuOSw0NzcuNiwxNzkuNiw0OTAuOSwxNjMuMyw0OTAuOXogTTE2My4zLDM1OS43Yy0xNi40LDAtMjkuNi0xMy4zLTI5LjYtMjkuNnMxMy4zLTI5LjYsMjkuNi0yOS42czI5LjYsMTMuMywyOS42LDI5LjZTMTc5LjYsMzU5LjcsMTYzLjMsMzU5Ljd6IE0yNDEsNDkwLjl2LTU5LjNoMTYwdjU5LjNIMjQxeiIvPjwvZz48L3N2Zz4=';
+	public static function get_admin_icon_b64( $color = false ) {
+
+		// replace the hex color (default was #999999) to %s; it will be replaced by the passed $color
+		$svg_xml = '<?xml version="1.0" encoding="utf-8"?><svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="-15 77 581 640" enable-background="new -15 77 581 640" xml:space="preserve"><g id="Layer_2"><path fill="%s" d="M489.5,227L489.5,227L315.9,126.8c-22.1-12.8-58.4-12.8-80.5,0L61.8,227c-22.1,12.8-40.3,44.2-40.3,69.7v200.5c0,25.6,18.1,56.9,40.3,69.7l173.6,100.2c22.1,12.8,58.4,12.8,80.5,0L489.5,567c22.2-12.8,40.3-44.2,40.3-69.7V296.8C529.8,271.2,511.7,239.8,489.5,227z M401,300.4v59.3H241v-59.3H401z M163.3,490.9c-16.4,0-29.6-13.3-29.6-29.6c0-16.4,13.3-29.6,29.6-29.6s29.6,13.3,29.6,29.6C192.9,477.6,179.6,490.9,163.3,490.9z M163.3,359.7c-16.4,0-29.6-13.3-29.6-29.6s13.3-29.6,29.6-29.6s29.6,13.3,29.6,29.6S179.6,359.7,163.3,359.7z M241,490.9v-59.3h160v59.3H241z"/></g></svg>';
+		$svg_b64 = 'PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IiB2aWV3Qm94PSItMTUgNzcgNTgxIDY0MCIgZW5hYmxlLWJhY2tncm91bmQ9Im5ldyAtMTUgNzcgNTgxIDY0MCIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+PGcgaWQ9IkxheWVyXzIiPjxwYXRoIGZpbGw9IiM5OTk5OTkiIGQ9Ik00ODkuNSwyMjdMNDg5LjUsMjI3TDMxNS45LDEyNi44Yy0yMi4xLTEyLjgtNTguNC0xMi44LTgwLjUsMEw2MS44LDIyN2MtMjIuMSwxMi44LTQwLjMsNDQuMi00MC4zLDY5Ljd2MjAwLjVjMCwyNS42LDE4LjEsNTYuOSw0MC4zLDY5LjdsMTczLjYsMTAwLjJjMjIuMSwxMi44LDU4LjQsMTIuOCw4MC41LDBMNDg5LjUsNTY3YzIyLjItMTIuOCw0MC4zLTQ0LjIsNDAuMy02OS43VjI5Ni44QzUyOS44LDI3MS4yLDUxMS43LDIzOS44LDQ4OS41LDIyN3ogTTQwMSwzMDAuNHY1OS4zSDI0MXYtNTkuM0g0MDF6IE0xNjMuMyw0OTAuOWMtMTYuNCwwLTI5LjYtMTMuMy0yOS42LTI5LjZjMC0xNi40LDEzLjMtMjkuNiwyOS42LTI5LjZzMjkuNiwxMy4zLDI5LjYsMjkuNkMxOTIuOSw0NzcuNiwxNzkuNiw0OTAuOSwxNjMuMyw0OTAuOXogTTE2My4zLDM1OS43Yy0xNi40LDAtMjkuNi0xMy4zLTI5LjYtMjkuNnMxMy4zLTI5LjYsMjkuNi0yOS42czI5LjYsMTMuMywyOS42LDI5LjZTMTc5LjYsMzU5LjcsMTYzLjMsMzU5Ljd6IE0yNDEsNDkwLjl2LTU5LjNoMTYwdjU5LjNIMjQxeiIvPjwvZz48L3N2Zz4=';
+
+		if( $color ) {
+			$icon = sprintf( 'data:image/svg+xml;base64,%s', base64_encode( sprintf( $svg_xml, $color ) ) );
+		} else {
+			$icon = 'data:image/svg+xml;base64,' . $svg_b64;
+		}
+
+		return $icon;
 	}
 
 	//Returns the parent menu item. It needs to be the same as the first sub-menu (otherwise WP will duplicate the main menu as a sub-menu)
@@ -1541,6 +1545,7 @@ class GFForms {
 					'gform_json',
 					'gform_form_admin',
 					'thickbox',
+					'sack',
 				);
 				break;
 
@@ -1554,6 +1559,7 @@ class GFForms {
 					'jquery-ui-datepicker',
 					'gform_masked_input',
 					'jquery-ui-sortable',
+					'sack',
 				);
 				break;
 
@@ -1566,7 +1572,6 @@ class GFForms {
 					'jquery-ui-draggable',
 					'jquery-ui-droppable',
 					'jquery-ui-tabs',
-					'sack',
 					'gform_gravityforms',
 					'gform_forms',
 					'gform_json',
@@ -1575,6 +1580,7 @@ class GFForms {
 					'gform_menu',
 					'gform_placeholder',
 					'jquery-ui-autocomplete',
+					'sack',
 				);
 
 				if ( wp_is_mobile() ) {
@@ -1584,11 +1590,18 @@ class GFForms {
 				break;
 
 			case 'entry_detail':
-				$scripts = array( 'gform_json' );
+				$scripts = array(
+					'gform_json',
+					'sack',
+				);
 				break;
 
 			case 'entry_detail_edit':
-				$scripts = array( 'gform_gravityforms', 'plupload-all' );
+				$scripts = array(
+					'gform_gravityforms',
+					'plupload-all',
+					'sack',
+				);
 				break;
 
 			case 'entry_list':
@@ -1599,6 +1612,7 @@ class GFForms {
 					'gform_json',
 					'thickbox',
 					'gform_field_filter',
+					'sack',
 				);
 				break;
 
@@ -1607,6 +1621,7 @@ class GFForms {
 					'gform_forms',
 					'gform_json',
 					'gform_form_admin',
+					'sack',
 				);
 				break;
 
@@ -1619,6 +1634,7 @@ class GFForms {
 					'gform_form_admin',
 					'gform_forms',
 					'gform_json',
+					'sack',
 				);
 				break;
 
@@ -1630,11 +1646,15 @@ class GFForms {
 					'gform_placeholder',
 					'gform_json',
 					'wp-pointer',
+					'sack',
 				);
 				break;
 
 			case 'addons':
-				$scripts = array( 'thickbox' );
+				$scripts = array(
+					'thickbox',
+					'sack',
+				);
 				break;
 
 			case 'export_entry':
@@ -1642,11 +1662,13 @@ class GFForms {
 					'jquery-ui-datepicker',
 					'gform_form_admin',
 					'gform_field_filter',
+					'sack',
 				);
 				break;
 			case 'updates' :
 				$scripts = array(
-					'thickbox'
+					'thickbox',
+					'sack',
 				);
 
 		}
@@ -2766,22 +2788,31 @@ class GFForms {
 	}
 
 	public static function modify_tiny_mce_4( $init ) {
-		$base_url = GFCommon::get_base_url();
 
 		// Hack to fix compatibility issue with ACF PRO
 		if ( ! isset( $init['content_css'] ) ) {
 			return $init;
 		}
 
+		$base_url = GFCommon::get_base_url();
+
+		$editor_styles = $base_url . '/css/shortcode-ui-editor-styles.css,';
+		$form_styles = $base_url . '/css/formsmain.css';
+
 		if ( isset( $init['content_css'] ) ) {
 			if ( empty( $init['content_css'] ) ) {
 				$init['content_css'] = '';
+			} elseif ( is_array( $init['content_css'] ) ) {
+				$init['content_css'][] = $base_url . '/css/shortcode-ui-editor-styles.css,';
+				$init['content_css'][] = $form_styles;
+				return $init;
 			} else {
-				$init['content_css'] .= ',';
+				$init['content_css'] = $init['content_css'] . ',';
 			}
 		}
-		$init['content_css'] .= $base_url . '/css/shortcode-ui-editor-styles.css,';
-		$init['content_css'] .= $base_url . '/css/formsmain.css';
+
+		// Note: Using .= here can trigger a fatal error
+		$init['content_css'] = $init['content_css'] . $editor_styles . $form_styles;
 		return $init;
 	}
 

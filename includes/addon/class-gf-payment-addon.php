@@ -215,6 +215,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
 			//Running an authorization only transaction if function is implemented and this is a single payment
 			$this->authorization = $this->authorize( $feed, $submission_data, $form, $entry );
+			$this->log_debug( __METHOD__ . "(): Authorization result for form #{$form['id']} submission => " . print_r( $this->authorization, 1 ) );
 
 			$performed_authorization = true;
 
@@ -225,6 +226,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 			$this->authorization['is_authorized'] = $subscription['is_success'];
 			$this->authorization['error_message'] = rgar( $subscription, 'error_message' );
 			$this->authorization['subscription']  = $subscription;
+			$this->log_debug( __METHOD__ . "(): Authorization result for form #{$form['id']} submission => " . print_r( $this->authorization, 1 ) );
 
 			$performed_authorization = true;
 		}
@@ -394,6 +396,8 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 			return $entry;
 		}
 
+		$this->log_debug( __METHOD__ . "(): Updating entry #{$entry['id']} with result => " . print_r( $payment, 1 ) );
+
 		if ( $payment['is_success'] ) {
 
 			$entry['is_fulfilled']     = '1';
@@ -419,6 +423,8 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		if ( empty( $subscription ) ) {
 			return $entry;
 		}
+
+		$this->log_debug( __METHOD__ . "(): Updating entry #{$entry['id']} with result => " . print_r( $subscription, 1 ) );
 
 		// if setup fee / trial is captured as part of a separate transaction
 		$payment      = rgar( $subscription, 'captured_payment' );

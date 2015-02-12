@@ -3095,67 +3095,69 @@ class GFFormsModel {
 		}
 	}
 
-    public static function is_duplicate($form_id, $field, $value){
-        global $wpdb;
+	public static function is_duplicate( $form_id, $field, $value ) {
+		global $wpdb;
 
-        $lead_detail_table_name = self::get_lead_details_table_name();
-        $lead_table_name        = self::get_lead_table_name();
-        $lead_detail_long       = self::get_lead_details_long_table_name();
-        $is_long                = ! is_array( $value ) && strlen( $value ) > GFORMS_MAX_FIELD_LENGTH - 10;
+		$lead_detail_table_name = self::get_lead_details_table_name();
+		$lead_table_name        = self::get_lead_table_name();
+		$lead_detail_long       = self::get_lead_details_long_table_name();
+		$is_long                = ! is_array( $value ) && strlen( $value ) > GFORMS_MAX_FIELD_LENGTH - 10;
 
-        $sql_comparison = $is_long ? '( ld.value = %s OR ldl.value = %s )' : 'ld.value = %s';
+		$sql_comparison = $is_long ? '( ld.value = %s OR ldl.value = %s )' : 'ld.value = %s';
 
-        switch( GFFormsModel::get_input_type( $field ) ) {
-            case 'time':
-                $value = sprintf("%02d:%02d %s", $value[0], $value[1], $value[2]);
-                break;
-            case 'date':
-                $value = self::prepare_date(rgar($field, "dateFormat"), $value);
-                break;
-            case 'number':
-                $value = GFCommon::clean_number($value, rgar($field, 'numberFormat'));
-                break;
-            case 'phone':
-                $value = str_replace(array(")", "(", "-", " "), array("", "", "", ""), $value);
-                $sql_comparison = 'replace( replace( replace( replace( ld.value, ")", "" ), "(", "" ), "-", "" ), " ", "" ) = %s';
-                break;
-        }
+		switch ( GFFormsModel::get_input_type( $field ) ) {
+			case 'time':
+				$value = sprintf( "%02d:%02d %s", $value[0], $value[1], $value[2] );
+				break;
+			case 'date':
+				$value = self::prepare_date( $field->dateFormat, $value );
+				break;
+			case 'number':
+				$value = GFCommon::clean_number( $value, $field->numberFormat );
+				break;
+			case 'phone':
+				$value          = str_replace( array( ')', '(', '-', ' ' ), '', $value );
+				$sql_comparison = 'replace( replace( replace( replace( ld.value, ")", "" ), "(", "" ), "-", "" ), " ", "" ) = %s';
+				break;
+			case 'email':
+				$value = is_array( $value ) ? rgar( $value, 0 ) : $value;
+				break;
+		}
 
-        $inner_sql_template =  "SELECT %s as input, ld.lead_id
+		$inner_sql_template = "SELECT %s as input, ld.lead_id
                                 FROM {$lead_detail_table_name} ld
                                 INNER JOIN {$lead_table_name} l ON l.id = ld.lead_id\n";
 
-        if( $is_long ) {
-            $inner_sql_template .= "INNER JOIN {$lead_detail_long} ldl ON ldl.lead_detail_id = ld.id\n";
-        }
+		if ( $is_long ) {
+			$inner_sql_template .= "INNER JOIN {$lead_detail_long} ldl ON ldl.lead_detail_id = ld.id\n";
+		}
 
-        $inner_sql_template .= "WHERE l.form_id=%d AND ld.form_id=%d
+		$inner_sql_template .= "WHERE l.form_id=%d AND ld.form_id=%d
                                 AND ld.field_number between %s AND %s
                                 AND status='active' AND {$sql_comparison}";
 
-        $sql = "SELECT count(distinct input) as match_count FROM ( ";
+		$sql = "SELECT count(distinct input) as match_count FROM ( ";
 
-        $input_count = 1;
-        if(is_array($field["inputs"])){
-            $input_count = sizeof($field["inputs"]);
-            foreach($field["inputs"] as $input){
-                $union = empty($inner_sql) ? "" : " UNION ALL ";
-                $inner_sql .= $union . $wpdb->prepare($inner_sql_template, $input["id"], $form_id, $form_id, $input["id"] - 0.0001, $input["id"] + 0.0001, $value[ $input['id'] ], $value[ $input['id'] ] );
-            }
-        }
-        else{
-            $inner_sql = $wpdb->prepare($inner_sql_template, $field["id"], $form_id, $form_id, doubleval($field["id"]) - 0.0001, doubleval($field["id"]) + 0.0001, $value, $value );
-        }
+		$input_count = 1;
+		if ( is_array( $field->get_entry_inputs() ) ) {
+			$input_count = sizeof( $field->inputs );
+			foreach ( $field->inputs as $input ) {
+				$union = empty( $inner_sql ) ? '' : ' UNION ALL ';
+				$inner_sql .= $union . $wpdb->prepare( $inner_sql_template, $input['id'], $form_id, $form_id, $input['id'] - 0.0001, $input['id'] + 0.0001, $value[ $input['id'] ], $value[ $input['id'] ] );
+			}
+		} else {
+			$inner_sql = $wpdb->prepare( $inner_sql_template, $field->id, $form_id, $form_id, doubleval( $field->id ) - 0.0001, doubleval( $field->id ) + 0.0001, $value, $value );
+		}
 
-        $sql .= $inner_sql . "
+		$sql .= $inner_sql . "
                 ) as count
                 GROUP BY lead_id
                 ORDER BY match_count DESC";
 
-        $count = apply_filters("gform_is_duplicate_{$form_id}", apply_filters('gform_is_duplicate', $wpdb->get_var($sql), $form_id, $field, $value), $form_id, $field, $value);
+		$count = apply_filters( "gform_is_duplicate_{$form_id}", apply_filters( 'gform_is_duplicate', $wpdb->get_var( $sql ), $form_id, $field, $value ), $form_id, $field, $value );
 
-        return $count != null && $count >= $input_count;
-    }
+		return $count != null && $count >= $input_count;
+	}
 
 	public static function get_lead( $lead_id ) {
 		global $wpdb;

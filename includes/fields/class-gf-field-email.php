@@ -43,15 +43,15 @@ class GF_Field_Email extends GF_Field {
 
 	public function validate( $value, $form ) {
 		$email = is_array( $value ) ? rgar( $value, 0 ) : $value; // Form objects created in 1.8 will supply a string as the value.
-		if ( $this->emailConfirmEnabled && ! empty( $email ) ) {
+		if ( ! rgblank( $value ) && ! GFCommon::is_valid_email( $email ) ) {
+			$this->failed_validation  = true;
+			$this->validation_message = empty( $this->errorMessage ) ? __( 'Please enter a valid email address.', 'gravityforms' ) : $this->errorMessage;
+		}elseif ( $this->emailConfirmEnabled && ! empty( $email ) ) {
 			$confirm = is_array( $value ) ? rgar( $value, 1 ) : rgpost( 'input_' . $this->id . '_2' );
 			if ( $confirm != $email ) {
 				$this->failed_validation  = true;
 				$this->validation_message = __( 'Your emails do not match.', 'gravityforms' );
 			}
-		} elseif ( ! rgblank( $value ) && ! GFCommon::is_valid_email( $email ) ) {
-			$this->failed_validation  = true;
-			$this->validation_message = empty( $this->errorMessage ) ? __( 'Please enter a valid email address.', 'gravityforms' ) : $this->errorMessage;
 		}
 	}
 
