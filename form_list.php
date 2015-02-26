@@ -296,15 +296,15 @@ class GFFormList {
 
 		<ul class="subsubsub">
 			<li>
-				<a class="<?php echo ( $active === null ) ? 'current' : '' ?>" href="?page=gf_edit_forms"><?php _e( 'All', 'gravityforms' ); ?>
+				<a class="<?php echo ( $active === null ) ? 'current' : '' ?>" href="?page=gf_edit_forms"><?php _ex( 'All', 'Form List', 'gravityforms' ); ?>
 					<span class="count">(<span id="all_count"><?php echo $form_count['total'] ?></span>)</span></a> |
 			</li>
 			<li>
-				<a class="<?php echo $active == '1' ? 'current' : '' ?>" href="?page=gf_edit_forms&active=1"><?php _e( 'Active', 'gravityforms' ); ?>
+				<a class="<?php echo $active == '1' ? 'current' : '' ?>" href="?page=gf_edit_forms&active=1"><?php _ex( 'Active', 'Form List', 'gravityforms' ); ?>
 					<span class="count">(<span id="active_count"><?php echo $form_count['active'] ?></span>)</span></a> |
 			</li>
 			<li>
-				<a class="<?php echo $active == '0' ? 'current' : '' ?>" href="?page=gf_edit_forms&active=0"><?php _e( 'Inactive', 'gravityforms' ); ?>
+				<a class="<?php echo $active == '0' ? 'current' : '' ?>" href="?page=gf_edit_forms&active=0"><?php _ex( 'Inactive', 'Form List', 'gravityforms' ); ?>
 					<span class="count">(<span id="inactive_count"><?php echo $form_count['inactive'] ?></span>)</span></a> |
 			</li>
 			<li>

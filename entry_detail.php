@@ -517,7 +517,7 @@ class GFEntryDetail {
 					<div>
 						<?php
 
-						$notifications = GFCommon::get_notifications('form_submission', $form);
+						$notifications = GFCommon::get_notifications( 'resend_notifications', $form );
 
 						if ( ! is_array( $notifications ) || count( $form['notifications'] ) <= 0 ) {
 							?>

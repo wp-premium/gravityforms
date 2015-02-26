@@ -136,7 +136,7 @@ class GF_Field_Address extends GF_Field {
 		$country_list        = $this->get_country_dropdown( $country_value, $country_placeholder );
 
 		//changing css classes based on field format to ensure proper display
-		$address_display_format = apply_filters( 'gform_address_display_format', 'default' );
+		$address_display_format = apply_filters( 'gform_address_display_format', 'default', $this );
 		$city_location          = $address_display_format == 'zip_before_city' ? 'right' : 'left';
 		$zip_location           = $address_display_format != 'zip_before_city' && ( $this->hideState || rgar( $address_state_field_input, 'isHidden' ) ) ? 'right' : 'left'; // support for $this->hideState legacy property
 		$state_location         = $address_display_format == 'zip_before_city' ? 'left' : 'right';
@@ -836,7 +836,7 @@ class GF_Field_Address extends GF_Field {
 
 			$line_break = $format == 'html' ? '<br />' : "\n";
 
-			$address_display_format = apply_filters( 'gform_address_display_format', 'default' );
+			$address_display_format = apply_filters( 'gform_address_display_format', 'default', $this );
 			if ( $address_display_format == 'zip_before_city' ) {
 				/*
                 Sample:

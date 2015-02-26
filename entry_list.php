@@ -770,15 +770,15 @@ class GFEntryList {
 
 		<ul class="subsubsub">
 			<li>
-				<a class="<?php echo empty( $filter ) ? 'current' : '' ?>" href="?page=gf_entries&view=entries&id=<?php echo $form_id ?>"><?php _e( 'All', 'gravityforms' ); ?>
+				<a class="<?php echo empty( $filter ) ? 'current' : '' ?>" href="?page=gf_entries&view=entries&id=<?php echo $form_id ?>"><?php _ex( 'All', 'Entry List', 'gravityforms' ); ?>
 					<span class="count">(<span id="all_count"><?php echo $active_lead_count ?></span>)</span></a> |
 			</li>
 			<li>
-				<a class="<?php echo $read !== null ? 'current' : '' ?>" href="?page=gf_entries&view=entries&id=<?php echo $form_id ?>&filter=unread"><?php _e( 'Unread', 'gravityforms' ); ?>
+				<a class="<?php echo $read !== null ? 'current' : '' ?>" href="?page=gf_entries&view=entries&id=<?php echo $form_id ?>&filter=unread"><?php _ex( 'Unread', 'Entry List', 'gravityforms' ); ?>
 					<span class="count">(<span id="unread_count"><?php echo $unread_count ?></span>)</span></a> |
 			</li>
 			<li>
-				<a class="<?php echo $star !== null ? 'current' : '' ?>" href="?page=gf_entries&view=entries&id=<?php echo $form_id ?>&filter=star"><?php _e( 'Starred', 'gravityforms' ); ?>
+				<a class="<?php echo $star !== null ? 'current' : '' ?>" href="?page=gf_entries&view=entries&id=<?php echo $form_id ?>&filter=star"><?php _ex( 'Starred', 'Entry List', 'gravityforms' ); ?>
 					<span class="count">(<span id="star_count"><?php echo $starred_count ?></span>)</span></a> |
 			</li>
 			<?php
@@ -872,7 +872,9 @@ class GFEntryList {
 
 								<?php
 
-								if ( ! is_array( $form['notifications'] ) || count( $form['notifications'] ) <= 0 ) {
+								$notifications = GFCommon::get_notifications( 'resend_notifications', $form );
+
+								if ( ! is_array( $notifications ) || count( $form['notifications'] ) <= 0 ) {
 									?>
 									<p class="description"><?php _e( 'You cannot resend notifications for these entries because this form does not currently have any notifications configured.', 'gravityforms' ); ?></p>
 
@@ -882,7 +884,7 @@ class GFEntryList {
 									?>
 									<p class="description"><?php _e( 'Specify which notifications you would like to resend for the selected entries.', 'gravityforms' ); ?></p>
 									<?php
-									foreach ( $form['notifications'] as $notification ) {
+									foreach ( $notifications as $notification ) {
 										?>
 										<input type="checkbox" class="gform_notifications" value="<?php echo $notification['id'] ?>" id="notification_<?php echo $notification['id'] ?>" onclick="toggleNotificationOverride();" />
 										<label for="notification_<?php echo $notification['id'] ?>"><?php echo $notification['name'] ?></label>

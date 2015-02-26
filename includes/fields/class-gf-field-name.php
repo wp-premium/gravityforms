@@ -287,17 +287,36 @@ class GF_Field_Name extends GF_Field {
 		if ( $prefix_input && ! rgar( $prefix_input, 'isHidden' ) ) {
 			$css_class .= 'has_prefix ';
 		}
+		else {
+			$css_class .= 'no_prefix ';
+		}
+
 		if ( $first_input && ! rgar( $first_input, 'isHidden' ) ) {
 			$css_class .= 'has_first_name ';
 		}
+		else {
+			$css_class .= 'no_first_name ';
+		}
+
 		if ( $middle_input && ! rgar( $middle_input, 'isHidden' ) ) {
 			$css_class .= 'has_middle_name ';
 		}
+		else {
+			$css_class .= 'no_middle_name ';
+		}
+
 		if ( $last_input && ! rgar( $last_input, 'isHidden' ) ) {
 			$css_class .= 'has_last_name ';
 		}
+		else {
+			$css_class .= 'no_last_name ';
+		}
+
 		if ( $suffix_input && ! rgar( $suffix_input, 'isHidden' ) ) {
 			$css_class .= 'has_suffix ';
+		}
+		else {
+			$css_class .= 'no_suffix ';
 		}
 
 		return trim( $css_class );

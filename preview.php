@@ -27,6 +27,7 @@ if ( ! GFCommon::current_user_can_any( array( 'gravityforms_edit_forms', 'gravit
 <head>
 	<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 	<meta http-equiv="Imagetoolbar" content="No" />
+	<meta name="viewport" content="width=device-width; initial-scale=1.0;"> 
 	<title><?php _e( 'Form Preview', 'gravityforms' ) ?></title>
 	<link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/reset.css' type='text/css' />
 	<link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/formreset.css' type='text/css' />

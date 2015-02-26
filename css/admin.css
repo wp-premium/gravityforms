@@ -10,7 +10,7 @@
 admin.css
 Gravity Forms Administration Styles
 http: //www.gravityforms.com
-updated: January 22, 2015 9:27 AM
+updated: February 17, 2015 11:53 AM
 
 Gravity Forms is a Rocketgenius project
 copyright 2008-2015 Rocketgenius Inc.
@@ -470,6 +470,22 @@ img#gfield_input_datepicker_icon {
 	width: auto;
 	clear: left;
 }
+
+.ginput_complex.ginput_container.has_first_name span,
+.ginput_complex.ginput_container.has_middle_name span,
+.ginput_complex.ginput_container.has_last_name span { 
+	width: 99.5% 
+}
+
+.ginput_complex.ginput_container.has_first_name.has_last_name span { 
+	width: 49% 
+}
+
+.ginput_complex.ginput_container.has_first_name.has_middle_name.has_last_name span { 
+	width: 32% 
+}
+
+
 
 .top_label .gfield_label {
 	display: block;
@@ -4173,28 +4189,6 @@ table.form-table tr:last-child th {
 	border: none !important;
 }
 
-/* MP6 styles (Wp 3.8)- temporary ----------------------------------------------------*/
-
-
-
-body.mp6 .field_edit_icon,
-body.mp6 .form_edit_icon,
-body.mp6 .field_delete_icon,
-body.mp6 .form_delete_icon,
-body.mp6 .field_duplicate_icon {
-	height: auto !important;
-}
-
-
-body.mp6 table tbody.user-list tr:nth-child(odd) {
-	background-color: #F9F9F9;
-}
-
-body.mp6 #namediv input[type=checkbox],
-body.mp6 #namediv input[type=radio] {
-	width: auto !important;
-}
-
 span.gf_settings_description {
 	display: block;
 	margin-top: 6px;
@@ -4233,6 +4227,14 @@ a.gf_insert_field_choice:active,
 a.gf_delete_field_choice:hover,
 a.gf_delete_field_choice:active {
 	color: #444;
+}
+
+/* form editor tweaks for 1.9  ----------------------------------------------------*/
+
+span.ginput_left input.medium,
+span.ginput_right input.medium,
+.ginput_container.ginput_single_email  input.medium {
+	width: 95% !important;
 }
 
 

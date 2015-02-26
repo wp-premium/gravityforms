@@ -1067,7 +1067,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		add_action( $cron_name, array( $this, 'check_status' ) );
 
 		if ( ! wp_next_scheduled( $cron_name ) ) {
-			wp_schedule_event( time(), 'daily', $cron_name );
+			wp_schedule_event( time(), 'hourly', $cron_name );
 		}
 
 
@@ -1904,7 +1904,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		$payment_method_markup = "
                 <div>
                     <select id='gaddon-sales-group' name='payment_method'>
-                        <option value=''>" . __( 'Any', 'regarding a payment method', 'gravityforms' ) . '</option>';
+                        <option value=''>" . _x( 'Any', 'regarding a payment method', 'gravityforms' ) . '</option>';
 
 		foreach ( $payment_methods as $payment_method ) {
 			$payment_method_markup .= "<option value='" . esc_attr( $payment_method ) . "' " . selected( $payment_method, rgget( 'payment_method' ), false ) . '>' . $payment_method . '</option>';

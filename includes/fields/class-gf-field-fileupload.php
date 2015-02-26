@@ -268,10 +268,10 @@ class GF_Field_FileUpload extends GF_Field {
 	}
 
 	public function get_value_save_entry( $value, $form, $input_name, $lead_id, $lead ) {
-		return $this->multipleFiles ? $this->get_multifile_value($form['id'], $input_name) : $this->get_single_file_value( $form['id'], $input_name );
+		return $this->multipleFiles ? $this->get_multifile_value( $form['id'], $input_name, $value ) : $this->get_single_file_value( $form['id'], $input_name );
 	}
 
-	public function get_multifile_value($form_id, $input_name){
+	public function get_multifile_value( $form_id, $input_name, $value ) {
 		global $_gf_uploaded_files;
 
 		GFCommon::log_debug( __METHOD__ . '(): Starting.' );
@@ -345,6 +345,7 @@ class GF_Field_FileUpload extends GF_Field {
 		}
 
 		if ( move_uploaded_file( $file['tmp_name'], $target['path'] ) ) {
+			GFCommon::log_debug( __METHOD__ . '(): File successfully moved.' );
 			$this->set_permissions( $target['path'] );
 
 			return $target['url'];

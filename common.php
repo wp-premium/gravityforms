@@ -155,7 +155,7 @@ class GFCommon {
 	    if ( file_exists( $htaccess_file ) ) {
 			unlink($htaccess_file);
 	    }
-	    $txt= '# Disable parsing of PHP for some server configurations.
+	    $txt= '# Disable parsing of PHP for some server configurations. This file may be removed or modified on certain server configurations by using by the gform_upload_root_htaccess_rules filter. Please consult your system administrator before removing this file.
 <Files *>
   SetHandler none
   SetHandler default-handler
@@ -166,8 +166,11 @@ class GFCommon {
   php_flag engine off
 </IfModule>';
 	    $rules = explode( "\n", $txt );
-	    insert_with_markers( $htaccess_file, 'Gravity Forms', $rules );
 
+	    $rules = apply_filters( 'gform_upload_root_htaccess_rules', $rules );
+	    if ( ! empty( $rules ) ) {
+		    insert_with_markers( $htaccess_file, 'Gravity Forms', $rules );
+	    }
     }
 
 	public static function clean_number( $number, $number_format = '' ) {
@@ -1027,7 +1030,7 @@ class GFCommon {
 			$text = str_replace( $full_tag, $value, $text );
 		}
 
-		$text = apply_filters( 'gform_replace_merge_tags', $text, false, $entry, $url_encode, false, false, false );
+		$text = apply_filters( 'gform_replace_merge_tags', $text, false, $entry, $url_encode, $esc_html, false, false );
 
 		return $text;
 	}
@@ -1340,7 +1343,10 @@ class GFCommon {
 
 		$message_format = apply_filters( "gform_notification_format_{$form['id']}", apply_filters( 'gform_notification_format', 'html', 'user', $form, $lead ), 'user', $form, $lead );
 		$message        = GFCommon::replace_variables( rgget( 'message', $form['autoResponder'] ), $form, $lead, false, false, ! rgget( 'disableAutoformat', $form['autoResponder'] ), $message_format );
-		$message        = do_shortcode( $message );
+
+		if ( apply_filters( 'gform_enable_shortcode_notification_message', true, $form, $lead ) ) {
+			$message = do_shortcode( $message );
+		}
 
 		//Running trough variable replacement
 		$to        = GFCommon::replace_variables( $to, $form, $lead, false, false );
@@ -1372,7 +1378,10 @@ class GFCommon {
 
 		$message_format = apply_filters( "gform_notification_format_{$form['id']}", apply_filters( 'gform_notification_format', 'html', 'admin', $form, $lead ), 'admin', $form, $lead );
 		$message        = GFCommon::replace_variables( rgget( 'message', $form['notification'] ), $form, $lead, false, false, ! rgget( 'disableAutoformat', $form['notification'] ), $message_format );
-		$message        = do_shortcode( $message );
+
+		if ( apply_filters( 'gform_enable_shortcode_notification_message', true, $form, $lead ) ) {
+			$message = do_shortcode( $message );
+		}
 
 		$version_info = self::get_version_info();
 		$is_expired   = ! rgempty( 'expiration_time', $version_info ) && $version_info['expiration_time'] < time();
@@ -1480,7 +1489,10 @@ class GFCommon {
 
 		$message_format = rgempty( 'message_format', $notification ) ? 'html' : rgar( $notification, 'message_format' );
 		$message        = GFCommon::replace_variables( rgar( $notification, 'message' ), $form, $lead, false, false, ! rgar( $notification, 'disableAutoformat' ), $message_format );
-		$message        = do_shortcode( $message );
+
+		if ( apply_filters( 'gform_enable_shortcode_notification_message', true, $form, $lead ) ) {
+			$message = do_shortcode( $message );
+		}
 
 		// allow attachments to be passed as a single path (string) or an array of paths, if string provided, add to array
 		$attachments = rgar( $notification, 'attachments' );
@@ -1573,7 +1585,9 @@ class GFCommon {
 
 		$notifications = array();
 		foreach ( $form['notifications'] as $notification ) {
-			if ( rgar( $notification, 'event' ) == $event ) {
+			$notification_event = rgar( $notification, 'event' );
+			$omit_from_resend   = array( 'form_saved', 'form_save_email_requested' );
+			if ( $notification_event == $event || ( $event == 'resend_notifications' && ! in_array( $notification_event, $omit_from_resend ) ) ) {
 				$notifications[] = $notification;
 			}
 		}
@@ -1643,8 +1657,9 @@ class GFCommon {
 			GFCommon::log_debug( 'GFCommon::send_email(): Sending email via wp_mail().' );
 			GFCommon::log_debug( print_r( compact( 'to', 'subject', 'message', 'headers', 'attachments', 'abort_email' ), true ) );
 			$is_success = wp_mail( $to, $subject, $message, $headers, $attachments );
-			GFCommon::log_debug( "GFCommon::send_email(): Result from wp_mail(): {$is_success}" );
-			if ( $is_success ) {
+			$result = is_wp_error( $is_success ) ? $is_success->get_error_message() : $is_success;
+			GFCommon::log_debug( "GFCommon::send_email(): Result from wp_mail(): {$result}" );
+			if ( ! is_wp_error( $is_success ) && $is_success ) {
 				GFCommon::log_debug( 'GFCommon::send_email(): Mail was passed from WordPress to the mail server.' );
 			} else {
 				GFCommon::log_error( 'GFCommon::send_email(): The mail message was passed off to WordPress for processing, but WordPress was unable to send the message.' );
@@ -2239,7 +2254,7 @@ class GFCommon {
 	}
 
 	/**
-	 * @deprecated
+	 * @deprecated Deprecated since 1.9. Use GF_Field_Checkbox::get_radio_choices() instead.
 	 *
 	 * @param GF_Field_Radio $field
 	 * @param string         $value
@@ -3496,8 +3511,8 @@ class GFCommon {
 		$gf_vars['thisFormButton']          = __( 'this form button if', 'gravityforms' );
 		$gf_vars['show']                    = __( 'Show', 'gravityforms' );
 		$gf_vars['hide']                    = __( 'Hide', 'gravityforms' );
-		$gf_vars['all']                     = __( 'All', 'gravityforms' );
-		$gf_vars['any']                     = __( 'Any', 'gravityforms' );
+		$gf_vars['all']                     = _x( 'All', 'Conditional Logic', 'gravityforms' );
+		$gf_vars['any']                     = _x( 'Any', 'Conditional Logic', 'gravityforms' );
 		$gf_vars['ofTheFollowingMatch']     = __( 'of the following match:', 'gravityforms' );
 		$gf_vars['is']                      = __( 'is', 'gravityforms' );
 		$gf_vars['isNot']                   = __( 'is not', 'gravityforms' );

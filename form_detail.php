@@ -734,24 +734,25 @@ class GFFormDetail {
 				<?php gform_tooltip( 'form_field_type' ) ?>
 			</label>
 			<select id="post_custom_field_type" onchange="if(jQuery(this).val() == '') return; jQuery('#field_settings').slideUp(function(){StartChangeInputType(jQuery('#post_custom_field_type').val());});">
-				<option value="" class="option_header"><?php _e( 'Standard Fields', 'gravityforms' ); ?></option>
-				<option value="text"><?php _e( 'Single line text', 'gravityforms' ); ?></option>
-				<option value="textarea"><?php _e( 'Paragraph Text', 'gravityforms' ); ?></option>
-				<option value="select"><?php _e( 'Drop Down', 'gravityforms' ); ?></option>
-				<option value="multiselect"><?php _e( 'Multi Select', 'gravityforms' ); ?></option>
-				<option value="number"><?php _e( 'Number', 'gravityforms' ); ?></option>
-				<option value="checkbox"><?php _e( 'Checkboxes', 'gravityforms' ); ?></option>
-				<option value="radio"><?php _e( 'Radio Buttons', 'gravityforms' ); ?></option>
-				<option value="hidden"><?php _e( 'Hidden', 'gravityforms' ); ?></option>
-
-				<option value="" class="option_header"><?php _e( 'Advanced Fields', 'gravityforms' ); ?></option>
-				<option value="date"><?php _e( 'Date', 'gravityforms' ); ?></option>
-				<option value="time"><?php _e( 'Time', 'gravityforms' ); ?></option>
-				<option value="phone"><?php _e( 'Phone', 'gravityforms' ); ?></option>
-				<option value="website"><?php _e( 'Website', 'gravityforms' ); ?></option>
-				<option value="email"><?php _e( 'Email', 'gravityforms' ); ?></option>
-				<option value="fileupload"><?php _e( 'File Upload', 'gravityforms' ); ?></option>
-				<option value="list"><?php _e( 'List', 'gravityforms' ); ?></option>
+				<optgroup class="option_header" label="<?php _e( 'Standard Fields', 'gravityforms' ); ?>">
+					<option value="text"><?php _e( 'Single line text', 'gravityforms' ); ?></option>
+					<option value="textarea"><?php _e( 'Paragraph Text', 'gravityforms' ); ?></option>
+					<option value="select"><?php _e( 'Drop Down', 'gravityforms' ); ?></option>
+					<option value="multiselect"><?php _e( 'Multi Select', 'gravityforms' ); ?></option>
+					<option value="number"><?php _e( 'Number', 'gravityforms' ); ?></option>
+					<option value="checkbox"><?php _e( 'Checkboxes', 'gravityforms' ); ?></option>
+					<option value="radio"><?php _e( 'Radio Buttons', 'gravityforms' ); ?></option>
+					<option value="hidden"><?php _e( 'Hidden', 'gravityforms' ); ?></option>
+				</optgroup>
+				<optgroup class="option_header" label="<?php _e( 'Advanced Fields', 'gravityforms' ); ?>">
+					<option value="date"><?php _e( 'Date', 'gravityforms' ); ?></option>
+					<option value="time"><?php _e( 'Time', 'gravityforms' ); ?></option>
+					<option value="phone"><?php _e( 'Phone', 'gravityforms' ); ?></option>
+					<option value="website"><?php _e( 'Website', 'gravityforms' ); ?></option>
+					<option value="email"><?php _e( 'Email', 'gravityforms' ); ?></option>
+					<option value="fileupload"><?php _e( 'File Upload', 'gravityforms' ); ?></option>
+					<option value="list"><?php _e( 'List', 'gravityforms' ); ?></option>
+				</optgroup>
 			</select>
 		</li>
 		<?php
