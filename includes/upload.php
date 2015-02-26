@@ -20,14 +20,17 @@ class GFAsyncUpload {
 	public static function upload() {
 
 		GFCommon::log_debug( 'GFAsyncUpload::upload(): Starting.' );
+
+		if ( $_SERVER['REQUEST_METHOD'] != 'POST' ) {
+			status_header( 404 );
+			die();
+		}
+
 		header( 'Content-Type: text/html; charset=' . get_option( 'blog_charset' ) );
 		send_nosniff_header();
 		nocache_headers();
-		status_header( 200 );
 
-		if( $_SERVER['REQUEST_METHOD'] != 'POST'){
-			die();
-		}
+		status_header( 200 );
 
 		// If the file is bigger than the server can accept then the form_id might not arrive.
 		// This might happen if the file is bigger than the max post size ini setting.
@@ -37,11 +40,11 @@ class GFAsyncUpload {
 			die( '{"status" : "error", "error" : {"code": 500, "message": "' . __( 'Failed to upload file.', 'gravityforms' ) . '"}}' );
 		}
 
-		$form_id        = intval($_REQUEST['form_id']);
+		$form_id        = intval( $_REQUEST['form_id'] );
 		$form_unique_id = rgpost( 'gform_unique_id' );
 		$form           = GFFormsModel::get_form_meta( $form_id );
 
-		if ( empty( $form ) || ! ctype_alnum($form_unique_id) ) {
+		if ( empty( $form ) || ! ctype_alnum( $form_unique_id ) ) {
 			die();
 		}
 
@@ -85,7 +88,7 @@ class GFAsyncUpload {
 		$field_id  = rgpost( 'field_id' );
 		$field     = GFFormsModel::get_field( $form, $field_id );
 
-		if ( empty( $field ) || $field->type != 'fileupload') {
+		if ( empty( $field ) || GFFormsModel::get_input_type( $field ) != 'fileupload') {
 			die();
 		}
 

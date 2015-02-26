@@ -1,29 +1,88 @@
 -------------------------------------------------------------------------------------------------------------------
-Version 1.9.1.6
-    - Added 'svg-painter' to list of no conflict scripts
-    - Updated GFForms::get_admin_icon_b64() method to support a $color parameter for fetching the SVG icon in different colors
+Version 1.9.2
+    - Added the disabled attribute to the datepicker input in the form editor.
+    - Added support for the field placeholder as an available choice in the conditional logic value drop down.
+    - Added self-healing security precautions.
+    - Added security precautions.
+    - Added THE BEST FIX EVER for on-going IE issues with the datepicker
+    - Added security precautions to updates.
+	- Added the gform_upload_root_htaccess_rules filter to allow the .htaccess file rules to be removed or modified. Please consult your system administrator before using this filter. Example:
+	    add_filter( 'gform_upload_root_htaccess_rules', '__return_false' );
+	- Added extra CSS classes for name field to help in styling them.
+	- Added the gform_enable_shortcode_notification_message hook back, allowing shortcode processing of notification messages to be disabled.
+    - Added context to some strings to allow a better translation.
+    - Added 'svg-painter' to list of no conflict scripts.
+	- Updated the field type drop down on the Custom Field in the form editor to use optgroup for the standard fields and the advanced fields option headers.
+	- Updated the gform_address_display_format filter to also have access to the $field.
+        add_filter( 'gform_address_display_format', function ( $format, $field ) {
+            return $field->form_id == 40 ? 'zip_before_city' : $format;
+        }, 10, 2 );
+	- Updated Payment Add-On Framework cron job schedule to hourly instead of daily.
+	- Updated Masked Input script to latest version.
+    - Updated Finnish translation file.
+    - Updated small fix to French translation.
+    - Updated Spanish (es_ES) translation.
+    - Updated GFForms::get_admin_icon_b64() method to support a $color parameter for fetching the SVG icon in different colors.
         $white_icon = GFForms::get_admin_icon_b64( '#fff' );
-
--------------------------------------------------------------------------------------------------------------------
-Version 1.9.1.5
+	- Fixed an issue in the form editor in Chrome for Windows where the conditional logic dependency confirmation pops up multiple times while editing a field with a dependency.
+	- Fixed issue with multi file upload field when applied to a post custom field.
+    - Fixed the loading of the Add Form button for custom admin pages using the gform_display_add_form_button filter.
+    - Fixed a deprecation notice related to the Captcha field when the Really Simple Captcha plugin is active.
+    - Fixed a JavaScript error on the WordPress edit attachment details page.
+    - Fixed a string in Spanish translation that caused a JS error in the entries list.
+    - Fixed a rare fatal error which would occur if a third-party plugin caused wp_mail() to return a WP_Error instance instead of the expected boolean.
+    - Fixed issue with GFFormDisplay::is_last_page() where "render" mode would return a false positive if validation failed
+    - Fixed issue when aggregating conditional logic default values for selects when no price is set on the selected choice
+	- Fixed issue with special characters on password field.
+	- Fixed inconsistency between GFForms::post() and rgpost() functions.
+	- Fixed issue with email validation when confirmation email is active.
+    - Fixed an issue which prevents List field columns from being sorted in the form editor.
+    - Fixed an issue with the multi-file field on the edit entry page where existing files are lost when adding new files.
+    - Fixed an issue with the Post Tags field in the form editor where the Default Value setting is missing.
     - Fixed a rare fatal error on some servers.
-
--------------------------------------------------------------------------------------------------------------------
-Version 1.9.1.4
     - Fixed a fatal error caused by a conflict with some themes.
     - Fixed a XSS vulnerability.
-
--------------------------------------------------------------------------------------------------------------------
-Version 1.9.1.3
     - Fixed an issue with the capability required to export forms.
-
--------------------------------------------------------------------------------------------------------------------
-Version 1.9.1.2
-    - Fixed issue where tabbing through Date field would skip the next field in the tabindex
-
--------------------------------------------------------------------------------------------------------------------
-Version 1.9.1.1
+    - Fixed issue where tabbing through Date field would skip the next field in the tabindex.
     - Fixed an issue with validation of the address field when the option to use values from another field is enabled and activated.
+    - Fixed an issue with the multi-file uploader not functioning when editing an entry if the user didn't have the gravityforms_edit_forms capability.
+    - Fixed an issue with notifications assigned to custom events, added via the gform_notification_events hook, being omitted from the resend notifications feature.
+    - AF: Fixed an issue with the way multi-input Email, Password, Date and Time fields are listed in field mapping drop downs when configuring a feed.
+    - AF: Updated GFAddOn::get_full_address() to use GF_Field_Address::get_country_code().
+    - AF: Updated GFAddOn::get_full_name() to include the middle name value for multi-input Name fields.
+    - API: Added support for arrays as entry search term values combined with operators IN and NOT IN. Credit to Scott Kingsley Clark from Pods Framework.
+        Example:
+            $search_criteria = array(
+                'status'        => 'active',
+                'field_filters' => array(
+                    array(
+                        'key' => '2',
+                        'operator' => 'IN', // or 'NOT IN'
+                        'value' => array( 'Second Choice', 'Third Choice' ),
+                    ),
+                )
+            );
+    - API: Added filters for each endpoint of the Web API to allow the capabilities to be modified.
+        - gform_web_api_capability_get_forms
+        - gform_web_api_capability_post_forms
+        - gform_web_api_capability_put_forms
+        - gform_web_api_capability_delete_forms
+        - gform_web_api_capability_put_forms_properties
+        - gform_web_api_capability_post_form_submissions
+        - gform_web_api_capability_get_entries
+        - gform_web_api_capability_post_entries
+        - gform_web_api_capability_put_entries
+        - gform_web_api_capability_put_entries_properties
+        - gform_web_api_capability_delete_entries
+        - gform_web_api_capability_get_results
+        Example:
+        add_filter( 'gform_web_api_capability_post_form_submissions', 'filter_gform_web_api_capability_post_form_submissions');
+        function filter_gform_web_api_capability_post_form_submissions( $capability ) {
+            return 'my_capability_post_form_submissions';
+        }
+    - API: Fixed fatal error if invalid entry id passed to GFAPI::update_entry_field().
+    - API: Fixed a warning in the Web API while filtering entries. On some server configurations, and with debug enabled, WordPress may issue an array to string conversion warning when adding field filters to the search query arg.  Although backwards compatibility remains, the entire search query arg should now be sent as a urlencoded JSON string.
+	- API: Fixed an issue with gform_get_meta and gform_update_meta which can result in multiple rows in the database for the same key if the value is updated with an empty string.
 
 -------------------------------------------------------------------------------------------------------------------
 Version 1.9.1

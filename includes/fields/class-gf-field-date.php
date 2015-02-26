@@ -167,36 +167,36 @@ class GF_Field_Date extends GF_Field {
 			if ( $is_sub_label_above ) {
 				$month_field = "<div class='gfield_date_month ginput_date' id='gfield_input_date_month' style='display:$datefield_display'>
                                     <label for='{$field_id}_1' {$sub_label_class_attribute}>{$month_sub_label}</label>
-                                    <input id='{$field_id}_1' name='ginput_month' type='text' {$month_placeholder_attribute} disabled='disabled' value='{$month_value}'/>
+                                    <input id='{$field_id}_1' name='ginput_month' type='text' {$month_placeholder_attribute} {$disabled_text} value='{$month_value}'/>
                                 </div>";
 				$day_field   = "<div class='gfield_date_day ginput_date' id='gfield_input_date_day' style='display:$datefield_display'>
                                     <label for='{$field_id}_2' {$sub_label_class_attribute}>{$day_sub_label}</label>
-                                    <input id='{$field_id}_2' name='ginput_day' type='text' {$day_placeholder_attribute} disabled='disabled' value='{$day_value}'/>
+                                    <input id='{$field_id}_2' name='ginput_day' type='text' {$day_placeholder_attribute} {$disabled_text} value='{$day_value}'/>
                                </div>";
 				$year_field  = "<div class='gfield_date_year ginput_date' id='gfield_input_date_year' style='display:$datefield_display'>
                                     <label {$sub_label_class_attribute}>{$year_sub_label}</label>
-                                    <input id='{$field_id}_3' type='text' name='text' {$year_placeholder_attribute} disabled='disabled' value='{$year_value}'/>
+                                    <input id='{$field_id}_3' type='text' name='text' {$year_placeholder_attribute} {$disabled_text} value='{$year_value}'/>
                                </div>";
 			} else {
 				$month_field = "<div class='gfield_date_month ginput_date' id='gfield_input_date_month' style='display:$datefield_display'>
-                                    <input id='{$field_id}_1' name='ginput_month' type='text' {$month_placeholder_attribute} disabled='disabled' value='{$month_value}'/>
+                                    <input id='{$field_id}_1' name='ginput_month' type='text' {$month_placeholder_attribute} {$disabled_text} value='{$month_value}'/>
                                     <label for='{$field_id}_1' {$sub_label_class_attribute}>{$month_sub_label}</label>
                                 </div>";
 				$day_field   = "<div class='gfield_date_day ginput_date' id='gfield_input_date_day' style='display:$datefield_display'>
-                                    <input id='{$field_id}_2' name='ginput_day' type='text' {$day_placeholder_attribute} disabled='disabled' value='{$day_value}'/>
+                                    <input id='{$field_id}_2' name='ginput_day' type='text' {$day_placeholder_attribute} {$disabled_text} value='{$day_value}'/>
                                     <label for='{$field_id}_2' {$sub_label_class_attribute}>{$day_sub_label}</label>
                               </div>";
 				$year_field  = "<div class='gfield_date_year ginput_date' id='gfield_input_date_year' style='display:$datefield_display'>
-                                    <input type='text' id='{$field_id}_3' name='ginput_year' {$year_placeholder_attribute} disabled='disabled' value='{$year_value}'/>
+                                    <input type='text' id='{$field_id}_3' name='ginput_year' {$year_placeholder_attribute} {$disabled_text} value='{$year_value}'/>
                                     <label for='{$field_id}_3' {$sub_label_class_attribute}>{$year_sub_label}</label>
                                </div>";
 			}
 
-			$month_dropdown = "<div class='gfield_date_dropdown_month ginput_date_dropdown' id='gfield_dropdown_date_month' style='display:$dropdown_display'>" . $this->get_month_dropdown( '', "{$field_id}_1", rgar( $date_info, 'month' ), '', "disabled='disabled'", $month_placeholder_value ) . '</div>';
-			$day_dropdown   = "<div class='gfield_date_dropdown_day ginput_date_dropdown' id='gfield_dropdown_date_day' style='display:$dropdown_display'>" . $this->get_day_dropdown( '', "{$field_id}_2", rgar( $date_info, 'day' ), '', "disabled='disabled'", $day_placeholder_value ) . '</div>';
-			$year_dropdown  = "<div class='gfield_date_dropdown_year ginput_date_dropdown' id='gfield_dropdown_date_year' style='display:$dropdown_display'>" . $this->get_year_dropdown( '', "{$field_id}_3", rgar( $date_info, 'year' ), '', "disabled='disabled'", $year_placeholder_value, $form ) . '</div>';
+			$month_dropdown = "<div class='gfield_date_dropdown_month ginput_date_dropdown' id='gfield_dropdown_date_month' style='display:$dropdown_display'>" . $this->get_month_dropdown( '', "{$field_id}_1", rgar( $date_info, 'month' ), '', $disabled_text, $month_placeholder_value ) . '</div>';
+			$day_dropdown   = "<div class='gfield_date_dropdown_day ginput_date_dropdown' id='gfield_dropdown_date_day' style='display:$dropdown_display'>" . $this->get_day_dropdown( '', "{$field_id}_2", rgar( $date_info, 'day' ), '', $disabled_text, $day_placeholder_value ) . '</div>';
+			$year_dropdown  = "<div class='gfield_date_dropdown_year ginput_date_dropdown' id='gfield_dropdown_date_year' style='display:$dropdown_display'>" . $this->get_year_dropdown( '', "{$field_id}_3", rgar( $date_info, 'year' ), '', $disabled_text, $year_placeholder_value, $form ) . '</div>';
 
-			$field_string = "<div class='ginput_container' id='gfield_input_datepicker' style='display:$datepicker_display'><input name='ginput_datepicker' type='text' {$date_picker_placeholder} value = '{$picker_value}'/><img src='" . GFCommon::get_base_url() . "/images/calendar.png' id='gfield_input_datepicker_icon' style='display:$icon_display'/></div>";
+			$field_string = "<div class='ginput_container' id='gfield_input_datepicker' style='display:$datepicker_display'><input name='ginput_datepicker' type='text' {$date_picker_placeholder} {$disabled_text} value = '{$picker_value}'/><img src='" . GFCommon::get_base_url() . "/images/calendar.png' id='gfield_input_datepicker_icon' style='display:$icon_display'/></div>";
 
 			switch ( $field_position ) {
 				case 'dmy' :

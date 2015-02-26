@@ -1560,7 +1560,7 @@ class GFFormsModel {
 	 *
 	 * @param array    $form         Form object.
 	 * @param GF_Field $field        Field object.
-	 * @param array    $field_values Default field values for this form. Used when form has not yet been submitted. Pass an array if no default field values are avilable/required.
+	 * @param array    $field_values Default field values for this form. Used when form has not yet been submitted. Pass an array if no default field values are available/required.
 	 * @param array    $lead         Optional, default is null. If lead object is available, pass the lead.
 	 *
 	 * @return mixed
@@ -4324,7 +4324,23 @@ class GFFormsModel {
 						}
 					}
 
-					$search_term_format = rgar( $search, 'is_numeric' ) || $is_number_field ? '%f' : '%s';
+					$search_term_placeholder = rgar( $search, 'is_numeric' ) || $is_number_field ? '%f' : '%s';
+
+					if ( is_array( $search_term ) ) {
+						if ( in_array( $operator, array( '=', 'in' ) ) ) {
+							$operator = 'IN'; // Override operator
+							// Format in SQL and sanitize the strings in the list
+							$search_terms = array_fill( 0, count( $search_term ), '%s' );
+							$search_term_placeholder = $wpdb->prepare( '( ' . implode( ', ', $search_terms ) . ' )', $search_term );
+							$search_term = ''; // Set to blank, still gets passed to wpdb::prepare below but isn't used
+						} elseif ( in_array( $operator, array( '!=', '<>', 'not in' ) ) ) {
+							$operator = 'NOT IN'; // Override operator
+							// Format in SQL and sanitize the strings in the list
+							$search_terms = array_fill( 0, count( $search_term ), '%s' );
+							$search_term_placeholder = $wpdb->prepare( '( ' . implode( ', ', $search_terms ) . ' )', $search_term );
+							$search_term = ''; // Set to blank, still gets passed to wpdb::prepare below but isn't used
+						}
+					}
 
 					$upper_field_number_limit = (string) (int) $key === $key ? (float) $key + 0.9999 : (float) $key + 0.0001;
 					/* doesn't support "<>" for checkboxes */
@@ -4335,7 +4351,7 @@ class GFFormsModel {
                         SELECT
                         lead_id
                         from {$lead_details_table_name}
-                        WHERE (field_number BETWEEN %s AND %s AND value {$operator} {$search_term_format})
+                        WHERE (field_number BETWEEN %s AND %s AND value {$operator} {$search_term_placeholder})
                         {$form_id_where}
                         )", (float) $key - 0.0001, $upper_field_number_limit, $search_term
 					);
@@ -4797,7 +4813,7 @@ function gform_get_meta( $entry_id, $meta_key ) {
 	$table_name                   = RGFormsModel::get_lead_meta_table_name();
 	$results                      = $wpdb->get_results( $wpdb->prepare( "SELECT meta_value FROM {$table_name} WHERE lead_id=%d AND meta_key=%s", $entry_id, $meta_key ) );
 	$value                        = isset( $results[0] ) ? $results[0]->meta_value : null;
-	$meta_value                   = $value == null ? false : maybe_unserialize( $value );
+	$meta_value                   = $value === null ? false : maybe_unserialize( $value );
 	$_gform_lead_meta[ $cache_key ] = $meta_value;
 
 	return $meta_value;
@@ -4811,8 +4827,6 @@ function gform_get_meta_values_for_entries( $entry_ids, $meta_keys ) {
 	}
 
 	$table_name            = RGFormsModel::get_lead_meta_table_name();
-	$meta_value_array      = array();
-	$select_meta_keys      = join( ',', $meta_keys );
 	$meta_key_select_array = array();
 
 	foreach ( $meta_keys as $meta_key ) {
@@ -4833,7 +4847,7 @@ function gform_get_meta_values_for_entries( $entry_ids, $meta_keys ) {
 
 	foreach ( $results as $result ) {
 		foreach ( $meta_keys as $meta_key ) {
-			$result->$meta_key = $result->$meta_key == null ? false : maybe_unserialize( $result->$meta_key );
+			$result->$meta_key = $result->$meta_key === null ? false : maybe_unserialize( $result->$meta_key );
 		}
 	}
 

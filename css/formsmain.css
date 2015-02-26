@@ -4,7 +4,7 @@
 Gravity Forms Front End Form Styles
 Version 1.9
 http: //www.gravityforms.com
-updated: February 5, 2015 12:25 PM
+updated: February 18, 2015 10:54 AM
 
 Gravity Forms is a Rocketgenius project
 copyright 2008-2015 Rocketgenius Inc.
@@ -76,6 +76,7 @@ to no.
 	padding: 0.250em 0.125em 0.250em 0.125em;
 	resize: none;
 }
+
 
 .gform_wrapper ul {
 	margin: 0 !important;
@@ -246,11 +247,6 @@ html>body .entry ul,
 	overflow: hidden;
 }
 
-.gform_wrapper .field_name_first input,
-.gform_wrapper .ginput_complex .ginput_left input {
-	width: 95% !important;
-}
-
 .gform_wrapper .field_name_last input {
 	width: 93% !important;
 }
@@ -260,19 +256,18 @@ html>body .entry ul,
 }
 
 .gform_wrapper .ginput_complex .ginput_left  {
-	width: 49.5%;
+	width: 49%;
 	float: left;
 }
 
 .gform_wrapper .ginput_complex .ginput_right {
-	width: 49.5%;
+	width: 49%;
 	float: right;
-	margin-right: .5%;
 }
 
 .gform_wrapper .gfield_error .ginput_complex .ginput_left,
 .gform_wrapper .gfield_error .ginput_complex .ginput_right {
-	width: 49.5%;
+	width: 49%;
 }
 
 .gform_wrapper .gfield_error .ginput_complex .ginput_left input[type=text],
@@ -298,9 +293,8 @@ html>body .entry ul,
 .gform_wrapper .ginput_complex input[type=email],
 .gform_wrapper .ginput_complex input[type=tel],
 .gform_wrapper .ginput_complex input[type=number],
-.gform_wrapper .ginput_complex input[type=password],
-.gform_wrapper .ginput_complex select {
-	width: 95% !important;
+.gform_wrapper .ginput_complex input[type=password] {
+	width: 97.5%;
 }
 
 .gform_wrapper .ginput_complex .ginput_right input[type=text],
@@ -309,8 +303,13 @@ html>body .entry ul,
 .gform_wrapper .ginput_complex .ginput_right input[type=tel],
 .gform_wrapper .ginput_complex .ginput_right input[type=number],
 .gform_wrapper .ginput_complex .ginput_right input[type=password],
-.gform_wrapper .ginput_complex .ginput_right select {
+.gform_wrapper .ginput_complex.ginput_container.has_first_name.has_last_name span.name_last input[type=text] {
 	width: 95% !important;
+}
+
+.gform_wrapper .ginput_complex .ginput_right select,
+.gform_wrapper .ginput_complex select {
+	width: 97% !important;
 }
 
 .gform_wrapper .ginput_complex label,
@@ -363,31 +362,22 @@ html>body .entry ul,
 	width: auto !important;
 }
 
+.gform_wrapper .ginput_complex span.name_suffix input[type=text] {
+	width: 48%;
+}
+
 .gform_wrapper .ginput_complex.has_middle span.name_suffix input[type=text] {
 	width: 32%;
 }
+
+
+
 
 .gform_wrapper .ginput_complex span.name_first,
 .gform_wrapper .ginput_complex span.name_middle,
 .gform_wrapper .ginput_complex span.name_last {
 	vertical-align: bottom;
 	min-height: 2.813em;
-	display: -moz-inline-stack; 
-	display: inline-block; 
-	zoom: 1;
-}
-
-.gform_wrapper .ginput_complex span.name_first,
-.gform_wrapper .ginput_complex span.name_middle {
-	margin-right: 0.313em;
-}
-
-.gform_wrapper .field_sublabel_above .ginput_complex .name_prefix,
-.gform_wrapper .field_sublabel_above .ginput_complex span.name_suffix,
-.gform_wrapper .field_sublabel_above .ginput_complex span.name_first,
-.gform_wrapper .field_sublabel_above .ginput_complex span.name_middle,
-.gform_wrapper .field_sublabel_above .ginput_complex span.name_last {
-	vertical-align: top;
 }
 
 .gform_wrapper .ginput_complex.ginput_container.has_first_name span,
@@ -396,12 +386,82 @@ html>body .entry ul,
 	width: 99.5% 
 }
 
-.gform_wrapper .ginput_complex.ginput_container.has_first_name.has_last_name span { 
+.gform_wrapper .ginput_complex.ginput_container.has_first_name.has_last_name span.name_first {
+	float: left;
+	width: 49%;
+}
+
+.gform_wrapper .ginput_complex.ginput_container.has_first_name.has_last_name span.name_last {
+	float: right;
+	width: 49%;
+}
+
+.gform_wrapper .ginput_complex.ginput_container.has_first_name.has_middle_name.has_last_name span.name_first,
+.gform_wrapper .ginput_complex.ginput_container.has_first_name.has_middle_name.has_last_name span.name_middle, {
+	width: 32% !important;
+	float: left;
+}
+.gform_wrapper .ginput_complex.ginput_container.has_first_name.has_middle_name.has_last_name span.name_middle {
+	margin-left: 2%;
+}
+
+.gform_wrapper .ginput_complex.ginput_container.has_first_name.has_middle_name.has_last_name span.name_last {
+	width: 32%;
+	float: right;
+}
+
+/* make the name field spans full width if only one field is shown */
+
+.gform_wrapper .ginput_complex.ginput_container.has_first_name.no_middle_name.no_last_name span,
+.gform_wrapper .ginput_complex.ginput_container.no_first_name.has_middle_name.no_last_name span,
+.gform_wrapper .ginput_complex.ginput_container.no_first_name.no_middle_name.has_last_name span { 
+	width: 99.5% 
+}
+
+/* make the name field spans 49% width if only two fields is shown */
+
+.gform_wrapper .ginput_complex.ginput_container.has_first_name.no_middle_name.has_last_name span,
+.gform_wrapper .ginput_complex.ginput_container.no_first_name.has_middle_name.has_last_name span,
+.gform_wrapper .ginput_complex.ginput_container.has_first_name.has_middle_name.no_last_name span { 
 	width: 49% 
+}
+
+.gform_wrapper .ginput_complex.ginput_container.has_first_name.has_last_name span.name_last {
+	float: right;
+	width: 49%;
+}
+
+/* make the name field spans 32% width if only two fields is shown */
+
+.gform_wrapper .ginput_complex.ginput_container.has_first_name.has_middle_name.has_last_name {
+	width: 99%;
 }
 
 .gform_wrapper .ginput_complex.ginput_container.has_first_name.has_middle_name.has_last_name span { 
 	width: 32% 
+}
+
+.gform_wrapper .ginput_complex.ginput_container.has_first_name.has_middle_name.has_last_name span.name_first,
+.gform_wrapper .ginput_complex.ginput_container.has_first_name.has_middle_name.has_last_name span.name_middle { 
+	float: left; 
+}
+
+.gform_wrapper .ginput_complex.ginput_container.has_first_name.has_middle_name.has_last_name span.name_middle { 
+	margin-left: 2%;
+}
+
+.gform_wrapper .ginput_complex.ginput_container.has_first_name.has_middle_name.has_last_name span.name_lasgt { 
+	float: right; 
+}
+
+
+
+.gform_wrapper .field_sublabel_above .ginput_complex .name_prefix,
+.gform_wrapper .field_sublabel_above .ginput_complex span.name_suffix,
+.gform_wrapper .field_sublabel_above .ginput_complex span.name_first,
+.gform_wrapper .field_sublabel_above .ginput_complex span.name_middle,
+.gform_wrapper .field_sublabel_above .ginput_complex span.name_last {
+	vertical-align: top;
 }
 
 .gform_wrapper .top_label .gfield_label {
@@ -483,26 +543,26 @@ body .gform_wrapper label.gfield_label + div.ginput_container {
 }
 
 .gform_wrapper .top_label input.small,
-.gform_wrapper .top_label select.small {
+.gform_wrapper .top_label select.small,
+.gform_wrapper .top_label textarea.textarea.small,
+.gform_wrapper .hidden_label textarea.textarea.small {
 	width: 25%;
 }
 
 .gform_wrapper .top_label input.medium,
-.gform_wrapper .top_label select.medium {
-	width: 47%;
-}
-
-.gform_wrapper .top_label input.medium {
-	padding-right: 2px;
+.gform_wrapper .top_label select.medium,
+.gform_wrapper .top_label textarea.textarea.medium,
+.gform_wrapper .hidden_label textarea.textarea.medium {
+	width: 48%;
 }
 
 .gform_wrapper .top_label input.large,
 .gform_wrapper .top_label select.large,
-.gform_wrapper .top_label textarea.textarea,
+.gform_wrapper .top_label textarea.textarea.large,
 .gform_wrapper .hidden_label input.large,
 .gform_wrapper .hidden_label select.large,
-.gform_wrapper .hidden_label textarea.textarea {
-	width: 99.2%;
+.gform_wrapper .hidden_label textarea.textarea.large {
+	width: 97.5%;
 }
 
 .gform_wrapper .right_label input.small,
@@ -828,7 +888,7 @@ div.gf_page_steps+div.validation_error {
 .gform_wrapper .ginput_complex .ginput_full input[type=tel],
 .gform_wrapper .ginput_complex .ginput_full input[type=number],
 .gform_wrapper .ginput_complex .ginput_full input[type=password] {
-	width: 97% !important;
+	width: 97.5% !important;
 }
 
 .gform_wrapper .gfield_checkbox li,
@@ -1087,6 +1147,17 @@ body .gform_wrapper ul.gform_fields li.gfield.gform_validation_container {
 	border-top: 1px dotted #CCC;
 	padding: 1em 0 0 0;
 	clear: both;
+}
+
+.gform_wrapper .gform_page_footer .button.gform_previous_button,
+.gform_wrapper .gform_page_footer .button.gform_next_button {
+	display: -moz-inline-stack; 
+	display: inline-block; 
+	zoom: 1;
+}
+
+.gform_wrapper .gform_page_footer .button.gform_previous_button {
+	margin-bottom: 0.500em;
 }
 
 .gform_wrapper .gform_page_footer .button.gform_next_button,
@@ -2111,20 +2182,6 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
 	margin-bottom: 1px;
 }
 
-/* simple confirmation message styling ------------------------------------------------------*/
-
-.gform_confirmation_message {
-	margin: 1em 0 1em 0;
-	padding: 1em;
-	font-size: 1em;
-	border: 2px solid #CFE2C0;
-	background-color: #E9FFD9;
-	text-align: center;
-	-webkit-border-radius: 2px;
-	-moz-border-radius: 2px;
-	border-radius: 2px;
-}
-
 /* saved message confirmation  ------------------------------------------------------*/
 
 .form_saved_message {
@@ -2186,7 +2243,7 @@ body .gform_wrapper form .gform_body .gform_fields .gfield .ginput_container #re
 	line-height: 1em !important;
 }
 
-/* define datepicker image size to override generic theme image styles  ------------------------------------------------------*/
+/* define date picker image size to override generic theme image styles  ------------------------------------------------------*/
 
 body .gform_wrapper img.ui-datepicker-trigger {
 	width: 17px !important;
@@ -2199,270 +2256,4 @@ body .gform_wrapper img.ui-datepicker-trigger {
 body .gform_wrapper img.add_list_item, 
 body .gform_wrapper img.delete_list_item {
 	display: -moz-inline-stack; display: inline-block; zoom: 1;
-}
-
-
-/* Responsive Layout Changes -------------------------------------------------------*/
-
-@media screen and (max-width: 570px) and (min-width: 480px) { 
-
-	body .gform_wrapper .ginput_complex.ginput_container.has_first_name span,
-	body .gform_wrapper .ginput_complex.ginput_container.has_middle_name span,
-	body .gform_wrapper .ginput_complex.ginput_container.has_last_name span { 
-		width: 95% 
-	}
-
-	body .gform_wrapper .ginput_complex.ginput_container.has_first_name.has_last_name span { 
-		width: 46% 
-	}
-
-	body .gform_wrapper .ginput_complex.ginput_container.has_first_name.has_middle_name.has_last_name span { 
-		width: 30% 
-	}
-
-}
-
-@media all and (max-width: 480px), all and (max-device-width: 480px) { 
-
-	body .gform_wrapper ul li.gfield,
-	body .gform_wrapper .ginput_container,
-	body .gform_wrapper div.ginput_complex,
-	body .gform_wrapper div.ginput_complex span,
-	body .gform_wrapper div.ginput_complex span.ginput_left,
-	body .gform_wrapper div.ginput_complex span.ginput_right,
-	body .gform_wrapper div.gfield_password_strength,
-	body .gform_wrapper div.gf_page_steps,
-	body .gform_wrapper div.gf_page_steps div {
-		display: block !important;
-		float: none !important;
-		clear: both !important;
-		margin-left: 0 !important;
-		margin-right: 0 !important;
-	}
-
-	body .gform_wrapper ul li.gfield[style="display: none;"] {
-		display:none !important;
-	}
-	
-	body .gform_wrapper .ginput_container,
-	body .gform_wrapper div.ginput_complex,
-	body .gform_wrapper div.gf_page_steps,
-	body .gform_wrapper div.gf_page_steps div {
-		width: 95% !important;
-	}
-
-	body .gform_wrapper div.gfield_password_strength {
-		width: 90% !important;
-	}
-
-	body .gform_wrapper ul li.gfield,
-	body .gform_wrapper div.ginput_complex span,
-	body .gform_wrapper div.ginput_complex span.ginput_left,
-	body .gform_wrapper div.ginput_complex span.ginput_right {
-		width: 100% !important;
-	}
-
-	body .gform_wrapper .ginput_complex .ginput_right input[type=text],
-	body .gform_wrapper .ginput_complex .ginput_right input[type=url],
-	body .gform_wrapper .ginput_complex .ginput_right input[type=email],
-	body .gform_wrapper .ginput_complex .ginput_right input[type=tel],
-	body .gform_wrapper .ginput_complex .ginput_right input[type=number],
-	body .gform_wrapper .ginput_complex .ginput_right input[type=password],
-	body .gform_wrapper .ginput_complex .ginput_left input[type=text],
-	body .gform_wrapper .ginput_complex .ginput_left input[type=url],
-	body .gform_wrapper .ginput_complex .ginput_left input[type=email],
-	body .gform_wrapper .ginput_complex .ginput_left input[type=tel],
-	body .gform_wrapper .ginput_complex .ginput_left input[type=number],
-	body .gform_wrapper .ginput_complex .ginput_left input[type=password],
-	body .gform_wrapper .ginput_complex .ginput_full input[type=text],
-	body .gform_wrapper .ginput_complex .ginput_full input[type=url],
-	body .gform_wrapper .ginput_complex .ginput_full input[type=email],
-	body .gform_wrapper .ginput_complex .ginput_full input[type=tel],
-	body .gform_wrapper .ginput_complex .ginput_full input[type=number],
-	body .gform_wrapper .ginput_complex .ginput_full input[type=password],
-	body .gform_wrapper .ginput_complex .ginput_full select,
-	body .gform_wrapper input.gform_button.button,
-	body .gform_wrapper input[type=submit]  {
-		width: 95% !important;
-	}
-
-	body .gform_wrapper .ginput_container input.small,
-	body .gform_wrapper .ginput_container input.medium,
-	body .gform_wrapper .ginput_container input.large,
-	body .gform_wrapper .ginput_container select.small,
-	body .gform_wrapper .ginput_container select.medium,
-	body .gform_wrapper .ginput_container select.large,
-	body .gform_wrapper .ginput_container textarea.small,
-	body .gform_wrapper .ginput_container textarea.medium,
-	body .gform_wrapper .ginput_container textarea.large {
-		width: 95% !important;
-	}
-
-	body .gform_wrapper div.chosen-container.chosen-container-single[style] {
-		width: 95% !important;
-	}
-
-	body .gform_wrapper img.ui-datepicker-trigger {
-		display: none !important;
-	}
-
-	body .gform_wrapper .gfield_time_hour input,
-	body .gform_wrapper .gfield_time_minute input,
-	body .gform_wrapper .gfield_date_month input,
-	body .gform_wrapper .gfield_date_day input,
-	body .gform_wrapper .gfield_date_year input {
-		width: 95% !important;
-	}
-
-	body .gform_wrapper .gfield_time_hour i {
-		display: none !important;
-	}
-
-	body .gform_wrapper .ginput_complex input[type=text],
-	body .gform_wrapper .ginput_complex input[type=url],
-	body .gform_wrapper .ginput_complex input[type=email],
-	body .gform_wrapper .ginput_complex input[type=tel],
-	body .gform_wrapper .ginput_complex input[type=number],
-	body .gform_wrapper .ginput_complex input[type=password] {
-		width: 95% !important;
-	}
-
-	body .gform_wrapper .ginput_complex .ginput_right input[type=text],
-	body .gform_wrapper .ginput_complex .ginput_right input[type=url],
-	body .gform_wrapper .ginput_complex .ginput_right input[type=email],
-	body .gform_wrapper .ginput_complex .ginput_right input[type=tel],
-	body .gform_wrapper .ginput_complex .ginput_right input[type=number],
-	body .gform_wrapper .ginput_complex .ginput_right input[type=password] {
-		width: 95% !important;
-	}
-
-	body .gform_wrapper .gfield_error .ginput_complex .ginput_left input[type=text],
-	body .gform_wrapper .gfield_error .ginput_complex .ginput_left input[type=url],
-	body .gform_wrapper .gfield_error .ginput_complex .ginput_left input[type=email],
-	body .gform_wrapper .gfield_error .ginput_complex .ginput_left input[type=tel],
-	body .gform_wrapper .gfield_error .ginput_complex .ginput_left input[type=number],
-	body .gform_wrapper .gfield_error .ginput_complex .ginput_left input[type=password],
-	body .gform_wrapper .gfield_error .ginput_complex .ginput_right input[type=text],
-	body .gform_wrapper .gfield_error .ginput_complex .ginput_right input[type=url],
-	body .gform_wrapper .gfield_error .ginput_complex .ginput_right input[type=email],
-	body .gform_wrapper .gfield_error .ginput_complex .ginput_right input[type=tel],
-	body .gform_wrapper .gfield_error .ginput_complex .ginput_right input[type=number],
-	body .gform_wrapper .gfield_error .ginput_complex .ginput_right input[type=password],
-	body .gform_wrapper .gfield_error .ginput_complex .ginput_full input[type=text],
-	body .gform_wrapper .gfield_error .ginput_complex .ginput_full input[type=url],
-	body .gform_wrapper .gfield_error .ginput_complex .ginput_full input[type=email],
-	body .gform_wrapper .gfield_error .ginput_complex .ginput_full input[type=tel],
-	body .gform_wrapper .gfield_error .ginput_complex .ginput_full input[type=number],
-	body .gform_wrapper .gfield_error .ginput_complex .ginput_full input[type=password] {
-		width: 95% !important;
-	}
-
-	body .gform_wrapper .ginput_complex span.name_suffix input[type=text] {
-		width: 97.5% !important;
-	}
-
-	body .gform_wrapper .ginput_complex .ginput_right select,
-	body .gform_wrapper .ginput_complex .ginput_left select,
-	body .gform_wrapper .ginput_complex span.name_prefix.name_prefix_select select,
-	body .gform_wrapper .gfield_time_ampm select,
-	body .gform_wrapper .ginput_complex select,
-	body .gform_wrapper .ginput_complex .ginput_right select  {
-		width: 97% !important;
-	}
-
-	body .gform_wrapper .right_label .gfield_description,
-	body .gform_wrapper .left_label .gfield_description,
-	body .gform_wrapper .left_label .instruction,
-	body .gform_wrapper .right_label .instruction {
-		margin-left: 0 !important;
-	}
-
-	body .gform_wrapper .gform_footer.right_label,
-	body .gform_wrapper .gform_footer.left_label {
-		padding-left: 0 !important;
-		padding-right: 0 !important;
-	}
-
-	body .gform_wrapper .gfield_description,
-	body .gform_wrapper .gsection_description,
-	body .gform_wrapper .gfield_description p,
-	body .gform_wrapper .gsection_description p {
-		width: 95% !important;
-		text-align: justify;
-	}
-
-	body .gform_wrapper label.gfield_label + div.ginput_container {
-		margin-top: 0;
-	}
-
-	body .gform_wrapper .gfield .ginput_complex.has_suffix span.name_suffix {
-		width: 98% !important;
-	}
-
-	body .gform_wrapper .gfield .ginput_complex.has_suffix span.name_suffix input {
-		width: 97.5%;
-	}
-
-	body .gform_wrapper ul.gform_fields.left_label li.gfield label.gfield_label,
-	body .gform_wrapper ul.gform_fields.right_label li.gfield label.gfield_label {
-		margin-left: 0 !important;
-		float: none !important;
-	}
-
-	body .gform_wrapper ul li.gfield.gfield_html img {
-		max-width: 95%  !important;
-	}
-
-	body .gform_wrapper .gform_footer a.gform_save_link {
-		display: block;
-		margin: 1em 0 1em 0;
-		text-align: center;
-	}
-
-	body .gform_wrapper ul li.gfield.gfield_html h1,
-	body .gform_wrapper ul li.gfield.gfield_html h2,
-	body .gform_wrapper ul li.gfield.gfield_html h3,
-	body .gform_wrapper ul li.gfield.gfield_html h4,
-	body .gform_wrapper ul li.gfield.gfield_html h5,
-	body .gform_wrapper ul li.gfield.gfield_html h6 {
-		white-space: normal !important
-	}
-
-	body .gform_wrapper .top_label .gfield_error {
-	width: 90% !important;
-	}
-
-	body .form_saved_message {
-		font-size: 0.813em;
-	}
-
-	body .form_saved_message_sent {
-		font-size: 0.813em;
-	}
-
-	body .gform_wrapper div.validation_error {
-		font-size: 1em;
-	}
-
-	body .form_saved_message .form_saved_message_emailform input,
-	body .form_saved_message .form_saved_message_emailform input[type=submit] {
-		width: 95% !important;
-	}
-
-}
-
-@media all and (max-device-width: 480px) { 
-
-	body .gform_wrapper {
-		font-size: inherit;
-	}
-
-	body .gform_wrapper .gfield_checkbox li input[type=checkbox],
-	body .gform_wrapper .gfield_radio li input[type=radio],
-	body .gform_wrapper .gfield_checkbox li input {
-		margin-top: 2.50em !important;
-		width: auto !important;
-		height: auto !important;
-	}
-
 }

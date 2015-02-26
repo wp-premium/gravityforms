@@ -40,8 +40,8 @@ class GF_Field_Password extends GF_Field {
 	}
 
 	public function validate( $value, $form ) {
-		$password = $_POST[ 'input_' . $this->id ];
-		$confirm  = $_POST[ 'input_' . $this->id . '_2' ];
+		$password = rgpost( 'input_' . $this->id );
+		$confirm  = rgpost( 'input_' . $this->id . '_2' );
 		if ( $password != $confirm ) {
 			$this->failed_validation  = true;
 			$this->validation_message = __( 'Your passwords do not match.', 'gravityforms' );
@@ -93,7 +93,7 @@ class GF_Field_Password extends GF_Field {
 		$onchange = $this->passwordStrengthEnabled ? "onchange='{$action}'" : '';
 		$onkeyup  = $this->passwordStrengthEnabled ? "onkeyup='{$action}'" : '';
 
-		$confirmation_value = RGForms::post( 'input_' . $id . '_2' );
+		$confirmation_value = rgpost( 'input_' . $id . '_2' );
 
 		$password_value = is_array( $value ) ? $value[0] : $value;
 		$password_value = esc_attr( $password_value );

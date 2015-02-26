@@ -35,7 +35,7 @@ class GF_Field_CAPTCHA extends GF_Field {
 			case 'simple_captcha' :
 				if ( class_exists( 'ReallySimpleCaptcha' ) ) {
 					$prefix      = $_POST[ "input_captcha_prefix_{$this->id}" ];
-					$captcha_obj = GFCommon::get_simple_captcha();
+					$captcha_obj = $this->get_simple_captcha();
 
 					if ( ! $captcha_obj->check( $prefix, str_replace( ' ', '', $value ) ) ) {
 						$this->failed_validation  = true;

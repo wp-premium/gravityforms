@@ -23,6 +23,7 @@ class GF_Field_Post_Tags extends GF_Field {
 			'admin_label_setting',
 			'size_setting',
 			'rules_setting',
+			'default_value_setting',
 			'visibility_setting',
 			'description_setting',
 			'css_class_setting',

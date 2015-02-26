@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms
 Plugin URI: http://www.gravityforms.com
 Description: Easily create web forms and manage form entries within the WordPress admin.
-Version: 1.9.1.6
+Version: 1.9.2
 Author: rocketgenius
 Author URI: http://www.rocketgenius.com
 Text Domain: gravityforms
@@ -112,7 +112,7 @@ add_action( 'plugins_loaded', array( 'GFForms', 'loaded' ) );
 
 class GFForms {
 
-	public static $version = '1.9.1.5';
+	public static $version = '1.9.2';
 
 	public static function loaded() {
 
@@ -381,6 +381,8 @@ class GFForms {
 
 			self::add_security_files();
 
+			self::do_self_healing();
+
 			//The format the version info changed to JSON. Make sure the old format is not cached.
 			if ( version_compare( get_option( 'rg_form_version' ), '1.8.0.3', '<' ) ) {
 				delete_transient( 'gform_update_info' );
@@ -569,17 +571,90 @@ class GFForms {
 
 	}
 
-	public static function add_security_files(){
+	public static function add_security_files() {
 		$upload_root = GFFormsModel::get_upload_root();
 
-        if ( ! is_dir( $upload_root ) ) {
-            return;
-        }
+		if ( ! is_dir( $upload_root ) ) {
+			return;
+		}
+
+		self::do_self_healing();
 
 		GFCommon::recursive_add_index_file( $upload_root );
 
 		GFCommon::add_htaccess_file();
+	}
 
+	private static function do_self_healing() {
+
+		$flag_security_alert = self::heal_wp_upload_dir();
+
+		$gf_upload_root = GFFormsModel::get_upload_root();
+
+		if ( ! is_dir( $gf_upload_root ) ) {
+			return;
+		}
+
+		$flag_security_alert = self::rename_suspicious_files_recursive( $gf_upload_root, $flag_security_alert );
+		if ( $flag_security_alert ) {
+			update_option( 'gform_security_alert', $flag_security_alert );
+		}
+	}
+
+	/**
+	 * Renames files with a .bak extension if they have a file extension that is not allowed in the Gravity Forms uploads folder.
+	 */
+	private static function rename_suspicious_files_recursive( $dir, $flag_security_alert = false ) {
+		if ( ! is_dir( $dir ) ) {
+			return;
+		}
+
+		if ( ! ( $dir_handle = opendir( $dir ) ) ) {
+			return;
+		}
+
+		// ignores all errors
+		set_error_handler( create_function( '', 'return 0;' ), E_ALL );
+
+		while ( false !== ( $file = readdir( $dir_handle ) ) ) {
+			if ( is_dir( $dir . DIRECTORY_SEPARATOR . $file ) && $file != '.' && $file != '..' ) {
+				$flag_security_alert = self::rename_suspicious_files_recursive( $dir . DIRECTORY_SEPARATOR . $file, $flag_security_alert );
+			} elseif ( GFCommon::file_name_has_disallowed_extension( $file )
+			           && ! GFCommon::match_file_extension( $file, array( 'htaccess', 'bak' ) ) ) {
+				$mini_hash = substr( wp_hash( $file ), 0, 6 );
+				$newName   = sprintf( '%s/%s.%s.bak', $dir, $file, $mini_hash );
+				rename( $dir . '/' . $file, $newName );
+				$flag_security_alert = true;
+			}
+		}
+
+		closedir( $dir_handle );
+
+		return $flag_security_alert;
+	}
+
+	private static function heal_wp_upload_dir(){
+		$wp_upload_dir = wp_upload_dir();
+
+		$wp_upload_path = $wp_upload_dir['basedir'];
+
+		if ( ! is_dir( $wp_upload_path ) ) {
+			return;
+		}
+
+		$flag_security_alert = false;
+
+		// ignores all errors
+		set_error_handler( create_function( '', 'return 0;' ), E_ALL );
+
+		foreach ( glob( $wp_upload_path . DIRECTORY_SEPARATOR . '*_input_*.{php,php5}', GLOB_BRACE ) as $filename ) {
+			$mini_hash = substr( wp_hash( $filename ), 0, 6 );
+			$newName   = sprintf( '%s.%s.bak', $filename, $mini_hash );
+			rename( $filename, $newName );
+			$flag_security_alert = true;
+		}
+
+		return $flag_security_alert;
 	}
 
 	private static function fix_leading_and_trailing_spaces() {
@@ -1505,7 +1580,7 @@ class GFForms {
 		wp_register_script( 'gform_forms', $base_url . '/js/forms.js', array( 'jquery' ), $version );
 		wp_register_script( 'gform_gravityforms', $base_url . "/js/gravityforms{$min}.js", array( 'jquery', 'gform_json' ), $version );
 		wp_register_script( 'gform_json', $base_url . '/js/jquery.json-1.3.js', array( 'jquery' ), $version, true );
-		wp_register_script( 'gform_masked_input', $base_url . '/js/jquery.maskedinput-1.3.1.min.js', array( 'jquery' ), $version );
+		wp_register_script( 'gform_masked_input', $base_url . '/js/jquery.maskedinput.min.js', array( 'jquery' ), $version );
 		wp_register_script( 'gform_menu', $base_url . '/js/menu.js', array( 'jquery' ), $version );
 		wp_register_script( 'gform_placeholder', $base_url . '/js/placeholders.jquery.min.js', array( 'jquery' ), $version );
 		wp_register_script( 'gform_tooltip_init', $base_url . '/js/tooltip_init.js', array( 'jquery-ui-tooltip' ), $version );
@@ -1673,19 +1748,23 @@ class GFForms {
 
 		}
 
-		if ( in_array( $hook, array( 'post.php', 'post-new.php' ) ) ) {
-			//add_filter( 'gform_shortcode_preview_disabled', '__return_false' );
-			require_once( GFCommon::get_base_path() . '/tooltips.php' );
-			wp_enqueue_script( 'gform_shortcode_ui' );
-			wp_enqueue_style( 'gform_shortcode_ui' );
-			wp_localize_script( 'gform_shortcode_ui', 'gfShortcodeUIData', array(
-				'shortcodes' => self::get_shortcodes(),
-				'previewNonce' => wp_create_nonce( 'gf-shortcode-ui-preview' ),
-				'previewDisabled' => apply_filters( 'gform_shortcode_preview_disabled', true ),
-				'strings' => array(
-					'pleaseSelectAForm' => __( 'Please select a form.', 'gravityforms' ),
-				)
-			) );
+
+		if ( self::page_supports_add_form_button() ) {
+			// add_filter( 'gform_shortcode_preview_disabled', '__return_false' );
+			$screen = get_current_screen();
+			if ( ! $screen instanceof WP_Screen || $screen->post_type != 'attachment' ) {
+				require_once( GFCommon::get_base_path() . '/tooltips.php' );
+				wp_enqueue_script( 'gform_shortcode_ui' );
+				wp_enqueue_style( 'gform_shortcode_ui' );
+				wp_localize_script( 'gform_shortcode_ui', 'gfShortcodeUIData', array(
+					'shortcodes' => self::get_shortcodes(),
+					'previewNonce' => wp_create_nonce( 'gf-shortcode-ui-preview' ),
+					'previewDisabled' => apply_filters( 'gform_shortcode_preview_disabled', true ),
+					'strings' => array(
+						'pleaseSelectAForm' => __( 'Please select a form.', 'gravityforms' ),
+					)
+				) );
+			}
 		}
 
 		if ( empty( $scripts ) ) {
@@ -1989,7 +2068,7 @@ class GFForms {
 	}
 
 	public static function get( $name, $array = null ) {
-		if ( ! $array ) {
+		if ( ! isset( $array ) ) {
 			$array = $_GET;
 		}
 
@@ -2000,9 +2079,10 @@ class GFForms {
 		return '';
 	}
 
-	public static function post( $name ) {
+	public static function post( $name, $do_stripslashes = true ) {
+
 		if ( isset( $_POST[ $name ] ) ) {
-			return $_POST[ $name ];
+			return $do_stripslashes ? stripslashes_deep( $_POST[ $name ] ) : $_POST[ $name ];
 		}
 
 		return '';

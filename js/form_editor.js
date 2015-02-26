@@ -109,7 +109,7 @@ jQuery(document).ready(function() {
         }
     });
 
-    jQuery('#field_choices').sortable({
+    jQuery('#field_choices, #field_columns').sortable({
         axis: 'y',
         handle: '.field-choice-handle',
         update: function(event, ui){
@@ -1862,8 +1862,9 @@ function CheckChoiceConditionalLogicDependency(input) {
 
     var field = GetSelectedField();
 
+    var previousValue = jQuery(input).data('previousValue'); // Get the value before checking. Fixes an issue in Chrome on Windows.
     // check for cond logic dependency
-    if( HasConditionalLogicDependency(field.id, jQuery(input).data('previousValue')) ) {
+    if(HasConditionalLogicDependency(field.id, previousValue)) {
 
         // confirm that the user wants to make the modification
         if(confirm(gf_vars.conditionalLogicDependencyChoiceEdit))
