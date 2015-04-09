@@ -33,6 +33,8 @@ class GF_Field_FileUpload extends GF_Field {
 	public function validate( $value, $form ) {
 		$input_name = 'input_' . $this->id;
 
+		$allowed_extensions = ! empty( $this->allowedExtensions ) ? GFCommon::clean_extensions( explode( ',', strtolower( $this->allowedExtensions ) ) ) : array();
+
 		if ( $this->multipleFiles ) {
 			$file_names = isset( GFFormsModel::$uploaded_files[ $form['id'] ][ $input_name ] ) ? GFFormsModel::$uploaded_files[ $form['id'] ][ $input_name ] : array();
 		} else {
@@ -58,20 +60,34 @@ class GF_Field_FileUpload extends GF_Field {
 				$this->validation_message = sprintf( __( 'File exceeds size limit. Maximum file size: %dMB', 'gravityforms' ), $max_upload_size_in_mb );
 				return;
 			}
+
+			$whitelisting_disabled = apply_filters( 'gform_file_upload_whitelisting_disabled', false );
+
+			if ( ! empty( $_FILES[ $input_name ]['name'] ) && empty( $allowed_extensions ) && ! $whitelisting_disabled ) {
+				$check_result = GFCommon::check_type_and_ext( $_FILES[ $input_name ] );
+				if ( is_wp_error( $check_result ) ) {
+					$this->failed_validation = true;
+					$this->validation_message = __( 'The uploaded file type is not allowed.', 'gravityforms' );
+					return;
+				}
+			}
 			$single_file_name = $_FILES[ $input_name ]['name'];
-			$file_names       = array( array( 'uploaded_filename' => $single_file_name ) );
+			$file_names = array( array( 'uploaded_filename' => $single_file_name ) );
 		}
 
 		foreach ( $file_names as $file_name ) {
 			$info = pathinfo( rgar( $file_name, 'uploaded_filename' ) );
-			$allowed_extensions = ! empty( $this->allowedExtensions ) ? GFCommon::clean_extensions( explode( ',', strtolower( $this->allowedExtensions ) ) ) : array();
 
-			if ( empty( $allowed_extensions ) && GFCommon::file_name_has_disallowed_extension( rgar( $file_name, 'uploaded_filename' ) ) ) {
-				$this->failed_validation  = true;
-				$this->validation_message = empty( $this->errorMessage ) ? __( 'The uploaded file type is not allowed.', 'gravityforms' ) : $this->errorMessage;
-			} elseif ( ! empty( $allowed_extensions ) && ! empty( $info['basename'] ) && ! GFCommon::match_file_extension( rgar( $file_name, 'uploaded_filename' ), $allowed_extensions ) ) {
-				$this->failed_validation  = true;
-				$this->validation_message = empty( $this->errorMessage ) ? sprintf( __( 'The uploaded file type is not allowed. Must be one of the following: %s', 'gravityforms' ), strtolower( $this->allowedExtensions ) ) : $this->errorMessage;
+			if ( empty( $allowed_extensions ) ) {
+				if ( GFCommon::file_name_has_disallowed_extension( rgar( $file_name, 'uploaded_filename' ) ) ) {
+					$this->failed_validation  = true;
+					$this->validation_message = empty( $this->errorMessage ) ? __( 'The uploaded file type is not allowed.', 'gravityforms' ) : $this->errorMessage;
+				}
+			} else {
+				if ( ! empty( $info['basename'] ) && ! GFCommon::match_file_extension( rgar( $file_name, 'uploaded_filename' ), $allowed_extensions ) ) {
+					$this->failed_validation  = true;
+					$this->validation_message = empty( $this->errorMessage ) ? sprintf( __( 'The uploaded file type is not allowed. Must be one of the following: %s', 'gravityforms' ), strtolower( $this->allowedExtensions ) ) : $this->errorMessage;
+				}
 			}
 		}
 	}
@@ -86,7 +102,7 @@ class GF_Field_FileUpload extends GF_Field {
 
 		$lead_id = intval( rgar( $entry, 'id' ) );
 
-		$form_id         = $form['id'];
+		$form_id         = absint( $form['id'] );
 		$is_entry_detail = $this->is_entry_detail();
 		$is_form_editor  = $this->is_form_editor();
 
@@ -152,6 +168,10 @@ class GF_Field_FileUpload extends GF_Field {
 						'disallowed_extensions' => $disallowed_extensions,
 					)
 				);
+
+				if ( rgar( $form, 'requireLogin' ) ) {
+					$plupload_init['multipart_params'][ '_gform_file_upload_nonce_' . $form_id ] = wp_create_nonce( 'gform_file_upload_' . $form_id, '_gform_file_upload_nonce_' . $form_id );
+				}
 
 				// plupload 2 was introduced in WordPress 3.9. Plupload 1 accepts a slightly different init array.
 				if ( version_compare( get_bloginfo( 'version' ), '3.9-RC1', '<' ) ) {

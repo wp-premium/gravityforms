@@ -18,15 +18,27 @@ abstract class GFFeedAddOn extends GFAddOn {
 	protected $_multiple_feeds = true;
 
 	/**
+	 * If true, only first matching feed will be processed.
+	 * @var bool
+	 */
+	protected $_single_feed_submission = false;
+
+	/**
+	 * If $_single_feed_submission is true, $_single_submission_feed will store the current single submission feed as stored by the get_single_submission_feed() method.
+	 * @var bool
+	 */
+	protected $_single_submission_feed = false;
+
+	/**
 	 * @var string Version number of the Add-On Framework
 	 */
 	private $_feed_version = '0.11';
 	private $_feed_settings_fields = array();
 	private $_current_feed_id = false;
 
-	public function init_frontend() {
+	public function init() {
 
-		parent::init_frontend();
+		parent::init();
 
 		add_filter( 'gform_entry_post_save', array( $this, 'maybe_process_feed' ), 10, 2 );
 
@@ -126,15 +138,24 @@ abstract class GFFeedAddOn extends GFAddOn {
 
 	public function maybe_process_feed( $entry, $form ) {
 
-		//Getting all feeds for current add-on
-		$feeds = $this->get_feeds( $form['id'] );
+		$feeds = false;
 
-		if ( empty( $feeds ) ){
+		//Getting all feeds for current add-on
+		if( $this->_single_feed_submission ) {
+			$feed = $this->get_single_submission_feed( $entry, $form );
+			if( $feed ) {
+				$feeds = array( $feed );
+			}
+		} else {
+			$feeds = $this->get_feeds( $form['id'] );
+		}
+
+		if ( empty( $feeds ) ) {
 			//no feeds to process
 			return $entry;
 		}
 
-		if ( $entry['status'] == 'spam' ){
+		if ( $entry['status'] == 'spam' ) {
 			$this->log_debug( 'GFFeedAddOn::maybe_process_feed(): Entry #' . $entry['id'] . ' is marked as spam.' );
 			return $entry;
 		}
@@ -151,7 +172,6 @@ abstract class GFFeedAddOn extends GFAddOn {
 					break;
 				}
 			}
-
 
 			if ( ! empty( $active_paypal_feed ) && $this->is_delayed( $active_paypal_feed ) && $this->has_paypal_payment( $active_paypal_feed, $form, $entry ) ) {
 				$this->log_debug( 'GFFeedAddOn::maybe_process_feed(): Feed processing is delayed pending payment, not processing feed for entry #' . $entry['id'] . ' for ' . $this->_slug );
@@ -184,6 +204,8 @@ abstract class GFFeedAddOn extends GFAddOn {
 				//should the add-on fulfill be done here????
 				$this->log_debug( 'GFFeedAddOn::maybe_process_feed(): Marking entry #' . $entry['id'] . ' as fulfilled for ' . $this->_slug );
 				gform_update_meta( $entry['id'], "{$this->_slug}_is_fulfilled", true );
+			} else {
+				$this->delay_feed( $feed, $entry, $form );
 			}
 		}
 
@@ -209,6 +231,11 @@ abstract class GFFeedAddOn extends GFAddOn {
 	}
 
 	public function process_feed( $feed, $entry, $form ) {
+
+		return;
+	}
+
+	public function delay_feed( $feed, $entry, $form ) {
 
 		return;
 	}
@@ -1000,7 +1027,7 @@ abstract class GFFeedAddOn extends GFAddOn {
 		return true;
 	}
 
-	protected function is_delayed_payment( $entry, $form, $is_delayed ) {
+	public function is_delayed_payment( $entry, $form, $is_delayed ) {
 		if ( $this->_slug == 'gravityformspaypal' ) {
 			return false;
 		}
@@ -1013,6 +1040,37 @@ abstract class GFFeedAddOn extends GFAddOn {
 		$has_payment = self::get_paypal_payment_amount( $form, $entry, $paypal_feed ) > 0;
 
 		return rgar( $paypal_feed['meta'], "delay_{$this->_slug}" ) && $has_payment && ! $is_delayed;
+	}
+
+	public function get_single_submission_feed( $entry, $form = false ) {
+
+		$feed = false;
+
+		if( ! empty( $this->_single_submission_feed ) ) {
+
+			$feed = $this->_single_submission_feed;
+
+		} else if( $entry['id'] ) {
+
+			$feeds = $this->get_feeds_by_entry( $entry['id'] );
+			$feed  = empty( $feeds ) ? false : $this->get_feed( $feeds[0] );
+
+		} else if ( $form ) {
+
+			$feeds = $this->get_feeds( $form['id'] );
+
+			foreach ( $feeds as $_feed ) {
+				if ( $_feed['is_active'] && $this->is_feed_condition_met( $_feed, $form, $entry ) ) {
+					$feed = $_feed;
+					break;
+				}
+			}
+
+			$this->_single_submission_feed = $feed;
+
+		}
+
+		return $feed;
 	}
 
 }

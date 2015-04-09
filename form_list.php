@@ -99,11 +99,17 @@ class GFFormList {
 					break;
 			}
 
-			if ( isset( $message ) )
+			if ( isset( $message ) ) {
 				$message = sprintf( $message, $form_count );
-
+			}
 		}
 		$sort_column    = empty( $_GET['sort'] ) ? 'title' : $_GET['sort'];
+		$db_columns = GFFormsModel::get_form_db_columns();
+
+		if ( ! in_array( strtolower( $sort_column ), $db_columns ) ) {
+			$sort_column = 'title';
+		}
+
 		$sort_direction = empty( $_GET['dir'] ) ? 'ASC' : $_GET['dir'];
 		$active         = RGForms::get( 'active' ) == '' ? null : RGForms::get( 'active' );
 		$trash          = RGForms::get( 'trash' ) == '' ? false : RGForms::get( 'trash' );
@@ -115,6 +121,8 @@ class GFFormList {
 		wp_print_styles( array( 'thickbox' ) );
 
 		add_action( 'admin_print_footer_scripts', array( __class__, 'output_form_list_script_block' ), 20 );
+
+		$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] ) ? '' : '.min';
 
 		?>
 
@@ -277,7 +285,7 @@ class GFFormList {
 			}
 		</script>
 
-		<link rel="stylesheet" href="<?php echo GFCommon::get_base_url() ?>/css/admin.css" />
+		<link rel="stylesheet" href="<?php echo GFCommon::get_base_url() ?>/css/admin<?php echo $min; ?>.css" />
 		<div class="wrap <?php echo GFCommon::get_browser_class() ?>">
 
 		<h2>

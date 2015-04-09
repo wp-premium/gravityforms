@@ -8,8 +8,10 @@ if ( ! class_exists( 'GFForms' ) ) {
 add_action( 'admin_print_scripts', 'print_tooltip_scripts' );
 function print_tooltip_scripts() {
 
-	wp_enqueue_style( 'gform_tooltip', GFCommon::get_base_url() . '/css/tooltip.css', null, GFCommon::$version );
-	wp_enqueue_style( 'gform_font_awesome', GFCommon::get_base_url() . '/css/font-awesome.css', null, GFCommon::$version );
+	$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] ) ? '' : '.min';
+
+	wp_enqueue_style( 'gform_tooltip', GFCommon::get_base_url() . "/css/tooltip{$min}.css", null, GFCommon::$version );
+	wp_enqueue_style( 'gform_font_awesome', GFCommon::get_base_url() . "/css/font-awesome{$min}.css", null, GFCommon::$version );
 
 	wp_print_scripts( 'gform_tooltip_init' );
 	wp_print_styles( 'gform_tooltip', 'gform_font_awesome' );
@@ -32,9 +34,9 @@ $__gf_tooltips = array(
 	'form_animation'                              => '<h6>' . __( 'Enable Animation', 'gravityforms' ) . '</h6>' . __( 'Check this option to enable a sliding animation when displaying/hiding conditional logic fields.', 'gravityforms' ),
 	'form_title'                                  => '<h6>' . __( 'Form Title', 'gravityforms' ) . '</h6>' . __( 'Enter the title of your form.', 'gravityforms' ),
 	'form_description'                            => '<h6>' . __( 'Form Description', 'gravityforms' ) . '</h6>' . __( 'Enter a description for your form. This may be used for user instructions.', 'gravityforms' ),
-	'form_label_placement'                        => '<h6>' . __( 'Form Label Placement', 'gravityforms' ) . '</h6>' . __( 'Select the default label placement.  Labels can be top aligned above a field, left aligned to the left of a field, or right aligned to the left of a field. This setting can be overridden in the advanced settings for each field.', 'gravityforms' ),
-	'form_description_placement'                  => '<h6>' . __( 'Description Placement', 'gravityforms' ) . '</h6>' . __( 'Select the default description placement.  Descriptions can be placed above the field inputs or below the field inputs. This setting can be overridden in the advanced settings for each field.', 'gravityforms' ),
-	'form_sub_label_placement'                    => '<h6>' . __( 'Sub-Label Placement', 'gravityforms' ) . '</h6>' . __( 'Select the default sub-label placement.  Sub-labels can be placed above the field inputs or below the field inputs. This setting can be overridden in the advanced settings for each field.', 'gravityforms' ),
+	'form_label_placement'                        => '<h6>' . __( 'Form Label Placement', 'gravityforms' ) . '</h6>' . __( 'Select the default label placement.  Labels can be top aligned above a field, left aligned to the left of a field, or right aligned to the left of a field. This setting can be overridden in the appearance settings for each field.', 'gravityforms' ),
+	'form_description_placement'                  => '<h6>' . __( 'Description Placement', 'gravityforms' ) . '</h6>' . __( 'Select the default description placement.  Descriptions can be placed above the field inputs or below the field inputs. This setting can be overridden in the appearance settings for each field.', 'gravityforms' ),
+	'form_sub_label_placement'                    => '<h6>' . __( 'Sub-Label Placement', 'gravityforms' ) . '</h6>' . __( 'Select the default sub-label placement.  Sub-labels can be placed above the field inputs or below the field inputs. This setting can be overridden in the appearance settings for each field.', 'gravityforms' ),
 	'form_button_text'                            => '<h6>' . __( 'Form Button Text', 'gravityforms' ) . '</h6>' . __( 'Enter the text you would like to appear on the form submit button.', 'gravityforms' ),
 	'form_button_image'                           => '<h6>' . __( 'Form Button Image', 'gravityforms' ) . '</h6>' . __( 'Enter the path to an image you would like to use as the form submit button.', 'gravityforms' ),
 	'form_css_class'                              => '<h6>' . __( 'Form CSS Class Name', 'gravityforms' ) . '</h6>' . __( 'Enter the CSS class name you would like to use in order to override the default styles for this form.', 'gravityforms' ),

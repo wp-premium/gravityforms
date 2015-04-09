@@ -4,10 +4,10 @@
 formreset.css
 Gravity Forms CSS Reset
 http://www.gravityforms.com
-updated: March 17, 2013 8:21 PM
+updated: March 15, 2015 1:41 PM
 
 Gravity Forms is a Rocketgenius project
-copyright 2013 Rocketgenius Inc.
+copyright 2008-2015 Rocketgenius Inc.
 http: //www.rocketgenius.com
 this may not be redistributed without the
 express written permission of the author.
@@ -25,115 +25,23 @@ to no.
 ----------------------------------------------------------------
 */
 
-/* Ready Class to reset elements inside the form wrapper ------------------------- */
-
-body .gform_wrapper.gf_reset_wrapper,
-body .gform_wrapper.gf_reset_wrapper div,
-body .gform_wrapper.gf_reset_wrapper span,
-body .gform_wrapper.gf_reset_wrapper iframe,
-body .gform_wrapper.gf_reset_wrapper h1,
-body .gform_wrapper.gf_reset_wrapper h2,
-body .gform_wrapper.gf_reset_wrapper h3,
-body .gform_wrapper.gf_reset_wrapper h4,
-body .gform_wrapper.gf_reset_wrapper h5,
-body .gform_wrapper.gf_reset_wrapper h6,
-body .gform_wrapper.gf_reset_wrapper p,
-body .gform_wrapper.gf_reset_wrapper img,
-body .gform_wrapper.gf_reset_wrapper ol,
-body .gform_wrapper.gf_reset_wrapper ul,
-body .gform_wrapper.gf_reset_wrapper li,
-body .gform_wrapper.gf_reset_wrapper fieldset,
-body .gform_wrapper.gf_reset_wrapper form,
-body .gform_wrapper.gf_reset_wrapper label,
-body .gform_wrapper.gf_reset_wrapper legend,
-body .gform_wrapper.gf_reset_wrapper input[type=text],
-body .gform_wrapper.gf_reset_wrapper input[type=email],
-body .gform_wrapper.gf_reset_wrapper input[type=tel],
-body .gform_wrapper.gf_reset_wrapper input[type=url],
-body .gform_wrapper.gf_reset_wrapper input[type=number],
-body .gform_wrapper.gf_reset_wrapper input[type=password],
-body .gform_wrapper.gf_reset_wrapper select,
-body .gform_wrapper.gf_reset_wrapper textarea,
-body .gform_wrapper.gf_reset_wrapper input[type=submit],
-body .gform_wrapper.gf_reset_wrapper input[type=button],
-body .gform_wrapper.gf_reset_wrapper input[type=image],
-body .gform_wrapper.gf_reset_wrapper button,
-body .gform_wrapper.gf_reset_wrapper table,
-body .gform_wrapper.gf_reset_wrapper caption,
-body .gform_wrapper.gf_reset_wrapper tbody,
-body .gform_wrapper.gf_reset_wrapper tfoot,
-body .gform_wrapper.gf_reset_wrapper thead,
-body .gform_wrapper.gf_reset_wrapper tr,
-body .gform_wrapper.gf_reset_wrapper th,
-body .gform_wrapper.gf_reset_wrapper td { 
-	margin: 0; 
-	padding: 0; 
-	border: 0; 
-	outline: 0; 
+body .gform_wrapper.gf_reset_wrapper, body .gform_wrapper.gf_reset_wrapper div, body .gform_wrapper.gf_reset_wrapper span, body .gform_wrapper.gf_reset_wrapper iframe, body .gform_wrapper.gf_reset_wrapper h1, body .gform_wrapper.gf_reset_wrapper h2, body .gform_wrapper.gf_reset_wrapper h3, body .gform_wrapper.gf_reset_wrapper h4, body .gform_wrapper.gf_reset_wrapper h5, body .gform_wrapper.gf_reset_wrapper h6, body .gform_wrapper.gf_reset_wrapper p, body .gform_wrapper.gf_reset_wrapper img, body .gform_wrapper.gf_reset_wrapper ol, body .gform_wrapper.gf_reset_wrapper ul, body .gform_wrapper.gf_reset_wrapper li, body .gform_wrapper.gf_reset_wrapper fieldset, body .gform_wrapper.gf_reset_wrapper form, body .gform_wrapper.gf_reset_wrapper label, body .gform_wrapper.gf_reset_wrapper legend, body .gform_wrapper.gf_reset_wrapper input[type=text], body .gform_wrapper.gf_reset_wrapper input[type=email], body .gform_wrapper.gf_reset_wrapper input[type=tel], body .gform_wrapper.gf_reset_wrapper input[type=url], body .gform_wrapper.gf_reset_wrapper input[type=number], body .gform_wrapper.gf_reset_wrapper input[type=password], body .gform_wrapper.gf_reset_wrapper select, body .gform_wrapper.gf_reset_wrapper textarea, body .gform_wrapper.gf_reset_wrapper input[type=submit], body .gform_wrapper.gf_reset_wrapper input[type=button], body .gform_wrapper.gf_reset_wrapper input[type=image], body .gform_wrapper.gf_reset_wrapper button, body .gform_wrapper.gf_reset_wrapper table, body .gform_wrapper.gf_reset_wrapper caption, body .gform_wrapper.gf_reset_wrapper tbody, body .gform_wrapper.gf_reset_wrapper tfoot, body .gform_wrapper.gf_reset_wrapper thead, body .gform_wrapper.gf_reset_wrapper tr, body .gform_wrapper.gf_reset_wrapper th, body .gform_wrapper.gf_reset_wrapper td {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
 }
-
-body .gform_wrapper.gf_reset_wrapper div,
-body .gform_wrapper.gf_reset_wrapper span,
-body .gform_wrapper.gf_reset_wrapper iframe,
-body .gform_wrapper.gf_reset_wrapper p,
-body .gform_wrapper.gf_reset_wrapper img,
-body .gform_wrapper.gf_reset_wrapper ol,
-body .gform_wrapper.gf_reset_wrapper ul,
-body .gform_wrapper.gf_reset_wrapper li,
-body .gform_wrapper.gf_reset_wrapper fieldset,
-body .gform_wrapper.gf_reset_wrapper form,
-body .gform_wrapper.gf_reset_wrapper label,
-body .gform_wrapper.gf_reset_wrapper legend,
-body .gform_wrapper.gf_reset_wrapper input[type=text],
-body .gform_wrapper.gf_reset_wrapper input[type=email],
-body .gform_wrapper.gf_reset_wrapper input[type=tel],
-body .gform_wrapper.gf_reset_wrapper input[type=url],
-body .gform_wrapper.gf_reset_wrapper input[type=number],
-body .gform_wrapper.gf_reset_wrapper input[type=password],
-body .gform_wrapper.gf_reset_wrapper select,
-body .gform_wrapper.gf_reset_wrapper textarea,
-body .gform_wrapper.gf_reset_wrapper input[type=submit],
-body .gform_wrapper.gf_reset_wrapper input[type=button],
-body .gform_wrapper.gf_reset_wrapper input[type=image],
-body .gform_wrapper.gf_reset_wrapper button,
-body .gform_wrapper.gf_reset_wrapper table,
-body .gform_wrapper.gf_reset_wrapper caption,
-body .gform_wrapper.gf_reset_wrapper tbody,
-body .gform_wrapper.gf_reset_wrapper tfoot,
-body .gform_wrapper.gf_reset_wrapper thead,
-body .gform_wrapper.gf_reset_wrapper tr,
-body .gform_wrapper.gf_reset_wrapper th,
-body .gform_wrapper.gf_reset_wrapper td {  
-	font-weight: inherit; 
-	font-style: inherit; 
-	font-size: 100%; 
-	font-family: inherit; 
-	vertical-align: baseline;
-	line-height: 1;
-	font-weight: normal;
+body .gform_wrapper.gf_reset_wrapper div, body .gform_wrapper.gf_reset_wrapper span, body .gform_wrapper.gf_reset_wrapper iframe, body .gform_wrapper.gf_reset_wrapper p, body .gform_wrapper.gf_reset_wrapper img, body .gform_wrapper.gf_reset_wrapper ol, body .gform_wrapper.gf_reset_wrapper ul, body .gform_wrapper.gf_reset_wrapper li, body .gform_wrapper.gf_reset_wrapper fieldset, body .gform_wrapper.gf_reset_wrapper form, body .gform_wrapper.gf_reset_wrapper label, body .gform_wrapper.gf_reset_wrapper legend, body .gform_wrapper.gf_reset_wrapper input[type=text], body .gform_wrapper.gf_reset_wrapper input[type=email], body .gform_wrapper.gf_reset_wrapper input[type=tel], body .gform_wrapper.gf_reset_wrapper input[type=url], body .gform_wrapper.gf_reset_wrapper input[type=number], body .gform_wrapper.gf_reset_wrapper input[type=password], body .gform_wrapper.gf_reset_wrapper select, body .gform_wrapper.gf_reset_wrapper textarea, body .gform_wrapper.gf_reset_wrapper input[type=submit], body .gform_wrapper.gf_reset_wrapper input[type=button], body .gform_wrapper.gf_reset_wrapper input[type=image], body .gform_wrapper.gf_reset_wrapper button, body .gform_wrapper.gf_reset_wrapper table, body .gform_wrapper.gf_reset_wrapper caption, body .gform_wrapper.gf_reset_wrapper tbody, body .gform_wrapper.gf_reset_wrapper tfoot, body .gform_wrapper.gf_reset_wrapper thead, body .gform_wrapper.gf_reset_wrapper tr, body .gform_wrapper.gf_reset_wrapper th, body .gform_wrapper.gf_reset_wrapper td {
+    font-weight: inherit;
+    font-style: inherit;
+    font-size: 100%;
+    font-family: inherit;
+    vertical-align: baseline;
+    line-height: 1;
+    font-weight: normal;
 }
-
-body .gform_wrapper.gf_reset_wrapper div,
-body .gform_wrapper.gf_reset_wrapper span,
-body .gform_wrapper.gf_reset_wrapper p {
-	line-height: 1.8;
-}
-
-body .gform_wrapper.gf_reset_wrapper fieldset, 
-body .gform_wrapper.gf_reset_wrapper img {
-	border: 0;
-}
-
-body .gform_wrapper.gf_reset_wrapper ol, 
-body .gform_wrapper.gf_reset_wrapper ul, 
-body .gform_wrapper.gf_reset_wrapper li { 
-	list-style: none;
-}
-
-body .gform_wrapper.gf_reset_wrapper a img {
-	border: none;
-}
-
-body .gform_wrapper.gf_reset_wrapper :focus {
-	outline: 0;
-}
+body .gform_wrapper.gf_reset_wrapper div, body .gform_wrapper.gf_reset_wrapper span, body .gform_wrapper.gf_reset_wrapper p { line-height: 1.8 }
+body .gform_wrapper.gf_reset_wrapper fieldset, body .gform_wrapper.gf_reset_wrapper img { border: 0 }
+body .gform_wrapper.gf_reset_wrapper ol, body .gform_wrapper.gf_reset_wrapper ul, body .gform_wrapper.gf_reset_wrapper li { list-style: none }
+body .gform_wrapper.gf_reset_wrapper a img { border: none }
+body .gform_wrapper.gf_reset_wrapper :focus { outline: 0 }

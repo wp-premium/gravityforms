@@ -223,23 +223,27 @@ function gformDeleteUploadedFile(formId, fieldId, deleteButton){
     parent.find("input[type=\"text\"]").val('');
 
     //removing file from uploaded meta
-    var files = jQuery.secureEvalJSON(jQuery('#gform_uploaded_files_' + formId).val());
-    if(files){
-        var inputName = "input_" + fieldId;
-        var $multfile = parent.find("#gform_multifile_upload_" + formId + "_" + fieldId );
-        if( $multfile.length > 0 ) {
-            files[inputName].splice(fileIndex, 1);
-            var settings = $multfile.data('settings');
-            var max = settings.gf_vars.max_files;
-            jQuery("#" + settings.gf_vars.message_id).html('');
-            if(files[inputName].length < max)
-                gfMultiFileUploader.toggleDisabled(settings, false);
+    var filesJson = jQuery('#gform_uploaded_files_' + formId).val();
 
-        } else {
-            files[inputName] = null;
+    if(filesJson){
+        var files = jQuery.secureEvalJSON(filesJson);
+        if(files) {
+            var inputName = "input_" + fieldId;
+            var $multfile = parent.find("#gform_multifile_upload_" + formId + "_" + fieldId );
+            if( $multfile.length > 0 ) {
+                files[inputName].splice(fileIndex, 1);
+                var settings = $multfile.data('settings');
+                var max = settings.gf_vars.max_files;
+                jQuery("#" + settings.gf_vars.message_id).html('');
+                if(files[inputName].length < max)
+                    gfMultiFileUploader.toggleDisabled(settings, false);
+
+            } else {
+                files[inputName] = null;
+            }
+
+            jQuery('#gform_uploaded_files_' + formId).val(jQuery.toJSON(files));
         }
-
-        jQuery('#gform_uploaded_files_' + formId).val(jQuery.toJSON(files));
     }
 }
 
@@ -1135,6 +1139,41 @@ var gform = {
     var strings = typeof gform_gravityforms != 'undefined' ? gform_gravityforms.strings : {};
     var imagesUrl = typeof gform_gravityforms != 'undefined' ? gform_gravityforms.vars.images_url : "";
 
+
+	$(document).bind('gform_post_render', function(e, formID){
+
+		$("form#gform_" + formID + " .gform_fileupload_multifile").each(function(){
+			setup(this);
+		});
+		var $form = $("form#gform_" + formID);
+		if($form.length > 0){
+			$form.submit(function(){
+				var pendingUploads = false;
+				$.each(gfMultiFileUploader.uploaders, function(i, uploader){
+					if(uploader.total.queued>0){
+						pendingUploads = true;
+						return false;
+					}
+				});
+				if(pendingUploads){
+					alert(strings.currently_uploading);
+					window["gf_submitting_" + formID] = false;
+					$('#gform_ajax_spinner_' + formID).remove();
+					return false;
+				}
+			});
+		}
+
+	});
+
+	$(document).bind("gform_post_conditional_logic", function(e,formID, fields, isInit){
+		if(!isInit){
+			$.each(gfMultiFileUploader.uploaders, function(i, uploader){
+				uploader.refresh();
+			});
+		}
+	});
+
     $(document).ready(function () {
         if((typeof adminpage !== 'undefined' && adminpage === 'toplevel_page_gf_edit_forms')|| typeof plupload == 'undefined'){
             $(".gform_button_select_files").prop("disabled", true);
@@ -1142,41 +1181,9 @@ var gform = {
             $(".gform_fileupload_multifile").each(function(){
                 setup(this);
             });
-        } else {
-            $(document).bind('gform_post_render', function(e, formID){
-
-                $("form#gform_" + formID + " .gform_fileupload_multifile").each(function(){
-                    setup(this);
-                });
-                var $form = $("form#gform_" + formID);
-                if($form.length > 0){
-                    $form.submit(function(){
-                        var pendingUploads = false;
-                        $.each(gfMultiFileUploader.uploaders, function(i, uploader){
-                            if(uploader.total.queued>0){
-                                pendingUploads = true;
-                                return false;
-                            }
-                        });
-                        if(pendingUploads){
-                            alert(strings.currently_uploading);
-                            window["gf_submitting_" + formID] = false;
-                            $('#gform_ajax_spinner_' + formID).remove();
-                            return false;
-                        }
-                    });
-                }
-
-            });
-            $(document).bind("gform_post_conditional_logic", function(e,formID, fields, isInit){
-                if(!isInit){
-                    $.each(gfMultiFileUploader.uploaders, function(i, uploader){
-                        uploader.refresh();
-                    });
-                }
-            });
         }
     });
+
 
     function setup(uploadElement){
         var settings = $(uploadElement).data('settings');
@@ -1203,7 +1210,7 @@ var gform = {
 
             var button = typeof settings.browse_button == "string" ? $("#" + settings.browse_button) : $(settings.browse_button);
             button.prop("disabled", disabled);
-        }
+        };
 
         function addMessage(messagesID, message){
             $("#" + messagesID).prepend("<li>" + message + "</li>");
@@ -1222,7 +1229,7 @@ var gform = {
                 $.each(files, function(i, file) {
                     up.removeFile(file);
                     return;
-                })
+                });
                 return;
             }
             $.each(files, function(i, file) {
@@ -1343,8 +1350,6 @@ var gform = {
 
 
         });
-
-
 
         function getAllFiles(){
             var selector = '#gform_uploaded_files_' + formID,

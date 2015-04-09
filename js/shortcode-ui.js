@@ -1,3 +1,4 @@
+//Props: https://github.com/fusioneng/Shortcake/
 var GformShortcodeUI;
 
 ( function (gfShortCodeUI, $) {
@@ -8,7 +9,7 @@ var GformShortcodeUI;
         views: {},
         utils: {},
         strings: {}
-    }
+    };
 
     /**
      * Shortcode Attribute Model.
@@ -21,8 +22,8 @@ var GformShortcodeUI;
             section: '',
             description: '',
             default: '',
-            value: '',
-        },
+            value: ''
+        }
     });
 
     /**
@@ -309,8 +310,6 @@ var GformShortcodeUI;
             var newShortcodeModel = sui.shortcodes.findWhere({shortcode_tag: 'gravityform', action_tag: val});
 
             // copy over values to new shortcode model
-
-
             var currentAttrs = m.get('attrs');
             newShortcodeModel.get('attrs').each(function (attr) {
                 var newAt = attr.get('attr');
@@ -319,14 +318,9 @@ var GformShortcodeUI;
                     var currentAt = currentAtModel.get('attr');
                     if (newAt == currentAt) {
                         var currentVal = currentAtModel.get('value');
-                        attr.set(
-                            'value',
-                            String(currentVal)
-                        );
+                        attr.set('value', String(currentVal));
                     }
                 }
-
-
             });
             $(this.parent.el).empty();
             var viewMode = this.parent.options.viewMode;
@@ -339,12 +333,103 @@ var GformShortcodeUI;
 
     });
 
-    /**
-     * Generic shortcode mce view constructor.
-     * This is cloned and used by each shortcode when registering a view.
-     */
     sui.utils.shortcodeViewConstructor = {
 
+        initialize: function( options ) {
+            this.shortcodeModel = this.getShortcodeModel( this.shortcode );
+        },
+
+        /**
+         * Get the shortcode model given the view shortcode options.
+         * Must be a registered shortcode (see sui.shortcodes)
+         */
+        getShortcodeModel: function( options ) {
+
+            var actionTag = typeof options.attrs.named.action != 'undefined' ? options.attrs.named.action : '';
+            var shortcodeModel = sui.shortcodes.findWhere({action_tag: actionTag});
+
+            if ( ! shortcodeModel ) {
+                return;
+            }
+
+            var shortcode = shortcodeModel.clone();
+
+            shortcode.get('attrs').each(function (attr) {
+
+                if (attr.get('attr') in options.attrs.named) {
+                    attr.set('value', options.attrs.named[attr.get('attr')]);
+                }
+
+                if (attr.get('attr') === 'content' && ( 'content' in options )) {
+                    attr.set('value', options.content);
+                }
+
+            });
+
+            return shortcode;
+
+        },
+
+        /**
+         * Return the preview HTML.
+         * If empty, fetches data.
+         *
+         * @return string
+         */
+        getContent : function() {
+            if ( ! this.content ) {
+                this.fetch();
+            }
+            return this.content;
+        },
+
+        /**
+         * Fetch preview.
+         * Async. Sets this.content and calls this.render.
+         *
+         * @return undefined
+         */
+        fetch : function() {
+
+            var self = this;
+
+            if ( ! this.fetching ) {
+
+                this.fetching = true;
+
+                var attr = this.shortcodeModel.get('attrs').findWhere({attr: 'id'});
+                var formId = attr.get('value');
+                var data;
+                data = {
+                    action: 'gf_do_shortcode',
+                    post_id: $('#post_ID').val(),
+                    form_id: formId,
+                    shortcode: this.shortcodeModel.formatShortcode(),
+                    nonce: gfShortcodeUIData.previewNonce
+                };
+
+                $.post(ajaxurl, data).done(function(response) {
+                    self.content = response;
+                }).fail(function () {
+                    self.content = '<span class="gf_shortcode_ui_error">' + gfShortcodeUIData.strings.errorLoadingPreview + '</span>';
+                }).always(function () {
+                    delete self.fetching;
+                    self.render(true);
+                });
+
+            }
+        },
+
+        setLoader: function() {
+            this.setContent(
+                '<div class="loading-placeholder">' +
+                '<div class="dashicons dashicons-feedback"></div>' +
+                '<div class="wpview-loading"><ins></ins></div>' +
+                '</div>'
+            );
+        },
+
+        // Backwards compatability for WP pre-4.2
         View: {
             overlay: true,
 
@@ -404,10 +489,10 @@ var GformShortcodeUI;
 
             loadingPlaceholder: function () {
                 return '' +
-                '<div class="loading-placeholder">' +
-                '<div class="dashicons dashicons-feedback"></div>' +
-                '<div class="wpview-loading"><ins></ins></div>' +
-                '</div>';
+                    '<div class="loading-placeholder">' +
+                    '<div class="dashicons dashicons-feedback"></div>' +
+                    '<div class="wpview-loading"><ins></ins></div>' +
+                    '</div>';
             },
 
             /**
@@ -599,59 +684,58 @@ var GformShortcodeUI;
                     $.post(ajaxurl, data, $.proxy(this.setIframes, this));
 
                 }
-
                 return this.shortcodeHTML;
-
             },
-
         },
 
-        edit: function (node) {
+        edit : function( shortcodeString ) {
 
-            var shortcodeString, model, attr, action;
+            var currentShortcode;
 
-            shortcodeString = decodeURIComponent($(node).attr('data-wpview-text'));
-
-            var parsedShortcode = wp.shortcode.next('gravityform', shortcodeString);
-
-            if (!parsedShortcode) {
-                return;
+            // Backwards compatability for WP pre-4.2
+            if ( 'object' === typeof( shortcodeString ) ) {
+                shortcodeString = decodeURIComponent( jQuery(shortcodeString).attr('data-wpview-text') );
             }
 
-            action = parsedShortcode.shortcode.attrs.named.action ? parsedShortcode.shortcode.attrs.named.action : '';
+            currentShortcode = wp.shortcode.next('gravityform', shortcodeString);
 
-            var defaultShortcode = sui.shortcodes.findWhere({
-                shortcode_tag: parsedShortcode.shortcode.tag,
-                action_tag: action
-            });
+            if ( currentShortcode ) {
 
-            if (!defaultShortcode) {
-                return;
-            }
+                var action = currentShortcode.shortcode.attrs.named.action ? currentShortcode.shortcode.attrs.named.action : '';
 
-            var currentShortcode = defaultShortcode.clone();
+                var defaultShortcode = sui.shortcodes.findWhere({
+                    shortcode_tag: currentShortcode.shortcode.tag,
+                    action_tag: action
+                });
 
-            // convert attribute strings to object.
-            _.each(parsedShortcode.shortcode.attrs.named, function (val, key) {
-                attr = currentShortcode.get('attrs').findWhere({attr: key});
-                if (attr) {
-                    attr.set('value', val);
+                if (!defaultShortcode) {
+                    return;
                 }
-            });
+
+                var currentShortcodeModel = defaultShortcode.clone();
+
+                // convert attribute strings to object.
+                _.each(currentShortcode.shortcode.attrs.named, function (val, key) {
+                    attr = currentShortcodeModel.get('attrs').findWhere({attr: key});
+                    if (attr) {
+                        attr.set('value', val);
+                    }
+                });
 
 
-            var idAttr = currentShortcode.get('attrs').findWhere({attr: 'id'});
-            var formId = idAttr.get('value');
-            $('#add_form_id').val(formId);
+                var idAttr = currentShortcodeModel.get('attrs').findWhere({attr: 'id'});
+                var formId = idAttr.get('value');
+                $('#add_form_id').val(formId);
 
-            GformShortcodeUI = new sui.views.editShortcodeForm({model: currentShortcode, viewMode: 'update'});
-            GformShortcodeUI.render();
+                GformShortcodeUI = new sui.views.editShortcodeForm({model: currentShortcodeModel, viewMode: 'update'});
+                GformShortcodeUI.render();
 
-            $('#gform-insert-shortcode').hide();
-            $('#gform-update-shortcode').show();
-            tb_show("Edit Gravity Form", "#TB_inline?inlineId=select_gravity_form&width=753&height=686", "");
-        }
+                $('#gform-insert-shortcode').hide();
+                $('#gform-update-shortcode').show();
+                tb_show("Edit Gravity Form", "#TB_inline?inlineId=select_gravity_form&width=753&height=686", "");
 
+            }
+        },
     };
 
     $(document).ready(function () {
@@ -660,7 +744,7 @@ var GformShortcodeUI;
 
         sui.shortcodes = new sui.collections.Shortcodes( gfShortcodeUIData.shortcodes );
 
-        if( ! gfShortcodeUIData.previewDisabled ){
+        if( ! gfShortcodeUIData.previewDisabled && typeof wp.mce != 'undefined'){
             wp.mce.views.register( 'gravityform', $.extend(true, {}, sui.utils.shortcodeViewConstructor) );
         }
 

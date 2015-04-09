@@ -98,7 +98,7 @@ class GF_Field extends stdClass implements ArrayAccess {
 		unset( $this->$key );
 	}
 
-	public function is_conditional_logic_supported(){
+	public function is_conditional_logic_supported() {
 		return false;
 	}
 
@@ -111,12 +111,12 @@ class GF_Field extends stdClass implements ArrayAccess {
 		return $this->get_value_default();
 	}
 
-	public function get_value_default(){
+	public function get_value_default() {
 
 		if ( is_array( $this->inputs ) ) {
 			$value = array();
 			foreach ( $this->inputs as $input ) {
-				$value[ strval( $input['id'] ) ] = $this->is_form_editor()  ? rgar( $input, 'defaultValue' ) : GFCommon::replace_variables_prepopulate( rgar( $input, 'defaultValue' ) );
+				$value[ strval( $input['id'] ) ] = $this->is_form_editor() ? rgar( $input, 'defaultValue' ) : GFCommon::replace_variables_prepopulate( rgar( $input, 'defaultValue' ) );
 			}
 		} else {
 			$value = $this->is_form_editor() ? $this->defaultValue : GFCommon::replace_variables_prepopulate( $this->defaultValue );
@@ -129,7 +129,7 @@ class GF_Field extends stdClass implements ArrayAccess {
 		return $value;
 	}
 
-	public function get_value_entry_list( $value, $entry, $field_id, $columns, $form ){
+	public function get_value_entry_list( $value, $entry, $field_id, $columns, $form ) {
 		return esc_html( $value );
 	}
 
@@ -141,10 +141,10 @@ class GF_Field extends stdClass implements ArrayAccess {
 		return $value;
 	}
 
-	public function is_description_above( $form ){
+	public function is_description_above( $form ) {
 		$form_label_placement        = rgar( $form, 'labelPlacement' );
 		$field_label_placement       = $this->labelPlacement;
-		$form_description_placement   = rgar( $form, 'descriptionPlacement' );
+		$form_description_placement  = rgar( $form, 'descriptionPlacement' );
 		$field_description_placement = $this->descriptionPlacement;
 		if ( empty( $field_description_placement ) ) {
 			$field_description_placement = $form_description_placement;
@@ -155,27 +155,28 @@ class GF_Field extends stdClass implements ArrayAccess {
 	}
 
 	public function get_description( $description, $css_class ) {
-		$is_form_editor = $this->is_form_editor();
+		$is_form_editor  = $this->is_form_editor();
 		$is_entry_detail = $this->is_entry_detail();
-		$is_admin = $is_form_editor || $is_entry_detail;
+		$is_admin        = $is_form_editor || $is_entry_detail;
+
 		return $is_admin || ! empty( $description ) ? "<div class='$css_class'>" . $description . '</div>' : '';
 	}
 
-	public function get_field_content( $value, $force_frontend_label, $form  ){
+	public function get_field_content( $value, $force_frontend_label, $form ) {
 
 		$field_label = $this->get_field_label( $force_frontend_label, $value );
 
 		$validation_message = ( $this->failed_validation && ! empty( $this->validation_message ) ) ? sprintf( "<div class='gfield_description validation_message'>%s</div>", $this->validation_message ) : '';
 
-		$is_form_editor = $this->is_form_editor();
+		$is_form_editor  = $this->is_form_editor();
 		$is_entry_detail = $this->is_entry_detail();
-		$is_admin = $is_form_editor || $is_entry_detail;
+		$is_admin        = $is_form_editor || $is_entry_detail;
 
-		$required_div  = $is_admin || $this->isRequired ? sprintf( "<span class='gfield_required'>%s</span>", $this->isRequired ? '*' : '' ) : '';
+		$required_div = $is_admin || $this->isRequired ? sprintf( "<span class='gfield_required'>%s</span>", $this->isRequired ? '*' : '' ) : '';
 
 		$admin_buttons = $this->get_admin_buttons();
 
-		$target_input_id  = $this->get_first_input_id( $form );
+		$target_input_id = $this->get_first_input_id( $form );
 
 		$for_attribute = empty( $target_input_id ) ? '' : "for='{$target_input_id}'";
 
@@ -186,31 +187,32 @@ class GF_Field extends stdClass implements ArrayAccess {
 		} else {
 			$field_content = sprintf( "%s<label class='gfield_label' $for_attribute >%s%s</label>{FIELD}%s%s", $admin_buttons, esc_html( $field_label ), $required_div, $description, $validation_message );
 		}
+
 		return $field_content;
 	}
 
-	public function get_first_input_id( $form ){
-		$form_id         = $form['id'];
+	public function get_first_input_id( $form ) {
+		$form_id = $form['id'];
 
 		$is_entry_detail = $this->is_entry_detail();
 		$is_form_editor  = $this->is_form_editor();
-		$field_id    = $is_entry_detail || $is_form_editor || $form_id == 0 ? 'input_' : 'input_' . $form_id ;
+		$field_id        = $is_entry_detail || $is_form_editor || $form_id == 0 ? 'input_' : "input_{$form_id}_";
 
 		if ( is_array( $this->inputs ) ) {
 			foreach ( $this->inputs as $input ) {
 				if ( ! isset( $input['isHidden'] ) || ! $input['isHidden'] ) {
-					$field_id .= '_' . str_replace( '.', '_', $input['id'] );
+					$field_id .= str_replace( '.', '_', $input['id'] );
 					break;
 				}
 			}
 		} else {
-			$field_id .= '_' . $this->id;
+			$field_id .= $this->id;
 		}
 
 		return $field_id;
 	}
 
-	public function get_field_label( $force_frontend_label, $value ){
+	public function get_field_label( $force_frontend_label, $value ) {
 		$field_label = $force_frontend_label ? $this->label : GFCommon::get_label( $this );
 		if ( ( $this->inputType == 'singleproduct' || $this->inputType == 'calculation' ) && ! rgempty( $this->id . '.1', $value ) ) {
 			$field_label = rgar( $value, $this->id . '.1' );
@@ -219,8 +221,16 @@ class GF_Field extends stdClass implements ArrayAccess {
 		return $field_label;
 	}
 
-	public function get_admin_buttons(){
-		$duplicate_disabled   = array( 'captcha', 'post_title', 'post_content', 'post_excerpt', 'total', 'shipping', 'creditcard' );
+	public function get_admin_buttons() {
+		$duplicate_disabled   = array(
+			'captcha',
+			'post_title',
+			'post_content',
+			'post_excerpt',
+			'total',
+			'shipping',
+			'creditcard'
+		);
 		$duplicate_field_link = ! in_array( $this->type, $duplicate_disabled ) ? "<a class='field_duplicate_icon' id='gfield_duplicate_{$this->id}' title='" . __( 'click to duplicate this field', 'gravityforms' ) . "' href='#' onclick='StartDuplicateField(this); return false;'><i class='fa fa-files-o fa-lg'></i></a>" : '';
 		$duplicate_field_link = apply_filters( 'gform_duplicate_field_link', $duplicate_field_link );
 
@@ -228,11 +238,12 @@ class GF_Field extends stdClass implements ArrayAccess {
 		$delete_field_link = apply_filters( 'gform_delete_field_link', $delete_field_link );
 		$field_type_title  = GFCommon::get_field_type_title( $this->type );
 
-		$is_form_editor = $this->is_form_editor();
+		$is_form_editor  = $this->is_form_editor();
 		$is_entry_detail = $this->is_entry_detail();
-		$is_admin = $is_form_editor || $is_entry_detail;
+		$is_admin        = $is_form_editor || $is_entry_detail;
 
-		$admin_buttons     = $is_admin ? "<div class='gfield_admin_icons'><div class='gfield_admin_header_title'>{$field_type_title} : " . __( 'Field ID', 'gravityforms' ) . " {$this->id}</div>" . $delete_field_link . $duplicate_field_link . "<a class='field_edit_icon edit_icon_collapsed' title='" . __( 'click to expand and edit the options for this field', 'gravityforms' ) . "'><i class='fa fa-caret-down fa-lg'></i></a></div>" : '';
+		$admin_buttons = $is_admin ? "<div class='gfield_admin_icons'><div class='gfield_admin_header_title'>{$field_type_title} : " . __( 'Field ID', 'gravityforms' ) . " {$this->id}</div>" . $delete_field_link . $duplicate_field_link . "<a class='field_edit_icon edit_icon_collapsed' title='" . __( 'click to expand and edit the options for this field', 'gravityforms' ) . "'><i class='fa fa-caret-down fa-lg'></i></a></div>" : '';
+
 		return $admin_buttons;
 	}
 
@@ -269,7 +280,7 @@ class GF_Field extends stdClass implements ArrayAccess {
 	 *
 	 * @return bool
 	 */
-	public function is_value_submission_empty( $form_id ){
+	public function is_value_submission_empty( $form_id ) {
 
 		$copy_values_option_activated = $this->enableCopyValuesOption && rgpost( 'input_' . $this->id . '_copy_values_activated' );
 
@@ -356,11 +367,13 @@ class GF_Field extends stdClass implements ArrayAccess {
 
 	public function has_calculation() {
 
-		if ( $this->type == 'number' ) {
+		$type =  GFFormsModel::get_input_type( $this );
+
+		if ( $type == 'number' ) {
 			return $this->enableCalculation && $this->calculationFormula;
 		}
 
-		return GFFormsModel::get_input_type( $this ) == 'calculation';
+		return $type == 'calculation';
 	}
 
 	public function get_conditional_logic_event( $event ) {
@@ -486,7 +499,7 @@ class GF_Field extends stdClass implements ArrayAccess {
 		return GFCommon::is_entry_detail_edit();
 	}
 
-	public function strip_script_tag( $string ){
+	public function strip_script_tag( $string ) {
 		$allowable_tags = '<a><abbr><acronym><address><area><area /><b><base><base /><bdo><big><blockquote><body><br><br /><button><caption><cite><code><col><col /><colgroup><command><command /><dd><del><dfn><div><dl><DOCTYPE><dt><em><fieldset><form><h1><h2><h3><h4><h5><h6><head><html><hr><hr /><i><img><img /><input><input /><ins><kbd><label><legend><li><link><map><meta><meta /><noscript><ol><optgroup><option><p><param><param /><pre><q><samp><select><small><span><strong><style><sub><sup><table><tbody><td><textarea><tfoot><th><thead><title><tr><tt><ul><var><wbr><wbr />';
 
 		$string = strip_tags( $string, $allowable_tags );
@@ -494,7 +507,7 @@ class GF_Field extends stdClass implements ArrayAccess {
 		return $string;
 	}
 
-	public function allow_html(){
+	public function allow_html() {
 
 		return false;
 

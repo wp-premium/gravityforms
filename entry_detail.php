@@ -15,10 +15,10 @@ class GFEntryDetail {
 
 		echo GFCommon::get_remote_message();
 
-		$form    = RGFormsModel::get_form_meta( $_GET['id'] );
-		$form_id = $form['id'];
-		$form    = apply_filters( 'gform_admin_pre_render_' . $form['id'], apply_filters( 'gform_admin_pre_render', $form ) );
-		$lead_id = rgget( 'lid' );
+		$form    = RGFormsModel::get_form_meta( absint( $_GET['id'] ) );
+		$form_id = absint( $form['id'] );
+		$form    = apply_filters( 'gform_admin_pre_render_' . $form_id, apply_filters( 'gform_admin_pre_render', $form ) );
+		$lead_id = absint( rgget( 'lid' ) );
 
 		$filter = rgget( 'filter' );
 		$status = in_array( $filter, array( 'trash', 'spam' ) ) ? $filter : 'active';
@@ -138,13 +138,20 @@ class GFEntryDetail {
 
 					$headers = "From: \"$email_from\" <$email_from> \r\n";
 					GFCommon::log_debug( "GFEntryDetail::lead_detail_page(): Emailing notes - TO: $email_to SUBJECT: $email_subject BODY: $body HEADERS: $headers" );
-					$result  = wp_mail( $email_to, $email_subject, $body, $headers );
+					$is_success  = wp_mail( $email_to, $email_subject, $body, $headers );
+					$result = is_wp_error( $is_success ) ? $is_success->get_error_message() : $is_success;
 					GFCommon::log_debug( "GFEntryDetail::lead_detail_page(): Result from wp_mail(): {$result}" );
-					if ( $result ) {
+					if ( ! is_wp_error( $is_success ) && $is_success ) {
 						GFCommon::log_debug( 'GFEntryDetail::lead_detail_page(): Mail was passed from WordPress to the mail server.' );
 					} else {
 						GFCommon::log_error( 'GFEntryDetail::lead_detail_page(): The mail message was passed off to WordPress for processing, but WordPress was unable to send the message.' );
 					}
+
+					if ( has_filter( 'phpmailer_init' ) ) {
+						GFCommon::log_debug( __METHOD__ . '(): The WordPress phpmailer_init hook has been detected, usually used by SMTP plugins, it can impact mail delivery.' );
+					}
+
+					do_action( 'gform_post_send_entry_note', $result, $email_to, $email_from, $email_subject, $body, $form, $lead );
 				}
 				break;
 
@@ -199,8 +206,11 @@ class GFEntryDetail {
 		}
 
 		$mode = empty( $_POST['screen_mode'] ) ? 'view' : $_POST['screen_mode'];
+
+		$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] ) ? '' : '.min';
+
 		?>
-		<link rel="stylesheet" href="<?php echo GFCommon::get_base_url() ?>/css/admin.css" />
+		<link rel="stylesheet" href="<?php echo GFCommon::get_base_url() ?>/css/admin<?php echo $min; ?>.css" />
 		<script type="text/javascript">
 
 			jQuery(document).ready(function () {
@@ -209,7 +219,7 @@ class GFEntryDetail {
 			});
 
 			function DeleteFile(leadId, fieldId, deleteButton) {
-				if (confirm(<?php _e( "'Would you like to delete this file? \'Cancel\' to stop. \'OK\' to delete'", 'gravityforms' ); ?>)) {
+				if (confirm('<?php _e( "Would you like to delete this file? \'Cancel\' to stop. \'OK\' to delete", 'gravityforms' ); ?>')) {
 					var fileIndex = jQuery(deleteButton).parent().index();
 					var mysack = new sack("<?php echo admin_url( 'admin-ajax.php' )?>");
 					mysack.execute = 1;
@@ -286,8 +296,8 @@ class GFEntryDetail {
 						gf_resend_notifications: '<?php echo wp_create_nonce( 'gf_resend_notifications' ); ?>',
 						notifications          : jQuery.toJSON(selectedNotifications),
 						sendTo                 : sendTo,
-						leadIds                : '<?php echo $lead['id']; ?>',
-						formId                 : '<?php echo $form['id']; ?>'
+						leadIds                : '<?php echo absint( $lead['id'] ); ?>',
+						formId                 : '<?php echo absint( $form['id'] ); ?>'
 					},
 					function (response) {
 						if (response) {
@@ -339,7 +349,7 @@ class GFEntryDetail {
 
 		<div class="wrap gf_entry_wrap">
 		<h2 class="gf_admin_page_title">
-			<span><?php echo __( 'Entry #', 'gravityforms' ) . absint( $lead['id'] ); ?></span><span class="gf_admin_page_subtitle"><span class="gf_admin_page_formid">ID: <?php echo $form['id']; ?></span><span class='gf_admin_page_formname'><?php _e( 'Form Name', 'gravityforms' ) ?>: <?php echo $form['title'];
+			<span><?php echo __( 'Entry #', 'gravityforms' ) . absint( $lead['id'] ); ?></span><span class="gf_admin_page_subtitle"><span class="gf_admin_page_formid">ID: <?php echo absint( $form['id'] ); ?></span><span class='gf_admin_page_formname'><?php _e( 'Form Name', 'gravityforms' ) ?>: <?php echo esc_html( $form['title'] );
 				$gf_entry_locking = new GFEntryLocking();
 				$gf_entry_locking->lock_info( $lead_id ); ?></span></span></h2>
 
@@ -374,7 +384,7 @@ class GFEntryDetail {
 						<?php _e( 'Entry Id', 'gravityforms' ); ?>: <?php echo absint( $lead['id'] ) ?><br /><br />
 						<?php _e( 'Submitted on', 'gravityforms' ); ?>: <?php echo esc_html( GFCommon::format_date( $lead['date_created'], false, 'Y/m/d' ) ) ?>
 						<br /><br />
-						<?php _e( 'User IP', 'gravityforms' ); ?>: <?php echo $lead['ip'] ?>
+						<?php _e( 'User IP', 'gravityforms' ); ?>: <?php echo esc_html( $lead['ip'] ); ?>
 						<br /><br />
 						<?php
 						if ( ! empty( $lead['created_by'] ) && $usermeta = get_userdata( $lead['created_by'] ) ) {
@@ -387,7 +397,7 @@ class GFEntryDetail {
 						?>
 
 						<?php _e( 'Embed Url', 'gravityforms' ); ?>:
-						<a href="<?php echo esc_url( $lead['source_url'] ) ?>" target="_blank" alt="<?php echo esc_url( $lead['source_url'] ) ?>" title="<?php echo esc_url( $lead['source_url'] ) ?>">.../<?php echo esc_html( GFCommon::truncate_url( $lead['source_url'] ) ) ?></a>
+						<a href="<?php echo esc_url( $lead['source_url'] ) ?>" target="_blank" alt="<?php echo esc_attr( $lead['source_url'] ) ?>" title="<?php echo esc_attr( $lead['source_url'] ) ?>">.../<?php echo esc_html( GFCommon::truncate_url( $lead['source_url'] ) ) ?></a>
 						<br /><br />
 						<?php
 						if ( ! empty( $lead['post_id'] ) ) {
@@ -413,7 +423,7 @@ class GFEntryDetail {
 								}
 
 								if ( ! empty( $lead['transaction_id'] ) ) {
-									echo $lead['transaction_type'] != 2 ? __( 'Transaction Id', 'gravityforms' ) : __( 'Subscriber Id', 'gravityforms' ); ?>: <?php echo $lead['transaction_id'] ?>
+									echo $lead['transaction_type'] != 2 ? __( 'Transaction Id', 'gravityforms' ) : __( 'Subscriber Id', 'gravityforms' ); ?>: <?php echo esc_html( $lead['transaction_id'] ); ?>
 									<br /><br />
 								<?php
 								}
@@ -523,13 +533,13 @@ class GFEntryDetail {
 							?>
 							<p class="description"><?php _e( 'You cannot resend notifications for this entry because this form does not currently have any notifications configured.', 'gravityforms' ); ?></p>
 
-							<a href="<?php echo admin_url( "admin.php?page=gf_edit_forms&view=settings&subview=notification&id={$form['id']}" ) ?>" class="button"><?php _e( 'Configure Notifications', 'gravityforms' ) ?></a>
+							<a href="<?php echo admin_url( "admin.php?page=gf_edit_forms&view=settings&subview=notification&id={$form_id}" ) ?>" class="button"><?php _e( 'Configure Notifications', 'gravityforms' ) ?></a>
 						<?php
 						} else {
 							foreach ( $notifications as $notification ) {
 								?>
-								<input type="checkbox" class="gform_notifications" value="<?php echo $notification['id'] ?>" id="notification_<?php echo $notification['id'] ?>" onclick="toggleNotificationOverride();" />
-								<label for="notification_<?php echo $notification['id'] ?>"><?php echo $notification['name'] ?></label>
+								<input type="checkbox" class="gform_notifications" value="<?php echo esc_attr( $notification['id'] ); ?>" id="notification_<?php echo esc_attr( $notification['id'] ); ?>" onclick="toggleNotificationOverride();" />
+								<label for="notification_<?php echo esc_attr( $notification['id'] ); ?>"><?php echo esc_html( $notification['name'] ); ?></label>
 								<br /><br />
 							<?php
 							}
@@ -562,7 +572,7 @@ class GFEntryDetail {
 
 		<!-- begin print button -->
 		<div class="detail-view-print">
-			<a href="javascript:;" onclick="var notes_qs = jQuery('#gform_print_notes').is(':checked') ? '&notes=1' : ''; var url='<?php echo trailingslashit( site_url() ) ?>?gf_page=print-entry&fid=<?php echo $form['id'] ?>&lid=<?php echo $lead['id'] ?>' + notes_qs; window.open (url,'printwindow');" class="button"><?php _e( 'Print', 'gravityforms' ) ?></a>
+			<a href="javascript:;" onclick="var notes_qs = jQuery('#gform_print_notes').is(':checked') ? '&notes=1' : ''; var url='<?php echo trailingslashit( site_url() ) ?>?gf_page=print-entry&fid=<?php echo absint( $form['id'] ) ?>&lid=<?php echo absint( $lead['id'] ); ?>' + notes_qs; window.open (url,'printwindow');" class="button"><?php _e( 'Print', 'gravityforms' ) ?></a>
 			<?php if ( GFCommon::current_user_can_any( 'gravityforms_view_entry_notes' ) ) { ?>
 				<input type="checkbox" name="print_notes" value="print_notes" checked="checked" id="gform_print_notes" />
 				<label for="print_notes"><?php _e( 'include notes', 'gravityforms' ) ?></label>
@@ -637,7 +647,7 @@ class GFEntryDetail {
 
 	public static function lead_detail_edit( $form, $lead ) {
 		$form    = apply_filters( 'gform_admin_pre_render_' . $form['id'], apply_filters( 'gform_admin_pre_render', $form ) );
-		$form_id = $form['id'];
+		$form_id = absint( $form['id'] );
 		?>
 		<div class="postbox">
 			<h3>
@@ -689,7 +699,7 @@ class GFEntryDetail {
 
 				<div class="gform_footer">
 					<input type="hidden" name="gform_unique_id" value="" />
-					<input type="hidden" name="gform_uploaded_files" id='gform_uploaded_files_<?php echo $form_id; ?>' value="" />
+					<input type="hidden" name="gform_uploaded_files" id='gform_uploaded_files_<?php echo absint( $form_id ); ?>' value="" />
 				</div>
 			</div>
 		</div>
@@ -780,7 +790,7 @@ class GFEntryDetail {
                                 <select name="gentry_email_notes_to" onchange="if(jQuery(this).val() != '') {jQuery('#gentry_email_subject_container').css('display', 'inline');} else{jQuery('#gentry_email_subject_container').css('display', 'none');}">
 									<option value=""><?php _e( 'Also email this note to', 'gravityforms' ) ?></option>
 									<?php foreach ( $emails as $email ) { ?>
-										<option value="<?php echo $email ?>"><?php echo $email ?></option>
+										<option value="<?php echo esc_attr( $email ); ?>"><?php echo esc_html( $email ); ?></option>
 									<?php } ?>
 								</select>
                                 &nbsp;&nbsp;
@@ -802,7 +812,7 @@ class GFEntryDetail {
 	}
 
 	public static function lead_detail_grid( $form, $lead, $allow_display_empty_fields = false ) {
-		$form_id              = $form['id'];
+		$form_id = absint( $form['id'] );
 
 		$display_empty_fields = false;
 		if ( $allow_display_empty_fields ) {
@@ -817,7 +827,7 @@ class GFEntryDetail {
 			<tr>
 				<th id="details">
 					<?php
-					$title = sprintf( '%s : %s %s', $form['title'], __( 'Entry # ', 'gravityforms' ), $lead['id'] );
+					$title = sprintf( '%s : %s %s', esc_html( $form['title'] ), __( 'Entry # ', 'gravityforms' ), absint( $lead['id'] ) );
 					echo apply_filters( 'gform_entry_detail_title', $title, $form, $lead );
 					?>
 				</th>
@@ -902,7 +912,7 @@ class GFEntryDetail {
 				if ( ! empty( $products['products'] ) ) {
 					?>
 					<tr>
-						<td colspan="2" class="entry-view-field-name"><?php echo apply_filters( "gform_order_label_{$form['id']}", apply_filters( 'gform_order_label', __( 'Order', 'gravityforms' ), $form['id'] ), $form['id'] ) ?></td>
+						<td colspan="2" class="entry-view-field-name"><?php echo apply_filters( "gform_order_label_{$form_id}", apply_filters( 'gform_order_label', __( 'Order', 'gravityforms' ), $form_id ), $form_id ) ?></td>
 					</tr>
 					<tr>
 						<td colspan="2" class="entry-view-field-value lastrow">
@@ -927,7 +937,7 @@ class GFEntryDetail {
 									?>
 									<tr>
 										<td>
-											<div class="product_name"><?php echo $product['name'] ?></div>
+											<div class="product_name"><?php echo $product['name']; ?></div>
 											<ul class="product_options">
 												<?php
 												$price = GFCommon::to_number( $product['price'] );

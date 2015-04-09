@@ -1,0 +1,1 @@
+window.onscroll=function(){var a=jQuery("#gf_form_toolbar"),b=jQuery("#floatMenu");if(window.XMLHttpRequest&&a.length>0){var c=a.offset().top;b.css(document.documentElement.scrollTop>c||self.pageYOffset>c?{position:"fixed",top:"40px"}:{position:"static",top:"40px"})}};

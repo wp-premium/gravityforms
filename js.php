@@ -855,7 +855,7 @@ if ( ! class_exists( 'GFForms' ) ) {
 	}
 
 	function GetDateFieldInputs(field) {
-		if (typeof field.dateType == 'undefined' || field.dateType == 'datepicker') {
+		if (typeof field.dateType == 'undefined' || field.dateType == 'datepicker' || field.dateType == '') {
 			return null;
 		}
 
@@ -863,7 +863,7 @@ if ( ! class_exists( 'GFForms' ) ) {
 
 		switch (field.dateType) {
 			case 'datefield' :
-				month = new Input(field.id + '.1', '<?php echo esc_js( __( 'MM', 'gravityforms' ) )?>');
+				month = new Input(field.id + '.1', '<?php echo esc_js( _x( 'MM', 'Abbreviation: Month', 'gravityforms' ) )?>');
 				day = new Input(field.id + '.2', '<?php echo esc_js( __( 'DD', 'gravityforms' ) )?>');
 				year = new Input(field.id + '.3', '<?php echo esc_js( __( 'YYYY', 'gravityforms' ) )?>');
 				break;
@@ -887,7 +887,7 @@ if ( ! class_exists( 'GFForms' ) ) {
 		var min, hour, ampm;
 
 		hour = new Input(field.id + '.1', '<?php echo esc_js( __( 'HH', 'gravityforms' ) )?>');
-		min = new Input(field.id + '.2', '<?php echo esc_js( __( 'MM', 'gravityforms' ) )?>');
+		min = new Input(field.id + '.2', '<?php echo esc_js( _x( 'MM', 'Abbreviation: Minutes', 'gravityforms' ) )?>');
 		ampm = new Input(field.id + '.3', '<?php echo esc_js( __( 'AM/PM', 'gravityforms' ) )?>');
 
 		return [hour, min, ampm];
@@ -1003,7 +1003,7 @@ if ( ! class_exists( 'GFForms' ) ) {
 				}
 				break;
 			default :
-				return true;
+				return gform.applyFilters('gform_form_editor_can_field_be_added', true, type);
 		}
 
 		return true;

@@ -89,6 +89,7 @@ if ( class_exists( 'GFForms' ) ) {
 
 		// Scripts
 		public function scripts() {
+			$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] ) ? '' : '.min';
 			$scripts = array(
 				array(
 					'handle'  => 'gfwebapi_hmac_sha1',
@@ -108,7 +109,7 @@ if ( class_exists( 'GFForms' ) ) {
 				),
 				array(
 					'handle'  => 'gfwebapi_settings.js',
-					'src'     => GFCommon::get_base_url() . '/includes/webapi/js/gfwebapi_settings.js',
+					'src'     => GFCommon::get_base_url() . "/includes/webapi/js/gfwebapi_settings{$min}.js",
 					'version' => $this->_version,
 					'deps'    => array( 'jquery', 'thickbox' ),
 					'enqueue' => array(
@@ -121,10 +122,11 @@ if ( class_exists( 'GFForms' ) ) {
 		}
 
 		public function styles() {
+			$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] ) ? '' : '.min';
 			$styles = array(
 				array(
 					'handle'  => 'gfwebap_settings',
-					'src'     => GFCommon::get_base_url() . '/includes/webapi/css/gfwebapi_settings.css',
+					'src'     => GFCommon::get_base_url() . "/includes/webapi/css/gfwebapi_settings{$min}.css",
 					'version' => $this->_version,
 					'deps'    => array( 'thickbox' ),
 					'enqueue' => array(
@@ -185,6 +187,13 @@ if ( class_exists( 'GFForms' ) ) {
 								array( 'label' => __( 'Enabled', 'gravityforms' ), 'name' => 'enabled' ),
 							)
 						),
+					)
+				),
+				array(
+					'title' => __( 'Authentication', 'gravityforms' ),
+					'id' => 'gform_section_authentication',
+					'description' => __( 'The settings below are only required to authenticate external applications. WordPress cookie authentication is supported for logged in users.', 'gravityforms' ),
+					'fields' => array(
 						array(
 							'name'              => 'public_key',
 							'label'             => __( 'Public API Key', 'gravityforms' ),
@@ -220,7 +229,7 @@ if ( class_exists( 'GFForms' ) ) {
 							'dependency' => array( 'field' => 'private_key', 'values' => array( '_notempty_' ) )
 						),
 					)
-				),
+				)
 			);
 		}
 
@@ -338,8 +347,6 @@ if ( class_exists( 'GFForms' ) ) {
 
 		public function handle_page_request($query) {
 
-
-
 			global $HTTP_RAW_POST_DATA;
 
 			$route = get_query_var( GFWEBAPI_ROUTE_VAR );
@@ -347,21 +354,12 @@ if ( class_exists( 'GFForms' ) ) {
 				return;
 			}
 
-			self::authenticate();
-
-			$test_mode = rgget( 'test' );
-			if ( $test_mode ) {
-				die( 'test mode' );
-			}
+			send_origin_headers();
 
 			$settings = get_option( 'gravityformsaddon_gravityformswebapi_settings' );
-
-			if ( empty( $settings ) ) {
-				$this->die_not_authorized();
+			if ( empty( $settings ) || ! $settings['enabled'] ) {
+				$this->die_permission_denied();
 			}
-
-			$account_id = $settings['impersonate_account'];
-			wp_set_current_user( $account_id );
 
 			$route_parts = pathinfo( $route );
 
@@ -386,7 +384,6 @@ if ( class_exists( 'GFForms' ) ) {
 				$id2 = explode( ';', $id2 );
 			}
 
-
 			if ( empty( $format ) ) {
 				$format = 'json';
 			}
@@ -397,10 +394,23 @@ if ( class_exists( 'GFForms' ) ) {
 
 			$method = strtoupper( $_SERVER['REQUEST_METHOD'] );
 			$args   = compact( 'offset', 'page_size', 'schema' );
+
+			$endpoint = empty( $collection2 ) ? strtolower( $method ) . '_' . $collection : strtolower( $method ) . '_' . $collection . '_' . $collection2;
+
+			// The POST forms/[ID]/submissions endpoint is public and does not require authentication.
+			if ( $endpoint !== 'post_forms_submissions' ) {
+				$this->authenticate();
+			}
+
+			$test_mode = rgget( 'test' );
+			if ( $test_mode ) {
+				die( 'test mode' );
+			}
+
 			if ( empty( $collection2 ) ) {
-				do_action( 'gform_webapi_' . strtolower( $method ) . '_' . $collection, $id, $format, $args );
+				do_action( 'gform_webapi_' . $endpoint, $id, $format, $args );
 			} else {
-				do_action( 'gform_webapi_' . strtolower( $method ) . '_' . $collection . '_' . $collection2, $id, $id2, $format, $args );
+				do_action( 'gform_webapi_' . $endpoint, $id, $id2, $format, $args );
 			}
 
 			if ( ! isset( $HTTP_RAW_POST_DATA ) ) {
@@ -601,7 +611,7 @@ if ( class_exists( 'GFForms' ) ) {
 				return true;
 			}
 
-			$this->die_permission_denied();
+			$this->die_forbidden();
 		}
 
 		//----- Feeds ------
@@ -738,9 +748,6 @@ if ( class_exists( 'GFForms' ) ) {
 			if ( $form_id < 1 ) {
 				$this->die_bad_request();
 			}
-
-			$capability = apply_filters( 'gform_web_api_capability_post_form_submissions', 'gravityforms_edit_entries' );
-			$this->authorize( $capability );
 
 			if ( empty( $data['input_values'] ) ) {
 				$this->die_bad_request();
@@ -1364,7 +1371,7 @@ if ( class_exists( 'GFForms' ) ) {
 					$gf_results         = new GFResults( $this->_slug, array() );
 					$max_execution_time = 5;
 					$results            = $gf_results->get_results_data( $form, $fields, $search_criteria, $state, $max_execution_time );
-					if ( 'complete' == $results['status'] ) {
+					if ( 'complete' == rgar( $data, 'status' ) ) {
 						$status = 200;
 						if ( false == empty( $state ) ) {
 							delete_option( $key_tmp );
@@ -1406,10 +1413,13 @@ if ( class_exists( 'GFForms' ) ) {
 				}
 			}
 
-			$fields = $results['field_data'];
+			$fields = rgar( $results, 'field_data' );
 
-			// add choice labels to the results so the client doesn't need to cross-reference with the form object
-			$results['field_data'] = $this->results_data_add_labels( $form, $fields );
+			if ( ! empty( $fields ) ) {
+				// add choice labels to the results so the client doesn't need to cross-reference with the form object
+				$results['field_data'] = $this->results_data_add_labels( $form, $fields );
+			}
+
 
 			$this->end( $status, $results );
 		}
@@ -1467,8 +1477,17 @@ if ( class_exists( 'GFForms' ) ) {
 
 
 		private function authenticate() {
+
+			if (  isset( $_REQUEST['_gf_json_nonce'] ) && is_user_logged_in() ) {
+				// WordPress cookie authentication for plugins and themes on this server.
+				check_admin_referer( 'gf_api', '_gf_json_nonce' );
+				return true;
+			}
+
 			$authenticated = false;
+
 			if ( isset( $_GET['api_key'] ) ) {
+				// Signatures required for external requests
 				if ( rgget( 'api_key' ) == $this->_public_key ) {
 					if ( self::check_signature() ) {
 						$authenticated = true;
@@ -1477,10 +1496,18 @@ if ( class_exists( 'GFForms' ) ) {
 			}
 
 			if ( $authenticated ) {
-				return true;
+				$settings = get_option( 'gravityformsaddon_gravityformswebapi_settings' );
+				if ( empty( $settings ) || ! $settings['enabled'] ) {
+					$authenticated = false;
+				} else {
+					$account_id = $settings['impersonate_account'];
+					wp_set_current_user( $account_id );
+				}
 			}
 
-			$this->die_not_authorized();
+			if ( ! $authenticated ) {
+				$this->die_permission_denied();
+			}
 		}
 
 		private function check_signature() {
@@ -1525,7 +1552,6 @@ if ( class_exists( 'GFForms' ) ) {
 				header_remove( 'X-Pingback' );
 			}
 
-			send_origin_headers();
 			header( 'Content-Type: application/json; charset=' . get_option( 'blog_charset' ), true );
 			$output_json = json_encode( $output );
 
@@ -1539,6 +1565,10 @@ if ( class_exists( 'GFForms' ) ) {
 
 		public function die_permission_denied() {
 			$this->end( 401, __( 'Permission denied', 'gravityforms' ) );
+		}
+
+		public function die_forbidden() {
+			$this->end( 403, __( 'Forbidden', 'gravityforms' ) );
 		}
 
 		public function die_bad_request() {
