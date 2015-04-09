@@ -1280,7 +1280,10 @@ class GFFormSettings {
 				<label for="form_page_use_querystring"><?php _e( 'Pass Field Data Via Query String', 'gravityforms' ) ?></label>
 
 				<div id="form_page_querystring_container" <?php echo empty( $confirmation['queryString'] ) ? 'style="display:none;"' : ''; ?> >
-					<textarea name="form_page_querystring" id="form_page_querystring" class="merge-tag-support mt-position-right mt-hide_all_fields mt-option-url" style="width:98%; height:100px;"><?php echo( rgget( 'queryString', $confirmation ) ); ?></textarea><br />
+					<?php
+					$query_string = rgget( 'queryString', $confirmation );
+					?>
+					<textarea name="form_page_querystring" id="form_page_querystring" class="merge-tag-support mt-position-right mt-hide_all_fields mt-option-url" style="width:98%; height:100px;"><?php echo esc_html( $query_string ); ?></textarea><br />
 
 					<div class="instruction"><?php _e( 'Sample: phone={Phone:1}&email={Email:2}', 'gravityforms' ); ?></div>
 				</div>
@@ -1295,7 +1298,7 @@ class GFFormSettings {
 			<?php echo $subsetting_open; ?>
 			<th><?php _e( 'Redirect URL', 'gravityforms' ); ?></th>
 			<td>
-				<input type="text" id="form_confirmation_url" name="form_confirmation_url" value="<?php echo rgget( 'url', $confirmation ); ?>" style="width:98%;" />
+				<input type="text" id="form_confirmation_url" name="form_confirmation_url" value="<?php echo esc_attr( rgget( 'url', $confirmation ) ); ?>" style="width:98%;" />
 			</td>
 			<?php echo $subsetting_close; ?>
 		</tr> <!-- / confirmation url -->
@@ -1311,7 +1314,12 @@ class GFFormSettings {
 				<label for="form_redirect_use_querystring"><?php _e( 'Pass Field Data Via Query String', 'gravityforms' ) ?></label>
 
 				<div id="form_redirect_querystring_container" <?php echo empty( $confirmation['queryString'] ) ? 'style="display:none;"' : ''; ?> >
-					<textarea name="form_redirect_querystring" id="form_redirect_querystring" class="merge-tag-support mt-position-right mt-hide_all_fields mt-option-url" style="width:98%; height:100px;"><?php echo( rgget( 'queryString', $confirmation ) ); ?></textarea><br />
+
+					<?php
+					$query_string = rgget( 'queryString', $confirmation );
+					?>
+
+					<textarea name="form_redirect_querystring" id="form_redirect_querystring" class="merge-tag-support mt-position-right mt-hide_all_fields mt-option-url" style="width:98%; height:100px;"><?php echo esc_html( $query_string ); ?></textarea><br />
 
 					<div class="instruction"><?php _e( 'Sample: phone={Phone:1}&email={Email:2}', 'gravityforms' ); ?></div>
 				</div>
@@ -1627,7 +1635,7 @@ class GFFormSettings {
 		}
 
 		if ( ! $has_save_confirmation ) {
-			$confirmation_id = uniqid();
+			$confirmation_id = uniqid( 'sc1' );
 			$form['confirmations'][ $confirmation_id ] = array(
 				'id'          => $confirmation_id,
 				'event'       => 'form_saved',
@@ -1639,7 +1647,7 @@ class GFFormSettings {
 				'pageId'      => '',
 				'queryString' => '',
 			);
-			$confirmation_id = uniqid();
+			$confirmation_id = uniqid( 'sc2' );
 			$form['confirmations'][ $confirmation_id ] = array(
 				'id'          => $confirmation_id,
 				'event'       => 'form_save_email_sent',

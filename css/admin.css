@@ -298,11 +298,17 @@ label.float_label {
 	float: left;
 	margin-bottom: 4px;
 }
+.gfield_date_year {
+    width: 65px;
+}
 
 .gfield_date_month input,
 .gfield_date_day input,
 .gfield_date_year input {
 	width: 80% !important;
+}
+.gfield_date_year input {
+    width: 83% !important;
 }
 
 .gfield_date_dropdown_month,

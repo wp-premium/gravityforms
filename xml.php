@@ -89,6 +89,9 @@ class RGXML {
 	public function unserialize( $xml_string ) {
 		$xml_string = trim( $xml_string );
 
+		$loader = libxml_disable_entity_loader( true );
+		$errors = libxml_use_internal_errors( true );
+
 		$xml_parser = xml_parser_create();
 		$values     = array();
 		xml_parser_set_option( $xml_parser, XML_OPTION_CASE_FOLDING, false );
@@ -98,6 +101,9 @@ class RGXML {
 
 		$object = $this->unserialize_node( $values, 0 );
 		xml_parser_free( $xml_parser );
+
+		libxml_use_internal_errors( $errors );
+		libxml_disable_entity_loader( $loader );
 
 		return $object;
 	}

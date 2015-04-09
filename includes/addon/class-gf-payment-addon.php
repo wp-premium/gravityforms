@@ -60,6 +60,9 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
 		add_filter( 'gform_currencies', array( $this, 'supported_currencies' ) );
 
+		add_filter( 'gform_delete_lead', array( $this, 'entry_deleted' ) );
+
+
 		if ( rgget( 'page' ) == 'gf_entries' ) {
 			add_action( 'gform_payment_details', array( $this, 'entry_info' ), 10, 2 );
 			add_action( 'gform_enable_entry_info_payment_details', array( $this, 'disable_entry_info_payment' ), 10, 2 );
@@ -198,7 +201,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		//Do not process payment if payment amount is 0
 		if ( floatval( $submission_data['payment_amount'] ) <= 0 ) {
 
-			$this->log_debug( 'GFPaymentAddOn::validation(): Payment amount is $0.00 or less. Not sending to payment gateway.' );
+			$this->log_debug( __METHOD__ . '(): Payment amount is $0.00 or less. Not sending to payment gateway.' );
 
 			return $validation_result;
 		}
@@ -478,6 +481,9 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		$txn_id = $wpdb->insert_id;
 
 		do_action( 'gform_post_payment_transaction', $txn_id, $entry_id, $transaction_type, $transaction_id, $amount, $is_recurring );
+		if ( has_filter( 'gform_post_payment_transaction' ) ) {
+			$this->log_debug( __METHOD__ . '(): Executing functions hooked to gform_post_payment_transaction.' );
+		}
 
 		return $txn_id;
 	}
@@ -524,8 +530,9 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		//getting mapped field data
 		$billing_fields = $this->billing_info_fields();
 		foreach ( $billing_fields as $billing_field ) {
-			$field_name             = $billing_field['name'];
-			$form_data[ $field_name ] = rgpost( 'input_' . str_replace( '.', '_', rgar( $feed['meta'], "billingInformation_{$field_name}" ) ) );
+			$field_name               = $billing_field['name'];
+			$input_id                 = rgar( $feed['meta'], "billingInformation_{$field_name}" );
+			$form_data[ $field_name ] = rgar( $entry, $input_id );
 		}
 
 		//getting credit card field data
@@ -651,11 +658,11 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
 		// returns either false or an array of data about the callback request which payment add-on will then use
 		// to generically process the callback data
-		$this->log_debug( 'GFPaymentAddOn::maybe_process_callback(): Initializing callback processing for: ' . $this->_slug );
+		$this->log_debug( __METHOD__ . '(): Initializing callback processing for: ' . $this->_slug );
 
 		$callback_action = $this->callback();
 
-		$this->log_debug( 'GFPaymentAddOn::maybe_process_callback(): Result from gateway callback: ' . print_r( $callback_action, true ) );
+		$this->log_debug( __METHOD__ . '(): Result from gateway callback => ' . print_r( $callback_action, true ) );
 
 		$result = false;
 		if ( is_wp_error( $callback_action ) ) {
@@ -663,6 +670,8 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		} else if ( $callback_action && is_array( $callback_action ) && rgar( $callback_action, 'type' ) && ! rgar( $callback_action, 'abort_callback' ) ) {
 
 			$result = $this->process_callback_action( $callback_action );
+
+			$this->log_debug( __METHOD__ . '(): Result of callback action => ' . print_r( $result, true ) );
 
 			if ( is_wp_error( $result ) ) {
 				$this->display_callback_error( $result );
@@ -710,7 +719,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 	 * @return mixed
 	 */
 	private function process_callback_action( $action ) {
-		$this->log_debug( 'GFPaymentAddOn::process_callback_action(): Processing callback action' );
+		$this->log_debug( __METHOD__ . '(): Processing callback action.' );
 		$action = wp_parse_args(
 			$action, array(
 				'type'             => false,
@@ -737,6 +746,9 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
 		//$action = do_action('gform_action_pre_payment_callback', $action, $entry);
 		do_action( 'gform_action_pre_payment_callback', $action, $entry );
+		if ( has_filter( 'gform_action_pre_payment_callback' ) ) {
+			$this->log_debug( __METHOD__ . '(): Executing functions hooked to gform_action_pre_payment_callback.' );
+		}
 
 		switch ( $action['type'] ) {
 			case 'complete_payment':
@@ -756,6 +768,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 				break;
 			case 'create_subscription':
 				$result = $this->start_subscription( $entry, $action );
+				$result = rgar( $result, 'payment_status' ) == 'Active' && rgar( $result, 'transaction_id' ) == rgar( $action, 'subscription_id' );
 				break;
 			case 'cancel_subscription':
 				$feed   = $this->get_payment_feed( $entry );
@@ -778,13 +791,14 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 				break;
 		}
 
-		$this->log_debug( 'GFPaymentAddOn::process_callback_action(): Callback action successful?' . print_r( $result, true ) );
-
 		if ( rgar( $action, 'id' ) && $result ) {
 			$this->register_callback( $action['id'], $action['entry_id'] );
 		}
 
 		do_action( 'gform_post_payment_callback', $entry, $action, $result );
+		if ( has_filter( 'gform_post_payment_callback' ) ) {
+			$this->log_debug( __METHOD__ . '(): Executing functions hooked to gform_post_payment_callback.' );
+		}
 
 		return $result;
 	}
@@ -816,7 +830,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 	// # PAYMENT INTERACTION FUNCTIONS
 
 	public function add_pending_payment( $entry, $action ) {
-		$this->log_debug( 'GFPaymentAddOn::add_pending_payment(): Processing a Pending transaction.' );
+		$this->log_debug( __METHOD__ . '(): Processing request.' );
 		if ( ! $action['payment_status'] ) {
 			$action['payment_status'] = 'Pending';
 		}
@@ -833,7 +847,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 	}
 
 	public function complete_payment( &$entry, $action ) {
-
+		$this->log_debug( __METHOD__ . '(): Processing request.' );
 		if ( ! rgar( $action, 'payment_status' ) ) {
 			$action['payment_status'] = 'Paid';
 		}
@@ -865,12 +879,15 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		$this->add_note( $entry['id'], $action['note'], 'success' );
 
 		do_action( 'gform_post_payment_completed', $entry, $action );
+		if ( has_filter( 'gform_post_payment_completed' ) ) {
+			$this->log_debug( __METHOD__ . '(): Executing functions hooked to gform_post_payment_completed.' );
+		}
 
 		return true;
 	}
 
 	public function refund_payment( $entry, $action ) {
-		$this->log_debug( 'GFPaymentAddOn::refund_payment(): Processing a Refund request.' );
+		$this->log_debug( __METHOD__ . '(): Processing request.' );
 		if ( ! $action['payment_status'] ) {
 			$action['payment_status'] = 'Refunded';
 		}
@@ -889,12 +906,15 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		$this->add_note( $entry['id'], $action['note'] );
 
 		do_action( 'gform_post_payment_refunded', $entry, $action );
+		if ( has_filter( 'gform_post_payment_refunded' ) ) {
+			$this->log_debug( __METHOD__ . '(): Executing functions hooked to gform_post_payment_refunded.' );
+		}
 
 		return true;
 	}
 
 	public function fail_payment( $entry, $action ) {
-		$this->log_debug( 'GFPaymentAddOn::fail_payment(): Processing a Failed request.' );
+		$this->log_debug( __METHOD__ . '(): Processing request.' );
 		if ( ! $action['payment_status'] ) {
 			$action['payment_status'] = 'Failed';
 		}
@@ -911,7 +931,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 	}
 
 	public function void_authorization( $entry, $action ) {
-		$this->log_debug( 'GFPaymentAddOn::void_authorization(): Processing a Voided request.' );
+		$this->log_debug( __METHOD__ . '(): Processing request.' );
 		if ( ! $action['payment_status'] ) {
 			$action['payment_status'] = 'Voided';
 		}
@@ -937,7 +957,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 	 */
 
 	public function start_subscription( $entry, $subscription ) {
-
+		$this->log_debug( __METHOD__ . '(): Processing request.' );
 		if ( ! $this->has_subscription( $entry ) ) {
 			$entry['payment_status']   = 'Active';
 			$entry['payment_amount']   = $subscription['amount'];
@@ -950,6 +970,9 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 			$this->add_note( $entry['id'], sprintf( __( 'Subscription has been created. Subscription Id: %s.', 'gravityforms' ), $subscription['subscription_id'] ), 'success' );
 
 			do_action( 'gform_post_subscription_started', $entry, $subscription );
+			if ( has_filter( 'gform_post_subscription_started' ) ) {
+				$this->log_debug( __METHOD__ . '(): Executing functions hooked to gform_post_subscription_started.' );
+			}
 		}
 
 		return $entry;
@@ -964,7 +987,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 	 * @return true
 	 */
 	public function add_subscription_payment( $entry, $action ) {
-
+		$this->log_debug( __METHOD__ . '(): Processing request.' );
 		if ( ! $action['transaction_type'] ) {
 			$action['transaction_type'] = 'payment';
 		}
@@ -980,12 +1003,15 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		$this->add_note( $entry['id'], $action['note'], 'success' );
 
 		do_action( 'gform_post_add_subscription_payment', $entry, $action );
+		if ( has_filter( 'gform_post_add_subscription_payment' ) ) {
+			$this->log_debug( __METHOD__ . '(): Executing functions hooked to gform_post_add_subscription_payment.' );
+		}
 
 		return true;
 	}
 
 	public function fail_subscription_payment( $entry, $action ) {
-
+		$this->log_debug( __METHOD__ . '(): Processing request.' );
 		if ( ! $action['note'] ) {
 			$amount_formatted = GFCommon::to_money( $action['amount'], $entry['currency'] );
 			$action['note']   = sprintf( __( 'Subscription payment has failed. Amount: %s. Subscription Id: %s.', 'gravityforms' ), $amount_formatted, $action['subscription_id'] );
@@ -996,19 +1022,25 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
 		// keep 'gform_subscription_payment_failed' for backward compatability
 		do_action( 'gform_subscription_payment_failed', $entry, $action['subscription_id'] );
+		if ( has_filter( 'gform_subscription_payment_failed' ) ) {
+			$this->log_debug( __METHOD__ . '(): Executing functions hooked to gform_subscription_payment_failed.' );
+		}
 		do_action( 'gform_post_fail_subscription_payment', $entry, $action );
+		if ( has_filter( 'gform_post_fail_subscription_payment' ) ) {
+			$this->log_debug( __METHOD__ . '(): Executing functions hooked to gform_post_fail_subscription_payment.' );
+		}
 
 		return true;
 	}
 
 	public function cancel_subscription( $entry, $feed, $note = null ) {
-		$this->log_debug( 'GFPaymentAddOn::cancel_subscription(): Cancelling subscription' );
+		$this->log_debug( __METHOD__ . '(): Processing request.' );
 		if ( ! $note ) {
 			$note = sprintf( __( 'Subscription has been cancelled. Subscription Id: %s.', 'gravityforms' ), $entry['transaction_id'] );
 		}
 
 		if ( strtolower( $entry['payment_status'] ) == 'cancelled' ) {
-			$this->log_debug( 'GFPaymentAddOn::cancel_subscription(): Subscription is already canceled.' );
+			$this->log_debug( __METHOD__ . '(): Subscription is already canceled.' );
 
 			return false;
 		}
@@ -1019,12 +1051,15 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
 		// include $subscriber_id as 3rd parameter for backwards compatibility
 		do_action( 'gform_subscription_canceled', $entry, $feed, $entry['transaction_id'] );
+		if ( has_filter( 'gform_subscription_canceled' ) ) {
+			$this->log_debug( __METHOD__ . '(): Executing functions hooked to gform_subscription_canceled.' );
+		}
 
 		return true;
 	}
 
 	public function expire_subscription( $entry, $action ) {
-		$this->log_debug( 'GFPaymentAddOn::expire_subscription(): Setting entry as expired' );
+		$this->log_debug( __METHOD__ . '(): Processing request.' );
 		if ( ! $action['note'] ) {
 			$action['note'] = sprintf( __( 'Subscription has expired. Subscriber Id: %s', 'gravityforms' ), $action['subscription_id'] );
 		}
@@ -1689,7 +1724,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 				$select_inner1 = "date_format(CONVERT_TZ(date_created, '+00:00', '" . $tz_offset . "'), '%%Y-%%m-01') month";
 				$select_inner2 = "date_format(CONVERT_TZ(t.date_created, '+00:00', '" . $tz_offset . "'), '%%Y-%%m-01') month";
 				$group_by      = 'month';
-				$order_by      = 'month desc';
+				$order_by      = 'year desc, month desc';
 				$join          = 'lead.month = transaction.month';
 
 				$data['chart']['hAxis']['column'] = 'month_abbrev';
@@ -1739,7 +1774,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
                                           sum( if(transaction_type = 1,1,0) ) as orders,
                                           sum( if(transaction_type = 2,1,0) ) as subscriptions
                                   FROM {$wpdb->prefix}rg_lead l
-                                  WHERE form_id=%d {$lead_date_filter} {$payment_method_filter}
+                                  WHERE l.status='active' AND form_id=%d {$lead_date_filter} {$payment_method_filter}
                                   GROUP BY {$group_by}
                                 ) AS lead
 
@@ -1750,7 +1785,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
                                           sum( if(t.transaction_type = 'payment' AND t.is_recurring = 1, 1, 0) ) as recurring_payments
                                   FROM {$wpdb->prefix}gf_addon_payment_transaction t
                                   INNER JOIN {$wpdb->prefix}rg_lead l ON l.id = t.lead_id
-                                  WHERE l.form_id=%d {$lead_date_filter} {$transaction_date_filter} {$payment_method_filter}
+                                  WHERE l.status='active' AND l.form_id=%d {$lead_date_filter} {$transaction_date_filter} {$payment_method_filter}
                                   GROUP BY {$group_by}
 
                                 ) AS transaction on {$join}
@@ -1812,7 +1847,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
                                sum( if(transaction_type = 1,1,0) ) as orders,
                                sum( if(transaction_type = 2,1,0) ) as subscriptions
                        FROM {$wpdb->prefix}rg_lead
-                       WHERE form_id = %d and datediff(now(), CONVERT_TZ(date_created, '+00:00', '" . $tz_offset . "') ) <= 30
+                       WHERE status='active' AND form_id = %d AND datediff(now(), CONVERT_TZ(date_created, '+00:00', '" . $tz_offset . "') ) <= 30
                        GROUP BY date
                      ) AS lead
 
@@ -1821,7 +1856,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
                                sum( if(t.transaction_type = 'refund', abs(t.amount) * -1, t.amount) ) as revenue
                        FROM {$wpdb->prefix}gf_addon_payment_transaction t
                          INNER JOIN {$wpdb->prefix}rg_lead l ON l.id = t.lead_id
-                       WHERE l.form_id=%d
+                       WHERE l.form_id=%d AND l.status='active'
                        GROUP BY date
                      ) AS transaction on lead.date = transaction.date
                     ORDER BY date desc", $form_id, $form_id
@@ -1834,7 +1869,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
                     SELECT sum( if(transaction_type = 1,1,0) ) as orders,
                            sum( if(transaction_type = 2,1,0) ) as subscriptions
                     FROM {$wpdb->prefix}rg_lead
-                    WHERE form_id=%d", $form_id
+                    WHERE form_id=%d AND status='active'", $form_id
 			), ARRAY_A
 		);
 
@@ -1844,7 +1879,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
                     SELECT sum( if(t.transaction_type = 'refund', abs(t.amount) * -1, t.amount) ) as revenue
                     FROM {$wpdb->prefix}gf_addon_payment_transaction t
                     INNER JOIN {$wpdb->prefix}rg_lead l ON l.id = t.lead_id
-                    WHERE l.form_id=%d", $form_id
+                    WHERE l.form_id=%d AND status='active'", $form_id
 			)
 		);
 
@@ -1962,11 +1997,11 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
 	//-------- Scripts -----------------------
 	public function scripts() {
-
+		$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] ) ? '' : '.min';
 		$scripts = array(
 			array(
 				'handle'  => 'gaddon_payment',
-				'src'     => $this->get_gfaddon_base_url() . '/js/gaddon_payment.js',
+				'src'     => $this->get_gfaddon_base_url() . "/js/gaddon_payment{$min}.js",
 				'version' => GFCommon::$version,
 				'strings' => array(
 					'subscriptionCancelWarning' => __( "Warning! This subscription will be canceled. This cannot be undone. 'OK' to cancel subscription, 'Cancel' to stop", 'gravityforms' ),
@@ -2025,6 +2060,21 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
 		<?php
 		}
+	}
+
+	/**
+	 * Target of gform_delete_lead hook. Deletes all transactions and callbacks when an entry is deleted.
+	 *
+	 * @param $entry_id. ID of entry that is being deleted
+	 */
+	public function entry_deleted( $entry_id ){
+		global $wpdb;
+
+		//deleting from transaction table
+		$wpdb->delete( "{$wpdb->prefix}gf_addon_payment_transaction", array( 'lead_id' => $entry_id ), array( '%d' ) );
+
+		//deleting from callback table
+		$wpdb->delete( "{$wpdb->prefix}gf_addon_payment_callback", array( 'lead_id' => $entry_id ), array( '%d' ) );
 	}
 
 	public function disable_entry_info_payment( $is_enabled, $entry ) {

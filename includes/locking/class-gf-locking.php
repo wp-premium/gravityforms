@@ -85,7 +85,9 @@ abstract class GFLocking {
 	 * @return bool
 	 */
 	protected function get_object_id() {
-		return rgget( 'id' ); // example in the case of form id
+		$id = rgget( 'id' );
+		$id = absint( $id );
+		return $id; // example in the case of form id
 	}
 
 	public function init_edit_lock() {
@@ -110,12 +112,13 @@ abstract class GFLocking {
 	}
 
 	public function register_scripts() {
+		$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] ) ? '' : '.min';
 		$locking_path = GFCommon::get_base_url() . '/includes/locking/';
-		wp_register_script( 'gforms_locking', $locking_path . 'js/locking.js', array( 'jquery', 'heartbeat' ), GFCommon::$version );
-		wp_register_script( 'gforms_locking_view', $locking_path . 'js/locking-view.js', array( 'jquery', 'heartbeat' ), GFCommon::$version );
-		wp_register_script( 'gforms_locking_list', $locking_path . 'js/locking-list.js', array( 'jquery', 'heartbeat' ), GFCommon::$version );
-		wp_register_style( 'gforms_locking_css', $locking_path . 'css/locking.css', array(), GFCommon::$version );
-		wp_register_style( 'gforms_locking_list_css', $locking_path . 'css/locking-list.css', array(), GFCommon::$version );
+		wp_register_script( 'gforms_locking', $locking_path . "js/locking{$min}.js", array( 'jquery', 'heartbeat' ), GFCommon::$version );
+		wp_register_script( 'gforms_locking_view', $locking_path . "js/locking-view{$min}.js", array( 'jquery', 'heartbeat' ), GFCommon::$version );
+		wp_register_script( 'gforms_locking_list', $locking_path . "js/locking-list{$min}.js", array( 'jquery', 'heartbeat' ), GFCommon::$version );
+		wp_register_style( 'gforms_locking_css', $locking_path . "css/locking{$min}.css", array(), GFCommon::$version );
+		wp_register_style( 'gforms_locking_list_css', $locking_path . "css/locking-list{$min}.css", array(), GFCommon::$version );
 
 		// No conflict scripts
 		add_filter( 'gform_noconflict_scripts', array( $this, 'register_noconflict_scripts' ) );
@@ -322,11 +325,11 @@ abstract class GFLocking {
 	public function maybe_lock_object( $is_edit_page ) {
 		if ( isset( $_GET['get-edit-lock'] ) ) {
 			$this->set_lock( $this->_object_id );
-			wp_redirect( $this->_edit_url );
+			wp_safe_redirect( $this->_edit_url );
 			exit();
 		} else if ( isset( $_GET['release-edit-lock'] ) ) {
 			$this->delete_lock_meta( $this->_object_id );
-			wp_redirect( $this->_redirect_url );
+			wp_safe_redirect( $this->_redirect_url );
 			exit();
 		} else {
 			if ( $is_edit_page && ! $user_id = $this->check_lock( $this->_object_id ) ) {

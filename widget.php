@@ -59,12 +59,12 @@ if ( ! class_exists( 'GFWidget' ) ) {
 		function update( $new_instance, $old_instance ) {
 			$instance                    = $old_instance;
 			$instance['title']           = strip_tags( $new_instance['title'] );
-			$instance['form_id']         = $new_instance['form_id'];
-			$instance['showtitle']       = $new_instance['showtitle'];
-			$instance['ajax']            = $new_instance['ajax'];
-			$instance['disable_scripts'] = $new_instance['disable_scripts'];
-			$instance['showdescription'] = $new_instance['showdescription'];
-			$instance['tabindex']        = $new_instance['tabindex'];
+			$instance['form_id']         = rgar( $new_instance, 'form_id' );
+			$instance['showtitle']       = rgar( $new_instance, 'showtitle' );
+			$instance['ajax']            = rgar( $new_instance, 'ajax' );
+			$instance['disable_scripts'] = rgar( $new_instance, 'disable_scripts' );
+			$instance['showdescription'] = rgar( $new_instance, 'showdescription' );
+			$instance['tabindex']        = rgar( $new_instance, 'tabindex' );
 
 			return $instance;
 		}

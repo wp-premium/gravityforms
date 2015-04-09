@@ -27,6 +27,7 @@ class GF_Field_Post_Tags extends GF_Field {
 			'visibility_setting',
 			'description_setting',
 			'css_class_setting',
+			'placeholder_setting'
 		);
 	}
 

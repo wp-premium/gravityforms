@@ -130,7 +130,7 @@ class GF_Field_Date extends GF_Field {
 		$day_input   = GFFormsModel::get_input( $this, $this->id . '.2' );
 		$year_input  = GFFormsModel::get_input( $this, $this->id . '.3' );
 
-		$month_sub_label = rgar( $month_input, 'customLabel' ) != '' ? $month_input['customLabel'] : __( 'MM', 'gravityforms' );
+		$month_sub_label = rgar( $month_input, 'customLabel' ) != '' ? $month_input['customLabel'] : _x( 'MM', 'Abbreviation: Month', 'gravityforms' );
 		$day_sub_label   = rgar( $day_input, 'customLabel' ) != '' ? $day_input['customLabel'] : __( 'DD', 'gravityforms' );
 		$year_sub_label  = rgar( $year_input, 'customLabel' ) != '' ? $year_input['customLabel'] : __( 'YYYY', 'gravityforms' );
 
@@ -409,6 +409,22 @@ class GF_Field_Date extends GF_Field {
                         <input type='hidden' id='gforms_calendar_icon_$field_id' class='gform_hidden' value='$icon_url'/>";
 			}
 		}
+	}
+
+	public function get_value_default(){
+
+		$value = parent::get_value_default();
+
+		// the default value for mulit-input date fields will always be an array in mdy order
+		// this code will alter the order of the values to the date format of the field
+		if ( is_array( $this->inputs ) ) {
+			$format   = empty( $this->dateFormat ) ? 'mdy' : esc_attr( $this->dateFormat );
+			$position = substr( $format, 0, 3 );
+			$date     = array_combine( array( 'm', 'd', 'y' ), $value );            // takes our numerical array and converts it to an associative array
+			$value    = array_merge( array_flip( str_split( $position ) ), $date ); // uses the mdy position as the array keys and creates a new array in the desired order
+		}
+
+		return $value;
 	}
 
 	public function checkdate( $month, $day, $year ) {

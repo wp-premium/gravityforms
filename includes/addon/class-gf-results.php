@@ -474,14 +474,20 @@ if ( ! class_exists( 'GFResults' ) ) {
 		}
 
 		public static function get_field_results( $form_id, $data, $field, $search_criteria ) {
+
+			if ( empty( $data['entry_count'] ) || empty ( $data['field_data'] ) ) {
+				return __( 'No entries for this field', 'gravityforms' );
+			}
+
 			$field_data    = $data['field_data'];
 			$entry_count   = $data['entry_count'];
-			$field_results = '';
-			if ( empty( $field_data[ $field->id ] ) ) {
-				$field_results .= __( 'No entries for this field', 'gravityforms' );
 
-				return $field_results;
+			if ( empty( $field_data[ $field->id ] ) ) {
+				return __( 'No entries for this field', 'gravityforms' );
 			}
+
+			$field_results = '';
+
 			$field_type = GFFormsModel::get_input_type( $field );
 			switch ( $field_type ) {
 				case 'radio' :

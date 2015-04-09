@@ -103,7 +103,13 @@ class GFFormsModel {
 
 		$where_clause = 'WHERE ' . join( ' AND ', $where_arr );
 		$sort_keyword = $sort_dir == 'ASC' ? 'ASC' : 'DESC';
-		$sort_column  = ESC_SQL( $sort_column );
+
+		$db_columns = self::get_form_db_columns();
+
+		if ( ! in_array( strtolower( $sort_column ), $db_columns ) ) {
+			$sort_column = 'title';
+		}
+
 		$order_by     = ! empty( $sort_column ) ? "ORDER BY $sort_column $sort_keyword" : '';
 
 		$sql = "SELECT f.id, f.title, f.date_created, f.is_active, 0 as lead_count, 0 view_count
@@ -140,6 +146,10 @@ class GFFormsModel {
 		}
 
 		return $forms;
+	}
+
+	public static function get_form_db_columns() {
+		return array( 'id', 'title', 'date_created', 'is_active', 'is_trash' );
 	}
 
 	public static function get_forms_by_id( $ids ) {
@@ -180,13 +190,15 @@ class GFFormsModel {
 	public static function get_form_counts( $form_id ) {
 		global $wpdb;
 		$lead_table_name = self::get_lead_table_name();
+		$lead_detail_table_name = self::get_lead_details_table_name();
+
 		$sql             = $wpdb->prepare(
 			"SELECT
-                    (SELECT count(0) FROM $lead_table_name WHERE form_id=%d AND status='active') as total,
-                    (SELECT count(0) FROM $lead_table_name WHERE is_read=0 AND status='active' AND form_id=%d) as unread,
-                    (SELECT count(0) FROM $lead_table_name WHERE is_starred=1 AND status='active' AND form_id=%d) as starred,
-                    (SELECT count(0) FROM $lead_table_name WHERE status='spam' AND form_id=%d) as spam,
-                    (SELECT count(0) FROM $lead_table_name WHERE status='trash' AND form_id=%d) as trash",
+                    (SELECT count(0) FROM $lead_table_name l INNER JOIN $lead_detail_table_name ld ON l.id=ld.lead_id WHERE l.form_id=%d AND l.status='active') as total,
+                    (SELECT count(0) FROM $lead_table_name l INNER JOIN $lead_detail_table_name ld ON l.id=ld.lead_id WHERE l.is_read=0 AND l.status='active' AND l.form_id=%d) as unread,
+                    (SELECT count(0) FROM $lead_table_name l INNER JOIN $lead_detail_table_name ld ON l.id=ld.lead_id WHERE l.is_starred=1 AND l.status='active' AND l.form_id=%d) as starred,
+                    (SELECT count(0) FROM $lead_table_name l INNER JOIN $lead_detail_table_name ld ON l.id=ld.lead_id WHERE l.status='spam' AND l.form_id=%d) as spam,
+                    (SELECT count(0) FROM $lead_table_name l INNER JOIN $lead_detail_table_name ld ON l.id=ld.lead_id WHERE l.status='trash' AND l.form_id=%d) as trash",
 			$form_id, $form_id, $form_id, $form_id, $form_id
 		);
 
@@ -1476,7 +1488,13 @@ class GFFormsModel {
 	public static function get_prepared_input_value( $form, $field, $lead, $input_id ) {
 
 		$input_name = 'input_' . str_replace( '.', '_', $input_id );
-		$value      = rgpost( $input_name );
+		if ( $field->enableCopyValuesOption && rgpost( 'input_' . $field->id . '_copy_values_activated' ) ) {
+			$source_field_id   = $field->copyValuesOptionField;
+			$source_input_name = str_replace( 'input_' . $field->id, 'input_' . $source_field_id, $input_name );
+			$value             = rgpost( $source_input_name );
+		} else {
+			$value = rgpost( $input_name );
+		}
 
 		$is_form_editor = GFCommon::is_form_editor();
 		$is_entry_detail = GFCommon::is_entry_detail();
@@ -2347,13 +2365,13 @@ class GFFormsModel {
 		$unique_id = '';
 		if ( rgpost( 'gform_submit' ) == $form_id ) {
 			$posted_uid = rgpost( 'gform_unique_id' );
-			if ( false === empty( $posted_uid ) ) {
-				$unique_id                  = $posted_uid;
+			if ( false === empty( $posted_uid ) && ctype_alnum( $posted_uid )) {
+				$unique_id = $posted_uid;
 				self::$unique_ids[ $form_id ] = $unique_id;
 			} elseif ( isset( self::$unique_ids[ $form_id ] ) ) {
 				$unique_id = self::$unique_ids[ $form_id ];
 			} else {
-				$unique_id                  = uniqid();
+				$unique_id = uniqid();
 				self::$unique_ids[ $form_id ] = $unique_id;
 			}
 		}
@@ -2975,10 +2993,12 @@ class GFFormsModel {
 	}
 
 	public static function get_upload_path( $form_id ) {
+		$form_id = absint( $form_id );
 		return self::get_upload_root() . $form_id . '-' . wp_hash( $form_id );
 	}
 
 	public static function get_upload_url( $form_id ) {
+		$form_id = absint( $form_id );
 		$dir = wp_upload_dir();
 
 		return $dir['baseurl'] . "/gravity_forms/$form_id" . '-' . wp_hash( $form_id );
@@ -2989,6 +3009,8 @@ class GFFormsModel {
 		if ( get_magic_quotes_gpc() ) {
 			$file_name = stripslashes( $file_name );
 		}
+
+		$form_id = absint( $form_id );
 
 		// Where the file is going to be placed
 		// Generate the yearly and monthly dirs
@@ -3726,6 +3748,7 @@ class GFFormsModel {
 				default :
 					$field = self::get_field( $form, $field_id );
 					if ( $field ) {
+						$input_label_only = apply_filters( 'gform_entry_list_column_input_label_only', $input_label_only, $form, $field );
 						$columns[strval( $field_id )] = array( 'label' => self::get_label( $field, $field_id, $input_label_only ), 'type' => $field->type, 'inputType' => $field->inputType );
 					}
 			}
@@ -4181,8 +4204,8 @@ class GFFormsModel {
 		global $wpdb;
 
 		if ( is_array( $form_id ) ) {
-			$in_str_arr    = array_fill( 0, count( $form_id ), '%s' );
-			$in_str        = esc_sql( join( ',', $in_str_arr ) );
+			$in_str_arr    = array_fill( 0, count( $form_id ), '%d' );
+			$in_str        = join( ',', $in_str_arr );
 			$form_id_where = $wpdb->prepare( "l.form_id IN ($in_str)", $form_id );
 		} else {
 			$form_id_where = $form_id > 0 ? $wpdb->prepare( 'l.form_id=%d', $form_id ) : '';
@@ -4269,8 +4292,8 @@ class GFFormsModel {
 		$lead_details_table_name = GFFormsModel::get_lead_details_table_name();
 		$lead_meta_table_name    = GFFormsModel::get_lead_meta_table_name();
 		if ( is_array( $form_id ) ) {
-			$in_str_arr    = array_fill( 0, count( $form_id ), '%s' );
-			$in_str        = esc_sql( join( ',', $in_str_arr ) );
+			$in_str_arr    = array_fill( 0, count( $form_id ), '%d' );
+			$in_str        = join( ',', $in_str_arr );
 			$form_id_where = $wpdb->prepare( "AND form_id IN ($in_str)", $form_id );
 		} else {
 			$form_id_where = $form_id > 0 ? $wpdb->prepare( 'AND form_id=%d', $form_id ) : '';
@@ -4329,17 +4352,13 @@ class GFFormsModel {
 					if ( is_array( $search_term ) ) {
 						if ( in_array( $operator, array( '=', 'in' ) ) ) {
 							$operator = 'IN'; // Override operator
-							// Format in SQL and sanitize the strings in the list
-							$search_terms = array_fill( 0, count( $search_term ), '%s' );
-							$search_term_placeholder = $wpdb->prepare( '( ' . implode( ', ', $search_terms ) . ' )', $search_term );
-							$search_term = ''; // Set to blank, still gets passed to wpdb::prepare below but isn't used
 						} elseif ( in_array( $operator, array( '!=', '<>', 'not in' ) ) ) {
 							$operator = 'NOT IN'; // Override operator
-							// Format in SQL and sanitize the strings in the list
-							$search_terms = array_fill( 0, count( $search_term ), '%s' );
-							$search_term_placeholder = $wpdb->prepare( '( ' . implode( ', ', $search_terms ) . ' )', $search_term );
-							$search_term = ''; // Set to blank, still gets passed to wpdb::prepare below but isn't used
 						}
+						// Format in SQL and sanitize the strings in the list
+						$search_terms = array_fill( 0, count( $search_term ), '%s' );
+						$search_term_placeholder = $wpdb->prepare( '( ' . implode( ', ', $search_terms ) . ' )', $search_term );
+						$search_term = ''; // Set to blank, still gets passed to wpdb::prepare below but isn't used
 					}
 
 					$upper_field_number_limit = (string) (int) $key === $key ? (float) $key + 0.9999 : (float) $key + 0.0001;
@@ -4452,6 +4471,19 @@ class GFFormsModel {
 					$meta        = rgar( $entry_meta, $key );
 					$placeholder = rgar( $meta, 'is_numeric' ) ? '%s' : '%s';
 					$search_term = 'like' == $operator ? "%$val%" : $val;
+
+					if ( is_array( $search_term ) ) {
+						if ( in_array( $operator, array( '=', 'in' ) ) ) {
+							$operator = 'IN';
+						} elseif ( in_array( $operator, array( '!=', '<>', 'not in' ) ) ) {
+							$operator = 'NOT IN';
+						}
+						$search_terms = array_fill( 0, count( $search_term ), '%s' );
+						$placeholder = $wpdb->prepare( '( ' . implode( ', ', $search_terms ) . ' )', $search_term );
+
+						$search_term = '';
+					}
+
 					$sql_array[] = $wpdb->prepare(
 						"
                         l.id IN
@@ -4807,7 +4839,7 @@ function gform_get_meta( $entry_id, $meta_key ) {
 	//get from cache if available
 	$cache_key = $entry_id . '_' . $meta_key;
 	if ( array_key_exists( $cache_key, $_gform_lead_meta ) ) {
-		return $_gform_lead_meta[ $cache_key ];
+		return maybe_unserialize( $_gform_lead_meta[ $cache_key ] );
 	}
 
 	$table_name                   = RGFormsModel::get_lead_meta_table_name();
@@ -4856,27 +4888,73 @@ function gform_get_meta_values_for_entries( $entry_ids, $meta_keys ) {
 	return $meta_value_array;
 }
 
-function gform_update_meta( $entry_id, $meta_key, $meta_value ) {
+
+/**
+ * Add or update metadata associated with an entry
+ *
+ * Data will be serialized; no sanitation is necessary.
+ *
+ * @param int $entry_id The ID of the entry to be updated
+ * @param string $meta_key The key for the meta data to be stored
+ * @param mixed $meta_value The data to be stored for the entry
+ * @param int|null $form_id The form ID of the entry (optional, saves extra query if passed when creating the metadata)
+ */
+function gform_update_meta( $entry_id, $meta_key, $meta_value, $form_id = null ) {
 	global $wpdb, $_gform_lead_meta;
 	$table_name = RGFormsModel::get_lead_meta_table_name();
 	if ( false === $meta_value ) {
 		$meta_value = '0';
 	}
-	$meta_value  = maybe_serialize( $meta_value );
+	$serialized_meta_value  = maybe_serialize( $meta_value );
 	$meta_exists = gform_get_meta( $entry_id, $meta_key ) !== false;
 	if ( $meta_exists ) {
-		$wpdb->update( $table_name, array( 'meta_value' => $meta_value ), array( 'lead_id' => $entry_id, 'meta_key' => $meta_key ), array( '%s' ), array( '%d', '%s' ) );
+		$wpdb->update( $table_name, array( 'meta_value' => $serialized_meta_value ), array( 'lead_id' => $entry_id, 'meta_key' => $meta_key ), array( '%s' ), array( '%d', '%s' ) );
 	} else {
-		$lead_table_name = RGFormsModel::get_lead_table_name();
-		$form_id         = $wpdb->get_var( $wpdb->prepare( "SELECT form_id from $lead_table_name WHERE id=%d", $entry_id ) );
-		$wpdb->insert( $table_name, array( 'form_id' => $form_id, 'lead_id' => $entry_id, 'meta_key' => $meta_key, 'meta_value' => $meta_value ), array( '%d', '%d', '%s', '%s' ) );
+
+		if ( empty( $form_id ) ) {
+			$lead_table_name = RGFormsModel::get_lead_table_name();
+			$form_id         = $wpdb->get_var( $wpdb->prepare( "SELECT form_id from $lead_table_name WHERE id=%d", $entry_id ) );
+		} else {
+			$form_id = intval( $form_id );
+		}
+
+		$wpdb->insert( $table_name, array( 'form_id' => $form_id, 'lead_id' => $entry_id, 'meta_key' => $meta_key, 'meta_value' => $serialized_meta_value ), array( '%d', '%d', '%s', '%s' ) );
 	}
 
 	//updates cache
 	$cache_key = $entry_id . '_' . $meta_key;
 	if ( array_key_exists( $cache_key, $_gform_lead_meta ) ) {
-		$_gform_lead_meta[ $cache_key ] = maybe_unserialize( $meta_value );
+		$_gform_lead_meta[ $cache_key ] = $meta_value;
 	}
+}
+
+/**
+ * Add metadata associated with an entry
+ *
+ * Data will be serialized; no sanitation is necessary.
+ *
+ * @param int $entry_id The ID of the entry where metadata is to be added
+ * @param string $meta_key The key for the meta data to be stored
+ * @param mixed $meta_value The data to be stored for the entry
+ * @param int|null $form_id The form ID of the entry (optional, saves extra query if passed when creating the metadata)
+ */
+function gform_add_meta( $entry_id, $meta_key, $meta_value, $form_id = null ) {
+	global $wpdb, $_gform_lead_meta;
+	$table_name = RGFormsModel::get_lead_meta_table_name();
+	if ( false === $meta_value ) {
+		$meta_value = '0';
+	}
+	$serialized_meta_value  = maybe_serialize( $meta_value );
+
+	if ( empty( $form_id ) ) {
+		$lead_table_name = RGFormsModel::get_lead_table_name();
+		$form_id         = $wpdb->get_var( $wpdb->prepare( "SELECT form_id from $lead_table_name WHERE id=%d", $entry_id ) );
+	} else {
+		$form_id = intval( $form_id );
+	}
+
+	$wpdb->insert( $table_name, array( 'form_id' => $form_id, 'lead_id' => $entry_id, 'meta_key' => $meta_key, 'meta_value' => $serialized_meta_value ), array( '%d', '%d', '%s', '%s' ) );
+
 }
 
 function gform_delete_meta( $entry_id, $meta_key = '' ) {

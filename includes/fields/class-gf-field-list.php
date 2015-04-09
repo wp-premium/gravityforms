@@ -33,7 +33,7 @@ class GF_Field_List extends GF_Field {
 	}
 
 	public function get_first_input_id( $form ){
-		return sprintf( 'input_%s_%s_shim', $form['id'], $this->id );
+		return ! $this->is_form_editor() ? sprintf( 'input_%s_%s_shim', $form['id'], $this->id ) : '';
 	}
 
 	public function get_field_input( $form, $value = '', $entry = null ) {

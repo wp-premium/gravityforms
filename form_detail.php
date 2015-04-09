@@ -41,9 +41,11 @@ class GFFormDetail {
 		/* @var GF_Field_Address $gf_address_field  */
 		$gf_address_field = GF_Fields::get( 'address' );
 
+		$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] ) ? '' : '.min';
+
 		?>
 
-		<link rel="stylesheet" href="<?php echo GFCommon::get_base_url() ?>/css/admin.css?ver=<?php echo GFCommon::$version ?>" type="text/css" />
+		<link rel="stylesheet" href="<?php echo GFCommon::get_base_url() ?>/css/admin<?php echo $min; ?>.css?ver=<?php echo GFCommon::$version ?>" type="text/css" />
 
 		<script type="text/javascript">
 			<?php GFCommon::gf_global(); ?>
@@ -145,7 +147,7 @@ class GFFormDetail {
 			<h2 class="gf_admin_page_title"><?php _e( 'New Form', 'gravityforms' ) ?></h2>
 		<?php else : ?>
 			<h2 class="gf_admin_page_title">
-				<span><?php _e( 'Form Editor', 'gravityforms' ) ?></span><span class="gf_admin_page_subtitle"><span class="gf_admin_page_formid">ID: <?php echo $form['id']; ?></span><span class="gf_admin_page_formname"><?php _e( 'Form Name', 'gravityforms' ) ?>: <?php echo $form['title']; ?></span></span>
+				<span><?php _e( 'Form Editor', 'gravityforms' ); ?></span><span class="gf_admin_page_subtitle"><span class="gf_admin_page_formid">ID: <?php echo absint( $form['id'] ); ?></span><span class="gf_admin_page_formname"><?php _e( 'Form Name', 'gravityforms' ); ?>: <?php echo esc_html( $form['title'] ); ?></span></span>
 			</h2>
 		<?php endif; ?>
 
@@ -888,7 +890,7 @@ class GFFormDetail {
 					) );
 				foreach ( $post_stati as $value => $label ) {
 					?>
-					<option value="<?php echo $value; ?>"><?php echo $label; ?></option>
+					<option value="<?php echo esc_attr( $value ); ?>"><?php echo esc_html( $label ); ?></option>
 				<?php } ?>
 			</select>
 		</li>
@@ -928,7 +930,9 @@ class GFFormDetail {
 				$post_formats = get_theme_support( 'post-formats' );
 				$post_formats_dropdown = '<option value="0">Standard</option>';
 				foreach ( $post_formats[0] as $post_format ) {
-					$post_formats_dropdown .= "<option value='$post_format'>" . ucfirst( $post_format ) . '</option>';
+					$post_format_val = esc_attr( $post_format );
+					$post_format_text = esc_html( $post_format );
+					$post_formats_dropdown .= "<option value='$post_format_val'>" . ucfirst( $post_format_text ) . '</option>';
 				}
 
 				echo '<select name="field_post_format" id="field_post_format">' . $post_formats_dropdown . '</select>';
@@ -1112,7 +1116,7 @@ class GFFormDetail {
 				<?php
 				foreach ( $addressTypes as $key => $addressType ) {
 					?>
-					<option value="<?php echo $key; ?>"><?php echo $addressType['label'] ?></option>
+					<option value="<?php echo esc_attr( $key ); ?>"><?php echo esc_html( $addressType['label'] );  ?></option>
 				<?php
 				}
 				?>
@@ -1131,23 +1135,23 @@ class GFFormDetail {
 
 			<?php
 			foreach ( $addressTypes as $key => $addressType ) {
-				$state_label = isset( $addressType['state_label'] ) ? $addressType['state_label'] : __( 'State', 'gravityforms' );
+				$state_label = isset( $addressType['state_label'] ) ? esc_attr( $addressType['state_label'] ) : __( 'State', 'gravityforms' );
 				?>
-				<div id="address_type_container_<?php echo $key; ?>" class="gfield_sub_setting gfield_address_type_container">
-					<input type="hidden" id="field_address_country_<?php echo $key ?>" value="<?php echo isset( $addressType['country'] ) ? $addressType['country'] : '' ?>" />
-					<input type="hidden" id="field_address_zip_label_<?php echo $key ?>" value="<?php echo isset( $addressType['zip_label'] ) ? $addressType['zip_label'] : __( 'Postal Code', 'gravityforms' ) ?>" />
-					<input type="hidden" id="field_address_state_label_<?php echo $key ?>" value="<?php echo $state_label ?>" />
-					<input type="hidden" id="field_address_has_states_<?php echo $key ?>" value="<?php echo is_array( rgget( 'states', $addressType ) ) ? '1' : '' ?>" />
+				<div id="address_type_container_<?php echo esc_attr( $key ); ?>" class="gfield_sub_setting gfield_address_type_container">
+					<input type="hidden" id="field_address_country_<?php echo esc_attr( $key ) ?>" value="<?php echo isset( $addressType['country'] ) ? esc_attr( $addressType['country'] ) : '' ?>" />
+					<input type="hidden" id="field_address_zip_label_<?php echo esc_attr( $key ) ?>" value="<?php echo isset( $addressType['zip_label'] ) ? esc_attr( $addressType['zip_label'] ) : __( 'Postal Code', 'gravityforms' ) ?>" />
+					<input type="hidden" id="field_address_state_label_<?php echo esc_attr( $key ) ?>" value="<?php echo $state_label ?>" />
+					<input type="hidden" id="field_address_has_states_<?php echo esc_attr( $key ) ?>" value="<?php echo is_array( rgget( 'states', $addressType ) ) ? '1' : '' ?>" />
 
 					<?php
 					if ( isset( $addressType['states'] ) && is_array( $addressType['states'] ) ) {
 						?>
-						<label for="field_address_default_state_<?php echo $key; ?>">
+						<label for="field_address_default_state_<?php echo esc_attr( $key ); ?>">
 							<?php echo sprintf( __( 'Default %s', 'gravityforms' ), $state_label ); ?>
 							<?php gform_tooltip( "form_field_address_default_state_{$key}" ) ?>
 						</label>
 
-						<select id="field_address_default_state_<?php echo $key; ?>" class="field_address_default_state" onchange="SetAddressProperties();">
+						<select id="field_address_default_state_<?php echo esc_attr( $key ); ?>" class="field_address_default_state" onchange="SetAddressProperties();">
 							<?php echo $gf_address_field->get_state_dropdown( $addressType['states'] ) ?>
 						</select>
 					<?php
@@ -1588,8 +1592,8 @@ class GFFormDetail {
 					?>
 
 					<li>
-						<input type="checkbox" id="field_credit_card_<?php echo $card['slug']; ?>" value="<?php echo $card['slug']; ?>" onclick="SetCardType(this, this.value);" />
-						<label for="field_credit_card_<?php echo $card['slug']; ?>" class="inline"><?php echo $card['name']; ?></label>
+						<input type="checkbox" id="field_credit_card_<?php echo esc_attr( $card['slug'] ); ?>" value="<?php echo esc_attr( $card['slug'] ); ?>" onclick="SetCardType(this, this.value);" />
+						<label for="field_credit_card_<?php echo esc_attr( $card['slug'] ); ?>" class="inline"><?php echo esc_html( $card['name'] ); ?></label>
 					</li>
 
 				<?php } ?>
@@ -1704,7 +1708,7 @@ class GFFormDetail {
 					$masks = RGFormsModel::get_input_masks();
 					foreach ( $masks as $mask_name => $mask_value ) {
 						?>
-						<option value="<?php echo $mask_value; ?>"><?php echo $mask_name; ?></option>
+						<option value="<?php echo esc_attr( $mask_value ); ?>"><?php echo esc_html( $mask_name ); ?></option>
 					<?php
 					}
 					?>
@@ -1892,7 +1896,7 @@ class GFFormDetail {
 						<?php gform_tooltip( 'form_field_label_placement' ) ?>
 					</label>
 					<select id="field_label_placement" onchange="SetFieldLabelPlacement(jQuery(this).val());">
-						<option value=""><?php printf( __( 'Visible (%s)', 'gravityforms' ), $label_placement_form_setting_label ); ?></option>
+						<option value=""><?php printf( __( 'Visible (%s)', 'gravityforms' ), esc_html( $label_placement_form_setting_label ) ); ?></option>
 						<option value="hidden_label"><?php _e( 'Hidden', 'gravityforms' ); ?></option>
 					</select>
 					<?php endif ?>
@@ -1904,7 +1908,7 @@ class GFFormDetail {
 						<select id="field_description_placement"
 						        onchange="SetFieldDescriptionPlacement(jQuery(this).val());">
 							<option
-								value=""><?php printf( __( 'Use Form Setting (%s)', 'gravityforms' ), $description_placement_form_setting_label ); ?></option>
+								value=""><?php printf( __( 'Use Form Setting (%s)', 'gravityforms' ), esc_html( $description_placement_form_setting_label ) ); ?></option>
 							<option value="below"><?php _e( 'Below inputs', 'gravityforms' ); ?></option>
 							<option value="above"><?php _e( 'Above inputs', 'gravityforms' ); ?></option>
 						</select>
@@ -1925,7 +1929,7 @@ class GFFormDetail {
 					<select id="field_sub_label_placement"
 					        onchange="SetFieldSubLabelPlacement(jQuery(this).val());">
 						<option
-							value=""><?php printf( __( 'Use Form Setting (%s)', 'gravityforms' ), $sub_label_placement_form_setting_label ); ?></option>
+							value=""><?php printf( __( 'Use Form Setting (%s)', 'gravityforms' ), esc_html( $sub_label_placement_form_setting_label ) ); ?></option>
 						<option value="below"><?php _e( 'Below inputs', 'gravityforms' ); ?></option>
 						<option value="above"><?php _e( 'Above inputs', 'gravityforms' ); ?></option>
 						<?php if ( $enable_label_visiblity_settings ) : ?>
@@ -2106,8 +2110,8 @@ class GFFormDetail {
 				foreach ( $cards as $card ) {
 					?>
 					<li>
-						<input type="checkbox" id="field_credit_card_<?php echo $card['slug']; ?>" value="<?php echo $card['slug']; ?>" onclick="SetCardType(this, this.value);" />
-						<label for="field_credit_card_<?php echo $card['slug']; ?>" class="inline"><?php echo $card['name']; ?></label>
+						<input type="checkbox" id="field_credit_card_<?php echo esc_attr( $card['slug'] ); ?>" value="<?php echo esc_attr( $card['slug'] ); ?>" onclick="SetCardType(this, this.value);" />
+						<label for="field_credit_card_<?php echo esc_attr( $card['slug'] ); ?>" class="inline"><?php echo esc_html( $card['name'] ); ?></label>
 					</li>
 
 				<?php } ?>
@@ -2340,9 +2344,9 @@ class GFFormDetail {
 						foreach ( $field_groups as $group ) {
 							$tooltip_class = empty( $group['tooltip_class'] ) ? 'tooltip_left' : $group['tooltip_class'];
 							?>
-							<li id="add_<?php echo $group['name'] ?>" class="add_field_button_container">
+							<li id="add_<?php echo esc_attr( $group['name'] ) ?>" class="add_field_button_container">
 								<div class="button-title-link <?php echo $group['name'] == 'standard_fields' ? 'gf_button_title_active' : '' ?>">
-									<div class="add-buttons-title"><?php echo $group['label'] ?> <?php gform_tooltip( "form_{$group['name']}", $tooltip_class ) ?></div>
+									<div class="add-buttons-title"><?php echo esc_html( $group['label'] ); ?> <?php gform_tooltip( "form_{$group['name']}", $tooltip_class ) ?></div>
 								</div>
 								<ul>
 									<li class="add-buttons">
@@ -2434,22 +2438,22 @@ class GFFormDetail {
 		<table cellpadding="0" cellspacing="0">
 			<tr>
 				<td>
-					<input type='text' class="iColorPicker" size="7" name='<?php echo esc_attr( $field_name ) ?>' onchange='SetColorPickerColor(this.name, this.value, "<?php echo $callback ?>");' id='<?php echo esc_attr( $field_name ) ?>' />
+					<input type='text' class="iColorPicker" size="7" name='<?php echo esc_attr( $field_name ); ?>' onchange='SetColorPickerColor(this.name, this.value, "<?php echo $callback ?>");' id='<?php echo esc_attr( $field_name ) ?>' />
 				</td>
 				<td style="padding-right:5px; padding-left:5px;">
-					<img style="top:3px; cursor:pointer; border:1px solid #dfdfdf;" id="chip_<?php echo $field_name ?>" valign="bottom" height="22" width="22" src="<?php echo GFCommon::get_base_url() ?>/images/blankspace.png" />
+					<img style="top:3px; cursor:pointer; border:1px solid #dfdfdf;" id="chip_<?php echo esc_attr( $field_name ); ?>" valign="bottom" height="22" width="22" src="<?php echo GFCommon::get_base_url() ?>/images/blankspace.png" />
 				</td>
 				<td>
-					<img style="cursor:pointer;" valign="bottom" id="chooser_<?php echo $field_name ?>" src="<?php echo GFCommon::get_base_url() ?>/images/color.png" />
+					<img style="cursor:pointer;" valign="bottom" id="chooser_<?php echo esc_attr( $field_name ); ?>" src="<?php echo GFCommon::get_base_url() ?>/images/color.png" />
 				</td>
 			</tr>
 		</table>
 		<script type="text/javascript">
-			jQuery("#chooser_<?php echo $field_name ?>").click(function (e) {
-				iColorShow(e.pageX, e.pageY, '<?php echo $field_name ?>', "<?php echo $callback ?>");
+			jQuery("#chooser_<?php echo esc_js( $field_name ); ?>").click(function (e) {
+				iColorShow(e.pageX, e.pageY, '<?php echo esc_js( $field_name ) ?>', "<?php echo esc_js ( $callback ) ?>");
 			});
-			jQuery("#chip_<?php echo $field_name ?>").click(function (e) {
-				iColorShow(e.pageX, e.pageY, '<?php echo $field_name ?>', "<?php echo $callback ?>");
+			jQuery("#chip_<?php echo esc_js( $field_name ); ?>").click(function (e) {
+				iColorShow(e.pageX, e.pageY, '<?php echo esc_js( $field_name ); ?>', "<?php echo esc_js( $callback ) ?>");
 			});
 		</script>
 	<?php
@@ -2533,7 +2537,7 @@ class GFFormDetail {
 
 		$output .= "
         <tr class='author-self status-inherit' valign='top'>
-            <th scope='row' class='check-column'><input type='checkbox' class='gfield_category_checkbox' value='$cat->term_id' name='" . esc_attr( $cat->name ) . "' onclick='SetSelectedCategories();' /></th>
+            <th scope='row' class='check-column'><input type='checkbox' class='gfield_category_checkbox' value='" . esc_attr( $cat->term_id ) . "' name='" . esc_attr( $cat->name ) . "' onclick='SetSelectedCategories();' /></th>
             <td class='gfield_category_cell'>$name</td>
         </tr>";
 	}
@@ -2558,9 +2562,8 @@ class GFFormDetail {
 
 	private static function insert_variable_prepopulate( $element_id, $callback = '' ) {
 		?>
-	<select id="<?php echo $element_id ?>_variable_select" onchange="InsertVariable('<?php echo $element_id ?>', '<?php echo $callback ?>'); ">
+	<select id="<?php echo esc_attr( $element_id ); ?>_variable_select" onchange="InsertVariable('<?php echo esc_js( $element_id ) ?>', '<?php echo esc_js( $callback ); ?>'); ">
 		<option value=''><?php _e( 'Insert Merge Tag', 'gravityforms' ); ?></option>
-
 		<option value='{ip}'><?php _e( 'User IP Address', 'gravityforms' ); ?></option>
 		<option value='{date_mdy}'><?php _e( 'Date', 'gravityforms' ); ?> (mm/dd/yyyy)</option>
 		<option value='{date_dmy}'><?php _e( 'Date', 'gravityforms' ); ?> (dd/mm/yyyy)</option>
@@ -2586,20 +2589,26 @@ class GFFormDetail {
 
 		$index = rgpost( 'index' );
 
+		if ( $index != 'undefined' ) {
+			$index = absint( $index );
+		}
+
 		require_once( GFCommon::get_base_path() . '/form_display.php' );
 
-		$form_id = $_GET['id'];
+		$form_id = absint( $_GET['id'] );
 		$form    = GFFormsModel::get_form_meta( $form_id );
 
 		$field_html      = GFFormDisplay::get_field( $field, '', true, $form );
 		$field_html_json = json_encode( $field_html );
+
+		$field_json = json_encode( $field_properties );
 
 		die( "EndAddField($field_json, " . $field_html_json . ", $index);" );
 	}
 
 	public static function duplicate_field() {
 		check_ajax_referer( 'rg_duplicate_field', 'rg_duplicate_field' );
-		$source_field_id  = rgpost( 'source_field_id' );
+		$source_field_id  = absint( rgpost( 'source_field_id' ) );
 		$field_json       = stripslashes_deep( $_POST['field'] );
 		$field_properties = GFCommon::json_decode( $field_json, true );
 		$field            = GF_Fields::create( $field_properties );
@@ -2617,8 +2626,8 @@ class GFFormDetail {
 
 	public static function delete_field() {
 		check_ajax_referer( 'rg_delete_field', 'rg_delete_field' );
-		$form_id  = intval( $_POST['form_id'] );
-		$field_id = intval( $_POST['field_id'] );
+		$form_id  = absint( $_POST['form_id'] );
+		$field_id = absint( $_POST['field_id'] );
 
 		RGFormsModel::delete_field( $form_id, $field_id );
 		die( "EndDeleteField($field_id);" );
@@ -2629,9 +2638,9 @@ class GFFormDetail {
 		$field_json       = stripslashes_deep( $_POST['field'] );
 		$field_properties = GFCommon::json_decode( $field_json, true );
 		$field            = GF_Fields::create( $field_properties );
-		$id               = $field->id;
+		$id               = absint( $field->id );
 		$type             = $field->inputType;
-		$form_id          = $_GET['id'];
+		$form_id          = absint( $_GET['id'] );
 		$form             = GFFormsModel::get_form_meta( $form_id );
 
 		require_once( GFCommon::get_base_path() . '/form_display.php' );
@@ -2648,7 +2657,7 @@ class GFFormDetail {
 		$field_json       = stripslashes_deep( $_POST['field'] );
 		$field_properties = GFCommon::json_decode( $field_json, true );
 		$field            = GF_Fields::create( $field_properties );
-		$form_id          = $_POST['formId'];
+		$form_id          = absint( $_POST['formId'] );
 		$form             = GFFormsModel::get_form_meta( $form_id );
 
 		require_once( GFCommon::get_base_path() . '/form_display.php' );
@@ -2690,16 +2699,20 @@ class GFFormDetail {
 
 		GFCommon::log_debug( 'GFFormDetail::save_form_info(): Form meta => ' . print_r( $form_meta, true ) );
 
-		if ( ! $form_meta )
+		if ( ! $form_meta ) {
 			return array( 'status' => 'invalid_json', 'meta' => null );
+		}
+
 
 		$form_table_name = $wpdb->prefix . 'rg_form';
 
 		//Making sure title is not duplicate
 		$forms = RGFormsModel::get_forms();
-		foreach ( $forms as $form )
-			if ( strtolower( $form->title ) == strtolower( $form_meta['title'] ) && rgar( $form_meta, 'id' ) != $form->id )
+		foreach ( $forms as $form ){
+			if ( strtolower( $form->title ) == strtolower( $form_meta['title'] ) && rgar( $form_meta, 'id' ) != $form->id ) {
 				return array( 'status' => 'duplicate_title', 'meta' => $form_meta );
+			}
+		}
 
 		if ( $id > 0 ) {
 			$form_meta = GFFormsModel::trim_form_meta_values( $form_meta );
@@ -2769,8 +2782,8 @@ class GFFormDetail {
 	public static function save_form() {
 
 		check_ajax_referer( 'rg_save_form', 'rg_save_form' );
-		$id        = $_POST['id'];
-		$form_json = $_POST['form'];
+		$id        = absint( $_POST['id'] );
+		$form_json = absint( $_POST['form'] );
 
 		$result = self::save_form_info( $id, $form_json );
 
@@ -2784,11 +2797,13 @@ class GFFormDetail {
 				break;
 
 			default :
-				$form_id = $result['status'];
-				if ( $form_id < 0 )
-					die( 'EndInsertForm(' . abs( $form_id ) . ');' );
-				else
+				$form_id = absint( $result['status'] );
+				if ( $form_id < 0 ) {
+					die( 'EndInsertForm(' . $form_id . ');' );
+				} else {
 					die( "EndUpdateForm({$form_id});" );
+				}
+
 				break;
 
 		}

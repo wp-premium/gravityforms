@@ -116,8 +116,10 @@ Class GFNotification {
 
 		$notification_ui_settings = self::get_notification_ui_settings( $notification );
 
+		$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] ) ? '' : '.min';
+
 		?>
-		<link rel="stylesheet" href="<?php echo GFCommon::get_base_url() ?>/css/admin.css?ver=<?php echo GFCommon::$version ?>" />
+		<link rel="stylesheet" href="<?php echo GFCommon::get_base_url() ?>/css/admin<?php echo $min; ?>.css?ver=<?php echo GFCommon::$version ?>" />
 
 		<script type="text/javascript">
 
@@ -973,13 +975,18 @@ Class GFNotification {
 		foreach ( $form['fields'] as $field ) {
 			$input_type  = RGFormsModel::get_input_type( $field );
 			$field_label = RGFormsModel::get_label( $field );
-			if ( in_array( $input_type, self::$supported_fields ) ) {
+			if ( in_array( $input_type, self::get_routing_field_types() ) ) {
 				$selected = $field->id == $selected_field_id ? "selected='selected'" : '';
 				$str .= "<option value='" . $field->id . "' " . $selected . '>' . $field_label . '</option>';
 			}
 		}
 
 		return $str;
+	}
+
+	public static function get_routing_field_types() {
+		$field_types = apply_filters( 'gform_routing_field_types', self::$supported_fields );
+		return $field_types;
 	}
 
 	private static function get_field_values( $i, $form, $field_id, $selected_value, $max_field_length = 16 ) {

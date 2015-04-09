@@ -21,6 +21,8 @@ if ( ! GFCommon::current_user_can_any( array( 'gravityforms_edit_forms', 'gravit
 	die( __( 'You don\'t have adequate permission to preview forms.', 'gravityforms' ) );
 }
 
+$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] ) ? '' : '.min';
+
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" <?php language_attributes(); ?>>
@@ -29,22 +31,22 @@ if ( ! GFCommon::current_user_can_any( array( 'gravityforms_edit_forms', 'gravit
 	<meta http-equiv="Imagetoolbar" content="No" />
 	<meta name="viewport" content="width=device-width; initial-scale=1.0;"> 
 	<title><?php _e( 'Form Preview', 'gravityforms' ) ?></title>
-	<link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/reset.css' type='text/css' />
-	<link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/formreset.css' type='text/css' />
-	<link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/datepicker.css' type='text/css' />
-	<link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/formsmain.css' type='text/css' />
-	<link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/readyclass.css' type='text/css' />
-	<link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/browsers.css' type='text/css' />
+	<link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/reset<?php echo $min; ?>.css' type='text/css' />
+	<link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/formreset<?php echo $min; ?>.css' type='text/css' />
+	<link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/datepicker<?php echo $min; ?>.css' type='text/css' />
+	<link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/formsmain<?php echo $min; ?>.css' type='text/css' />
+	<link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/readyclass<?php echo $min; ?>.css' type='text/css' />
+	<link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/browsers<?php echo $min; ?>.css' type='text/css' />
 
 <?php
 if ( is_rtl() ) {
 	?>
-	<link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/rtl.css' type='text/css' />
+	<link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/rtl<?php echo $min; ?>.css' type='text/css' />
 	<?php
 }
 ?>
 
-	<link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/preview.css' type='text/css' />
+	<link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/preview<?php echo $min; ?>.css' type='text/css' />
 	<?php
 	require_once( GFCommon::get_base_path() . '/form_display.php' );
 	$form = RGFormsModel::get_form_meta( $_GET['id'] );

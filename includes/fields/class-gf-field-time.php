@@ -133,7 +133,7 @@ class GF_Field_Time extends GF_Field {
 		}
 
 		$hour_label = rgar( $hour_input, 'customLabel' ) != '' ? $hour_input['customLabel'] : __( 'HH', 'gravityforms' );
-		$minute_label = rgar( $minute_input, 'customLabel' ) != '' ? $minute_input['customLabel'] : __( 'MM', 'gravityforms' );
+		$minute_label = rgar( $minute_input, 'customLabel' ) != '' ? $minute_input['customLabel'] : _x( 'MM', 'Abbreviation: Minutes', 'gravityforms' );
 
 		if ( $is_sub_label_above ) {
 			return "<div class='clear-multi'>

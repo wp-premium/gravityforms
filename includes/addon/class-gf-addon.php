@@ -110,6 +110,7 @@ abstract class GFAddOn {
 	function __construct() {
 
 		add_action( 'init', array( $this, 'init' ) );
+
 		if ( $this->_enable_rg_autoupgrade ) {
 			require_once( 'class-gf-auto-upgrade.php' );
 			$is_gravityforms_supported = $this->is_gravityforms_supported( $this->_min_gravityforms_version );
@@ -185,6 +186,9 @@ abstract class GFAddOn {
 	 */
 	public function init() {
 
+		// Initializing translations. Translation files in the WP_LANG_DIR folder have a higher priority.
+		$locale = apply_filters( 'plugin_locale', get_locale(), $this->_slug );
+		load_textdomain( $this->_slug, WP_LANG_DIR . '/gravityforms/' . $this->_slug . '-' . $locale . '.mo' );
 		load_plugin_textdomain( $this->_slug, false, $this->_slug . '/languages' );
 
 		add_filter( 'gform_logging_supported', array( $this, 'set_logging_supported' ) );
@@ -353,18 +357,19 @@ abstract class GFAddOn {
 	 * See scripts() for an example of the format expected to be returned.
 	 */
 	protected function styles() {
+		$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] ) ? '' : '.min';
 		return array(
 			array(
 				'handle'  => 'gaddon_form_settings_css',
-				'src'     => GFAddOn::get_gfaddon_base_url() . '/css/gaddon_settings.css',
+				'src'     => GFAddOn::get_gfaddon_base_url() . "/css/gaddon_settings{$min}.css",
 				'version' => GFCommon::$version,
 				'enqueue' => array(
-					array( 'admin_page' => array( 'form_settings', 'plugin_settings', 'plugin_page' ) ),
+					array( 'admin_page' => array( 'form_settings', 'plugin_settings', 'plugin_page', 'app_settings' ) ),
 				)
 			),
 			array(
 				'handle'  => 'gaddon_results_css',
-				'src'     => GFAddOn::get_gfaddon_base_url() . '/css/gaddon_results.css',
+				'src'     => GFAddOn::get_gfaddon_base_url() . "/css/gaddon_results{$min}.css",
 				'version' => GFCommon::$version,
 				'enqueue' => array(
 					array( 'admin_page' => array( 'results' ) ),
@@ -427,6 +432,7 @@ abstract class GFAddOn {
 	 * </pre>
 	 */
 	protected function scripts() {
+		$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] ) ? '' : '.min';
 		return array(
 			array(
 				'handle'  => 'gform_form_admin',
@@ -446,7 +452,7 @@ abstract class GFAddOn {
 			),
 			array(
 				'handle'   => 'gaddon_results_js',
-				'src'      => GFAddOn::get_gfaddon_base_url() . '/js/gaddon_results.js',
+				'src'      => GFAddOn::get_gfaddon_base_url() . "/js/gaddon_results{$min}.js",
 				'version'  => GFCommon::$version,
 				'deps'     => array( 'jquery', 'sack', 'jquery-ui-resizable', 'jquery-ui-datepicker', 'google_charts', 'gform_field_filter' ),
 				'callback' => array( 'GFResults', 'localize_results_scripts' ),
@@ -456,14 +462,12 @@ abstract class GFAddOn {
 			),
 			array(
 				'handle'  => 'gaddon_repeater',
-				'src'     => GFAddOn::get_gfaddon_base_url() . '/js/repeater.js',
+				'src'     => GFAddOn::get_gfaddon_base_url() . "/js/repeater{$min}.js",
 				'version' => GFCommon::$version,
 				'deps'    => array( 'jquery' ),
 				'enqueue' => array(
 					array(
-						'admin_page' => array( 'form_settings' )
-						//                    ,
-						//                        'field_types' => array( 'dynamic_field_map' )
+						'admin_page' => array( 'form_settings' ),
 					),
 				),
 			),
@@ -1024,12 +1028,12 @@ abstract class GFAddOn {
 	 * @param array $field - The field to be rendered
 	 */
 	protected function single_setting( $field ) {
-		if ( is_callable( rgar( $field, 'callback' ) ) ) {
-			call_user_func( $field['callback'], $field );
-		} else if ( is_callable( array( $this, "settings_{$field['type']}" ) ) ) {
-			call_user_func( array( $this, "settings_{$field['type']}" ), $field );
+		if( is_callable( rgar( $field, 'callback' ) ) ) {
+			call_user_func($field["callback"], $field);
+		} else if (is_callable(array($this, "settings_{$field["type"]}"))) {
+			call_user_func(array($this, "settings_{$field["type"]}"), $field);
 		} else {
-			printf( __( "Field type '%s' has not been implemented", 'gravityforms' ), $field['type'] );
+			printf(__("Field type '%s' has not been implemented", "gravityforms"), $field["type"] );
 		}
 	}
 
@@ -1906,6 +1910,11 @@ abstract class GFAddOn {
 				}
 			} elseif ( ! rgar( $field, 'displayOnly' ) ) {
 				$fields[] = array( 'value' => $field->id, 'label' => GFCommon::get_label( $field ) );
+			} else{
+				$fields[] = array(
+					'value' => $field->id,
+					'label' => GFCommon::get_label( $field )
+				);
 			}
 		}
 
@@ -2538,7 +2547,7 @@ abstract class GFAddOn {
 
 		if ( $this->is_save_postback() ) {
 
-			// store a copy of the previous settings for cases where action whould only happen if value has changed
+			// store a copy of the previous settings for cases where action would only happen if value has changed
 			$this->set_previous_settings( $this->get_form_settings( $form ) );
 
 			$settings = $this->get_posted_settings();
@@ -3154,9 +3163,9 @@ abstract class GFAddOn {
 	 * @param string $message
 	 */
 	protected function app_tab_page_header( $tabs, $current_tab, $title, $message = '' ) {
-
+		$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] ) ? '' : '.min';
 		// register admin styles
-		wp_register_style( 'gform_admin', GFCommon::get_base_url() . '/css/admin.css' );
+		wp_register_style( 'gform_admin', GFCommon::get_base_url() . "/css/admin{$min}.css" );
 		wp_print_styles( array( 'jquery-ui-styles', 'gform_admin' ) );
 
 		?>
@@ -3699,7 +3708,7 @@ abstract class GFAddOn {
 	 *
 	 * @return string
 	 */
-	protected function get_base_url( $full_path = '' ) {
+	public function get_base_url( $full_path = '' ) {
 		if ( empty( $full_path ) )
 			$full_path = $this->_full_path;
 
@@ -3731,7 +3740,7 @@ abstract class GFAddOn {
 	 *
 	 * @return string
 	 */
-	protected function get_base_path( $full_path = '' ) {
+	public function get_base_path( $full_path = '' ) {
 		if ( empty( $full_path ) )
 			$full_path = $this->_full_path;
 		$folder = basename( dirname( $full_path ) );

@@ -12,8 +12,10 @@ class GFHelp {
 
 		echo GFCommon::get_remote_message();
 
+		$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] ) ? '' : '.min';
+
 		?>
-		<link rel="stylesheet" href="<?php echo GFCommon::get_base_url() ?>/css/admin.css" />
+		<link rel="stylesheet" href="<?php echo GFCommon::get_base_url() ?>/css/admin<?php echo $min; ?>.css" />
 		<div class="wrap <?php echo GFCommon::get_browser_class() ?>">
 			<h2><?php _e( 'Gravity Forms Help', 'gravityforms' ); ?></h2>
 
