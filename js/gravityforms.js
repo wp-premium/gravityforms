@@ -8,7 +8,7 @@ jQuery(document).ready(function(){
     //Formatting free form currency fields to currency
     jQuery(document).bind('gform_post_render', gformBindFormatPricingFields);
 });
-
+v
 function gformBindFormatPricingFields(){
     jQuery(".ginput_amount, .ginput_donation_amount").bind("change", function(){
         gformFormatPricingField(this);
@@ -153,10 +153,10 @@ function gformCleanNumber(text, symbol_right, symbol_left, decimal_separator){
 
     for(var i=0; i<clean_number.length; i++)
     {
-        var char = clean_number.substr(i,1);
-        if (char >= '0' && char <= '9')
-            float_number += char;
-        else if(char == decimal_separator){
+        var char_ = clean_number.substr(i,1);
+        if (char_ >= '0' && char_ <= '9')
+            float_number += char_;
+        else if(char_ == decimal_separator){
             float_number += ".";
         }
     }
