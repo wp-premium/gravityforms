@@ -3088,6 +3088,19 @@ div.gf_entry_detail_pagination ul li.gf_entry_pagination a {
 	margin: 0;
 }
 
+div.gf_entry_wrap #poststuff .inside {
+    margin-top: 12px;
+}
+
+div.gf_entry_wrap #poststuff .inside .message,
+div.gf_entry_wrap #poststuff .inside .updated {
+    margin: -12px -12px 12px -12px;
+}
+
+#notifications_container .message {
+    margin: -2px -15px 0 -15px;
+}
+
 /* entry paging ----------------------------------------------------*/
 
 a.gf_entry_prev_link.gf_entry_pagination_link.gf_entry_pagination_link_inactive,
@@ -3682,6 +3695,7 @@ table.gforms_form_settings th {
 	padding: 8px 0;
 }
 
+
 .show_advanced_settings_container {
 	border-top: 1px solid #EEE;
 	padding: 5px;
@@ -4176,9 +4190,6 @@ li.gfield.gpage label.gfield_label {
 	overflow: hidden;
 	white-space: nowrap;
 }
-.message {
-	margin: 15px 0 0 !important;
-}
 .gform-filter-operator {
 	width: 100px;
 }
@@ -4268,13 +4279,7 @@ span.ginput_right input.medium,
     margin-right: 8px;
 }
 
-.gaddon-section .settings-field-map-table thead tr th {
-    border-bottom: 1px solid #ccc !important;
-}
 
-.gaddon-section .settings-field-map-table tbody tr td {
-    border-bottom: 1px dotted #eee !important;
-}
 
 /* resize the sub-settings tables for more verbose inputs ----------------------------------------------------*/
 

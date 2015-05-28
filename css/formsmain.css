@@ -1287,7 +1287,7 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
 }
 .gform_wrapper .copy_values_option_container .copy_values_enabled { width: auto }
 .gform_wrapper li.field_sublabel_above .ginput_complex input[type=text] { margin-bottom: 1px }
-.form_saved_message {
+.gform_wrapper .form_saved_message{
     margin: 1em 0 1em 0;
     width: 100%;
     font-size: 1em;
@@ -1299,7 +1299,11 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
     -moz-border-radius: 2px;
     border-radius: 2px;
 }
-.form_saved_message span:first-child {
+.gform_wrapper .form_saved_message form{
+    text-align: center;
+}
+
+.gform_wrapper .form_saved_message span:first-child {
     display: block;
     padding: 2.5em 1em 2.5em 1em;
 }

@@ -75,7 +75,7 @@ class GF_Field_Date extends GF_Field {
 		}
 	}
 
-	public function is_value_submission_empty( $form_id ){
+	public function is_value_submission_empty( $form_id ) {
 		$value = rgpost( 'input_' . $this->id );
 		if ( is_array( $value ) ) {
 			// Date field and date drop-downs
@@ -268,7 +268,7 @@ class GF_Field_Date extends GF_Field {
 							$field_str .= $is_sub_label_above
 								? "<div class='gfield_date_year ginput_container' id='{$field_id}_3_container'>
                                             <label for='{$field_id}_3' {$sub_label_class_attribute}>{$year_sub_label}</label>
-                                            <input type='{$date_input_type}' maxlength='4' name='input_{$id}[]' id='{$field_id}_3' value='{$year_value}' {$tabindex} {$disabled_text} {$year_placeholder_attribute} {$year_html5_attributes}/>
+                                            <input type='{$date_input_type}' maxlength='4' name='input_{$id}[]' id='{$field_id}_3' value='{$year_value}' {$tabindex} {$disabled_text} {$year_placeholder_attribute} {$year_min_attribute} {$year_max_attribute} {$year_step_attribute}/>
                                        </div>
                                     </div>"
 								: "<div class='gfield_date_year ginput_container' id='{$field_id}_3_container'>
@@ -400,6 +400,7 @@ class GF_Field_Date extends GF_Field {
 				$picker_value = esc_attr( GFCommon::date_display( $picker_value, $format ) );
 				$icon_class   = $this->calendarIconType == 'none' ? 'datepicker_no_icon' : 'datepicker_with_icon';
 				$icon_url     = empty( $this->calendarIconUrl ) ? GFCommon::get_base_url() . '/images/calendar.png' : $this->calendarIconUrl;
+				$icon_url = esc_url( $icon_url );
 				$tabindex     = $this->get_tabindex();
 				$class        = esc_attr( $class );
 
@@ -411,18 +412,26 @@ class GF_Field_Date extends GF_Field {
 		}
 	}
 
-	public function get_value_default(){
+	public function get_value_default() {
 
 		$value = parent::get_value_default();
 
-		// the default value for mulit-input date fields will always be an array in mdy order
-		// this code will alter the order of the values to the date format of the field
 		if ( is_array( $this->inputs ) ) {
-			$format   = empty( $this->dateFormat ) ? 'mdy' : esc_attr( $this->dateFormat );
-			$position = substr( $format, 0, 3 );
-			$date     = array_combine( array( 'm', 'd', 'y' ), $value );            // takes our numerical array and converts it to an associative array
-			$value    = array_merge( array_flip( str_split( $position ) ), $date ); // uses the mdy position as the array keys and creates a new array in the desired order
+			$value = $this->get_date_array_by_format( $value );
 		}
+
+		return $value;
+	}
+
+	/**
+	 * The default value for mulit-input date fields will always be an array in mdy order
+	 * this code will alter the order of the values to the date format of the field
+	 */
+	public function get_date_array_by_format( $value ) {
+		$format   = empty( $this->dateFormat ) ? 'mdy' : esc_attr( $this->dateFormat );
+		$position = substr( $format, 0, 3 );
+		$date     = array_combine( array( 'm', 'd', 'y' ), $value );            // takes our numerical array and converts it to an associative array
+		$value    = array_merge( array_flip( str_split( $position ) ), $date ); // uses the mdy position as the array keys and creates a new array in the desired order
 
 		return $value;
 	}
@@ -445,7 +454,7 @@ class GF_Field_Date extends GF_Field {
 		return GFCommon::date_display( $value, $this->dateFormat );
 	}
 
-	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format ) {
+	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {
 		$format_modifier = empty( $modifier ) ? $this->dateFormat : $modifier;
 
 		return GFCommon::date_display( $value, $format_modifier );
@@ -501,6 +510,16 @@ class GF_Field_Date extends GF_Field {
 
 	public function get_entry_inputs() {
 		return null;
+	}
+
+	public function sanitize_settings() {
+		parent::sanitize_settings();
+		$this->calendarIconType = wp_strip_all_tags( $this->calendarIconType );
+		$this->calendarIconUrl = wp_strip_all_tags( $this->calendarIconUrl );
+		if ( $this->dateFormat && ! in_array( $this->dateFormat, array( 'mdy', 'dmy', 'dmy_dash', 'dmy_dot', 'ymd_slash', 'ymd_dash', 'ymd_dot'  ) ) ) {
+			$this->dateFormat = 'mdy';
+		}
+
 	}
 
 }

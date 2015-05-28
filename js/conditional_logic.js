@@ -3,6 +3,7 @@ var __gf_timeout_handle;
 
 function gf_apply_rules(formId, fields, isInit){
 	var rule_applied = 0;
+	jQuery(document).trigger( 'gform_pre_conditional_logic', [ formId, fields, isInit ] );
 	for(var i=0; i < fields.length; i++){
 		gf_apply_field_rule(formId, fields[i], isInit, function(){
 			rule_applied++;
@@ -310,29 +311,33 @@ function gf_do_action(action, targetId, useAnimation, defaultValues, isInit, cal
 }
 
 function gf_reset_to_default(targetId, defaultValue){
-	var dateFields = jQuery(targetId).find('.gfield_date_month input[type="text"], .gfield_date_day input[type="text"], .gfield_date_year input[type="text"], .gfield_date_dropdown_month select, .gfield_date_dropdown_day select, .gfield_date_dropdown_year select');
-	if(dateFields.length > 0){
-		dateFields.each(function(){
 
-			var element = jQuery(this);
+    var dateFields = jQuery( targetId ).find( '.gfield_date_month input, .gfield_date_day input, .gfield_date_year input, .gfield_date_dropdown_month select, .gfield_date_dropdown_day select, .gfield_date_dropdown_year select' );
+	if( dateFields.length > 0 ) {
 
-			if(defaultValue){
+		dateFields.each( function(){
 
-				var key = 'd';
-				if (element.parents().hasClass('gfield_date_month') || element.parents().hasClass('gfield_date_dropdown_month') ){
-					key = 'm';
-				}
-				else if(element.parents().hasClass('gfield_date_year') || element.parents().hasClass('gfield_date_dropdown_year') ){
-					key = 'y';
-				}
+			var element = jQuery( this );
 
-				val = defaultValue[key];
+            // defaultValue is associative array (i.e. [ m: 1, d: 13, y: 1987 ] )
+			if( defaultValue ) {
+
+                var key = 'd';
+                if (element.parents().hasClass('gfield_date_month') || element.parents().hasClass('gfield_date_dropdown_month') ){
+                    key = 'm';
+                }
+                else if(element.parents().hasClass('gfield_date_year') || element.parents().hasClass('gfield_date_dropdown_year') ){
+                    key = 'y';
+                }
+
+                val = defaultValue[ key ];
+
 			}
 			else{
 				val = "";
 			}
 
-			if(element.prop("tagName") == "SELECT")
+			if(element.prop("tagName") == "SELECT" && val != '' )
 				val = parseInt(val);
 
 
@@ -356,9 +361,6 @@ function gf_reset_to_default(targetId, defaultValue){
 		var val = "";
 
 		var element = jQuery(this);
-		if(element.is('select:not([multiple])')){
-			val = element.find('option' ).not( ':disabled' ).eq(0).val();
-		}
 
 		//get name of previous input field to see if it is the radio button which goes with the "Other" text box
 		//otherwise field is populated with input field name
@@ -371,10 +373,19 @@ function gf_reset_to_default(targetId, defaultValue){
 		}
 		else if(jQuery.isPlainObject(defaultValue)){
 			val = defaultValue[element.attr("name")];
+            if( ! val ) {
+                // 'input_123_3_1' => '3.1'
+                var inputId = element.attr( 'id' ).split( '_' ).splice( -2 ).join( '.' );
+                val = defaultValue[ inputId ];
+            }
 		}
 		else if(defaultValue){
 			val = defaultValue;
 		}
+
+        if( element.is('select:not([multiple])') && ! val ) {
+            val = element.find( 'option' ).not( ':disabled' ).eq(0).val();
+        }
 
 		if(element.val() != val) {
 			element.val(val).trigger('change');
@@ -391,7 +402,7 @@ function gf_reset_to_default(targetId, defaultValue){
 	});
 
 	//checkboxes and radio buttons
-	var elements = jQuery(targetId).find('input[type="radio"], input[type="checkbox"]');
+	var elements = jQuery(targetId).find('input[type="radio"], input[type="checkbox"]:not(".copy_values_activated")');
 
 	elements.each(function(){
 

@@ -319,7 +319,7 @@ class GFExport {
 		?>
 
 		<p class="textleft">
-			<?php _e( 'Select the Gravity Forms export file you would like to import. When you click the import button below, Gravity Forms will import the forms.', 'gravityforms' ); ?>
+			<?php esc_html_e( 'Select the Gravity Forms export file you would like to import. When you click the import button below, Gravity Forms will import the forms.', 'gravityforms' ); ?>
 		</p>
 
 		<div class="hr-divider"></div>
@@ -330,13 +330,13 @@ class GFExport {
 				<tr valign="top">
 
 					<th scope="row">
-						<label for="gf_import_file"><?php _e( 'Select File', 'gravityforms' ); ?></label> <?php gform_tooltip( 'import_select_file' ) ?>
+						<label for="gf_import_file"><?php esc_html_e( 'Select File', 'gravityforms' ); ?></label> <?php gform_tooltip( 'import_select_file' ) ?>
 					</th>
 					<td><input type="file" name="gf_import_file" id="gf_import_file" /></td>
 				</tr>
 			</table>
 			<br /><br />
-			<input type="submit" value="<?php _e( 'Import', 'gravityforms' ) ?>" name="import_forms" class="button button-large button-primary" />
+			<input type="submit" value="<?php esc_html_e( 'Import', 'gravityforms' ) ?>" name="import_forms" class="button button-large button-primary" />
 
 		</form>
 
@@ -356,14 +356,14 @@ class GFExport {
 
 		?>
 
-		<p class="textleft"><?php _e( 'Select the forms you would like to export. When you click the download button below, Gravity Forms will create a JSON file for you to save to your computer. Once you\'ve saved the download file, you can use the Import tool to import the forms.', 'gravityforms' ); ?></p>
+		<p class="textleft"><?php esc_html_e( 'Select the forms you would like to export. When you click the download button below, Gravity Forms will create a JSON file for you to save to your computer. Once you\'ve saved the download file, you can use the Import tool to import the forms.', 'gravityforms' ); ?></p>
 		<div class="hr-divider"></div>
 		<form id="gform_export" method="post" style="margin-top:10px;">
 			<?php wp_nonce_field( 'gf_export_forms', 'gf_export_forms_nonce' ); ?>
 			<table class="form-table">
 				<tr valign="top">
 					<th scope="row">
-						<label for="export_fields"><?php _e( 'Select Forms', 'gravityforms' ); ?></label> <?php gform_tooltip( 'export_select_forms' ) ?>
+						<label for="export_fields"><?php esc_html_e( 'Select Forms', 'gravityforms' ); ?></label> <?php gform_tooltip( 'export_select_forms' ) ?>
 					</th>
 					<td>
 						<ul id="export_form_list">
@@ -384,7 +384,7 @@ class GFExport {
 			</table>
 
 			<br /><br />
-			<input type="submit" value="<?php _e( 'Download Export File', 'gravityforms' ) ?>" name="export_forms" class="button button-large button-primary" />
+			<input type="submit" value="<?php esc_attr_e( 'Download Export File', 'gravityforms' ) ?>" name="export_forms" class="button button-large button-primary" />
 		</form>
 
 		<?php
@@ -418,14 +418,14 @@ class GFExport {
 
 				gfSpinner = new gfAjaxSpinner(jQuery('select#export_form'), gf_vars.baseUrl + '/images/spinner.gif', 'position: relative; top: 2px; left: 5px;');
 
-				var mysack = new sack("<?php echo admin_url('admin-ajax.php')?>");
+				var mysack = new sack("<?php echo admin_url( 'admin-ajax.php' )?>");
 				mysack.execute = 1;
 				mysack.method = 'POST';
 				mysack.setVar("action", "rg_select_export_form");
-				mysack.setVar("rg_select_export_form", "<?php echo wp_create_nonce('rg_select_export_form') ?>");
+				mysack.setVar("rg_select_export_form", "<?php echo wp_create_nonce( 'rg_select_export_form' ); ?>");
 				mysack.setVar("form_id", formId);
 				mysack.onError = function () {
-					alert('<?php echo esc_js(__('Ajax error while selecting a form', 'gravityforms')) ?>')
+					alert(<?php echo json_encode( esc_html__( 'Ajax error while selecting a form', 'gravityforms' ) ); ?>)
 				};
 				mysack.runAJAX();
 
@@ -441,7 +441,7 @@ class GFExport {
 					return;
 				}
 
-				var fieldList = "<li><input id='select_all' type='checkbox' onclick=\"jQuery('.gform_export_field').attr('checked', this.checked); jQuery('#gform_export_check_all').html(this.checked ? '<strong><?php _e( 'Deselect All', 'gravityforms' ) ?></strong>' : '<strong><?php _e( 'Select All', 'gravityforms' ) ?></strong>'); \"> <label id='gform_export_check_all' for='select_all'><strong><?php _e( 'Select All', 'gravityforms' ) ?></strong></label></li>";
+				var fieldList = "<li><input id='select_all' type='checkbox' onclick=\"jQuery('.gform_export_field').attr('checked', this.checked); jQuery('#gform_export_check_all').html(this.checked ? '<strong><?php echo esc_js( __( 'Deselect All', 'gravityforms' ) ); ?></strong>' : '<strong><?php echo esc_js( __( 'Select All', 'gravityforms' ) ); ?></strong>'); \"> <label id='gform_export_check_all' for='select_all'><strong><?php esc_html_e( 'Select All', 'gravityforms' ) ?></strong></label></li>";
 				for (var i = 0; i < aryFields.length; i++) {
 					fieldList += "<li><input type='checkbox' id='export_field_" + i + "' name='export_field[]' value='" + aryFields[i][0] + "' class='gform_export_field'> <label for='export_field_" + i + "'>" + aryFields[i][1] + "</label></li>";
 				}
@@ -450,13 +450,13 @@ class GFExport {
 
 				jQuery("#export_field_container, #export_filter_container, #export_date_container, #export_submit_container").hide().show();
 
-				gf_vars.filterAndAny = '<?php _e( 'Export entries if {0} of the following match:', 'gravityforms' ) ?>';
+				gf_vars.filterAndAny = <?php echo json_encode( esc_html__( 'Export entries if {0} of the following match:', 'gravityforms' ) ); ?>;
 				jQuery("#export_filters").gfFilterUI(filterSettings);
 			}
 			jQuery(document).ready(function () {
 				jQuery("#gform_export").submit(function () {
 					if (jQuery(".gform_export_field:checked").length == 0) {
-						alert('<?php _e( 'Please select the fields to be exported', 'gravityforms' );  ?>');
+						alert(<?php echo json_encode( esc_html__( 'Please select the fields to be exported', 'gravityforms' ) );  ?>);
 						return false;
 					}
 				});
@@ -465,7 +465,7 @@ class GFExport {
 
 		</script>
 
-		<p class="textleft"><?php _e( 'Select a form below to export entries. Once you have selected a form you may select the fields you would like to export and then define optional filters for field values and the date range. When you click the download button below, Gravity Forms will create a CSV file for you to save to your computer.', 'gravityforms' ); ?></p>
+		<p class="textleft"><?php esc_html_e( 'Select a form below to export entries. Once you have selected a form you may select the fields you would like to export and then define optional filters for field values and the date range. When you click the download button below, Gravity Forms will create a CSV file for you to save to your computer.', 'gravityforms' ); ?></p>
 		<div class="hr-divider"></div>
 		<form id="gform_export" method="post" style="margin-top:10px;">
 			<?php echo wp_nonce_field( 'rg_start_export', 'rg_start_export_nonce' ); ?>
@@ -473,12 +473,12 @@ class GFExport {
 				<tr valign="top">
 
 					<th scope="row">
-						<label for="export_form"><?php _e( 'Select A Form', 'gravityforms' ); ?></label> <?php gform_tooltip( 'export_select_form' ) ?>
+						<label for="export_form"><?php esc_html_e( 'Select A Form', 'gravityforms' ); ?></label> <?php gform_tooltip( 'export_select_form' ) ?>
 					</th>
 					<td>
 
 						<select id="export_form" name="export_form" onchange="SelectExportForm(jQuery(this).val());">
-							<option value=""><?php _e( 'Select a form', 'gravityforms' ); ?></option>
+							<option value=""><?php esc_html_e( 'Select a form', 'gravityforms' ); ?></option>
 							<?php
 							$forms = RGFormsModel::get_forms( null, 'title' );
 							foreach ( $forms as $form ) {
@@ -493,7 +493,7 @@ class GFExport {
 				</tr>
 				<tr id="export_field_container" valign="top" style="display: none;">
 					<th scope="row">
-						<label for="export_fields"><?php _e( 'Select Fields', 'gravityforms' ); ?></label> <?php gform_tooltip( 'export_select_fields' ) ?>
+						<label for="export_fields"><?php esc_html_e( 'Select Fields', 'gravityforms' ); ?></label> <?php gform_tooltip( 'export_select_fields' ) ?>
 					</th>
 					<td>
 						<ul id="export_field_list">
@@ -502,7 +502,7 @@ class GFExport {
 				</tr>
 				<tr id="export_filter_container" valign="top" style="display: none;">
 					<th scope="row">
-						<label><?php _e( 'Conditional Logic', 'gravityforms' ); ?></label> <?php gform_tooltip( 'export_conditional_logic' ) ?>
+						<label><?php esc_html_e( 'Conditional Logic', 'gravityforms' ); ?></label> <?php gform_tooltip( 'export_conditional_logic' ) ?>
 					</th>
 					<td>
 						<div id="export_filters">
@@ -513,22 +513,22 @@ class GFExport {
 				</tr>
 				<tr id="export_date_container" valign="top" style="display: none;">
 					<th scope="row">
-						<label for="export_date"><?php _e( 'Select Date Range', 'gravityforms' ); ?></label> <?php gform_tooltip( 'export_date_range' ) ?>
+						<label for="export_date"><?php esc_html_e( 'Select Date Range', 'gravityforms' ); ?></label> <?php gform_tooltip( 'export_date_range' ) ?>
 					</th>
 					<td>
 						<div>
                             <span style="width:150px; float:left; ">
                                 <input type="text" id="export_date_start" name="export_date_start" style="width:90%" />
-                                <strong><label for="export_date_start" style="display:block;"><?php _e( 'Start', 'gravityforms' ); ?></label></strong>
+                                <strong><label for="export_date_start" style="display:block;"><?php esc_html_e( 'Start', 'gravityforms' ); ?></label></strong>
                             </span>
 
                             <span style="width:150px; float:left;">
                                 <input type="text" id="export_date_end" name="export_date_end" style="width:90%" />
-                                <strong><label for="export_date_end" style="display:block;"><?php _e( 'End', 'gravityforms' ); ?></label></strong>
+                                <strong><label for="export_date_end" style="display:block;"><?php esc_html_e( 'End', 'gravityforms' ); ?></label></strong>
                             </span>
 
 							<div style="clear: both;"></div>
-							<?php _e( 'Date Range is optional, if no date range is selected all entries will be exported.', 'gravityforms' ); ?>
+							<?php esc_html_e( 'Date Range is optional, if no date range is selected all entries will be exported.', 'gravityforms' ); ?>
 						</div>
 					</td>
 				</tr>
@@ -536,9 +536,9 @@ class GFExport {
 			<ul>
 				<li id="export_submit_container" style="display:none; clear:both;">
 					<br /><br />
-					<input type="submit" name="export_lead" value="<?php _e( 'Download Export File', 'gravityforms' ); ?>" class="button button-large button-primary" />
+					<input type="submit" name="export_lead" value="<?php esc_attr_e( 'Download Export File', 'gravityforms' ); ?>" class="button button-large button-primary" />
                     <span id="please_wait_container" style="display:none; margin-left:15px;">
-                        <i class='gficon-gravityforms-spinner-icon gficon-spin'></i> <?php _e( 'Exporting entries. Please wait...', 'gravityforms' ); ?>
+                        <i class='gficon-gravityforms-spinner-icon gficon-spin'></i> <?php esc_html_e( 'Exporting entries. Please wait...', 'gravityforms' ); ?>
                     </span>
 
 					<iframe id="export_frame" width="1" height="1" src="about:blank"></iframe>
@@ -547,12 +547,12 @@ class GFExport {
 		</form>
 
 		<?php
-		self::page_footer( __( 'Export Entries', 'gravityforms' ) );
+		self::page_footer();
 
 	}
 
 	private static function get_field_row_count( $form, $exported_field_ids, $entry_count ) {
-		$list_fields = GFCommon::get_fields_by_type( $form, array( 'list' ) );
+		$list_fields = GFAPI::get_fields_by_type( $form, array( 'list' ), true );
 
 		//only getting fields that have been exported
 		$field_ids = '';
@@ -828,9 +828,9 @@ class GFExport {
 		?>
 
 
-		<div class="wrap <?php echo $current_tab; ?>">
+		<div class="wrap <?php echo sanitize_html_class( $current_tab ); ?>">
 
-		<h2><?php echo $title ?></h2>
+		<h2><?php echo esc_html( $title ) ?></h2>
 
 		<?php GFCommon::display_admin_message(); ?>
 
@@ -844,9 +844,10 @@ class GFExport {
 					$query = array_merge( $query, $tab['query'] );
 				}
 
+				$url = add_query_arg( $query );
 				?>
 				<li <?php echo $current_tab == $tab['name'] ? "class='active'" : '' ?>>
-					<a href="<?php echo add_query_arg( $query ); ?>"><?php echo $tab['label'] ?></a>
+					<a href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( $tab['label'] ) ?></a>
 				</li>
 			<?php
 			}
@@ -854,7 +855,7 @@ class GFExport {
 		</ul>
 
 		<div id="gform_tab_container" class="gform_tab_container">
-		<div class="gform_tab_content" id="tab_<?php echo $current_tab ?>">
+		<div class="gform_tab_content" id="tab_<?php echo esc_attr( $current_tab ); ?>">
 
 	<?php
 	}

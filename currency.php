@@ -129,7 +129,7 @@ if ( ! class_exists( 'RGCurrency' ) ) {
 				'SGD' => array( 'name' => __( 'Singapore Dollar', 'gravityforms' ), 'symbol_left' => '$', 'symbol_right' => '', 'symbol_padding' => ' ', 'thousand_separator' => ',', 'decimal_separator' => '.', 'decimals' => 2 ),
 				'ZAR' => array( 'name' => __( 'South African Rand', 'gravityforms' ), 'symbol_left' => 'R', 'symbol_right' => '', 'symbol_padding' => '', 'thousand_separator' => ',', 'decimal_separator' => '.', 'decimals' => 2 ),
 				'SEK' => array( 'name' => __( 'Swedish Krona', 'gravityforms' ), 'symbol_left' => '', 'symbol_right' => 'Kr', 'symbol_padding' => ' ', 'thousand_separator' => ' ', 'decimal_separator' => ',', 'decimals' => 2 ),
-				'CHF' => array( 'name' => __( 'Swiss Franc', 'gravityforms' ), 'symbol_left' => 'Fr.', 'symbol_right' => '', 'symbol_padding' => ' ', 'thousand_separator' => "'", 'decimal_separator' => '.', 'decimals' => 2 ),
+				'CHF' => array( 'name' => __( 'Swiss Franc', 'gravityforms' ), 'symbol_left' => 'CHF', 'symbol_right' => '', 'symbol_padding' => ' ', 'thousand_separator' => "'", 'decimal_separator' => '.', 'decimals' => 2 ),
 				'TWD' => array( 'name' => __( 'Taiwan New Dollar', 'gravityforms' ), 'symbol_left' => '$', 'symbol_right' => '', 'symbol_padding' => ' ', 'thousand_separator' => ',', 'decimal_separator' => '.', 'decimals' => 2 ),
 				'THB' => array( 'name' => __( 'Thai Baht', 'gravityforms' ), 'symbol_left' => '&#3647;', 'symbol_right' => '', 'symbol_padding' => ' ', 'thousand_separator' => ',', 'decimal_separator' => '.', 'decimals' => 2 ),
 				'USD' => array( 'name' => __( 'U.S. Dollar', 'gravityforms' ), 'symbol_left' => '$', 'symbol_right' => '', 'symbol_padding' => '', 'thousand_separator' => ',', 'decimal_separator' => '.', 'decimals' => 2 )

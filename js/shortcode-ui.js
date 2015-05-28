@@ -414,7 +414,7 @@ var GformShortcodeUI;
                     self.content = '<span class="gf_shortcode_ui_error">' + gfShortcodeUIData.strings.errorLoadingPreview + '</span>';
                 }).always(function () {
                     delete self.fetching;
-                    self.render(true);
+                    self.render();
                 });
 
             }
@@ -545,7 +545,7 @@ var GformShortcodeUI;
 
                 if (body.indexOf('<script') === -1) {
                     this.shortcodeHTML = body;
-                    this.render(true);
+                    this.render();
                     return;
                 }
 

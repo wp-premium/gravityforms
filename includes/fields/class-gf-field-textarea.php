@@ -33,7 +33,7 @@ class GF_Field_Textarea extends GF_Field {
 		);
 	}
 
-	public function is_conditional_logic_supported(){
+	public function is_conditional_logic_supported() {
 		return true;
 	}
 
@@ -60,6 +60,11 @@ class GF_Field_Textarea extends GF_Field {
 		return "<div class='ginput_container'>
 					<textarea name='input_{$id}' id='{$field_id}' class='textarea {$class}' {$tabindex} {$logic_event} {$placeholder_attribute} {$disabled_text} rows='10' cols='50'>{$value}</textarea>
 				</div>";
+	}
+
+	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {
+
+		return $format == 'html' && ! $nl2br ? nl2br( $value ) : $value;
 	}
 
 }

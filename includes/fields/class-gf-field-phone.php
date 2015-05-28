@@ -33,7 +33,7 @@ class GF_Field_Phone extends GF_Field {
 		);
 	}
 
-	public function is_conditional_logic_supported(){
+	public function is_conditional_logic_supported() {
 		return true;
 	}
 
@@ -84,11 +84,20 @@ class GF_Field_Phone extends GF_Field {
 
 	public function get_form_inline_script_on_page_render( $form ) {
 		$script = '';
-		if ( $this->phoneFormat == 'standard' ){
-			$script = "jQuery('#input_{$form['id']}_{$this->id}').mask('(999) 999-9999').bind('keypress', function(e){if(e.which == 13){jQuery(this).blur();} } );";
+		if ( $this->phoneFormat == 'standard' ) {
+			$script = "if(!/(android)/i.test(navigator.userAgent)){jQuery('#input_{$form['id']}_{$this->id}').mask('(999) 999-9999').bind('keypress', function(e){if(e.which == 13){jQuery(this).blur();} } );}";
 		}
 		return $script;
 	}
+
+	public function sanitize_settings() {
+		parent::sanitize_settings();
+
+		if ( $this->phoneFormat && ! in_array( $this->phoneFormat, array( 'standard', 'international' ) ) ) {
+			$this->phoneFormat = 'standard';
+		}
+	}
+
 
 }
 

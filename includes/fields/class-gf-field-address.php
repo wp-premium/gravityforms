@@ -349,7 +349,7 @@ class GF_Field_Address extends GF_Field {
                 </div>";
 	}
 
-	public function get_css_class(){
+	public function get_css_class() {
 
 		$address_street_field_input  = GFFormsModel::get_input( $this, $this->id . '.1' );
 		$address_street2_field_input = GFFormsModel::get_input( $this, $this->id . '.2' );
@@ -359,22 +359,22 @@ class GF_Field_Address extends GF_Field {
 		$address_country_field_input = GFFormsModel::get_input( $this, $this->id . '.6' );
 
 		$css_class = '';
-		if ( ! rgar( $address_street_field_input, 'isHidden' ) ){
+		if ( ! rgar( $address_street_field_input, 'isHidden' ) ) {
 			$css_class .= 'has_street ';
 		}
-		if ( ! rgar( $address_street2_field_input, 'isHidden' ) ){
+		if ( ! rgar( $address_street2_field_input, 'isHidden' ) ) {
 			$css_class .= 'has_street2 ';
 		}
-		if ( ! rgar( $address_city_field_input, 'isHidden' ) ){
+		if ( ! rgar( $address_city_field_input, 'isHidden' ) ) {
 			$css_class .= 'has_city ';
 		}
-		if ( ! rgar( $address_state_field_input, 'isHidden' ) ){
+		if ( ! rgar( $address_state_field_input, 'isHidden' ) ) {
 			$css_class .= 'has_state ';
 		}
-		if ( ! rgar( $address_zip_field_input, 'isHidden' ) ){
+		if ( ! rgar( $address_zip_field_input, 'isHidden' ) ) {
 			$css_class .= 'has_zip ';
 		}
-		if ( ! rgar( $address_country_field_input, 'isHidden' ) ){
+		if ( ! rgar( $address_country_field_input, 'isHidden' ) ) {
 			$css_class .= 'has_country ';
 		}
 
@@ -437,7 +437,7 @@ class GF_Field_Address extends GF_Field {
 
 		if ( $is_admin && RG_CURRENT_VIEW != 'entry' ) {
 			return $state_dropdown . $state_text;
-		} else if ( $has_state_drop_down ) {
+		} elseif ( $has_state_drop_down ) {
 			return $state_dropdown;
 		} else {
 			return $state_text;
@@ -896,6 +896,22 @@ class GF_Field_Address extends GF_Field {
 		$input = GFFormsModel::get_input( $this, $input_id );
 
 		return rgar( $input, $property_name );
+	}
+
+	public function sanitize_settings() {
+		parent::sanitize_settings();
+		if ( $this->addressType ) {
+			$this->addressType = wp_strip_all_tags( $this->addressType );
+		}
+
+		if ( $this->defaultCountry ) {
+			$this->defaultCountry = wp_strip_all_tags( $this->defaultCountry );
+		}
+
+		if ( $this->defaultProvince ) {
+			$this->defaultProvince = wp_strip_all_tags( $this->defaultProvince );
+		}
+
 	}
 }
 

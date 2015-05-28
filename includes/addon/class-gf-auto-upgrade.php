@@ -133,6 +133,7 @@ class GFAutoUpgrade {
 		if ( ! rgar( $version_info, 'is_valid_key' ) || version_compare( $this->_version, $version_info['version'], '>=' ) ) {
 			unset( $option->response[ $this->_path ] );
 		} else {
+			$option->response[ $this->_path ]->plugin      = $this->_path;
 			$option->response[ $this->_path ]->url         = $this->_url;
 			$option->response[ $this->_path ]->slug        = $this->_slug;
 			$option->response[ $this->_path ]->package     = str_replace( '{KEY}', $key, $version_info['url'] );

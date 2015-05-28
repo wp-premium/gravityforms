@@ -60,7 +60,7 @@ class GF_Field_Total extends GF_Field {
 		return GFCommon::to_money( $value, $entry['currency'] );
 	}
 
-	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format ) {
+	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {
 		$format_numeric = $modifier == 'price';
 
 		$value = $format_numeric ? GFCommon::to_number( $value ) : GFCommon::to_money( $value );

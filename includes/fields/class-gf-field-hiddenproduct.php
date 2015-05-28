@@ -26,7 +26,7 @@ class GF_Field_HiddenProduct extends GF_Field {
 		if ( $this->isRequired && rgblank( $quantity ) && ! $this->disableQuantity ) {
 			$this->failed_validation  = true;
 			$this->validation_message = empty($this->errorMessage) ? __( 'This field is required.', 'gravityforms' ) : $this->errorMessage;
-		} else if ( ! empty( $quantity ) && ( ! is_numeric( $quantity ) || intval( $quantity ) != floatval( $quantity ) || intval( $quantity ) < 0 ) ) {
+		} elseif ( ! empty( $quantity ) && ( ! is_numeric( $quantity ) || intval( $quantity ) != floatval( $quantity ) || intval( $quantity ) < 0 ) ) {
 			$this->failed_validation  = true;
 			$this->validation_message = __( 'Please enter a valid quantity', 'gravityforms' );
 		}
@@ -43,7 +43,7 @@ class GF_Field_HiddenProduct extends GF_Field {
 		$price        = ! is_array( $value ) || empty( $value[ $this->id . '.2' ] ) ? $this->basePrice : esc_attr( $value[ $this->id . '.2' ] );
 		$quantity     = is_array( $value ) ? esc_attr( $value[ $this->id . '.3' ] ) : '';
 
-		if( rgblank( $quantity ) ) {
+		if ( rgblank( $quantity ) ) {
 			$quantity = 1;
 		}
 
@@ -66,6 +66,13 @@ class GF_Field_HiddenProduct extends GF_Field {
 		$field_type = $is_entry_detail || $is_form_editor ? 'text' : 'hidden';
 
 		return $quantity_field . $product_name_field . "<input name='input_{$id}.2' id='ginput_base_price_{$form_id}_{$this->id}' type='{$field_type}' value='{$price}' class='gform_hidden ginput_amount' {$disabled_text}/>";
+	}
+
+	public function sanitize_settings() {
+		parent::sanitize_settings();
+
+		$price_number = GFCommon::to_number( $this->basePrice );
+		$this->basePrice = GFCommon::to_money( $price_number );
 	}
 
 }

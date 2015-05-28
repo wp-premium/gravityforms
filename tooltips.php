@@ -175,6 +175,7 @@ function gform_tooltip( $name, $css_class = '', $return = false ) {
 
 	$tooltip_text  = $parameter_is_key ? rgar( $__gf_tooltips, $name ) : $name;
 	$tooltip_class = isset( $__gf_tooltips[ $name ] ) ? "tooltip_{$name}" : '';
+	$tooltip_class = esc_attr( $tooltip_class );
 
 	if ( empty( $tooltip_text ) ) {
 		return '';

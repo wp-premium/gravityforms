@@ -81,7 +81,7 @@ if ( class_exists( 'GFForms' ) ) {
 
 			add_filter( 'query_vars', array( $this, 'query_vars' ) );
 
-			add_filter( 'pre_get_posts', array( $this, 'handle_page_request' ) );
+			add_action( 'template_redirect', array( $this, 'handle_page_request' ) );
 
 			// update the cache
 			add_action( 'gform_entry_created', array( $this, 'entry_created' ), 10, 2 );
@@ -345,7 +345,7 @@ if ( class_exists( 'GFForms' ) ) {
 		}
 
 
-		public function handle_page_request($query) {
+		public function handle_page_request() {
 
 			global $HTTP_RAW_POST_DATA;
 

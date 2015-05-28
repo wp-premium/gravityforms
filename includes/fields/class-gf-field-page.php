@@ -28,6 +28,18 @@ class GF_Field_Page extends GF_Field {
 		return $field_content;
 	}
 
+	public function sanitize_settings() {
+		parent::sanitize_settings();
+		if ( $this->nextButton ) {
+			$this->nextButton['imageUrl'] = wp_strip_all_tags( $this->nextButton['imageUrl'] );
+			$allowed_tags      = wp_kses_allowed_html( 'post' );
+			$this->nextButton['text'] = wp_kses( $this->nextButton['text'], $allowed_tags );
+			$this->nextButton['type'] = wp_strip_all_tags( $this->nextButton['type'] );
+			if ( isset( $this->nextButton['conditionalLogic'] ) && is_array( $this->nextButton['conditionalLogic'] ) ) {
+				$this->nextButton['conditionalLogic'] = $this->sanitize_settings_conditional_logic( $this->nextButton['conditionalLogic'] );
+			}
+		}
+	}
 
 }
 

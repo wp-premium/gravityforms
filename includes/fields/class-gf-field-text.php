@@ -35,7 +35,7 @@ class GF_Field_Text extends GF_Field {
 		);
 	}
 
-	public function is_conditional_logic_supported(){
+	public function is_conditional_logic_supported() {
 		return true;
 	}
 
@@ -70,7 +70,7 @@ class GF_Field_Text extends GF_Field {
 		return sprintf( "<div class='ginput_container'>%s</div>", $input );
 	}
 
-	public function allow_html(){
+	public function allow_html() {
 		return in_array( $this->type, array( 'post_custom_field', 'post_tags' )  ) ? true : false;
 	}
 }
