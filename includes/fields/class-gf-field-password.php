@@ -45,7 +45,7 @@ class GF_Field_Password extends GF_Field {
 		if ( $password != $confirm ) {
 			$this->failed_validation  = true;
 			$this->validation_message = __( 'Your passwords do not match.', 'gravityforms' );
-		} else if ( $this->passwordStrengthEnabled && ! empty( $this->minPasswordStrength ) && ! empty( $password ) ) {
+		} elseif ( $this->passwordStrengthEnabled && ! empty( $this->minPasswordStrength ) && ! empty( $password ) ) {
 			$strength = $_POST[ 'input_' . $this->id . '_strength' ];
 
 			$levels = array( 'short' => 1, 'bad' => 2, 'good' => 3, 'strong' => 4 );
@@ -95,12 +95,12 @@ class GF_Field_Password extends GF_Field {
 
 		$confirmation_value = rgpost( 'input_' . $id . '_2' );
 
-		$password_value = is_array( $value ) ? $value[0] : $value;
-		$password_value = esc_attr( $password_value );
-		$confirmation_value  = esc_attr( $confirmation_value );
+		$password_value     = is_array( $value ) ? $value[0] : $value;
+		$password_value     = esc_attr( $password_value );
+		$confirmation_value = esc_attr( $confirmation_value );
 
-		$enter_password_field_input     = GFFormsModel::get_input( $this, $this->id . '' );
-		$confirm_password_field_input     = GFFormsModel::get_input( $this, $this->id . '.2' );
+		$enter_password_field_input   = GFFormsModel::get_input( $this, $this->id . '' );
+		$confirm_password_field_input = GFFormsModel::get_input( $this, $this->id . '.2' );
 
 		$enter_password_label   = rgar( $enter_password_field_input, 'customLabel' ) != '' ? $enter_password_field_input['customLabel'] : __( 'Enter Password', 'gravityforms' );
 		$enter_password_label   = apply_filters( "gform_password_{$form_id}", apply_filters( 'gform_password', $enter_password_label, $form_id ), $form_id );
@@ -109,8 +109,8 @@ class GF_Field_Password extends GF_Field {
 		$confirm_password_label = apply_filters( "gform_password_confirm_{$form_id}", apply_filters( 'gform_password_confirm', $confirm_password_label, $form_id ), $form_id );
 
 
-		$enter_password_placeholder_attribute  = GFCommon::get_input_placeholder_attribute( $enter_password_field_input );
-		$confirm_password_placeholder_attribute  = GFCommon::get_input_placeholder_attribute( $confirm_password_field_input );
+		$enter_password_placeholder_attribute   = GFCommon::get_input_placeholder_attribute( $enter_password_field_input );
+		$confirm_password_placeholder_attribute = GFCommon::get_input_placeholder_attribute( $confirm_password_field_input );
 
 		if ( $is_sub_label_above ) {
 			return "<div class='ginput_complex$class_suffix ginput_container' id='{$field_id}_container'>
@@ -151,11 +151,11 @@ class GF_Field_Password extends GF_Field {
 	}
 
 
-	public static function delete_passwords( $entry, $form ){
+	public static function delete_passwords( $entry, $form ) {
 
-		$password_fields = GFCommon::get_fields_by_type( $form , array( 'password' ) );
+		$password_fields = GFAPI::get_fields_by_type( $form , array( 'password' ) );
 
-		foreach ( $password_fields as $password_field ){
+		foreach ( $password_fields as $password_field ) {
 			GFAPI::update_entry_field( $entry['id'], $password_field['id'], '' );
 		}
 	}

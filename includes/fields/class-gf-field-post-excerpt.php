@@ -34,7 +34,7 @@ class GF_Field_Post_Excerpt extends GF_Field {
 		);
 	}
 
-	public function is_conditional_logic_supported(){
+	public function is_conditional_logic_supported() {
 		return true;
 	}
 
@@ -65,8 +65,13 @@ class GF_Field_Post_Excerpt extends GF_Field {
 				</div>";
 	}
 
-	public function allow_html(){
+	public function allow_html() {
 		return true;
+	}
+
+	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {
+
+		return $format == 'html' && ! $nl2br ? nl2br( $value ) : $value;
 	}
 }
 

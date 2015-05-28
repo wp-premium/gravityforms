@@ -125,7 +125,7 @@ class GF_Field_FileUpload extends GF_Field {
 
 		$max_upload_size = ! $is_admin && $this->maxFileSize > 0 ? $this->maxFileSize * 1048576 : wp_max_upload_size();
 		if ( $multiple_files ) {
-			$upload_action_url = trailingslashit( site_url() ) . '?gf_page=upload';
+			$upload_action_url = trailingslashit( site_url() ) . '?gf_page=' . GFCommon::get_upload_page_slug();
 			$max_files         = $this->maxFiles > 0 ? $this->maxFiles : 0;
 			$browse_button_id  = 'gform_browse_button_' . $form_id . '_' . $id;
 			$container_id      = 'gform_multifile_upload_' . $form_id . '_' . $id;
@@ -181,12 +181,6 @@ class GF_Field_FileUpload extends GF_Field {
 			}
 
 			$plupload_init = apply_filters( "gform_plupload_settings_{$form_id}", apply_filters( 'gform_plupload_settings', $plupload_init, $form_id, $this ), $form_id, $this );
-
-			// Multi-file uploading doesn't currently work in iOS Safari,
-			// single-file allows the built-in camera to be used as source for images
-			if ( wp_is_mobile() ) {
-				$plupload_init['multi_selection'] = false;
-			}
 
 			$drop_files_here_text = __( 'Drop files here or', 'gravityforms' );
 			$select_files_text    = __( 'Select files', 'gravityforms' );
@@ -376,7 +370,7 @@ class GF_Field_FileUpload extends GF_Field {
 		}
 	}
 
-	public function get_value_entry_list( $value, $entry, $field_id, $columns, $form ){
+	public function get_value_entry_list( $value, $entry, $field_id, $columns, $form ) {
 		if ( $this->multipleFiles ) {
 			$uploaded_files_arr = empty( $value ) ? array() : json_decode( $value, true );
 			$file_count         = count( $uploaded_files_arr );
@@ -385,6 +379,8 @@ class GF_Field_FileUpload extends GF_Field {
 				return $value;
 			} elseif ( $file_count == 1 ) {
 				$value = $uploaded_files_arr[0];
+			} elseif ( $file_count == 0 ) {
+				return;
 			}
 		}
 
@@ -420,7 +416,7 @@ class GF_Field_FileUpload extends GF_Field {
 		return $output;
 	}
 
-	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format ) {
+	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {
 
 		if ( $this->multipleFiles ) {
 
@@ -429,7 +425,7 @@ class GF_Field_FileUpload extends GF_Field {
 
 				$file = str_replace( ' ', '%20', $file );
 
-				if ( $esc_html ){
+				if ( $esc_html ) {
 					$value = esc_html( $value );
 				}
 			}
@@ -439,7 +435,7 @@ class GF_Field_FileUpload extends GF_Field {
 			$value = str_replace( ' ', '%20', $value );
 		}
 
-		if ( $url_encode ){
+		if ( $url_encode ) {
 			$value = urlencode( $value );
 		}
 
@@ -473,7 +469,21 @@ class GF_Field_FileUpload extends GF_Field {
 		GFFormsModel::set_permissions( $path );
 	}
 
+	public function sanitize_settings() {
+		parent::sanitize_settings();
+		if ( $this->maxFileSize ) {
+			$this->maxFileSize = absint( $this->maxFileSize );
+		}
 
+		if ( $this->maxFiles ) {
+			$this->maxFiles = preg_replace( '/[^0-9,.]/', '', $this->maxFiles );
+		}
+
+		$this->multipleFiles = (bool) $this->multipleFiles;
+
+		$this->allowedExtensions = sanitize_text_field( $this->allowedExtensions );
+
+	}
 
 }
 

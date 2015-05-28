@@ -126,22 +126,24 @@ function Currency(currency){
 }
 
 function gformCleanNumber(text, symbol_right, symbol_left, decimal_separator){
+    var clean_number = '',
+        float_number = '',
+        digit = '',
+        is_negative = false;
+
     //converting to a string if a number as passed
     text = text + " ";
 
     //Removing symbol in unicode format (i.e. &#4444;)
-    text = text.replace(/&.*?;/, "", text);
+    text = text.replace(/&.*?;/, "");
 
     //Removing symbol from text
     text = text.replace(symbol_right, "");
     text = text.replace(symbol_left, "");
 
-
     //Removing all non-numeric characters
-    var clean_number = "";
-    var is_negative = false;
     for(var i=0; i<text.length; i++){
-        var digit = text.substr(i,1);
+        digit = text.substr(i,1);
         if( (parseInt(digit) >= 0 && parseInt(digit) <= 9) || digit == decimal_separator )
             clean_number += digit;
         else if(digit == '-')
@@ -149,14 +151,11 @@ function gformCleanNumber(text, symbol_right, symbol_left, decimal_separator){
     }
 
     //Removing thousand separators but keeping decimal point
-    var float_number = "";
-
-    for(var i=0; i<clean_number.length; i++)
-    {
-        var char = clean_number.substr(i,1);
-        if (char >= '0' && char <= '9')
-            float_number += char;
-        else if(char == decimal_separator){
+    for(var i=0; i<clean_number.length; i++) {
+        digit = clean_number.substr(i,1);
+        if (digit >= '0' && digit <= '9')
+            float_number += digit;
+        else if(digit == decimal_separator){
             float_number += ".";
         }
     }
@@ -326,8 +325,6 @@ function gformGetFieldId(element){
 
 function gformCalculateProductPrice(form_id, productFieldId){
 
-    var price = gformGetBasePrice(form_id, productFieldId);
-
     var suffix = "_" + form_id + "_" + productFieldId;
 
 
@@ -378,16 +375,20 @@ function gformCalculateProductPrice(form_id, productFieldId){
         });
     });
 
-    jQuery(".gfield_option" + suffix).find("input:checked, select").each(function(){
-        if(!gformIsHidden(jQuery(this)))
-            price += gformGetPrice(jQuery(this).val());
-    });
+	var price = gformGetBasePrice(form_id, productFieldId);
+	var quantity = gformGetProductQuantity( form_id, productFieldId );
 
-    var quantity = gformGetProductQuantity( form_id, productFieldId );
+	//calculating options if quantity is more than 0 (a product was selected).
+	if( quantity > 0 ) {
 
-    //setting global variable if quantity is more than 0 (a product was selected). Will be used when calculating total
-    if(quantity > 0)
-        _anyProductSelected = true;
+		jQuery(".gfield_option" + suffix).find("input:checked, select").each(function(){
+			if(!gformIsHidden(jQuery(this)))
+				price += gformGetPrice(jQuery(this).val());
+		});
+
+		//setting global variable if quantity is more than 0 (a product was selected). Will be used when calculating total
+		_anyProductSelected = true;
+	}
 
     price = price * quantity;
     price = Math.round(price * 100) / 100;
@@ -396,6 +397,11 @@ function gformCalculateProductPrice(form_id, productFieldId){
 }
 
 function gformGetProductQuantity( formId, productFieldId ) {
+
+	//If product is not selected
+	if ( ! gformIsProductSelected( formId, productFieldId )){
+		return 0;
+	}
 
     var quantity,
         quantityInput = jQuery( '#ginput_quantity_' + formId + '_' + productFieldId);
@@ -423,6 +429,26 @@ function gformGetProductQuantity( formId, productFieldId ) {
     quantity = parseFloat( quantity );
 
     return quantity;
+}
+
+
+function gformIsProductSelected( formId, productFieldId ) {
+
+	var suffix = "_" + formId + "_" + productFieldId;
+
+	var productField = jQuery("#ginput_base_price" + suffix + ", .gfield_donation" + suffix + " input[type=\"text\"], .gfield_product" + suffix + " .ginput_amount");
+	if( productField.val() && ! gformIsHidden(productField) ){
+		return true;
+	}
+	else
+	{
+		productField = jQuery(".gfield_product" + suffix + " select, .gfield_product" + suffix + " input:checked, .gfield_donation" + suffix + " select, .gfield_donation" + suffix + " input:checked");
+		if( productField.val() && ! gformIsHidden(productField) ){
+			return true;
+		}
+	}
+
+	return false;
 }
 
 function gformGetBasePrice(formId, productFieldId){
@@ -1184,6 +1210,9 @@ var gform = {
         }
     });
 
+    gfMultiFileUploader.setup = function (uploadElement){
+        setup( uploadElement );
+    };
 
     function setup(uploadElement){
         var settings = $(uploadElement).data('settings');
@@ -1427,7 +1456,7 @@ function gformInitSpinner( formId, spinnerUrl ) {
 
 	jQuery('#gform_' + formId).submit(function () {
 		if (jQuery('#gform_ajax_spinner_' + formId).length == 0) {
-			jQuery('#gform_submit_button_' + formId + ', #gform_wrapper_' + formId + ' .gform_next_button')
+			jQuery('#gform_submit_button_' + formId + ', #gform_wrapper_' + formId + ' .gform_next_button, #gform_send_resume_link_button_' + formId)
 				.after('<img id="gform_ajax_spinner_' + formId + '"  class="gform_ajax_spinner" src="' + spinnerUrl + '" alt="" />');
 		}
 	});

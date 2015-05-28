@@ -89,8 +89,8 @@ $min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] 
 	<meta http-equiv="Imagetoolbar" content="No" />
 	<title>
 		Print Preview :
-		<?php echo $form['title'] ?> :
-		<?php echo count( $lead_ids ) > 1 ? __( 'Entry # ', 'gravityforms' ) . $lead_ids[0] : 'Bulk Print' ?>
+		<?php echo esc_html( $form['title'] ) ?> :
+		<?php echo count( $lead_ids ) > 1 ? esc_html__( 'Entry # ', 'gravityforms' ) . $lead_ids[0] : esc_html__( 'Bulk Print', 'gravityforms' ); ?>
 	</title>
 	<link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/print<?php echo $min; ?>.css' type='text/css' />
 <?php
@@ -106,7 +106,7 @@ if ( ! empty( $styles ) ) {
 
 <div id="print_preview_hdr" style="display:none">
 	<div>
-		<span class="actionlinks"><a href="javascript:;" onclick="window.print();" class="header-print-link">print this page</a> | <a href="javascript:window.close()" class="close_window"><?php _e( 'close window', 'gravityforms' ) ?></a></span><?php _e( 'Print Preview', 'gravityforms' ) ?>
+		<span class="actionlinks"><a href="javascript:;" onclick="window.print();" class="header-print-link">print this page</a> | <a href="javascript:window.close()" class="close_window"><?php esc_html_e( 'close window', 'gravityforms' ) ?></a></span><?php esc_html_e( 'Print Preview', 'gravityforms' ) ?>
 	</div>
 </div>
 <div id="view-container">
@@ -120,7 +120,12 @@ foreach ( $lead_ids as $lead_id ) {
 
 	do_action( 'gform_print_entry_header', $form, $lead );
 
+	// Separate each entry inside a form element so radio buttons don't get treated as a single group across multiple entries.
+	echo '<form>';
+
 	GFEntryDetail::lead_detail_grid( $form, $lead );
+
+	echo '</form>';
 
 	if ( rgget( 'notes' ) ) {
 		$notes = RGFormsModel::get_lead_notes( $lead['id'] );

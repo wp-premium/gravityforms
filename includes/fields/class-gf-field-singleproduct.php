@@ -32,7 +32,7 @@ class GF_Field_SingleProduct extends GF_Field {
 		if ( $this->isRequired && rgblank( $quantity ) && ! $this->disableQuantity ) {
 			$this->failed_validation  = true;
 			$this->validation_message = empty($this->errorMessage) ? __( 'This field is required.', 'gravityforms' ) : $this->errorMessage;
-		} else if ( ! empty( $quantity ) && ( ! is_numeric( $quantity ) || intval( $quantity ) != floatval( $quantity ) || intval( $quantity ) < 0 ) ) {
+		} elseif ( ! empty( $quantity ) && ( ! is_numeric( $quantity ) || intval( $quantity ) != floatval( $quantity ) || intval( $quantity ) < 0 ) ) {
 			$this->failed_validation  = true;
 			$this->validation_message = __( 'Please enter a valid quantity', 'gravityforms' );
 		}
@@ -56,7 +56,7 @@ class GF_Field_SingleProduct extends GF_Field {
 		}
 
 		$has_quantity = sizeof( GFCommon::get_product_fields_by_type( $form, array( 'quantity' ), $this->id ) ) > 0;
-		if ( $has_quantity ){
+		if ( $has_quantity ) {
 			$this->disableQuantity = true;
 		}
 
@@ -78,7 +78,7 @@ class GF_Field_SingleProduct extends GF_Field {
 			$tabindex  = $this->get_tabindex();
 			$quantity_field .= " <span class='ginput_quantity_label'>" . $product_quantity_sub_label . "</span> <input type='{$qty_input_type}' name='input_{$id}.3' value='{$quantity}' id='ginput_quantity_{$form_id}_{$this->id}' class='ginput_quantity' size='10' {$qty_min_attr} {$tabindex}/>";
 		} else {
-			if ( ! is_numeric( $quantity ) ){
+			if ( ! is_numeric( $quantity ) ) {
 				$quantity = 1;
 			}
 
@@ -108,7 +108,6 @@ class GF_Field_SingleProduct extends GF_Field {
 			return '';
 		}
 	}
-
 
 }
 

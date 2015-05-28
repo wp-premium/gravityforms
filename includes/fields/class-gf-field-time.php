@@ -43,8 +43,8 @@ class GF_Field_Time extends GF_Field {
 			$value[1] = $matches[2];
 		}
 
-		$hour   = $value[0];
-		$minute = $value[1];
+		$hour   = rgar( $value, 0 );
+		$minute = rgar( $value, 1 );
 
 		if ( empty( $hour ) && empty( $minute ) ) {
 			return;
@@ -86,7 +86,7 @@ class GF_Field_Time extends GF_Field {
 			$the_rest    = strtolower( rgar( $matches, 3 ) );
 			$am_selected = strpos( $the_rest, 'am' ) > -1 ? "selected='selected'" : '';
 			$pm_selected = strpos( $the_rest, 'pm' ) > -1  ? "selected='selected'" : '';
-		} else if ( is_array( $value ) ) {
+		} elseif ( is_array( $value ) ) {
 			$value       = array_values( $value );
 			$hour        = esc_attr( $value[0] );
 			$minute      = esc_attr( $value[1] );
@@ -162,7 +162,7 @@ class GF_Field_Time extends GF_Field {
 		}
 	}
 
-	public function is_value_submission_empty( $form_id ){
+	public function is_value_submission_empty( $form_id ) {
 		$value = rgpost( 'input_' . $this->id );
 		if ( is_array( $value ) ) {
 			// Date field and date drop-downs
@@ -227,6 +227,13 @@ class GF_Field_Time extends GF_Field {
 		}
 
 		return parent::get_first_input_id( $form );
+	}
+
+	public function sanitize_settings() {
+		parent::sanitize_settings();
+		if ( ! $this->timeFormat || ! in_array( $this->timeFormat, array( 12, 24 ) ) ) {
+			$this->timeFormat = '12';
+		}
 	}
 
 }

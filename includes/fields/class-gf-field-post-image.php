@@ -98,7 +98,7 @@ class GF_Field_Post_Image extends GF_Field_Fileupload {
 		Return $value;
 	}
 
-	public function get_value_entry_list( $value, $entry, $field_id, $columns, $form ){
+	public function get_value_entry_list( $value, $entry, $field_id, $columns, $form ) {
 		list( $url, $title, $caption, $description ) = rgexplode( '|:|', $value, 4 );
 		if ( ! empty( $url ) ) {
 			//displaying thumbnail (if file is an image) or an icon based on the extension
@@ -148,7 +148,7 @@ class GF_Field_Post_Image extends GF_Field_Fileupload {
 		return $value;
 	}
 
-	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format ) {
+	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {
 		list( $url, $title, $caption, $description ) = array_pad( explode( '|:|', $value ), 4, false );
 		switch ( $modifier ) {
 			case 'title' :

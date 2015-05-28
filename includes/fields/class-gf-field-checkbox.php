@@ -46,11 +46,11 @@ class GF_Field_Checkbox extends GF_Field {
 		return sprintf( "<div class='ginput_container'><ul class='gfield_checkbox' id='%s'>%s</ul></div>", $field_id, $this->get_checkbox_choices( $value, $disabled_text, $form_id ) );
 	}
 
-	public function get_first_input_id( $form ){
+	public function get_first_input_id( $form ) {
 		return '';
 	}
 
-	public function get_value_default(){
+	public function get_value_default() {
 		return $this->is_form_editor() ? $this->defaultValue : GFCommon::replace_variables_prepopulate( $this->defaultValue );
 	}
 
@@ -85,7 +85,7 @@ class GF_Field_Checkbox extends GF_Field {
 		return $value;
 	}
 
-	public function get_value_entry_list( $value, $entry, $field_id, $columns, $form ){
+	public function get_value_entry_list( $value, $entry, $field_id, $columns, $form ) {
 		//if this is the main checkbox field (not an input), display a comma separated list of all inputs
 		if ( absint( $field_id ) == $field_id ) {
 			$lead_field_keys = array_keys( $entry );
@@ -132,7 +132,7 @@ class GF_Field_Checkbox extends GF_Field {
 			}
 			if ( empty( $items ) ) {
 				return '';
-			} else if ( $format == 'text' ) {
+			} elseif ( $format == 'text' ) {
 				return substr( $items, 0, strlen( $items ) - 2 ); //removing last comma
 			} else {
 				return "<ul class='bulleted'>$items</ul>";
@@ -143,14 +143,14 @@ class GF_Field_Checkbox extends GF_Field {
 
 	}
 
-	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format ) {
+	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {
 		$use_value       = $modifier == 'value';
 		$use_price       = in_array( $modifier, array( 'price', 'currency' ) );
 		$format_currency = $modifier == 'currency';
 
 		if ( is_array( $raw_value ) && (string) intval( $input_id ) != $input_id ) {
 			$items = array( $input_id => $value ); //float input Ids. (i.e. 4.1 ). Used when targeting specific checkbox items
-		} else if ( is_array( $raw_value ) ) {
+		} elseif ( is_array( $raw_value ) ) {
 			$items = $raw_value;
 		} else {
 			$items = array( $input_id => $raw_value );
@@ -161,12 +161,12 @@ class GF_Field_Checkbox extends GF_Field {
 		foreach ( $items as $input_id => $item ) {
 			if ( $use_value ) {
 				list( $val, $price ) = rgexplode( '|', $item, 2 );
-			} else if ( $use_price ) {
+			} elseif ( $use_price ) {
 				list( $name, $val ) = rgexplode( '|', $item, 2 );
 				if ( $format_currency ) {
 					$val = GFCommon::to_money( $val, rgar( $entry, 'currency' ) );
 				}
-			} else if ( $this->type == 'post_category' ) {
+			} elseif ( $this->type == 'post_category' ) {
 				$use_id     = strtolower( $modifier ) == 'id';
 				$item_value = GFCommon::format_post_category( $item, $use_id );
 
@@ -185,11 +185,9 @@ class GF_Field_Checkbox extends GF_Field {
 
 		if ( empty( $value ) ){
 			return '';
-		}
-		else if ( is_array( $value ) ){
+		} elseif ( is_array( $value ) ){
 			return implode( ',', $value );
-		}
-		else {
+		} else {
 			return $this->sanitize_entry_value( $value, $form['id'] );
 		}
 	}
@@ -215,11 +213,11 @@ class GF_Field_Checkbox extends GF_Field {
 					$id = $form_id . '_' . $this->id . '_' . $choice_number ++;
 				}
 
-				if ( empty( $_POST ) && rgar( $choice, 'isSelected' ) ) {
+				if ( ! isset( $_GET['gf_token'] ) && empty( $_POST ) && rgar( $choice, 'isSelected' ) ) {
 					$checked = "checked='checked'";
-				} else if ( is_array( $value ) && RGFormsModel::choice_value_match( $this, $choice, rgget( $input_id, $value ) ) ) {
+				} elseif ( is_array( $value ) && RGFormsModel::choice_value_match( $this, $choice, rgget( $input_id, $value ) ) ) {
 					$checked = "checked='checked'";
-				} else if ( ! is_array( $value ) && RGFormsModel::choice_value_match( $this, $choice, $value ) ) {
+				} elseif ( ! is_array( $value ) && RGFormsModel::choice_value_match( $this, $choice, $value ) ) {
 					$checked = "checked='checked'";
 				} else {
 					$checked = '';
@@ -233,11 +231,13 @@ class GF_Field_Checkbox extends GF_Field {
 					$price = rgempty( 'price', $choice ) ? 0 : GFCommon::to_number( rgar( $choice, 'price' ) );
 					$choice_value .= '|' . $price;
 				}
-				$choice_value = esc_attr( $choice_value );
-				$choices .= "<li class='gchoice_{$id}'>
+				$choice_value  = esc_attr( $choice_value );
+				$choice_markup = "<li class='gchoice_{$id}'>
 								<input name='input_{$input_id}' type='checkbox' $logic_event value='{$choice_value}' {$checked} id='choice_{$id}' {$tabindex} {$disabled_text} />
 								<label for='choice_{$id}' id='label_{$id}'>{$choice['text']}</label>
 							</li>";
+
+				$choices .= apply_filters( 'gform_field_choice_markup_pre_render_' . $this->formId, apply_filters( 'gform_field_choice_markup_pre_render', $choice_markup, $choice, $this, $value ), $choice, $this, $value );
 
 				$is_entry_detail = $this->is_entry_detail();
 				$is_form_editor  = $this->is_form_editor();
@@ -260,8 +260,19 @@ class GF_Field_Checkbox extends GF_Field {
 
 	}
 
-	public function allow_html(){
+	public function allow_html() {
 		return true;
+	}
+
+	public function sanitize_settings() {
+		parent::sanitize_settings();
+		if ( $this->type === 'option' ) {
+			$this->productField = absint( $this->productField );
+		}
+
+		if ( $this->type === 'post_category' ) {
+			$this->displayAllCategories = (bool) $this->displayAllCategories;
+		}
 	}
 
 }

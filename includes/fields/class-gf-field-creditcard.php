@@ -45,16 +45,16 @@ class GF_Field_CreditCard extends GF_Field {
 		if ( $this->isRequired && ( empty( $card_number ) || empty( $security_code ) || empty( $expiration_date[0] ) || empty( $expiration_date[1] ) ) ) {
 			$this->failed_validation  = true;
 			$this->validation_message = empty( $this->errorMessage ) ? __( 'Please enter your credit card information.', 'gravityforms' ) : $this->errorMessage;
-		} else if ( ! empty( $card_number ) ) {
+		} elseif ( ! empty( $card_number ) ) {
 			$card_type     = GFCommon::get_card_type( $card_number );
 
 			if ( empty( $security_code ) ) {
 				$this->failed_validation  = true;
 				$this->validation_message = __( "Please enter your card's security code.", 'gravityforms' );
-			} else if ( ! $card_type ) {
+			} elseif ( ! $card_type ) {
 				$this->failed_validation  = true;
 				$this->validation_message = __( 'Invalid credit card number.', 'gravityforms' );
-			} else if ( ! $this->is_card_supported( $card_type['slug'] ) ) {
+			} elseif ( ! $this->is_card_supported( $card_type['slug'] ) ) {
 				$this->failed_validation  = true;
 				$this->validation_message = $card_type['name'] . ' ' . __( 'is not supported. Please enter one of the supported credit cards.', 'gravityforms' );
 			}
@@ -67,7 +67,7 @@ class GF_Field_CreditCard extends GF_Field {
 
 		if ( ! empty( $supported_cards ) && in_array( $card_slug, $supported_cards ) ) {
 			return true;
-		} else if ( empty( $supported_cards ) && in_array( $card_slug, $default_cards ) ) {
+		} elseif ( empty( $supported_cards ) && in_array( $card_slug, $default_cards ) ) {
 			return true;
 		}
 
@@ -145,7 +145,7 @@ class GF_Field_CreditCard extends GF_Field {
 			$style = '';
 			if ( $this->is_card_supported( $card['slug'] ) ) {
 				$print_card = true;
-			} else if ( $is_form_editor || $is_entry_detail ) {
+			} elseif ( $is_form_editor || $is_entry_detail ) {
 				$print_card = true;
 				$style      = "style='display:none;'";
 			} else {
@@ -369,7 +369,7 @@ class GF_Field_CreditCard extends GF_Field {
 			$card_number_length = strlen( $value );
 			$value              = substr( $value, - 4, 4 );
 			$value              = str_pad( $value, $card_number_length, 'X', STR_PAD_LEFT );
-		} else if ( $input_id == '4' ) {
+		} elseif ( $input_id == '4' ) {
 
 			$value = rgpost( "input_{$field_id_token}_4" );
 

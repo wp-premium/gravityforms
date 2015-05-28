@@ -106,7 +106,7 @@ if ( ! class_exists( 'GFResults' ) ) {
 				$link_class = '';
 				if ( rgget( 'page' ) == 'gf_new_form' ) {
 					$link_class = 'gf_toolbar_disabled';
-				} else if ( rgget( 'page' ) == 'gf_entries' && rgget( 'view' ) == 'gf_results_' . $this->_slug ) {
+				} elseif ( rgget( 'page' ) == 'gf_entries' && rgget( 'view' ) == 'gf_results_' . $this->_slug ) {
 					$link_class = 'gf_toolbar_active';
 				}
 

@@ -44,7 +44,11 @@ class GF_Field_SingleShipping extends GF_Field {
 		return GFCommon::to_money( $value, $currency );
 	}
 
-
+	public function sanitize_settings() {
+		parent::sanitize_settings();
+		$price_number    = GFCommon::to_number( $this->basePrice );
+		$this->basePrice = GFCommon::to_money( $price_number );
+	}
 }
 
 GF_Fields::register( new GF_Field_SingleShipping() );

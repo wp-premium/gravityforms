@@ -163,8 +163,13 @@ jQuery.fn.repeater = function( options ) {
                 continue;
 
             var input = self.elem.find( '.' + property + '_' + index );
-            if( input.is( 'select' ) )
-                input.find( 'option[value="' + item[property] + '"]' ).prop( 'selected', true );
+            if( input.is( 'select' ) ){
+                if(jQuery.isArray(item[property])){
+                    input.val(item[property]);
+                } else {
+                    input.find( 'option[value="' + item[property] + '"]' ).prop( 'selected', true );
+                }
+            }
         }
 
     }
@@ -172,7 +177,7 @@ jQuery.fn.repeater = function( options ) {
     self.addNewItem = function( elem ) {
 
         var index = jQuery( elem ).attr( 'data-index' );
-
+        index = parseInt( index );
         self.callbacks.beforeAddNew( this, index );
         self.items.splice( index + 1, 0, self.getBaseObject() );
         self.callbacks.addNew( this, index );
@@ -297,15 +302,3 @@ jQuery.fn.repeater = function( options ) {
 
     return self.init();
 };
-
-//$(this).repeater({
-//    limit: 0,
-//    items: wpvflow.getActionRuleEvents( i ),
-//    template: wpvflow.getEventTemplate(),
-//    addImageSrc: '<?php echo GFCommon::get_base_url(); ?>',
-//    removeImageSrc: '<?php echo GFCommon::get_base_url(); ?>',
-//    callbacks: {
-//        save: wpvflow.saveActionRuleEvents
-//    }
-//});
-

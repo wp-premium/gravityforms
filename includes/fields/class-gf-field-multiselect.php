@@ -59,14 +59,17 @@ class GF_Field_MultiSelect extends GF_Field {
 			$size = 7;
 		}
 
-		return sprintf( "<div class='ginput_container'><select multiple='multiple' {$placeholder} size='{$size}' name='input_%d[]' id='%s' {$logic_event} class='%s' $tabindex %s>%s</select></div>", $id, $field_id, $css_class, $disabled_text, GFCommon::get_select_choices( $this, $value ) );
+		return sprintf( "<div class='ginput_container'><select multiple='multiple' {$placeholder} size='{$size}' name='input_%d[]' id='%s' {$logic_event} class='%s' $tabindex %s>%s</select></div>", $id, $field_id, $css_class, $disabled_text, $this->get_choices( $value ) );
+	}
+
+	public function get_choices( $value ) {
+		return GFCommon::get_select_choices( $this, $value );
 	}
 
 	public function get_value_entry_list( $value, $entry, $field_id, $columns, $form ) {
 		// add space after comma-delimited values
 		return implode( ', ', explode( ',', $value ) );
 	}
-
 
 	public function get_value_entry_detail( $value, $currency = '', $use_text = false, $format = 'html', $media = 'screen' ) {
 
@@ -89,7 +92,7 @@ class GF_Field_MultiSelect extends GF_Field {
 		return empty( $value ) ? '' : is_array( $value ) ? implode( ',', $value ) : $value;
 	}
 
-	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format ) {
+	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {
 		if ( $this->type == 'post_category' ) {
 			$use_id = $modifier == 'id';
 			$items  = explode( ',', $value );
@@ -106,6 +109,14 @@ class GF_Field_MultiSelect extends GF_Field {
 		return $value;
 	}
 
+	public function sanitize_settings() {
+		parent::sanitize_settings();
+		$this->enableEnhancedUI = (bool) $this->enableEnhancedUI;
+
+		if ( $this->type === 'post_category' ) {
+			$this->displayAllCategories = (bool) $this->displayAllCategories;
+		}
+	}
 
 }
 

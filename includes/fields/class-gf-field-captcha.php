@@ -60,13 +60,13 @@ class GF_Field_CAPTCHA extends GF_Field {
 
 				//finding second number
 				for ( $second = 0; $second < 10; $second ++ ) {
-					if ( $captcha_obj->check( $prefixes[2], $second ) ){
+					if ( $captcha_obj->check( $prefixes[2], $second ) ) {
 						break;
 					}
 				}
 
 				//if it is a +, perform the sum
-				if ( $captcha_obj->check( $prefixes[1], '+' ) ){
+				if ( $captcha_obj->check( $prefixes[1], '+' ) ) {
 					$result = $first + $second;
 				} else {
 					$result = $first - $second;
@@ -110,33 +110,33 @@ class GF_Field_CAPTCHA extends GF_Field {
 		$is_entry_detail = $this->is_entry_detail();
 		$is_form_editor  = $this->is_form_editor();
 
-
-		$id          = (int) $this->id;
-		$field_id    = $is_entry_detail || $is_form_editor || $form_id == 0 ? "input_$id" : 'input_' . $form_id . "_$id";
+		$id       = (int) $this->id;
+		$field_id = $is_entry_detail || $is_form_editor || $form_id == 0 ? "input_$id" : 'input_' . $form_id . "_$id";
 
 		switch ( $this->captchaType ) {
 			case 'simple_captcha' :
-				$size    = empty($this->simpleCaptchaSize) ? 'medium' : $this->simpleCaptchaSize;
+				$size    = empty($this->simpleCaptchaSize) ? 'medium' : esc_attr( $this->simpleCaptchaSize );
 				$captcha = $this->get_captcha();
 
 				$tabindex = $this->get_tabindex();
 
-				$dimensions = $is_entry_detail || $is_form_editor ? '' : "width='" . rgar( $captcha, 'width' ) . "' height='" . rgar( $captcha, 'height' ) . "'";
+				$dimensions = $is_entry_detail || $is_form_editor ? '' : "width='" . esc_attr( rgar( $captcha, 'width' ) ) . "' height='" . esc_attr( rgar( $captcha, 'height' ) ) . "'";
 
-				return "<div class='gfield_captcha_container'><img class='gfield_captcha' src='" . rgar( $captcha, 'url' ) . "' alt='' {$dimensions} /><div class='gfield_captcha_input_container simple_captcha_{$size}'><input type='text' name='input_{$id}' id='{$field_id}' {$tabindex}/><input type='hidden' name='input_captcha_prefix_{$id}' value='" . rgar( $captcha, 'prefix' ) . "' /></div></div>";
+				return "<div class='gfield_captcha_container'><img class='gfield_captcha' src='" . esc_url( rgar( $captcha, 'url' ) ) . "' alt='' {$dimensions} /><div class='gfield_captcha_input_container simple_captcha_{$size}'><input type='text' name='input_{$id}' id='{$field_id}' {$tabindex}/><input type='hidden' name='input_captcha_prefix_{$id}' value='" . esc_attr( rgar( $captcha, 'prefix' ) ) . "' /></div></div>";
 				break;
 
 			case 'math' :
-				$size      = empty( $this->simpleCaptchaSize ) ? 'medium' : $this->simpleCaptchaSize;
+				$size      = empty( $this->simpleCaptchaSize ) ? 'medium' : esc_attr( $this->simpleCaptchaSize );
 				$captcha_1 = $this->get_math_captcha( 1 );
 				$captcha_2 = $this->get_math_captcha( 2 );
 				$captcha_3 = $this->get_math_captcha( 3 );
 
 				$tabindex = $this->get_tabindex();
 
-				$dimensions = $is_entry_detail || $is_form_editor ? '' : "width='{$captcha_1['width']}' height='{$captcha_1['height']}'";
+				$dimensions   = $is_entry_detail || $is_form_editor ? '' : "width='" . esc_attr( rgar( $captcha_1, 'width' ) ) . "' height='" . esc_attr( rgar( $captcha_1, 'height' ) ) . "'";
+				$prefix_value = rgar( $captcha_1, 'prefix' ) . ',' . rgar( $captcha_2, 'prefix' ) . ',' . rgar( $captcha_3, 'prefix' );
 
-				return "<div class='gfield_captcha_container'><img class='gfield_captcha' src='{$captcha_1['url']}' alt='' {$dimensions} /><img class='gfield_captcha' src='{$captcha_2['url']}' alt='' {$dimensions} /><img class='gfield_captcha' src='{$captcha_3['url']}' alt='' {$dimensions} /><div class='gfield_captcha_input_container math_{$size}'><input type='text' name='input_{$id}' id='{$field_id}' {$tabindex}/><input type='hidden' name='input_captcha_prefix_{$id}' value='{$captcha_1['prefix']},{$captcha_2['prefix']},{$captcha_3['prefix']}' /></div></div>";
+				return "<div class='gfield_captcha_container'><img class='gfield_captcha' src='" . esc_url( rgar( $captcha_1, 'url' ) ) . "' alt='' {$dimensions} /><img class='gfield_captcha' src='" . esc_url( rgar( $captcha_2, 'url' ) ) . "' alt='' {$dimensions} /><img class='gfield_captcha' src='" . esc_url( rgar( $captcha_3, 'url' ) ) . "' alt='' {$dimensions} /><div class='gfield_captcha_input_container math_{$size}'><input type='text' name='input_{$id}' id='{$field_id}' {$tabindex}/><input type='hidden' name='input_captcha_prefix_{$id}' value='" . esc_attr( $prefix_value ) . "' /></div></div>";
 				break;
 
 			default:
@@ -160,12 +160,12 @@ class GF_Field_CAPTCHA extends GF_Field {
 					if ( empty( GFCommon::$tab_index ) ) {
 						GFCommon::$tab_index = 1;
 					}
-					$tabindex = GFCommon::$tab_index;
-					$tabindex2 = GFCommon::$tab_index++;
-					$options = "<script type='text/javascript'>" . apply_filters( 'gform_cdata_open', '' ) . " var RecaptchaOptions = {theme : '$theme'}; if(parseInt('{$tabindex}') > 0) {RecaptchaOptions.tabindex = {$tabindex2};}" .
-						apply_filters( 'gform_recaptcha_init_script', '', $form_id, $this ) . apply_filters( 'gform_cdata_close', '' ) . '</script>';
+					$tabindex  = GFCommon::$tab_index;
+					$tabindex2 = GFCommon::$tab_index ++;
+					$options   = "<script type='text/javascript'>" . apply_filters( 'gform_cdata_open', '' ) . " var RecaptchaOptions = {theme : '$theme'}; if(parseInt('{$tabindex}') > 0) {RecaptchaOptions.tabindex = {$tabindex2};}" .
+					             apply_filters( 'gform_recaptcha_init_script', '', $form_id, $this ) . apply_filters( 'gform_cdata_close', '' ) . '</script>';
 
-					$is_ssl = ! empty( $_SERVER['HTTPS'] );
+					$is_ssl = GFCommon::is_ssl();
 
 					return $options . "<div class='ginput_container' id='$field_id'>" . recaptcha_get_html( $publickey, null, $is_ssl, $language ) . '</div>';
 				}
@@ -291,6 +291,10 @@ class GF_Field_CAPTCHA extends GF_Field {
 		$filename = $captcha->generate_image( $prefix, $word );
 		$url      = RGFormsModel::get_upload_url( 'captcha' ) . '/' . $filename;
 		$path     = $captcha->tmp_dir . $filename;
+
+		if ( GFCommon::is_ssl() && strpos( $url, 'http:' ) !== false ) {
+			$url = str_replace( 'http:', 'https:', $url );
+		}
 
 		return array( 'path' => $path, 'url' => $url, 'height' => $captcha->img_size[1], 'width' => $captcha->img_size[0], 'prefix' => $prefix );
 	}
