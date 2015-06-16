@@ -68,7 +68,7 @@ $page_break = rgget( 'page_break' ) ? 'print-page-break' : false;
 sort( $lead_ids );
 
 if ( empty( $form_id ) || empty( $lead_ids ) ) {
-	die( __( 'Form Id and Lead Id are required parameters.', 'gravityforms' ) );
+	die( esc_html__( 'Form Id and Lead Id are required parameters.', 'gravityforms' ) );
 }
 
 $form = RGFormsModel::get_form_meta( $form_id );

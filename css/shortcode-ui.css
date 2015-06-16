@@ -38,5 +38,5 @@
 }
 
 #TB_ajaxContent {
-    height:92%!important;
+    min-height:92%!important;
 }

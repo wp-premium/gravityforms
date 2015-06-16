@@ -10,7 +10,7 @@ class GF_Field_Post_Image extends GF_Field_Fileupload {
 	public $type = 'post_image';
 
 	public function get_form_editor_field_title() {
-		return __( 'Post Image', 'gravityforms' );
+		return esc_attr__( 'Post Image', 'gravityforms' );
 	}
 
 	function get_form_editor_field_settings() {

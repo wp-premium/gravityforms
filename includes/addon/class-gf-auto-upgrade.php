@@ -50,15 +50,19 @@ class GFAutoUpgrade {
 	public function rg_plugin_row() {
 
 		if ( ! $this->_is_gravityforms_supported ) {
-			$message = sprintf( __( 'Gravity Forms ' . $this->_min_gravityforms_version . ' is required. Activate it now or %spurchase it today!%s', 'gravityforms' ), "<a href='http://www.gravityforms.com'>", '</a>' );
+			$message = sprintf( esc_html__( 'Gravity Forms %s is required. Activate it now or %spurchase it today!%s', 'gravityforms' ), $this->_min_gravityforms_version, "<a href='http://www.gravityforms.com'>", '</a>' );
 			GFAddOn::display_plugin_message( $message, true );
 		} else {
 			$version_info = $this->get_version_info( $this->_slug );
 
 			if ( ! rgar( $version_info, 'is_valid_key' ) ) {
 				$title       = $this->_title;
-				$new_version = version_compare( $this->_version, $version_info['version'], '<' ) ? __( "There is a new version of {$title} available.", 'gravityforms' ) . " <a class='thickbox' title='{$title}' href='plugin-install.php?tab=plugin-information&plugin=" . $this->_slug . "&TB_iframe=true&width=640&height=808'>" . sprintf( __( 'View version %s Details', 'gravityforms' ), $version_info['version'] ) . '</a>. ' : '';
-				$message     = $new_version . sprintf( __( '%sRegister%s your copy of Gravity Forms to receive access to automatic upgrades and support. Need a license key? %sPurchase one now%s.', 'gravityforms' ), '<a href="admin.php?page=gf_settings">', '</a>', '<a href="http://www.gravityforms.com">', '</a>' ) . '</div></td>';
+				if ( version_compare( $this->_version, $version_info['version'], '<' ) ) {
+					$new_version = sprintf( esc_html__( 'There is a new version of %s available.', 'gravityforms' ), $title ) . sprintf( ' <a class="thickbox" title="%s" href="plugin-install.php?tab=plugin-information&plugin=%s&TB_iframe=true&width=640&height=808">', $title, $this->_slug ) . sprintf( esc_html__( 'View version %s Details', 'gravityforms' ), $version_info['version'] ) . '</a>. ';
+				} else {
+					$new_version = '';
+				}
+				$message = $new_version . sprintf( esc_html__( '%sRegister%s your copy of Gravity Forms to receive access to automatic upgrades and support. Need a license key? %sPurchase one now%s.', 'gravityforms' ), '<a href="admin.php?page=gf_settings">', '</a>', '<a href="http://www.gravityforms.com">', '</a>' ) . '</div></td>';
 				GFAddOn::display_plugin_message( $message );
 			}
 		}
@@ -145,10 +149,7 @@ class GFAutoUpgrade {
 
 	}
 
-	private function display_upgrade_message( $plugin_name, $plugin_title, $version, $message, $localization_namespace ) {
-		$upgrade_message = $message . ' <a class="thickbox" title="' . $plugin_title . '" href="plugin-install.php?tab=plugin-information&plugin=' . $plugin_name . '&TB_iframe=true&width=640&height=808">' . sprintf( __( 'View version %s Details', $localization_namespace ), $version ) . '</a>. ';
-		GFAddOn::display_plugin_message( $upgrade_message );
-	}
+
 
 	// Displays current version details on plugins page and updates page
 	public function display_changelog() {
@@ -175,7 +176,7 @@ class GFAutoUpgrade {
 		$raw_response = GFCommon::post_to_manager( 'changelog.php', $this->get_remote_request_params( $this->_slug, $key, $this->_version ), $options );
 
 		if ( is_wp_error( $raw_response ) || 200 != $raw_response['response']['code'] ) {
-			$text = sprintf( __( 'Oops!! Something went wrong.%sPlease try again or %scontact us%s.', 'gravityforms' ), '<br/>', "<a href='http://www.gravityforms.com'>", '</a>' );
+			$text = sprintf( esc_html__( 'Oops!! Something went wrong.%sPlease try again or %scontact us%s.', 'gravityforms' ), '<br/>', "<a href='http://www.gravityforms.com'>", '</a>' );
 		} else {
 			$text = $raw_response['body'];
 			if ( substr( $text, 0, 10 ) != '<!--GFM-->' ) {
@@ -214,7 +215,7 @@ class GFAutoUpgrade {
 
 		?>
 		<div class="wrap <?php echo GFCommon::get_browser_class() ?>">
-			<h2><?php echo $this->_title ?></h2>
+			<h2><?php esc_html_e( $this->_title ); ?></h2>
 			<?php
 			$force_check = rgget( 'force-check' ) == 1;
 			$version_info = $this->get_version_info( $this->_slug, ! $force_check );
@@ -222,7 +223,7 @@ class GFAutoUpgrade {
 			if ( ! rgar( $version_info, 'is_valid_key' ) ) {
 				?>
 				<div class="gf_update_expired alert_red">
-					<?php _e( sprintf( '%sRegister%s your copy of Gravity Forms to receive access to automatic updates and support. Need a license key? %sPurchase one now%s.', '<a href="admin.php?page=gf_settings">','</a>','<a href="http://www.gravityforms.com">', '</a>' ), 'gravityforms' ); ?>
+					<?php printf( esc_html__( '%sRegister%s your copy of Gravity Forms to receive access to automatic updates and support. Need a license key? %sPurchase one now%s.', 'gravityforms' ), '<a href="admin.php?page=gf_settings">','</a>','<a href="http://www.gravityforms.com">', '</a>' ); ?>
 				</div>
 
 			<?php
@@ -232,11 +233,13 @@ class GFAutoUpgrade {
 					$plugin_file = $this->_path;
 					$upgrade_url = wp_nonce_url( 'update.php?action=upgrade-plugin&amp;plugin=' . urlencode( $plugin_file ), 'upgrade-plugin_' . $plugin_file );
 					$details_url = self_admin_url( 'plugin-install.php?tab=plugin-information&plugin=' . urlencode( $this->_slug ) . '&section=changelog&TB_iframe=true&width=600&height=800' );
-					$message     = sprintf( __( 'There is a new version of %1$s available. <a href="%2$s" class="thickbox" title="%3$s">View version %4$s details</a>.', 'gravityforms' ), $this->_title, esc_url( $details_url ), esc_attr( $this->_title ), $version_info['version'] );
+					$message_link_text = sprintf( esc_html__( 'View version %4$s details', 'gravityforms' ), $version_info['version'] );
+					$message_link      = sprintf( '<a href="%s" class="thickbox" title="%s">%s</a>', esc_url( $details_url ), esc_attr( $this->_title ), $message_link_text );
+					$message           = sprintf( esc_html__( 'There is a new version of %1$s available. %s.', 'gravityforms' ), $this->_title, $message_link );
 
 					?>
 					<div class="gf_update_outdated alert_yellow">
-						<?php echo $message . ' ' . sprintf( __( '<p>You can update to the latest version automatically or download the update and install it manually. %sUpdate Automatically%s %sDownload Update%s', 'gravityforms' ), "</p><a class='button-primary' href='{$upgrade_url}'>", '</a>', "&nbsp;<a class='button' href='{$version_info['url']}'>", '</a>' ); ?>
+						<?php echo $message . ' <p>' . sprintf( esc_html__( 'You can update to the latest version automatically or download the update and install it manually. %sUpdate Automatically%s %sDownload Update%s', 'gravityforms' ), "</p><a class='button-primary' href='{$upgrade_url}'>", '</a>', "&nbsp;<a class='button' href='{$version_info['url']}'>", '</a>' ); ?>
 					</div>
 				<?php
 				}
@@ -244,7 +247,7 @@ class GFAutoUpgrade {
 
 				?>
 				<div class="gf_update_current alert_green">
-					<?php printf( __( 'Your version of %s is up to date.', 'gravityforms' ), $this->_title ); ?>
+					<?php printf( esc_html__( 'Your version of %s is up to date.', 'gravityforms' ), $this->_title ); ?>
 				</div>
 			<?php
 			}

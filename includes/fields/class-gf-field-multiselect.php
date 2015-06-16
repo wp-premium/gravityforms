@@ -10,7 +10,7 @@ class GF_Field_MultiSelect extends GF_Field {
 	public $type = 'multiselect';
 
 	public function get_form_editor_field_title() {
-		return __( 'Multi Select', 'gravityforms' );
+		return esc_attr__( 'Multi Select', 'gravityforms' );
 	}
 
 	function get_form_editor_field_settings() {
@@ -37,7 +37,7 @@ class GF_Field_MultiSelect extends GF_Field {
 	}
 
 	public function get_field_input( $form, $value = '', $entry = null ) {
-		$form_id         = $form['id'];
+		$form_id         = absint( $form['id'] );
 		$is_entry_detail = $this->is_entry_detail();
 		$is_form_editor  = $this->is_form_editor();
 
@@ -52,14 +52,14 @@ class GF_Field_MultiSelect extends GF_Field {
 		$tabindex      = $this->get_tabindex();
 		$disabled_text = $is_form_editor ? 'disabled="disabled"' : '';
 
-		$placeholder = $this->enableEnhancedUI ? "data-placeholder='" . esc_attr( apply_filters( "gform_multiselect_placeholder_{$form_id}", apply_filters( 'gform_multiselect_placeholder', __( 'Click to select...', 'gravityforms' ), $form_id ), $form_id ) ) . "'" : '';
+		$placeholder = $this->enableEnhancedUI ? "data-placeholder='" . esc_attr( apply_filters( "gform_multiselect_placeholder_{$form_id}", apply_filters( 'gform_multiselect_placeholder', esc_attr__( 'Click to select...', 'gravityforms' ), $form_id ), $form_id ) ) . "'" : '';
 
 		$size = $this->multiSelectSize;
 		if ( empty( $size ) ) {
 			$size = 7;
 		}
 
-		return sprintf( "<div class='ginput_container'><select multiple='multiple' {$placeholder} size='{$size}' name='input_%d[]' id='%s' {$logic_event} class='%s' $tabindex %s>%s</select></div>", $id, $field_id, $css_class, $disabled_text, $this->get_choices( $value ) );
+		return sprintf( "<div class='ginput_container'><select multiple='multiple' {$placeholder} size='{$size}' name='input_%d[]' id='%s' {$logic_event} class='%s' $tabindex %s>%s</select></div>", $id, esc_attr( $field_id ), $css_class, $disabled_text, $this->get_choices( $value ) );
 	}
 
 	public function get_choices( $value ) {

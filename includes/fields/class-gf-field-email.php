@@ -10,7 +10,7 @@ class GF_Field_Email extends GF_Field {
 	public $type = 'email';
 
 	public function get_form_editor_field_title() {
-		return __( 'Email', 'gravityforms' );
+		return esc_attr__( 'Email', 'gravityforms' );
 	}
 
 	function get_form_editor_field_settings() {
@@ -47,12 +47,12 @@ class GF_Field_Email extends GF_Field {
 
 		if ( ! $is_blank && ! GFCommon::is_valid_email( $email ) ) {
 			$this->failed_validation  = true;
-			$this->validation_message = empty( $this->errorMessage ) ? __( 'Please enter a valid email address.', 'gravityforms' ) : $this->errorMessage;
+			$this->validation_message = empty( $this->errorMessage ) ? esc_html__( 'Please enter a valid email address.', 'gravityforms' ) : $this->errorMessage;
 		} elseif ( $this->emailConfirmEnabled && ! empty( $email ) ) {
 			$confirm = is_array( $value ) ? rgar( $value, 1 ) : rgpost( 'input_' . $this->id . '_2' );
 			if ( $confirm != $email ) {
 				$this->failed_validation  = true;
-				$this->validation_message = __( 'Your emails do not match.', 'gravityforms' );
+				$this->validation_message = esc_html__( 'Your emails do not match.', 'gravityforms' );
 			}
 		}
 	}
@@ -65,8 +65,8 @@ class GF_Field_Email extends GF_Field {
 			$value = array_values( $value );
 		}
 
-		$form_id  = $form['id'];
-		$id       = intval( $this->id );
+		$form_id  = absint( $form['id'] );
+		$id       = absint( $this->id );
 		$field_id = $is_entry_detail || $is_form_editor || $form_id == 0 ? "input_$id" : 'input_' . $form_id . "_$id";
 		$form_id  = ( $is_entry_detail || $is_form_editor ) && empty( $form_id ) ? rgget( 'id' ) : $form_id;
 
@@ -86,9 +86,9 @@ class GF_Field_Email extends GF_Field {
 		$enter_email_field_input = GFFormsModel::get_input( $this, $this->id . '' );
 		$confirm_field_input     = GFFormsModel::get_input( $this, $this->id . '.2' );
 
-		$enter_email_label   = rgar( $enter_email_field_input, 'customLabel' ) != '' ? $enter_email_field_input['customLabel'] : __( 'Enter Email', 'gravityforms' );
+		$enter_email_label   = rgar( $enter_email_field_input, 'customLabel' ) != '' ? $enter_email_field_input['customLabel'] : esc_html__( 'Enter Email', 'gravityforms' );
 		$enter_email_label   = apply_filters( "gform_email_{$form_id}", apply_filters( 'gform_email', $enter_email_label, $form_id ), $form_id );
-		$confirm_email_label = rgar( $confirm_field_input, 'customLabel' ) != '' ? $confirm_field_input['customLabel'] : __( 'Confirm Email', 'gravityforms' );
+		$confirm_email_label = rgar( $confirm_field_input, 'customLabel' ) != '' ? $confirm_field_input['customLabel'] : esc_html__( 'Confirm Email', 'gravityforms' );
 		$confirm_email_label = apply_filters( "gform_email_confirm_{$form_id}", apply_filters( 'gform_email_confirm', $confirm_email_label, $form_id ), $form_id );
 
 		$single_placeholder_attribute        = $this->get_field_placeholder_attribute();

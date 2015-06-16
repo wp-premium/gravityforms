@@ -59,7 +59,7 @@ class GFUpdate {
 
 				?>
 				<div class="gf_update_current alert_green">
-					<?php esc_html( 'Your version of Gravity Forms is up to date.', 'gravityforms' ); ?>
+					<?php esc_html_e( 'Your version of Gravity Forms is up to date.', 'gravityforms' ); ?>
 				</div>
 			<?php
 			}

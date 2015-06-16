@@ -325,7 +325,7 @@ class GFEntryList {
 			mysack.setVar("name", name);
 			mysack.setVar("value", value);
 			mysack.onError = function () {
-				alert(<?php echo json_encode( esc_html__( 'Ajax error while setting lead property', 'gravityforms' ) ); ?>)
+				alert(<?php echo json_encode( __( 'Ajax error while setting lead property', 'gravityforms' ) ); ?>)
 			};
 			mysack.runAJAX();
 
@@ -379,7 +379,7 @@ class GFEntryList {
 			var leadIds = getLeadIds();
 
 			if (leadIds.length == 0) {
-				alert(<?php echo json_encode( esc_html__( 'Please select at least one entry.', 'gravityforms' ) ); ?>);
+				alert(<?php echo json_encode( __( 'Please select at least one entry.', 'gravityforms' ) ); ?>);
 				return false;
 			}
 
@@ -456,9 +456,9 @@ class GFEntryList {
 					if (response) {
 						displayMessage(response, 'error', '#notifications_container');
 					} else {
-						var message = <?php echo json_encode( esc_html__( 'Notifications for %s were resent successfully.', 'gravityforms' ) ); ?>;
+						var message = <?php echo json_encode( __( 'Notifications for %s were resent successfully.', 'gravityforms' ) ); ?>;
 						var c = leadIds == 0 ? gformVars.countAllEntries : leadIds.length;
-						displayMessage(message.replace('%s', c + ' ' + getPlural(c, <?php echo json_encode( esc_html__( 'entry', 'gravityforms' ) ); ?>, <?php echo json_encode( esc_html__( 'entries', 'gravityforms' ) ); ?>)), "updated", "#lead_form");
+						displayMessage(message.replace('%s', c + ' ' + getPlural(c, <?php echo json_encode( __( 'entry', 'gravityforms' ) ); ?>, <?php echo json_encode( __( 'entries', 'gravityforms' ) ); ?>)), "updated", "#lead_form");
 						closeModal(true);
 					}
 
@@ -564,7 +564,7 @@ class GFEntryList {
 			"allEntriesOnPageAreSelected": <?php echo json_encode( sprintf( esc_html__( 'All %s{0}%s entries on this page are selected.', 'gravityforms' ), '<strong>', '</strong>' ) ); ?>,
 			"selectAll"                  : <?php echo json_encode( sprintf( esc_html__( 'Select all %s{0}%s entries.', 'gravityforms' ), '<strong>', '</strong>' ) ); ?>,
 			"allEntriesSelected"         : <?php echo json_encode( sprintf( esc_html__( 'All %s{0}%s entries have been selected.', 'gravityforms' ), '<strong>', '</strong>' ) ); ?>,
-			"clearSelection"             : <?php echo json_encode( esc_html__( 'Clear selection', 'gravityforms' ) ); ?>
+			"clearSelection"             : <?php echo json_encode( __( 'Clear selection', 'gravityforms' ) ); ?>
 		}
 
 		var gformVars = {

@@ -930,7 +930,12 @@ class GFAPI {
 
 		$field = GFFormsModel::get_field( $form, $input_id );
 
-		$lead_detail_id = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$wpdb->prefix}rg_lead_detail WHERE lead_id=%d AND CAST(field_number as DECIMAL(4,2))=%s", $entry_id, $input_id ) );
+		$input_id_min = (float) $input_id - 0.0001;
+		$input_id_max = (float) $input_id + 0.0001;
+
+		$lead_details_table_name = GFFormsModel::get_lead_details_table_name();
+
+		$lead_detail_id = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$lead_details_table_name} WHERE lead_id=%d AND field_number BETWEEN %s AND %s", $entry_id, $input_id_min, $input_id_max ) );
 
 		$result = true;
 		if ( ! isset( $entry[ $input_id ] ) || $entry[ $input_id ] != $value ){
@@ -1263,28 +1268,18 @@ class GFAPI {
 	// FIELDS -----------------------------------------------------
 
 	/**
-	 * Returns an array containing the form fields of the specified types.
+	 * Returns an array containing the form fields of the specified type or types.
+	 *
+	 * @since 1.9.9.8
 	 *
 	 * @param array $form
-	 * @param array $types
-	 * @param bool $use_inputType
+	 * @param array|string $types
+	 * @param bool $use_input_type
 	 *
-	 * @return array
+	 * @return GF_Field[]
 	 */
-	public static function get_fields_by_type( $form, $types, $use_inputType = false ) {
-		$fields = array();
-		if ( ! is_array( rgar( $form, 'fields' ) ) ) {
-			return $fields;
-		}
-
-		foreach ( $form['fields'] as $field ) {
-			$type = $use_inputType ? $field->get_input_type() : $field->type;
-			if ( in_array( $type, $types ) ) {
-				$fields[] = $field;
-			}
-		}
-
-		return $fields;
+	public static function get_fields_by_type( $form, $types, $use_input_type = false ) {
+		return GFFormsModel::get_fields_by_type( $form, $types, $use_input_type );
 	}
 
 	// HELPERS ----------------------------------------------------

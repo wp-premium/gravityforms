@@ -10,7 +10,7 @@ class GF_Field_CAPTCHA extends GF_Field {
 	public $type = 'captcha';
 
 	public function get_form_editor_field_title() {
-		return __( 'CAPTCHA', 'gravityforms' );
+		return esc_attr__( 'CAPTCHA', 'gravityforms' );
 	}
 
 	function get_form_editor_field_settings() {
@@ -39,7 +39,7 @@ class GF_Field_CAPTCHA extends GF_Field {
 
 					if ( ! $captcha_obj->check( $prefix, str_replace( ' ', '', $value ) ) ) {
 						$this->failed_validation  = true;
-						$this->validation_message = empty( $this->errorMessage ) ? __( "The CAPTCHA wasn't entered correctly. Go back and try it again.", 'gravityforms' ) : $this->errorMessage;
+						$this->validation_message = empty( $this->errorMessage ) ? esc_html__( "The CAPTCHA wasn't entered correctly. Go back and try it again.", 'gravityforms' ) : $this->errorMessage;
 					}
 
 					//removes old files in captcha folder (older than 1 hour);
@@ -76,7 +76,7 @@ class GF_Field_CAPTCHA extends GF_Field {
 
 				if ( intval( $result ) != intval( $value ) ) {
 					$this->failed_validation  = true;
-					$this->validation_message = empty( $this->errorMessage ) ? __( "The CAPTCHA wasn't entered correctly. Go back and try it again.", 'gravityforms' ) : $this->errorMessage;
+					$this->validation_message = empty( $this->errorMessage ) ? esc_html__( "The CAPTCHA wasn't entered correctly. Go back and try it again.", 'gravityforms' ) : $this->errorMessage;
 				}
 
 				//removes old files in captcha folder (older than 1 hour);
@@ -99,7 +99,7 @@ class GF_Field_CAPTCHA extends GF_Field {
 
 				if ( ! $resp->is_valid ) {
 					$this->failed_validation  = true;
-					$this->validation_message = empty( $this->errorMessage ) ? __( "The reCAPTCHA wasn't entered correctly. Go back and try it again.", 'gravityforms' ) : $this->errorMessage;
+					$this->validation_message = empty( $this->errorMessage ) ? esc_html__( "The reCAPTCHA wasn't entered correctly. Go back and try it again.", 'gravityforms' ) : $this->errorMessage;
 				}
 		}
 
@@ -150,7 +150,7 @@ class GF_Field_CAPTCHA extends GF_Field {
 				$privatekey = get_option( 'rg_gforms_captcha_private_key' );
 				if ( $is_entry_detail || $is_form_editor ) {
 					if ( empty( $publickey ) || empty( $privatekey ) ) {
-						return "<div class='captcha_message'>" . __( 'To use the reCaptcha field you must first do the following:', 'gravityforms' ) . "</div><div class='captcha_message'>1 - <a href='http://www.google.com/recaptcha' target='_blank'>" . sprintf( __( 'Sign up%s for a free reCAPTCHA account', 'gravityforms' ), '</a>' ) . "</div><div class='captcha_message'>2 - " . sprintf( __( 'Enter your reCAPTCHA keys in the %ssettings page%s', 'gravityforms' ), "<a href='?page=gf_settings'>", '</a>' ) . '</div>';
+						return "<div class='captcha_message'>" . esc_html__( 'To use the reCaptcha field you must first do the following:', 'gravityforms' ) . "</div><div class='captcha_message'>1 - <a href='http://www.google.com/recaptcha' target='_blank'>" . sprintf( esc_html__( 'Sign up%s for a free reCAPTCHA account', 'gravityforms' ), '</a>' ) . "</div><div class='captcha_message'>2 - " . sprintf( esc_html__( 'Enter your reCAPTCHA keys in the %ssettings page%s', 'gravityforms' ), "<a href='?page=gf_settings'>", '</a>' ) . '</div>';
 					} else {
 						return "<div class='ginput_container'><img class='gfield_captcha' src='" . GFCommon::get_base_url() . "/images/captcha_$theme.jpg' alt='reCAPTCHA' title='reCAPTCHA'/></div>";
 					}

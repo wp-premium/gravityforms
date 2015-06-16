@@ -10,7 +10,7 @@ class GF_Field_Radio extends GF_Field {
 	public $type = 'radio';
 
 	public function get_form_editor_field_title() {
-		return __( 'Radio Buttons', 'gravityforms' );
+		return esc_attr__( 'Radio Buttons', 'gravityforms' );
 	}
 
 	function get_form_editor_field_settings() {
@@ -42,7 +42,7 @@ class GF_Field_Radio extends GF_Field {
 
 		if ( $this->isRequired && $this->enableOtherChoice && $value == GFCommon::get_other_choice_value() ) {
 			$this->failed_validation  = true;
-			$this->validation_message = empty( $this->errorMessage ) ? __( 'This field is required.', 'gravityforms' ) : $this->errorMessage;
+			$this->validation_message = empty( $this->errorMessage ) ? esc_html__( 'This field is required.', 'gravityforms' ) : $this->errorMessage;
 		}
 	}
 
@@ -144,7 +144,7 @@ class GF_Field_Radio extends GF_Field {
 
 			$total = sizeof( $this->choices );
 			if ( $count < $total ) {
-				$choices .= "<li class='gchoice_total'>" . sprintf( __( '%d of %d items shown. Edit field to view all', 'gravityforms' ), $count, $total ) . '</li>';
+				$choices .= "<li class='gchoice_total'>" . sprintf( esc_html__( '%d of %d items shown. Edit field to view all', 'gravityforms' ), $count, $total ) . '</li>';
 			}
 		}
 
