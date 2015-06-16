@@ -1,47 +1,125 @@
 -------------------------------------------------------------------------------------------------------------------
-Version 1.9.9.8
-    - Added security enhancements.
-    - Updated Swiss Franc symbol to CHF.
-    - Fixed an issue with exporting entries and the list type Custom field not outputting it's value correctly.
-    - API: Added GF_Field::get_input_type() helper e.g. $type = $field->get_input_type();
-    - API: Added GFAPI::get_fields_by_type() for returning an array of form fields of the specified type or inputType.
+Version 1.9.10.15
+    - Updated some security precautions.
+	- AF: Added maybe_override_field_value(). Override to prevent use of the gform_{slug}_field_value filter or to replace with a customised filter.
 
 -------------------------------------------------------------------------------------------------------------------
-Version 1.9.9.7
+Version 1.9.10.14
+    - Fixed an issue with the select and multi-select type fields which could result in the incorrect choices being selected.
+	- AF: Added can_create_feed() to control rendering of feed creation UI.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.10.13
+	- Fixed an issue with the updates page not displaying the "No updates available" message appropriately.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.10.12
+    - API: Fixed an issue with the Serbia and Montenegro choices in GF_Field_Address get_countries() and get_country_codes().
+    - AF: Fixed an issue with the feed name in some maybe_process_feed() logging statements.
+    - AF: Fixed an issue with the default feed name not incrementing correctly based on field name.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.10.11
+    - Added 'gform_entries_field_header_pre_export', 'gform_entries_field_header_pre_export_{form_id}' and 'gform_entries_field_header_pre_export_{form_id}_{field_id}' filters for modifying the fields header in the entry export.
+        add_filter( 'gform_entries_field_header_pre_export', function( $header, $form, $field ) {
+            // do stuff
+            return $header;
+        } );
+	- Updated loading of the text domains to use a function and check whether they are already loaded to prevent unnecessary loads
+    - AF: Added "gform_{slug}_field_value", "gform_{slug}_field_value_{$form_id}" and "gform_{slug}_field_value_{$form_id}_{$field_id}" filters to modify field value.
+    - AF: Added "get_first_field_by_type" function to get the field ID of the first field of the desired type.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.10.10
+    - Fixed an issue with validation of the Reply To field on the edit notification page.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.10.9
+    - Fixed a minor CSS conflict with the Lite Tooltip plugin.
+    - AF: Fixed a PHP notice for settings fields if field_type setting property was an array.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.10.8
+	- Updated list field pre-population to accept an array in the same format currently saved to the database. This change is backwards-compatible and will accept the old array format.
+		Example:
+			$list_array = array(
+							array(
+								'Column 1' => 'row1col1',
+								'Column 2' => 'row1col2',
+							),
+							array(
+								'Column 1' => 'row2col1',
+								'Column 2' => 'row2col2',
+							),
+          				);
+	- Updated shortcode parsing so that "form" is the default action.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.10.7
+    - Updated some security precautions.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.10.6
+    - AF: Fixed a PHP warning related to sales pagination.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.10.5
+	- AF: Updated Feed Name to display a default incremented name based on existing feeds in the add-on.
+	- Fixed issue with number field formatting for certain currencies.
+	- Updated Finnish translation.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.10.4
+    - Updated some security precautions.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.10.3
+    - Fixed an issue with the Swiss Franc currency.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.10.2
+    - API: Fixed an issue with GFAPI::update_entry_field() where values for field IDs higher than 99 get added instead of updated.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.10.1
+    - Updated the ajax submission <iframe> tag to include the title attribute when HTML5 is enabled in the settings to comply with WCAG 2.0.
+    - Fixed notices caused by new primary column parameter for classes extending the WP_List_Table class.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.10
     - Added security enhancements.
+    - Added the gform_field_types_delete_files filter, including form specific version, for modifying field types to delete files when deleting entries.
+        add_filter( 'gform_field_types_delete_files', 'delete_custom_field_upload' );
+        function delete_custom_field_upload( $field_types ) {
+            $field_types[] = 'post_custom_field';
+            return $field_types;
+        }
+	- Added a javascript hook gform_pre_conditional_logic. Fires before conditional logic is executed.
+    - Updated Swiss Franc symbol to CHF.
+	- Updated some delete queries so that they perform better on large databases.
     - Updated the links in the help page.
+    - Updated query which deletes entry values from the entry_detail_long table to be more performant. Thanks @strebel!
+    - Fixed an issue with the Address field in the form editor where the country input was not hidden when a country specific address type was selected.
+    - Fixed an issue in Internet Explorer when editing a drop down with choices that are part of conditional logic.
+    - Fixed an issue with exporting entries and the list type Custom field not outputting it's value correctly.
+	- Fixed issue with conditional logic 'less than' operator not saving properly.
+    - Fixed a PHP notice in the form editor when saving a form with a Page field without next button conditional logic.
+	- Fixed an issue with the formatting of Paragraph, Post Body and Post Excerpt field values when merge tags are processed in some situations.
+	- Fixed an issue with the input mask setting in the form editor where the mask is not saved correctly.
+    - AF: Fixed an issue with the add-on uninstall process where app settings are not removed.
+    - AF: Fixed a database error during the add-on uninstall process when no forms exist.
+    - AF: Added get_dynamic_field_map_values( $feed, $field_name ); Returns array of mapped fields for a dynamic field map field and their values.
+    - AF: Prevent "Add Custom Key" option from being added to dynamic field map choices if "gf_custom" exists in a choices child array.
     - AF: Added get_list_field_value( $entry, $field_id, $field ); Returns a comma separated string for the specified column or when multiple columns are not enabled.
     - AF: Updated get_mapped_field_value() to use get_field_value().
     - AF: Updated get_field_value() to use get_list_field_value().
     - AF: Updated get_field_map_choices() and get_form_fields_as_choices() to include the List fields individual columns.
-
--------------------------------------------------------------------------------------------------------------------
-Version 1.9.9.6
-    - Updated query which deletes entry values from the entry_detail_long table to be more performant. Thanks @strebel!
-
--------------------------------------------------------------------------------------------------------------------
-Version 1.9.9.5
-	- Added security enhancements.
-	- API: Updated the Web API to hook into the template_redirect action instead of the pre_get_posts filter. This fixes an issue for add-ons that need access to posts.
-
--------------------------------------------------------------------------------------------------------------------
-Version 1.9.9.4
-	- Fixed issue with conditional logic 'less than' operator not saving properly.
-
--------------------------------------------------------------------------------------------------------------------
-Version 1.9.9.3
-    - Fixed a PHP notice in the form editor when saving a form with a Page field without next button conditional logic.
-    - Added security enhancements.
-
--------------------------------------------------------------------------------------------------------------------
-Version 1.9.9.2
-	- Added a javascript hook gform_pre_conditional_logic. Fires before conditional logic is executed.
-
--------------------------------------------------------------------------------------------------------------------
-Version 1.9.9.1
-	- Fixed an issue with the formatting of Paragraph, Post Body and Post Excerpt field values when merge tags are processed in some situations.
-	- Fixed an issue with the input mask setting in the form editor where the mask is not saved correctly.
 	- AF: Fixed styling issues with the app settings uninstall tab.
+    - API: Removed deprecation notices from GFCommon::get_us_state_code(), GFCommon::get_country_code(), GFCommon::get_us_states() and GFCommon::get_canadian_provinces().
+    - API: Added GFFormsModel::get_fields_by_type() and some refactoring.
+    - API: Added GF_Field::get_input_type() helper e.g. $type = $field->get_input_type();
+    - API: Added GFAPI::get_fields_by_type() for returning an array of form fields of the specified type or inputType.
+	- API: Updated the Web API to hook into the template_redirect action instead of the pre_get_posts filter. This fixes an issue for add-ons that need access to posts.
 
 -------------------------------------------------------------------------------------------------------------------
 Version 1.9.9

@@ -17,10 +17,8 @@ if ( ! class_exists( 'GFWidget' ) ) {
 
 		function __construct() {
 
-			// Initializing translations. Translation files in the WP_LANG_DIR folder have a higher priority.
-			$locale = apply_filters( 'plugin_locale', get_locale(), 'gravityforms' );
-			load_textdomain( 'gravityforms', WP_LANG_DIR . '/gravityforms/gravityforms-' . $locale . '.mo' );
-			load_plugin_textdomain( 'gravityforms', false, '/gravityforms/languages' );
+			//load text domains
+			GFCommon::load_gf_text_domain( 'gravityforms' );
 
 			$description = esc_html__( 'Gravity Forms Widget', 'gravityforms' );
 			$this->WP_Widget(

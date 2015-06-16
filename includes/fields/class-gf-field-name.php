@@ -9,7 +9,7 @@ class GF_Field_Name extends GF_Field {
 	public $type = 'name';
 
 	public function get_form_editor_field_title() {
-		return __( 'Name', 'gravityforms' );
+		return esc_attr__( 'Name', 'gravityforms' );
 	}
 
 	function validate( $value, $form ) {
@@ -20,7 +20,7 @@ class GF_Field_Name extends GF_Field {
 			if (   ( empty( $first ) && ! $this->get_input_property( '3', 'isHidden' ) )
 				|| ( empty( $last )  && ! $this->get_input_property( '6', 'isHidden' ) ) ) {
 				$this->failed_validation  = true;
-				$this->validation_message = empty( $this->errorMessage ) ? __( 'This field is required. Please enter the first and last name.', 'gravityforms' ) : $this->errorMessage;
+				$this->validation_message = empty( $this->errorMessage ) ? esc_html__( 'This field is required. Please enter the first and last name.', 'gravityforms' ) : $this->errorMessage;
 			}
 		}
 	}
@@ -102,11 +102,11 @@ class GF_Field_Name extends GF_Field {
 				$last_tabindex   = GFCommon::get_tabindex();
 				$suffix_tabindex = GFCommon::get_tabindex();
 
-				$prefix_sub_label      = rgar( $prefix_input, 'customLabel' ) != '' ? $prefix_input['customLabel'] : apply_filters( "gform_name_prefix_{$form_id}", apply_filters( 'gform_name_prefix', __( 'Prefix', 'gravityforms' ), $form_id ), $form_id );
-				$first_name_sub_label  = rgar( $first_input, 'customLabel' ) != '' ? $first_input['customLabel'] : apply_filters( "gform_name_first_{$form_id}", apply_filters( 'gform_name_first', __( 'First', 'gravityforms' ), $form_id ), $form_id );
-				$middle_name_sub_label = rgar( $middle_input, 'customLabel' ) != '' ? $middle_input['customLabel'] : apply_filters( "gform_name_middle_{$form_id}", apply_filters( 'gform_name_middle', __( 'Middle', 'gravityforms' ), $form_id ), $form_id );
-				$last_name_sub_label   = rgar( $last_input, 'customLabel' ) != '' ? $last_input['customLabel'] : apply_filters( "gform_name_last_{$form_id}", apply_filters( 'gform_name_last', __( 'Last', 'gravityforms' ), $form_id ), $form_id );
-				$suffix_sub_label      = rgar( $suffix_input, 'customLabel' ) != '' ? $suffix_input['customLabel'] : apply_filters( "gform_name_suffix_{$form_id}", apply_filters( 'gform_name_suffix', __( 'Suffix', 'gravityforms' ), $form_id ), $form_id );
+				$prefix_sub_label      = rgar( $prefix_input, 'customLabel' ) != '' ? $prefix_input['customLabel'] : apply_filters( "gform_name_prefix_{$form_id}", apply_filters( 'gform_name_prefix', esc_html__( 'Prefix', 'gravityforms' ), $form_id ), $form_id );
+				$first_name_sub_label  = rgar( $first_input, 'customLabel' ) != '' ? $first_input['customLabel'] : apply_filters( "gform_name_first_{$form_id}", apply_filters( 'gform_name_first', esc_html__( 'First', 'gravityforms' ), $form_id ), $form_id );
+				$middle_name_sub_label = rgar( $middle_input, 'customLabel' ) != '' ? $middle_input['customLabel'] : apply_filters( "gform_name_middle_{$form_id}", apply_filters( 'gform_name_middle', esc_html__( 'Middle', 'gravityforms' ), $form_id ), $form_id );
+				$last_name_sub_label   = rgar( $last_input, 'customLabel' ) != '' ? $last_input['customLabel'] : apply_filters( "gform_name_last_{$form_id}", apply_filters( 'gform_name_last', esc_html__( 'Last', 'gravityforms' ), $form_id ), $form_id );
+				$suffix_sub_label      = rgar( $suffix_input, 'customLabel' ) != '' ? $suffix_input['customLabel'] : apply_filters( "gform_name_suffix_{$form_id}", apply_filters( 'gform_name_suffix', esc_html__( 'Suffix', 'gravityforms' ), $form_id ), $form_id );
 
 				$prefix_markup         = '';
 				$first_markup          = '';
@@ -224,8 +224,8 @@ class GF_Field_Name extends GF_Field {
 			default :
 				$first_tabindex       = GFCommon::get_tabindex();
 				$last_tabindex        = GFCommon::get_tabindex();
-				$first_name_sub_label = rgar( $first_input, 'customLabel' ) != '' ? $first_input['customLabel'] : apply_filters( "gform_name_first_{$form_id}", apply_filters( 'gform_name_first', __( 'First', 'gravityforms' ), $form_id ), $form_id );
-				$last_name_sub_label  = rgar( $last_input, 'customLabel' ) != '' ? $last_input['customLabel'] : apply_filters( "gform_name_last_{$form_id}", apply_filters( 'gform_name_last', __( 'Last', 'gravityforms' ), $form_id ), $form_id );
+				$first_name_sub_label = rgar( $first_input, 'customLabel' ) != '' ? $first_input['customLabel'] : apply_filters( "gform_name_first_{$form_id}", apply_filters( 'gform_name_first', esc_html__( 'First', 'gravityforms' ), $form_id ), $form_id );
+				$last_name_sub_label  = rgar( $last_input, 'customLabel' ) != '' ? $last_input['customLabel'] : apply_filters( "gform_name_last_{$form_id}", apply_filters( 'gform_name_last', esc_html__( 'Last', 'gravityforms' ), $form_id ), $form_id );
 				if ( $is_sub_label_above ) {
 					$first_markup = '';
 					$style        = ( $is_admin && rgar( $first_input, 'isHidden' ) ) ? "style='display:none;'" : '';

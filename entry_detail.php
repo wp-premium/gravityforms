@@ -219,7 +219,7 @@ class GFEntryDetail {
 			});
 
 			function DeleteFile(leadId, fieldId, deleteButton) {
-				if (confirm(<?php echo json_encode( esc_html__( "Would you like to delete this file? 'Cancel' to stop. 'OK' to delete", 'gravityforms' ) ); ?>)) {
+				if (confirm(<?php echo json_encode( __( "Would you like to delete this file? 'Cancel' to stop. 'OK' to delete", 'gravityforms' ) ); ?>)) {
 					var fileIndex = jQuery(deleteButton).parent().index();
 					var mysack = new sack("<?php echo admin_url( 'admin-ajax.php' )?>");
 					mysack.execute = 1;
@@ -230,7 +230,7 @@ class GFEntryDetail {
 					mysack.setVar("field_id", fieldId);
 					mysack.setVar("file_index", fileIndex);
 					mysack.onError = function () {
-						alert(<?php echo json_encode( esc_html__( 'Ajax error while deleting field.', 'gravityforms' ) ) ?>)
+						alert(<?php echo json_encode( __( 'Ajax error while deleting field.', 'gravityforms' ) ); ?>)
 					};
 					mysack.runAJAX();
 
@@ -285,7 +285,7 @@ class GFEntryDetail {
 				var sendTo = jQuery('#notification_override_email').val();
 
 				if (selectedNotifications.length <= 0) {
-					displayMessage(<?php echo json_encode( esc_html__( 'You must select at least one type of notification to resend.', 'gravityforms' ) ); ?>, 'error', '#notifications_container');
+					displayMessage(<?php echo json_encode( __( 'You must select at least one type of notification to resend.', 'gravityforms' ) ); ?>, 'error', '#notifications_container');
 					return;
 				}
 
@@ -830,7 +830,7 @@ class GFEntryDetail {
 				<th id="details">
 					<?php
 					$title = sprintf( '%s : %s %s', esc_html( $form['title'] ), esc_html__( 'Entry # ', 'gravityforms' ), absint( $lead['id'] ) );
-					echo apply_filters( 'gform_entry_detail_title', $title, $form, $lead );
+					echo apply_filters( 'gravityflow_title_entry_detail', $title, $form, $lead );
 					?>
 				</th>
 				<th style="width:140px; font-size:10px; text-align: right;">

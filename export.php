@@ -425,7 +425,7 @@ class GFExport {
 				mysack.setVar("rg_select_export_form", "<?php echo wp_create_nonce( 'rg_select_export_form' ); ?>");
 				mysack.setVar("form_id", formId);
 				mysack.onError = function () {
-					alert(<?php echo json_encode( esc_html__( 'Ajax error while selecting a form', 'gravityforms' ) ); ?>)
+					alert(<?php echo json_encode( __( 'Ajax error while selecting a form', 'gravityforms' ) ); ?>)
 				};
 				mysack.runAJAX();
 
@@ -456,7 +456,7 @@ class GFExport {
 			jQuery(document).ready(function () {
 				jQuery("#gform_export").submit(function () {
 					if (jQuery(".gform_export_field:checked").length == 0) {
-						alert(<?php echo json_encode( esc_html__( 'Please select the fields to be exported', 'gravityforms' ) );  ?>);
+						alert(<?php echo json_encode( __( 'Please select the fields to be exported', 'gravityforms' ) );  ?>);
 						return false;
 					}
 				});
@@ -657,7 +657,11 @@ class GFExport {
 		$headers = array();
 		foreach ( $fields as $field_id ) {
 			$field = RGFormsModel::get_field( $form, $field_id );
-			$value = str_replace( '"', '""', GFCommon::get_label( $field, $field_id ) );
+			$label = gf_apply_filters( 'gform_entries_field_header_pre_export', array(
+				$form_id,
+				$field_id
+			), GFCommon::get_label( $field, $field_id ), $form, $field );
+			$value = str_replace( '"', '""', $label );
 
 			GFCommon::log_debug( "GFExport::start_export(): Header for field ID {$field_id}: {$value}" );
 

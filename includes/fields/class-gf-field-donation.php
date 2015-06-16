@@ -42,17 +42,17 @@ class GF_Field_Donation extends GF_Field {
 		$price = GFCommon::to_number( $value );
 		if ( ! rgblank( $value ) && ( $price === false || $price < 0 ) ) {
 			$this->failed_validation  = true;
-			$this->validation_message = empty( $this->errorMessage ) ? __( 'Please enter a valid amount.', 'gravityforms' ) : $this->errorMessage;
+			$this->validation_message = empty( $this->errorMessage ) ? esc_html__( 'Please enter a valid amount.', 'gravityforms' ) : $this->errorMessage;
 		}
 	}
 
 
 	public function get_field_input( $form, $value = '', $entry = null ) {
-		$form_id         = $form['id'];
+		$form_id         = absint( $form['id'] );
 		$is_entry_detail = $this->is_entry_detail();
 		$is_form_editor  = $this->is_form_editor();
 
-		$id       = (int) $this->id;
+		$id       = absint( $this->id );
 		$field_id = $is_entry_detail || $is_form_editor || $form_id == 0 ? "input_$id" : 'input_' . $form_id . "_$id";
 
 		$value = esc_attr( $value );

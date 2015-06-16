@@ -10,7 +10,7 @@ class GF_Field_CreditCard extends GF_Field {
 	public $type = 'creditcard';
 
 	public function get_form_editor_field_title() {
-		return __( 'Credit Card', 'gravityforms' );
+		return esc_attr__( 'Credit Card', 'gravityforms' );
 	}
 
 	function get_form_editor_field_settings() {
@@ -44,19 +44,19 @@ class GF_Field_CreditCard extends GF_Field {
 
 		if ( $this->isRequired && ( empty( $card_number ) || empty( $security_code ) || empty( $expiration_date[0] ) || empty( $expiration_date[1] ) ) ) {
 			$this->failed_validation  = true;
-			$this->validation_message = empty( $this->errorMessage ) ? __( 'Please enter your credit card information.', 'gravityforms' ) : $this->errorMessage;
+			$this->validation_message = empty( $this->errorMessage ) ? esc_html__( 'Please enter your credit card information.', 'gravityforms' ) : $this->errorMessage;
 		} elseif ( ! empty( $card_number ) ) {
 			$card_type     = GFCommon::get_card_type( $card_number );
 
 			if ( empty( $security_code ) ) {
 				$this->failed_validation  = true;
-				$this->validation_message = __( "Please enter your card's security code.", 'gravityforms' );
+				$this->validation_message = esc_html__( "Please enter your card's security code.", 'gravityforms' );
 			} elseif ( ! $card_type ) {
 				$this->failed_validation  = true;
-				$this->validation_message = __( 'Invalid credit card number.', 'gravityforms' );
+				$this->validation_message = esc_html__( 'Invalid credit card number.', 'gravityforms' );
 			} elseif ( ! $this->is_card_supported( $card_type['slug'] ) ) {
 				$this->failed_validation  = true;
-				$this->validation_message = $card_type['name'] . ' ' . __( 'is not supported. Please enter one of the supported credit cards.', 'gravityforms' );
+				$this->validation_message = $card_type['name'] . ' ' . esc_html__( 'is not supported. Please enter one of the supported credit cards.', 'gravityforms' );
 			}
 		}
 	}
@@ -78,11 +78,11 @@ class GF_Field_CreditCard extends GF_Field {
 	public function get_value_submission( $field_values, $get_from_post_global_var = true ) {
 
 		if ( $get_from_post_global_var ) {
-			$value[$this->id . '.1'] = $this->get_input_value_submission( 'input_' . $this->id . '_1', rgar( $this->inputs[0], 'name' ), $field_values, true );
-            $value[$this->id . '.2'] = $this->get_input_value_submission( 'input_' . $this->id . '_2', rgar( $this->inputs[1], 'name' ), $field_values, true );
-            $value[$this->id . '.3'] = $this->get_input_value_submission( 'input_' . $this->id . '_3', rgar( $this->inputs[2], 'name' ), $field_values, true );
-            $value[$this->id . '.4'] = $this->get_input_value_submission( 'input_' . $this->id . '_4', rgar( $this->inputs[3], 'name' ), $field_values, true );
-            $value[$this->id . '.5'] = $this->get_input_value_submission( 'input_' . $this->id . '_5', rgar( $this->inputs[4], 'name' ), $field_values, true );
+			$value[ $this->id . '.1' ] = $this->get_input_value_submission( 'input_' . $this->id . '_1', rgar( $this->inputs[0], 'name' ), $field_values, true );
+			$value[ $this->id . '.2' ] = $this->get_input_value_submission( 'input_' . $this->id . '_2', rgar( $this->inputs[1], 'name' ), $field_values, true );
+			$value[ $this->id . '.3' ] = $this->get_input_value_submission( 'input_' . $this->id . '_3', rgar( $this->inputs[2], 'name' ), $field_values, true );
+			$value[ $this->id . '.4' ] = $this->get_input_value_submission( 'input_' . $this->id . '_4', rgar( $this->inputs[3], 'name' ), $field_values, true );
+			$value[ $this->id . '.5' ] = $this->get_input_value_submission( 'input_' . $this->id . '_5', rgar( $this->inputs[4], 'name' ), $field_values, true );
 		} else {
 			$value = $this->get_input_value_submission( 'input_' . $this->id, $this->inputName, $field_values, $get_from_post_global_var );
 		}
@@ -172,8 +172,8 @@ class GF_Field_CreditCard extends GF_Field {
 		//card number fields
 		$tabindex                = $this->get_tabindex();
 		$card_number_field_input = GFFormsModel::get_input( $this, $this->id . '.1' );
-		$html5_output            = ! is_admin() && GFFormsModel::is_html5_enabled() ? "pattern='[0-9]*' title='" . __( 'Only digits are allowed', 'gravityforms' ) . "'" : '';
-		$card_number_label       = rgar( $card_number_field_input, 'customLabel' ) != '' ? $card_number_field_input['customLabel'] : __( 'Card Number', 'gravityforms' );
+		$html5_output            = ! is_admin() && GFFormsModel::is_html5_enabled() ? "pattern='[0-9]*' title='" . esc_attr__( 'Only digits are allowed', 'gravityforms' ) . "'" : '';
+		$card_number_label       = rgar( $card_number_field_input, 'customLabel' ) != '' ? $card_number_field_input['customLabel'] : esc_html__( 'Card Number', 'gravityforms' );
 		$card_number_label       = apply_filters( "gform_card_number_{$form_id}", apply_filters( 'gform_card_number', $card_number_label, $form_id ), $form_id );
 
 		$card_number_placeholder = $this->get_input_placeholder_attribute( $card_number_field_input );
@@ -200,7 +200,7 @@ class GF_Field_CreditCard extends GF_Field {
 		$expiration_year_placeholder  = $this->get_input_placeholder_value( $expiration_year_input );
 		$expiration_months            = $this->get_expiration_months( $expiration_month, $expiration_month_placeholder );
 		$expiration_years             = $this->get_expiration_years( $expiration_year, $expiration_year_placeholder );
-		$expiration_label             = rgar( $expiration_month_input, 'customLabel' ) != '' ? $expiration_month_input['customLabel'] : __( 'Expiration Date', 'gravityforms' );
+		$expiration_label             = rgar( $expiration_month_input, 'customLabel' ) != '' ? $expiration_month_input['customLabel'] : esc_html__( 'Expiration Date', 'gravityforms' );
 		$expiration_label             = apply_filters( "gform_card_expiration_{$form_id}", apply_filters( 'gform_card_expiration', $expiration_label, $form_id ), $form_id );
 		if ( $is_sub_label_above ) {
 			$expiration_field = "<span class='ginput_full{$class_suffix} ginput_cardextras' id='{$field_id}_2_container'>
@@ -233,9 +233,9 @@ class GF_Field_CreditCard extends GF_Field {
 		//security code field
 		$tabindex                  = $this->get_tabindex();
 		$security_code_field_input = GFFormsModel::get_input( $this, $this->id . '.3' );
-		$security_code_label       = rgar( $security_code_field_input, 'customLabel' ) != '' ? $security_code_field_input['customLabel'] : __( 'Security Code', 'gravityforms' );
+		$security_code_label       = rgar( $security_code_field_input, 'customLabel' ) != '' ? $security_code_field_input['customLabel'] : esc_html__( 'Security Code', 'gravityforms' );
 		$security_code_label       = apply_filters( "gform_card_security_code_{$form_id}", apply_filters( 'gform_card_security_code', $security_code_label, $form_id ), $form_id );
-		$html5_output              = GFFormsModel::is_html5_enabled() ? "pattern='[0-9]*' title='" . __( 'Only digits are allowed', 'gravityforms' ) . "'" : '';
+		$html5_output              = GFFormsModel::is_html5_enabled() ? "pattern='[0-9]*' title='" . esc_attr__( 'Only digits are allowed', 'gravityforms' ) . "'" : '';
 		$security_code_placeholder = $this->get_input_placeholder_attribute( $security_code_field_input );
 		if ( $is_sub_label_above ) {
 			$security_field = "<span class='ginput_cardinfo_right{$class_suffix}' id='{$field_id}_2_cardinfo_right'>
@@ -255,7 +255,7 @@ class GF_Field_CreditCard extends GF_Field {
 
 		$tabindex              = $this->get_tabindex();
 		$card_name_field_input = GFFormsModel::get_input( $this, $this->id . '.5' );
-		$card_name_label       = rgar( $card_name_field_input, 'customLabel' ) != '' ? $card_name_field_input['customLabel'] : __( 'Cardholder Name', 'gravityforms' );
+		$card_name_label       = rgar( $card_name_field_input, 'customLabel' ) != '' ? $card_name_field_input['customLabel'] : esc_html__( 'Cardholder Name', 'gravityforms' );
 		$card_name_label       = apply_filters( "gform_card_name_{$form_id}", apply_filters( 'gform_card_name', $card_name_label, $form_id ), $form_id );
 
 		$card_name_placeholder = $this->get_input_placeholder_attribute( $card_name_field_input );
@@ -277,7 +277,7 @@ class GF_Field_CreditCard extends GF_Field {
 
 	private function get_expiration_months( $selected_month, $placeholder ) {
 		if ( empty( $placeholder ) ) {
-			$placeholder = __( 'Month', 'gravityforms' );
+			$placeholder = esc_html__( 'Month', 'gravityforms' );
 		}
 		$str = "<option value=''>{$placeholder}</option>";
 		for ( $i = 1; $i < 13; $i ++ ) {
@@ -291,7 +291,7 @@ class GF_Field_CreditCard extends GF_Field {
 
 	private function get_expiration_years( $selected_year, $placeholder ) {
 		if ( empty( $placeholder ) ) {
-			$placeholder = __( 'Year', 'gravityforms' );
+			$placeholder = esc_html__( 'Year', 'gravityforms' );
 		}
 		$str  = "<option value=''>{$placeholder}</option>";
 		$year = intval( date( 'Y' ) );

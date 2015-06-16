@@ -168,6 +168,12 @@ if ( class_exists( 'GFForms' ) ) {
 								'label' => __( 'Requirements check', 'gravityforms' ),
 								'type'  => 'requirements_check',
 							),
+							array(
+								'id'    => 'save_button',
+								'type'  => 'save',
+								'value' => 'Update',
+								'style' => 'display:none;',
+							),
 						)
 					),
 				);
@@ -235,13 +241,24 @@ if ( class_exists( 'GFForms' ) ) {
 
 		public function settings_requirements_check() {
 			$permalinks_url = admin_url( 'options-permalink.php' );
-			echo "<i class='fa fa-exclamation-triangle gf_invalid'></i> <span class='gf_invalid'>Permalinks are not in the correct format.</span><br /><span class='gf_settings_description'>Change the <a href='{$permalinks_url}'>WordPress Permalink Settings</a> from default to any of the other options to get started.</span>";
+			?>
+			<i class="fa fa-exclamation-triangle gf_invalid"></i>
+				<span class="gf_invalid">
+					<?php esc_html_e( 'Permalinks are not in the correct format.', 'gravityforms' ); ?>
+				</span>
+			<br />
+			<span class='gf_settings_description'>
+				<?php
+				printf( esc_html__( 'Change the %sWordPress Permalink Settings%s from default to any of the other options to get started.', 'gravityforms' ), '<a href="' . esc_url( $permalinks_url ) .'">', '</a>' );
+				?>
+			</span>
+			<?php
 		}
 
 		public function settings_qrcode() {
 			?>
 			<button class="button-secondary"
-					id="gfwebapi-qrbutton"><?php _e( 'Show/hide QR Code', 'gravityforms' ); ?></button>
+					id="gfwebapi-qrbutton"><?php esc_html_e( 'Show/hide QR Code', 'gravityforms' ); ?></button>
 			<div id="gfwebapi-qrcode-container" style="display:none;">
 				<img id="gfwebapi-qrcode" src="<?php echo GFCommon::get_base_url() ?>/images/spinner.gif" />
 			</div>
@@ -257,7 +274,7 @@ if ( class_exists( 'GFForms' ) ) {
 			</script>
 
 			<a title="Gravity Forms API: Developer Tools" class="thickbox"
-			   href="#TB_inline?width=300&height=550&inlineId=gfwebapi-dev-tools"><?php _e( 'Open developer tools', 'gravityforms' ) ?></a>
+			   href="#TB_inline?width=300&height=550&inlineId=gfwebapi-dev-tools"><?php esc_html_e( 'Open developer tools', 'gravityforms' ) ?></a>
 
 			<div id="gfwebapi-dev-tools" style="display:none;">
 				<div>

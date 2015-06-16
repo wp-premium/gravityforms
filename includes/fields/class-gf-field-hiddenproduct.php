@@ -25,10 +25,10 @@ class GF_Field_HiddenProduct extends GF_Field {
 
 		if ( $this->isRequired && rgblank( $quantity ) && ! $this->disableQuantity ) {
 			$this->failed_validation  = true;
-			$this->validation_message = empty($this->errorMessage) ? __( 'This field is required.', 'gravityforms' ) : $this->errorMessage;
+			$this->validation_message = empty($this->errorMessage) ? esc_html__( 'This field is required.', 'gravityforms' ) : $this->errorMessage;
 		} elseif ( ! empty( $quantity ) && ( ! is_numeric( $quantity ) || intval( $quantity ) != floatval( $quantity ) || intval( $quantity ) < 0 ) ) {
 			$this->failed_validation  = true;
-			$this->validation_message = __( 'Please enter a valid quantity', 'gravityforms' );
+			$this->validation_message = esc_html__( 'Please enter a valid quantity', 'gravityforms' );
 		}
 	}
 

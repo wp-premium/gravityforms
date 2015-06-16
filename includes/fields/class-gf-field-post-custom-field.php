@@ -9,7 +9,7 @@ class GF_Field_Post_Custom_Field extends GF_Field {
 	public $type = 'post_custom_field';
 
 	public function get_form_editor_field_title() {
-		return __( 'Custom Field', 'gravityforms' );
+		return esc_attr__( 'Custom Field', 'gravityforms' );
 	}
 
 	function get_form_editor_field_settings() {
@@ -36,7 +36,7 @@ class GF_Field_Post_Custom_Field extends GF_Field {
 	}
 
 	public function get_field_input( $form, $value = '', $entry = null ) {
-		$form_id         = $form['id'];
+		$form_id         = absint( $form['id'] );
 		$is_entry_detail = $this->is_entry_detail();
 		$is_form_editor  = $this->is_form_editor();
 

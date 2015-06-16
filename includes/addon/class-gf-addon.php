@@ -1057,7 +1057,7 @@ abstract class GFAddOn {
 		} elseif ( is_callable( array( $this, "settings_{$field['type']}" ) ) ) {
 			call_user_func( array( $this, "settings_{$field['type']}" ), $field );
 		} else {
-			printf( __( "Field type '%s' has not been implemented", 'gravityforms' ), $field['type'] );
+			printf( esc_html__( "Field type '%s' has not been implemented", 'gravityforms' ), esc_html( $field['type'] ) );
 		}
 	}
 
@@ -1254,13 +1254,13 @@ abstract class GFAddOn {
 	protected function get_save_success_message( $sections ) {
 		$save_button = $this->get_save_button( $sections );
 
-		return isset( $save_button['messages']['success'] ) ? $save_button['messages']['success'] : __( 'Settings updated', 'gravityforms' );
+		return isset( $save_button['messages']['success'] ) ? $save_button['messages']['success'] : esc_html__( 'Settings updated', 'gravityforms' );
 	}
 
 	protected function get_save_error_message( $sections ) {
 		$save_button = $this->get_save_button( $sections );
 
-		return isset( $save_button['messages']['error'] ) ? $save_button['messages']['error'] : __( 'There was an error while saving your settings', 'gravityforms' );
+		return isset( $save_button['messages']['error'] ) ? $save_button['messages']['error'] : esc_html__( 'There was an error while saving your settings', 'gravityforms' );
 	}
 
 	protected function get_save_button( $sections ) {
@@ -1628,7 +1628,7 @@ abstract class GFAddOn {
 		}
 		if ( ! $has_gf_custom ) {
 			$select_field['choices'][] = array(
-				'label' => __( 'Add Custom', 'gravityforms' ) .' ' . $select_field['label'],
+				'label' => esc_html__( 'Add Custom', 'gravityforms' ) .' ' . $select_field['label'],
 				'value' => 'gf_custom'
 			);
 		}
@@ -1664,7 +1664,7 @@ abstract class GFAddOn {
 
 			if ( isset( $choice['choices'] ) ) {
 
-				$options .= sprintf( '<optgroup label="%1$s">%2$s</optgroup>', $choice['label'], $this->get_select_options( $choice['choices'], $selected_value ) );
+				$options .= sprintf( '<optgroup label="%1$s">%2$s</optgroup>', esc_attr( $choice['label'] ), $this->get_select_options( $choice['choices'], $selected_value ) );
 
 			} else {
 
@@ -1744,7 +1744,7 @@ abstract class GFAddOn {
 		return '<thead>
 					<tr>
 						<th>' . $this->field_map_title() . '</th>
-						<th>' . __( 'Form Field', 'gravityforms' ) . '</th>
+						<th>' . esc_html__( 'Form Field', 'gravityforms' ) . '</th>
 					</tr>
 				</thead>';
 	}
@@ -1761,7 +1761,7 @@ abstract class GFAddOn {
 	}
 
 	protected function field_map_title() {
-		return __( 'Field', 'gravityforms' );
+		return esc_html__( 'Field', 'gravityforms' );
 	}
 
 	public static function get_field_map_choices( $form_id, $field_type = null, $exclude_field_types = null ) {
@@ -1774,10 +1774,10 @@ abstract class GFAddOn {
 
 		// Adding default fields
 		if ( is_null( $field_type ) ) {
-			$fields[] = array( 'value' => 'date_created', 'label' => __( 'Entry Date', 'gravityforms' ) );
-			$fields[] = array( 'value' => 'ip', 'label' => __( 'User IP', 'gravityforms' ) );
-			$fields[] = array( 'value' => 'source_url', 'label' => __( 'Source Url', 'gravityforms' ) );
-			$fields[] = array( 'value' => 'form_title', 'label' => __( 'Form Title', 'gravityforms' ) );
+			$fields[] = array( 'value' => 'date_created', 'label' => esc_html__( 'Entry Date', 'gravityforms' ) );
+			$fields[] = array( 'value' => 'ip', 'label' => esc_html__( 'User IP', 'gravityforms' ) );
+			$fields[] = array( 'value' => 'source_url', 'label' => esc_html__( 'Source Url', 'gravityforms' ) );
+			$fields[] = array( 'value' => 'form_title', 'label' => esc_html__( 'Form Title', 'gravityforms' ) );
 		}
 
 		// Populate entry meta
@@ -1815,21 +1815,21 @@ abstract class GFAddOn {
 					if ( $input_type == 'address' ) {
 						$fields[] = array(
 							'value' => $field->id,
-							'label' => GFCommon::get_label( $field ) . ' (' . __( 'Full', 'gravityforms' ) . ')'
+							'label' => GFCommon::get_label( $field ) . ' (' . esc_html__( 'Full', 'gravityforms' ) . ')'
 						);
 					}
 					//If this is a name field, add full name to the list
 					if ( $input_type == 'name' ) {
 						$fields[] = array(
 							'value' => $field->id,
-							'label' => GFCommon::get_label( $field ) . ' (' . __( 'Full', 'gravityforms' ) . ')'
+							'label' => GFCommon::get_label( $field ) . ' (' . esc_html__( 'Full', 'gravityforms' ) . ')'
 						);
 					}
 					//If this is a checkbox field, add to the list
 					if ( $input_type == 'checkbox' ) {
 						$fields[] = array(
 							'value' => $field->id,
-							'label' => GFCommon::get_label( $field ) . ' (' . __( 'Selected', 'gravityforms' ) . ')'
+							'label' => GFCommon::get_label( $field ) . ' (' . esc_html__( 'Selected', 'gravityforms' ) . ')'
 						);
 					}
 
@@ -1842,13 +1842,13 @@ abstract class GFAddOn {
 				} elseif ( $input_type == 'list' && $field->enableColumns && $field_is_valid_type && ! $exclude_field ) {
 					$fields[] = array(
 						'value' => $field->id,
-						'label' => GFCommon::get_label( $field ) . ' (' . __( 'Full', 'gravityforms' ) . ')'
+						'label' => GFCommon::get_label( $field ) . ' (' . esc_html__( 'Full', 'gravityforms' ) . ')'
 					);
 					$col_index = 0;
 					foreach ( $field->choices as $column ) {
 						$fields[] = array(
 							'value' => $field->id . '.' . $col_index,
-							'label' => GFCommon::get_label( $field ) . ' (' . rgar( $column, 'text' ) . ')',
+							'label' => GFCommon::get_label( $field ) . ' (' . esc_html( rgar( $column, 'text' ) ) . ')',
 						);
 						$col_index ++;
 					}
@@ -1879,6 +1879,26 @@ abstract class GFAddOn {
 
 		return $fields;
 	}
+
+	public static function get_dynamic_field_map_fields( $feed, $field_name ) {
+
+		$fields = array();
+		$dynamic_fields = $feed['meta'][$field_name];
+
+		if ( ! empty( $dynamic_fields ) ) {
+			
+			foreach ( $dynamic_fields as $dynamic_field ) {
+			
+				$field_key = ( $dynamic_field['key'] == 'gf_custom' ) ? $dynamic_field['custom_key'] : $dynamic_field['key'];
+				$fields[$field_key] = $dynamic_field['value'];
+				
+			}
+			
+		}
+
+		return $fields;
+	}
+
 
 	//----------------------------------------------------------------
 
@@ -1938,10 +1958,17 @@ abstract class GFAddOn {
 				if ( rgar( $choice, 'name' ) == 'gf_custom' || rgar( $choice, 'value' ) == 'gf_custom' ) {
 					$has_gf_custom = true;
 				}
+				if ( rgar( $choice, 'choices' ) ) {
+					foreach ( $choice['choices'] as $subchoice ) {
+						if ( rgar( $subchoice, 'name' ) == 'gf_custom' || rgar( $subchoice, 'value' ) == 'gf_custom' ) {
+							$has_gf_custom = true;
+						}
+					}					
+				}
 			}
 			if ( ! $has_gf_custom && ! rgar( $field, 'disable_custom' ) ) {
 				$key_field['choices'][] = array(
-					'label' => __( 'Add Custom Key', 'gravityforms' ),
+					'label' => esc_html__( 'Add Custom Key', 'gravityforms' ),
 					'value' => 'gf_custom'
 				);
 			}
@@ -2070,21 +2097,21 @@ abstract class GFAddOn {
 				if ( $input_type == 'address' ) {
 					$fields[] = array(
 						'value' => $field->id,
-						'label' => GFCommon::get_label( $field ) . ' (' . __( 'Full', 'gravityforms' ) . ')'
+						'label' => GFCommon::get_label( $field ) . ' (' . esc_html__( 'Full', 'gravityforms' ) . ')'
 					);
 				}
 				// if this is a name field, add full name to the list
 				if ( $input_type == 'name' ) {
 					$fields[] = array(
 						'value' => $field->id,
-						'label' => GFCommon::get_label( $field ) . ' (' . __( 'Full', 'gravityforms' ) . ')'
+						'label' => GFCommon::get_label( $field ) . ' (' . esc_html__( 'Full', 'gravityforms' ) . ')'
 					);
 				}
 				// if this is a checkbox field, add to the list
 				if ( $input_type == 'checkbox' ) {
 					$fields[] = array(
 						'value' => $field->id,
-						'label' => GFCommon::get_label( $field ) . ' (' . __( 'Selected', 'gravityforms' ) . ')'
+						'label' => GFCommon::get_label( $field ) . ' (' . esc_html__( 'Selected', 'gravityforms' ) . ')'
 					);
 				}
 
@@ -2097,7 +2124,7 @@ abstract class GFAddOn {
 			} elseif ( $input_type == 'list' && $field->enableColumns ) {
 				$fields[] = array(
 					'value' => $field->id,
-					'label' => GFCommon::get_label( $field ) . ' (' . __( 'Full', 'gravityforms' ) . ')'
+					'label' => GFCommon::get_label( $field ) . ' (' . esc_html__( 'Full', 'gravityforms' ) . ')'
 				);
 				$col_index = 0;
 				foreach ( $field->choices as $column ) {
@@ -2129,7 +2156,7 @@ abstract class GFAddOn {
 		$checkbox_field = array(
 			'type'       => 'checkbox',
 			'name'       => $field['name'] . 'Enable',
-			'label'      => __( 'Enable', 'gravityforms' ),
+			'label'      => esc_html__( 'Enable', 'gravityforms' ),
 			'horizontal' => true,
 			'value'      => '1',
 			'choices'    => false,
@@ -2207,17 +2234,15 @@ abstract class GFAddOn {
 		$field['class'] = 'button-primary gfbutton';
 
 		if ( ! rgar( $field, 'value' ) ) {
-			$field['value'] = __( 'Update Settings', 'gravityforms' );
+			$field['value'] = esc_html__( 'Update Settings', 'gravityforms' );
 		}
 
 		$attributes = $this->get_field_attributes( $field );
 
 		$html = '<input
-                    type="' . $field['type'] . '"
-                    name="' . esc_attr( $field['name'] ) . '"
-                    value="' . $field['value'] . '" ' .
-		        implode( ' ', $attributes ) .
-		        ' />';
+					type="' . esc_attr( $field['type'] ) . '"
+					name="' . esc_attr( $field['name'] ) . '"
+					value="' . esc_attr( $field['value'] ) . '" ' . implode( ' ', $attributes ) . ' />';
 
 		if ( $echo ) {
 			echo $html;
@@ -2237,55 +2262,55 @@ abstract class GFAddOn {
 
 		$conditional_fields = $this->get_conditional_logic_fields();
 
-		$value_input = '_gaddon_setting_' . esc_attr( $setting_name_root ) . '_value';
-		$object_type = "simple_condition_{$setting_name_root}";
+		$value_input = esc_js( '_gaddon_setting_' . esc_attr( $setting_name_root ) . '_value' );
+		$object_type = esc_js( "simple_condition_{$setting_name_root}" );
 
 		$str = $this->settings_select( array(
 			'name' => "{$setting_name_root}_field_id",
 			'type' => 'select',
 			'choices' => $conditional_fields,
 			'class' => 'optin_select',
-			'onchange' => "jQuery('#" . esc_attr( $setting_name_root ) . "_container').html(GetRuleValues('{$object_type}', 0, jQuery(this).val(), '', '{$value_input}'));"
+			'onchange' => "jQuery('#" . esc_js( $setting_name_root ) . "_container').html(GetRuleValues('{$object_type}', 0, jQuery(this).val(), '', '{$value_input}'));"
 		), false );
 
 		$str .= $this->settings_select( array(
 			'name' => "{$setting_name_root}_operator",
 			'type' => 'select',
-			'onchange' => "SetRuleProperty('{$object_type}', 0, 'operator', jQuery(this).val()); jQuery('#" . esc_attr( $setting_name_root ) . "_container').html(GetRuleValues('{$object_type}', 0, jQuery('#{$setting_name_root}_field_id').val(), '', '{$value_input}'));",
+			'onchange' => "SetRuleProperty('{$object_type}', 0, 'operator', jQuery(this).val()); jQuery('#" . esc_js( $setting_name_root ) . "_container').html(GetRuleValues('{$object_type}', 0, jQuery('#{$setting_name_root}_field_id').val(), '', '{$value_input}'));",
 			'choices' => array(
 				array(
 					'value' => 'is',
-					'label' => __( 'is', 'gravityforms' ),
+					'label' => esc_html__( 'is', 'gravityforms' ),
 				),
 				array(
 					'value' => 'isnot',
-					'label' => __( 'is not', 'gravityforms' ),
+					'label' => esc_html__( 'is not', 'gravityforms' ),
 				),
 				array(
 					'value' => '>',
-					'label' => __( 'greater than', 'gravityforms' ),
+					'label' => esc_html__( 'greater than', 'gravityforms' ),
 				),
 				array(
 					'value' => '<',
-					'label' => __( 'less than', 'gravityforms' ),
+					'label' => esc_html__( 'less than', 'gravityforms' ),
 				),
 				array(
 					'value' => 'contains',
-					'label' => __( 'contains', 'gravityforms' ),
+					'label' => esc_html__( 'contains', 'gravityforms' ),
 				),
 				array(
 					'value' => 'starts_with',
-					'label' => __( 'starts with', 'gravityforms' ),
+					'label' => esc_html__( 'starts with', 'gravityforms' ),
 				),
 				array(
 					'value' => 'ends_with',
-					'label' => __( 'ends with', 'gravityforms' ),
+					'label' => esc_html__( 'ends with', 'gravityforms' ),
 				),
 			),
 
 		), false );
 
-		$str .= "<span id='{$setting_name_root}_container'></span>";
+		$str .= sprintf( "<span id='%s_container'></span>", esc_attr( $setting_name_root ) );
 
 		$field_id = $this->get_setting( "{$setting_name_root}_field_id" );
 
@@ -2329,7 +2354,8 @@ abstract class GFAddOn {
 			'gaddon_no_output_field_properties',
 			array(
 				'default_value', 'label', 'choices', 'feedback_callback', 'checked', 'checkbox_label', 'value', 'type',
-				'validation_callback', 'required', 'hidden', 'tooltip', 'dependency', 'messages', 'name', 'args', 'exclude_field_types'
+				'validation_callback', 'required', 'hidden', 'tooltip', 'dependency', 'messages', 'name', 'args', 'exclude_field_types',
+				'field_type'
 			), $field
 		);
 
@@ -2548,7 +2574,7 @@ abstract class GFAddOn {
 
 		// set default error message if none passed
 		if ( ! $error_message ) {
-			$error_message = __( 'This field is required.', 'gravityforms' );
+			$error_message = esc_html__( 'This field is required.', 'gravityforms' );
 		}
 
 		$this->_setting_field_errors[ $field['name'] ] = $error_message;
@@ -2585,7 +2611,7 @@ abstract class GFAddOn {
 
 		return '<span
             class="gf_tooltip tooltip"
-            title="<h6>' . __( 'Validation Error', 'gravityforms' ) . '</h6>' . $error . '"
+            title="<h6>' . esc_html__( 'Validation Error', 'gravityforms' ) . '</h6>' . $error . '"
             style="display:inline-block;position:relative;right:-3px;top:1px;font-size:14px;">
                 <i class="fa fa-exclamation-circle icon-exclamation-sign gf_invalid"></i>
             </span>';
@@ -3064,7 +3090,7 @@ abstract class GFAddOn {
 		}
 
 		if ( $this->has_app_settings() ) {
-			add_submenu_page( $parent_menu['name'], __( 'Settings', 'gravityforms' ), __( 'Settings', 'gravityforms' ), $has_full_access ? 'gform_full_access' : $this->_capabilities_app_settings, $this->_slug . '_settings', array( $this, 'app_tab_page' ) );
+			add_submenu_page( $parent_menu['name'], esc_html__( 'Settings', 'gravityforms' ), esc_html__( 'Settings', 'gravityforms' ), $has_full_access ? 'gform_full_access' : $this->_capabilities_app_settings, $this->_slug . '_settings', array( $this, 'app_tab_page' ) );
 		}
 
 	}
@@ -3192,13 +3218,13 @@ abstract class GFAddOn {
 		}
 
 		if ( empty( $current_tab ) ) {
-			wp_die( __( "You don't have adequate permission to view this page", 'gravityforms' ) );
+			wp_die( esc_html__( "You don't have adequate permission to view this page", 'gravityforms' ) );
 		}
 
 		foreach ( $tabs as $tab ) {
 			if ( $tab['name'] == $current_tab && isset( $tab['callback'] ) && is_callable( $tab['callback'] ) ) {
 				if ( isset( $tab['permission'] ) && ! $this->current_user_can_any( $tab['permission'] ) ) {
-					wp_die( __( "You don't have adequate permission to view this page", 'gravityforms' ) );
+					wp_die( esc_html__( "You don't have adequate permission to view this page", 'gravityforms' ) );
 				}
 				$title = isset( $tab['label'] ) ? $tab['label'] : $tab['name'];
 				$this->app_tab_page_header( $tabs, $current_tab, $title, '' );
@@ -3279,7 +3305,7 @@ abstract class GFAddOn {
 			return $links;
 		}
 
-		array_unshift( $links, '<a href="' . admin_url( 'admin.php' ) . '?page=gf_settings&subview=' . $this->_slug . '">' . __( 'Settings', 'gravityforms' ) . '</a>' );
+		array_unshift( $links, '<a href="' . admin_url( 'admin.php' ) . '?page=gf_settings&subview=' . $this->_slug . '">' . esc_html__( 'Settings', 'gravityforms' ) . '</a>' );
 
 		return $links;
 	}
@@ -3298,7 +3324,7 @@ abstract class GFAddOn {
 
 		<?php if ( $this->has_deprecated_elements() ) : ?>
 		<div class="push-alert-red" style="border-left: 1px solid #E6DB55; border-right: 1px solid #E6DB55;">
-			<?php _e( 'This add-on needs to be updated. Please contact the developer.', 'gravityforms' ); ?>
+			<?php esc_html_e( 'This add-on needs to be updated. Please contact the developer.', 'gravityforms' ); ?>
 		</div>
 		<?php endif; ?>
 
@@ -3310,7 +3336,7 @@ abstract class GFAddOn {
 		} elseif ( $this->maybe_uninstall() ) {
 			?>
 			<div class="push-alert-gold" style="border-left: 1px solid #E6DB55; border-right: 1px solid #E6DB55;">
-				<?php _e( sprintf( '%s has been successfully uninstalled. It can be re-activated from the %splugins page%s.', $this->_title, "<a href='plugins.php'>", '</a>' ), 'gravityforms' ) ?>
+				<?php printf( esc_html__( '%s has been successfully uninstalled. It can be re-activated from the %splugins page%s.', 'gravityforms'), $this->_title, "<a href='plugins.php'>", '</a>' ); ?>
 			</div>
 		<?php
 		} else {
@@ -3337,7 +3363,7 @@ abstract class GFAddOn {
 	}
 
 	public function plugin_settings_title() {
-		return sprintf( __( "%s Settings", "gravityforms" ), $this->get_short_title() );
+		return sprintf( esc_html__( "%s Settings", "gravityforms" ), $this->get_short_title() );
 	}
 
 	protected function plugin_settings_icon() {
@@ -3438,12 +3464,12 @@ abstract class GFAddOn {
 
 		//build left side options, always have app Settings first and Uninstall last, put add-ons in the middle
 
-		$setting_tabs = array( array( 'name' => 'settings', 'label' => __( 'Settings', 'gravityforms' ), 'callback' => array( $this, 'app_settings_tab' ) ) );
+		$setting_tabs = array( array( 'name' => 'settings', 'label' => esc_html__( 'Settings', 'gravityforms' ), 'callback' => array( $this, 'app_settings_tab' ) ) );
 
 		$setting_tabs = apply_filters( 'gform_addon_app_settings_menu_' . $this->_slug, $setting_tabs );
 
 		if ( $this->current_user_can_any( $this->_capabilities_uninstall ) ) {
-			$setting_tabs[] = array( 'name' => 'uninstall', 'label' => __( 'Uninstall', 'gravityforms' ), 'callback' => array( $this, 'app_settings_uninstall_tab' ) );
+			$setting_tabs[] = array( 'name' => 'uninstall', 'label' => esc_html__( 'Uninstall', 'gravityforms' ), 'callback' => array( $this, 'app_settings_uninstall_tab' ) );
 		}
 
 		ksort( $setting_tabs, SORT_NUMERIC );
@@ -3461,7 +3487,7 @@ abstract class GFAddOn {
 		if ( $this->maybe_uninstall() ) {
 			?>
 			<div class="push-alert-gold" style="border-left: 1px solid #E6DB55; border-right: 1px solid #E6DB55;">
-				<?php _e( sprintf( '%s has been successfully uninstalled. It can be re-activated from the %splugins page%s.', $this->_title, "<a href='plugins.php'>", '</a>' ), 'gravityforms' ) ?>
+				<?php sprintf( esc_html__( '%s has been successfully uninstalled. It can be re-activated from the %splugins page%s.', 'gravityforms' ), esc_html( $this->_title ), "<a href='plugins.php'>", '</a>' ); ?>
 			</div>
 		<?php
 
@@ -3472,13 +3498,13 @@ abstract class GFAddOn {
 				<?php wp_nonce_field( 'uninstall', 'gf_addon_uninstall' ) ?>
 				<?php  ?>
 					<h3>
-						<span><i class="fa fa-times"></i> <?php printf( __( 'Uninstall %s', 'gravityforms' ), $this->get_short_title() ); ?></span>
+						<span><i class="fa fa-times"></i> <?php printf( esc_html__( 'Uninstall %s', 'gravityforms' ), $this->get_short_title() ); ?></span>
 					</h3>
 
 					<div class="delete-alert alert_red">
 
 						<h3>
-							<i class="fa fa-exclamation-triangle gf_invalid"></i> <?php _e( 'Warning', 'gravityforms' ); ?>
+							<i class="fa fa-exclamation-triangle gf_invalid"></i> <?php esc_html_e( 'Warning', 'gravityforms' ); ?>
 						</h3>
 
 						<div class="gf_delete_notice">
@@ -3486,7 +3512,7 @@ abstract class GFAddOn {
 						</div>
 
 						<?php
-						$uninstall_button = '<input type="submit" name="uninstall" value="' . sprintf( __( 'Uninstall %s', 'gravityforms' ), $this->get_short_title() ) . '" class="button" onclick="return confirm(\'' . $this->uninstall_confirm_message() . '\');"/>';
+						$uninstall_button = '<input type="submit" name="uninstall" value="' . sprintf( esc_html__( 'Uninstall %s', 'gravityforms' ), $this->get_short_title() ) . '" class="button" onclick="return confirm(\'' . $this->uninstall_confirm_message() . '\');"/>';
 						echo $uninstall_button;
 						?>
 
@@ -3588,7 +3614,7 @@ abstract class GFAddOn {
 		} elseif ( $this->maybe_uninstall() ) {
 			?>
 			<div class="push-alert-gold" style="border-left: 1px solid #E6DB55; border-right: 1px solid #E6DB55;">
-				<?php _e( sprintf( '%s has been successfully uninstalled. It can be re-activated from the %splugins page%s.', $this->_title, "<a href='plugins.php'>", '</a>' ), 'gravityforms' ) ?>
+				<?php printf( esc_html__( '%s has been successfully uninstalled. It can be re-activated from the %splugins page%s.', 'gravityforms' ), esc_html( $this->_title ), "<a href='plugins.php'>", '</a>' ); ?>
 			</div>
 		<?php
 		} else {
@@ -3617,7 +3643,7 @@ abstract class GFAddOn {
 	 * @return string
 	 */
 	protected function app_settings_title() {
-		return $this->get_short_title() . ' ' . __( 'Settings', 'gravityforms' );
+		return sprintf( esc_html__( '%s Settings', 'gravityforms' ), $this->get_short_title() );
 	}
 
 	/**
@@ -3750,13 +3776,13 @@ abstract class GFAddOn {
 
 				<div class="hr-divider"></div>
 
-				<h3><span><i class="fa fa-times"></i> <?php printf( __( 'Uninstall %s Add-On', 'gravityforms' ), $this->get_short_title() ) ?></span></h3>
+				<h3><span><i class="fa fa-times"></i> <?php printf( esc_html__( 'Uninstall %s Add-On', 'gravityforms' ), $this->get_short_title() ) ?></span></h3>
 				<div class="delete-alert alert_red">
 					<h3><i class="fa fa-exclamation-triangle gf_invalid"></i> Warning</h3>
 					<div class="gf_delete_notice">
 						<?php echo $this->uninstall_warning_message() ?>
 					</div>
-					<input type="submit" name="uninstall" value="<?php _e( 'Uninstall  Add-On', 'gravityforms' ) ?>" class="button" onclick="return confirm('<?php echo $this->uninstall_confirm_message() ?>');">
+					<input type="submit" name="uninstall" value="<?php esc_attr_e( 'Uninstall  Add-On', 'gravityforms' ) ?>" class="button" onclick="return confirm('<?php echo esc_js( $this->uninstall_confirm_message() ); ?>');">
 				</div>
 
 			<?php
@@ -3767,11 +3793,11 @@ abstract class GFAddOn {
 	}
 
 	protected function uninstall_warning_message() {
-		return sprintf( __( '%sThis operation deletes ALL %s settings%s. If you continue, you will NOT be able to retrieve these settings.', 'gravityforms' ), '<strong>', $this->get_short_title(), '</strong>' );
+		return sprintf( esc_html__( '%sThis operation deletes ALL %s settings%s. If you continue, you will NOT be able to retrieve these settings.', 'gravityforms' ), '<strong>', esc_html( $this->get_short_title() ), '</strong>' );
 	}
 
 	protected function uninstall_confirm_message() {
-		return sprintf( __( "Warning! ALL %s settings will be deleted. This cannot be undone. \'OK\' to delete, \'Cancel\' to stop", 'gravityforms' ), $this->get_short_title() );
+		return sprintf( esc_html__( "Warning! ALL %s settings will be deleted. This cannot be undone. 'OK' to delete, 'Cancel' to stop", 'gravityforms' ), esc_html( $this->get_short_title() ) );
 	}
 	/**
 	 * Not intended to be overridden or called directly by Add-Ons.
@@ -3798,7 +3824,7 @@ abstract class GFAddOn {
 	public function uninstall_addon() {
 
 		if ( ! $this->current_user_can_any( $this->_capabilities_uninstall ) ) {
-			die( __( "You don't have adequate permission to uninstall this addon: " . $this->_title, 'gravityforms' ) );
+			die( esc_html__( "You don't have adequate permission to uninstall this addon: " . $this->_title, 'gravityforms' ) );
 		}
 
 		$continue = $this->uninstall();
@@ -3825,18 +3851,21 @@ abstract class GFAddOn {
 		}
 
 		//remove form settings
-		$form_metas = GFFormsModel::get_form_meta_by_id( $all_form_ids );
-		require_once( GFCommon::get_base_path() . '/form_detail.php' );
-		foreach ( $form_metas as $form_meta ) {
-			if ( isset( $form_meta[ $this->_slug ] ) ) {
-				unset( $form_meta[ $this->_slug ] );
-				$form_json = json_encode( $form_meta );
-				GFFormDetail::save_form_info( $form_meta['id'], addslashes( $form_json ) );
+		if ( ! empty( $all_form_ids ) ) {
+			$form_metas = GFFormsModel::get_form_meta_by_id( $all_form_ids );
+			require_once( GFCommon::get_base_path() . '/form_detail.php' );
+			foreach ( $form_metas as $form_meta ) {
+				if ( isset( $form_meta[ $this->_slug ] ) ) {
+					unset( $form_meta[ $this->_slug ] );
+					$form_json = json_encode( $form_meta );
+					GFFormDetail::save_form_info( $form_meta['id'], addslashes( $form_json ) );
+				}
 			}
 		}
 
 		//removing options
 		delete_option( 'gravityformsaddon_' . $this->_slug . '_settings' );
+		delete_option( 'gravityformsaddon_' . $this->_slug . '_app_settings' );
 		delete_option( 'gravityformsaddon_' . $this->_slug . '_version' );
 
 
@@ -3884,7 +3913,7 @@ abstract class GFAddOn {
 	 * Override this method to display a custom message.
 	 */
 	public function plugin_message() {
-		$message = sprintf( __( 'Gravity Forms ' . $this->_min_gravityforms_version . ' is required. Activate it now or %spurchase it today!%s', 'gravityforms' ), "<a href='http://www.gravityforms.com'>", '</a>' );
+		$message = sprintf( esc_html__( 'Gravity Forms %s is required. Activate it now or %spurchase it today!%s', 'gravityforms' ), $this->_min_gravityforms_version, "<a href='http://www.gravityforms.com'>", '</a>' );
 
 		return $message;
 	}
@@ -4073,23 +4102,28 @@ abstract class GFAddOn {
 	 */
 	public function get_field_value( $form, $entry, $field_id ) {
 
+		$field_value = '';
+
 		switch ( strtolower( $field_id ) ) {
 
 			case 'form_title':
-				return rgar( $form, 'title' );
+				$field_value = rgar( $form, 'title' );
+				break;
 
 			case 'date_created':
 				$date_created = rgar( $entry, strtolower( $field_id ) );
 				if ( empty( $date_created ) ) {
 					//the date created may not yet be populated if this function is called during the validation phase and the entry is not yet created
-					return gmdate( 'Y-m-d H:i:s' );
+					$field_value = gmdate( 'Y-m-d H:i:s' );
 				} else {
-					return $date_created;
+					$field_value = $date_created;
 				}
+				break;
 
 			case 'ip':
 			case 'source_url':
-				return rgar( $entry, strtolower( $field_id ) );
+				$field_value = rgar( $entry, strtolower( $field_id ) );
+				break;
 
 			default:
 				$field      = GFFormsModel::get_field( $form, $field_id );
@@ -4098,11 +4132,11 @@ abstract class GFAddOn {
 
 				if ( $is_integer && $input_type == 'address' ) {
 
-					return $this->get_full_address( $entry, $field_id );
+					$field_value = $this->get_full_address( $entry, $field_id );
 
 				} elseif ( $is_integer && $input_type == 'name' ) {
 
-					return $this->get_full_name( $entry, $field_id );
+					$field_value = $this->get_full_name( $entry, $field_id );
 
 				} elseif ( $is_integer && $input_type == 'checkbox' ) {
 
@@ -4115,20 +4149,41 @@ abstract class GFAddOn {
 						}
 					}
 
-					return implode( ', ', $selected );
+					$field_value = implode( ', ', $selected );
 
 				} elseif ( $input_type == 'list' ) {
 
-					return $this->get_list_field_value( $entry, $field_id, $field );
+					$field_value = $this->get_list_field_value( $entry, $field_id, $field );
 
 				} else {
 
-					return rgar( $entry, $field_id );
+					$field_value = rgar( $entry, $field_id );
 
 				}
 
 		}
 
+		return $this->maybe_override_field_value( $field_value, $form, $entry, $field_id );
+	}
+
+	/**
+	 * Enables use of the gform_SLUG_field_value filter to override the field value. Override this function to prevent the filter being used or to implement a custom filter.
+	 *
+	 * @param string $field_value
+	 * @param array $form
+	 * @param array $entry
+	 * @param string $field_id
+	 *
+	 * @return string
+	 */
+	public function maybe_override_field_value( $field_value, $form, $entry, $field_id ) {
+		/* Get Add-On slug */
+		$slug = str_replace( 'gravityforms', '', $this->_slug );
+
+		return gf_apply_filters( "gform_{$slug}_field_value", array(
+			$form['id'],
+			$field_id
+		), $field_value, $form, $entry, $field_id );
 	}
 
 	/**
@@ -4224,6 +4279,50 @@ abstract class GFAddOn {
 		}
 
 		return GFCommon::implode_non_blank( ', ', $column_values );
+	}
+	
+	/**
+	 * Returns the field ID of the first field of the desired type.
+	 * 
+	 * @access public
+	 * @param string $field_type
+	 * @param int $subfield_id (default: null)
+	 * @param int $form_id (default: null)
+	 * @return string
+	 */
+	public function get_first_field_by_type( $field_type, $subfield_id = null, $form_id = null, $return_first_only = true ) {
+		
+		/* Get the current form ID. */
+		if ( rgblank( $form_id ) ) {
+			
+			$form_id = rgget( 'id' );
+			
+		}
+		
+		/* Get the form. */
+		$form = GFAPI::get_form( $form_id );
+		
+		/* Get the request field type for the form. */
+		$fields = GFAPI::get_fields_by_type( $form, array( $field_type ) );
+		
+		if ( count( $fields ) == 0 || ( count( $fields ) > 1 && $return_first_only ) ) {
+			
+			return null;
+			
+		} else {
+			
+			if ( rgblank( $subfield_id ) ) {
+				
+				return $fields[0]->id;
+				
+			} else {
+				
+				return $fields[0]->id . '.' . $subfield_id;
+				
+			}
+			
+		}
+		
 	}
 
 	//--------------  Helper functions  ---------------------------------------------------

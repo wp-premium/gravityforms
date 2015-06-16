@@ -227,7 +227,7 @@ class GFFormList {
 			}
 
 			function ConfirmDeleteForm(form_id){
-				if( confirm(<?php echo json_encode( esc_html__( 'WARNING: You are about to delete this form and ALL entries associated with it. ', 'gravityforms' ) . esc_html__( 'Cancel to stop, OK to delete.', 'gravityforms' ) ); ?>) ){
+				if( confirm(<?php echo json_encode( __( 'WARNING: You are about to delete this form and ALL entries associated with it. ', 'gravityforms' ) . esc_html__( 'Cancel to stop, OK to delete.', 'gravityforms' ) ); ?>) ){
 					DeleteForm(form_id);
 				}
 			}
@@ -247,11 +247,11 @@ class GFFormList {
 				var is_active = img.src.indexOf("active1.png") >= 0
 				if (is_active) {
 					img.src = img.src.replace("active1.png", 'active0.png');
-					jQuery(img).attr('title', <?php echo json_encode( esc_html__( 'Inactive', 'gravityforms' ) ); ?>).attr('alt', <?php echo json_encode( esc_html__( 'Inactive', 'gravityforms' ) ); ?>);
+					jQuery(img).attr('title', <?php echo json_encode( esc_attr__( 'Inactive', 'gravityforms' ) ); ?>).attr('alt', <?php echo json_encode( esc_attr__( 'Inactive', 'gravityforms' ) ); ?>);
 				}
 				else {
 					img.src = img.src.replace("active0.png", 'active1.png');
-					jQuery(img).attr('title', <?php echo json_encode( esc_html__( 'Active', 'gravityforms' ) ); ?>).attr('alt', <?php echo json_encode( esc_html__( 'Active', 'gravityforms' ) ); ?>);
+					jQuery(img).attr('title', <?php echo json_encode( esc_attr__( 'Active', 'gravityforms' ) ); ?>).attr('alt', <?php echo json_encode( esc_attr__( 'Active', 'gravityforms' ) ); ?>);
 				}
 
 				UpdateCount("active_count", is_active ? -1 : 1);
@@ -265,7 +265,7 @@ class GFFormList {
 				mysack.setVar("form_id", form_id);
 				mysack.setVar("is_active", is_active ? 0 : 1);
 				mysack.onError = function () {
-					alert(<?php echo json_encode( esc_html__( 'Ajax error while updating form', 'gravityforms' ) ); ?>)
+					alert(<?php echo json_encode( __( 'Ajax error while updating form', 'gravityforms' ) ); ?>)
 				};
 				mysack.runAJAX();
 
@@ -280,11 +280,11 @@ class GFFormList {
 			function gfConfirmBulkAction(element_id) {
 				var element = "#" + element_id;
 				if (jQuery(element).val() == 'delete')
-					return confirm(<?php echo json_encode( esc_html__( 'WARNING: You are about to delete these forms and ALL entries associated with them. ', 'gravityforms' ) . esc_html__( "'Cancel' to stop, 'OK' to delete.", 'gravityforms' ) ); ?>);
+					return confirm(<?php echo json_encode( __( 'WARNING: You are about to delete these forms and ALL entries associated with them. ', 'gravityforms' ) . __( "'Cancel' to stop, 'OK' to delete.", 'gravityforms' ) ); ?>);
 				else if (jQuery(element).val() == 'reset_views')
-					return confirm(<?php echo json_encode( esc_html__( 'Are you sure you would like to reset the Views for the selected forms? ', 'gravityforms' ) . esc_html__( "'Cancel' to stop, 'OK' to reset.", 'gravityforms' ) ); ?>);
+					return confirm(<?php echo json_encode( __( 'Are you sure you would like to reset the Views for the selected forms? ', 'gravityforms' ) . __( "'Cancel' to stop, 'OK' to reset.", 'gravityforms' ) ); ?>);
 				else if (jQuery(element).val() == 'delete_entries')
-					return confirm(<?php echo json_encode( esc_html__( 'WARNING: You are about to delete ALL entries associated with the selected forms. ', 'gravityforms' ) . esc_html__( "'Cancel' to stop, 'OK' to delete.", 'gravityforms' ) ); ?>);
+					return confirm(<?php echo json_encode( __( 'WARNING: You are about to delete ALL entries associated with the selected forms. ', 'gravityforms' ) . __( "'Cancel' to stop, 'OK' to delete.", 'gravityforms' ) ); ?>);
 
 				return true;
 			}

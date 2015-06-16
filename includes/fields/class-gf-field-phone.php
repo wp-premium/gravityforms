@@ -10,7 +10,7 @@ class GF_Field_Phone extends GF_Field {
 	public $type = 'phone';
 
 	public function get_form_editor_field_title() {
-		return __( 'Phone', 'gravityforms' );
+		return esc_attr__( 'Phone', 'gravityforms' );
 	}
 
 	function get_form_editor_field_settings() {
@@ -61,7 +61,7 @@ class GF_Field_Phone extends GF_Field {
 		$class_suffix  = $is_entry_detail ? '_admin' : '';
 		$class         = $size . $class_suffix;
 
-		$instruction           = $this->phoneFormat == 'standard' ? __( 'Phone format:', 'gravityforms' ) . ' (###) ###-####' : '';
+		$instruction           = $this->phoneFormat == 'standard' ? esc_html__( 'Phone format:', 'gravityforms' ) . ' (###) ###-####' : '';
 		$instruction_div       = $this->failed_validation && ! empty( $instruction ) ? "<div class='instruction validation_message'>$instruction</div>" : '';
 		$html_input_type       = RGFormsModel::is_html5_enabled() ? 'tel' : 'text';
 		$logic_event           = $this->get_conditional_logic_event( 'keyup' );

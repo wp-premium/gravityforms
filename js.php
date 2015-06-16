@@ -9,7 +9,7 @@ if ( ! class_exists( 'GFForms' ) ) {
 	var gforms_original_json;
 
 	function DeleteCustomChoice() {
-		if (!confirm(<?php echo json_encode( esc_html__( "Delete this custom choice list? 'OK' to delete, 'Cancel' to abort.", 'gravityforms' ) ); ?>))
+		if (!confirm(<?php echo json_encode( __( "Delete this custom choice list? 'OK' to delete, 'Cancel' to abort.", 'gravityforms' ) ); ?>))
 			return;
 
 		//Sending AJAX request
@@ -495,7 +495,7 @@ if ( ! class_exists( 'GFForms' ) ) {
 			mysack.setVar("id", form.id);
 			mysack.setVar("form", form_json);
 			mysack.onError = function () {
-				alert(<?php echo json_encode( esc_html__( 'Ajax error while saving form', 'gravityforms' ) ); ?>)
+				alert(<?php echo json_encode( __( 'Ajax error while saving form', 'gravityforms' ) ); ?>)
 			};
 			mysack.runAJAX();
 		}
@@ -505,7 +505,7 @@ if ( ! class_exists( 'GFForms' ) ) {
 
 	function DeleteField(fieldId) {
 
-		if (form.id == 0 || confirm(<?php echo json_encode( esc_html__( "Warning! Deleting this field will also delete all entry data associated with it. 'Cancel' to stop. 'OK' to delete", 'gravityforms' ) ); ?>)) {
+		if (form.id == 0 || confirm(<?php echo json_encode( __( "Warning! Deleting this field will also delete all entry data associated with it. 'Cancel' to stop. 'OK' to delete", 'gravityforms' ) ); ?>)) {
 
 			jQuery('#gform_fields li#field_' + fieldId).addClass('gform_pending_delete');
 			var mysack = new sack("<?php echo admin_url( 'admin-ajax.php' )?>");

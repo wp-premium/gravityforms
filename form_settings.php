@@ -1453,9 +1453,6 @@ class GFFormSettings {
 		return $setting_tabs;
 	}
 
-
-	/* Ajax Functions */
-
 	public static function handle_confirmation_edit_submission( $confirmation, $form ) {
 
 		if ( empty( $_POST ) || ! check_admin_referer( 'gform_confirmation_edit', 'gform_confirmation_edit' ) )
@@ -1463,20 +1460,29 @@ class GFFormSettings {
 
 		$is_new_confirmation = ! $confirmation;
 
-		if ( $is_new_confirmation )
+		if ( $is_new_confirmation ) {
 			$confirmation['id'] = uniqid();
+		}
 
-		$confirmation['name']              = rgpost( 'form_confirmation_name' );
-		$confirmation['type']              = rgpost( 'form_confirmation' );
+		$name =  sanitize_text_field( rgpost( 'form_confirmation_name' ) );
+		$confirmation['name'] = $name;
+		$type = rgpost( 'form_confirmation' );
+		if ( ! in_array( $type, array( 'message', 'page', 'redirect' ) ) ) {
+			$type = 'message';
+		}
+		$confirmation['type']              = $type;
 		$confirmation['message']           = rgpost( 'form_confirmation_message' );
-		$confirmation['disableAutoformat'] = rgpost( 'form_disable_autoformatting' );
-		$confirmation['pageId']            = rgpost( 'form_confirmation_page' );
+		$confirmation['disableAutoformat'] = (bool) rgpost( 'form_disable_autoformatting' );
+		$confirmation['pageId']            = absint( rgpost( 'form_confirmation_page' ) );
 		$confirmation['url']               = rgpost( 'form_confirmation_url' );
-		$confirmation['queryString']       = '' != rgpost( 'form_redirect_querystring' ) ? rgpost( 'form_redirect_querystring' ) : rgpost( 'form_page_querystring' );
-		$confirmation['isDefault']         = rgpost( 'is_default' );
+		$query_string                      = '' != rgpost( 'form_redirect_querystring' ) ? rgpost( 'form_redirect_querystring' ) : rgpost( 'form_page_querystring' );
+		$confirmation['queryString']       = wp_strip_all_tags( $query_string );
+		$confirmation['isDefault']         = (bool) rgpost( 'is_default' );
 
 		// if is default confirmation, override any submitted conditional logic with empty array
 		$confirmation['conditionalLogic'] = $confirmation['isDefault'] ? array() : json_decode( rgpost( 'conditional_logic' ), ARRAY_A );
+
+		$confirmation['conditionalLogic'] = GFFormsModel::sanitize_conditional_logic( $confirmation['conditionalLogic'] );
 
 		$failed_validation = false;
 
@@ -1485,7 +1491,7 @@ class GFFormSettings {
 			GFCommon::add_error_message( __( 'You must specify a Confirmation Name.', 'gravityforms' ) );
 		}
 
-		switch ( $confirmation['type'] ) {
+		switch ( $type ) {
 			case 'page':
 				if ( empty( $confirmation['pageId'] ) ) {
 					$failed_validation = true;
@@ -1720,6 +1726,7 @@ class GFConfirmationTable extends WP_List_Table {
 			),
 			array(),
 			array(),
+			'name',
 		);
 
 		parent::__construct();
