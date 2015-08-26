@@ -52,10 +52,11 @@ class GF_Field_Time extends GF_Field {
 
 		$is_valid_format = is_numeric( $hour ) && is_numeric( $minute );
 
-		$min_hour = $this->timeFormat == '24' ? 0 : 1;
-		$max_hour = $this->timeFormat == '24' ? 23 : 12;
+		$min_hour   = $this->timeFormat == '24' ? 0 : 1;
+		$max_hour   = $this->timeFormat == '24' ? 24 : 12;
+		$max_minute = $hour >= 24 ? 0 : 59;
 
-		if ( ! $is_valid_format || $hour < $min_hour || $hour > $max_hour || $minute < 0 || $minute >= 60 ) {
+		if ( ! $is_valid_format || $hour < $min_hour || $hour > $max_hour || $minute < 0 || $minute > $max_minute ) {
 			$this->failed_validation  = true;
 			$this->validation_message = empty( $this->errorMessage ) ? esc_html__( 'Please enter a valid time.', 'gravityforms' ) : $this->errorMessage;
 		}
@@ -73,7 +74,7 @@ class GF_Field_Time extends GF_Field {
 		$form_sub_label_placement  = rgar( $form, 'subLabelPlacement' );
 		$field_sub_label_placement = rgar( $this, 'subLabelPlacement' );
 		$is_sub_label_above        = $field_sub_label_placement == 'above' || ( empty( $field_sub_label_placement ) && $form_sub_label_placement == 'above' );
-		$sub_label_class_attribute = $field_sub_label_placement == 'hidden_label' ? "class='hidden_sub_label'" : '';
+		$sub_label_class_attribute = $field_sub_label_placement == 'hidden_label' ? "class='hidden_sub_label screen-reader-text'" : '';
 
 		$disabled_text = $is_form_editor ? "disabled='disabled'" : '';
 
@@ -107,7 +108,7 @@ class GF_Field_Time extends GF_Field {
 		$is_html5   = RGFormsModel::is_html5_enabled();
 		$input_type = $is_html5 ? 'number' : 'text';
 
-		$max_hour = $this->timeFormat == '24' ? 23 : 12;
+		$max_hour = $this->timeFormat == '24' ? 24 : 12;
 		$hour_html5_attributes   = $is_html5 ? "min='0' max='{$max_hour}' step='1'" : '';
 		$minute_html5_attributes = $is_html5 ? "min='0' max='59' step='1'" : '';
 

@@ -106,7 +106,7 @@ class GF_Field_CreditCard extends GF_Field {
 		$form_sub_label_placement  = rgar( $form, 'subLabelPlacement' );
 		$field_sub_label_placement = $this->subLabelPlacement;
 		$is_sub_label_above        = $field_sub_label_placement == 'above' || ( empty( $field_sub_label_placement ) && $form_sub_label_placement == 'above' );
-		$sub_label_class_attribute = $field_sub_label_placement == 'hidden_label' ? "class='hidden_sub_label'" : '';
+		$sub_label_class_attribute = $field_sub_label_placement == 'hidden_label' ? "class='hidden_sub_label screen-reader-text'" : '';
 
 		$card_number      = '';
 		$card_name        = '';
@@ -174,7 +174,7 @@ class GF_Field_CreditCard extends GF_Field {
 		$card_number_field_input = GFFormsModel::get_input( $this, $this->id . '.1' );
 		$html5_output            = ! is_admin() && GFFormsModel::is_html5_enabled() ? "pattern='[0-9]*' title='" . esc_attr__( 'Only digits are allowed', 'gravityforms' ) . "'" : '';
 		$card_number_label       = rgar( $card_number_field_input, 'customLabel' ) != '' ? $card_number_field_input['customLabel'] : esc_html__( 'Card Number', 'gravityforms' );
-		$card_number_label       = apply_filters( "gform_card_number_{$form_id}", apply_filters( 'gform_card_number', $card_number_label, $form_id ), $form_id );
+		$card_number_label       = gf_apply_filters( 'gform_card_number', $form_id, $card_number_label, $form_id );
 
 		$card_number_placeholder = $this->get_input_placeholder_attribute( $card_number_field_input );
 		if ( $is_sub_label_above ) {
@@ -201,7 +201,7 @@ class GF_Field_CreditCard extends GF_Field {
 		$expiration_months            = $this->get_expiration_months( $expiration_month, $expiration_month_placeholder );
 		$expiration_years             = $this->get_expiration_years( $expiration_year, $expiration_year_placeholder );
 		$expiration_label             = rgar( $expiration_month_input, 'customLabel' ) != '' ? $expiration_month_input['customLabel'] : esc_html__( 'Expiration Date', 'gravityforms' );
-		$expiration_label             = apply_filters( "gform_card_expiration_{$form_id}", apply_filters( 'gform_card_expiration', $expiration_label, $form_id ), $form_id );
+		$expiration_label             = gf_apply_filters( 'gform_card_expiration', $form_id, $expiration_label, $form_id );
 		if ( $is_sub_label_above ) {
 			$expiration_field = "<span class='ginput_full{$class_suffix} ginput_cardextras' id='{$field_id}_2_container'>
                                             <span class='ginput_cardinfo_left{$class_suffix}' id='{$field_id}_2_cardinfo_left'>
@@ -234,7 +234,7 @@ class GF_Field_CreditCard extends GF_Field {
 		$tabindex                  = $this->get_tabindex();
 		$security_code_field_input = GFFormsModel::get_input( $this, $this->id . '.3' );
 		$security_code_label       = rgar( $security_code_field_input, 'customLabel' ) != '' ? $security_code_field_input['customLabel'] : esc_html__( 'Security Code', 'gravityforms' );
-		$security_code_label       = apply_filters( "gform_card_security_code_{$form_id}", apply_filters( 'gform_card_security_code', $security_code_label, $form_id ), $form_id );
+		$security_code_label       = gf_apply_filters( 'gform_card_security_code', $form_id, $security_code_label, $form_id );
 		$html5_output              = GFFormsModel::is_html5_enabled() ? "pattern='[0-9]*' title='" . esc_attr__( 'Only digits are allowed', 'gravityforms' ) . "'" : '';
 		$security_code_placeholder = $this->get_input_placeholder_attribute( $security_code_field_input );
 		if ( $is_sub_label_above ) {
@@ -256,7 +256,7 @@ class GF_Field_CreditCard extends GF_Field {
 		$tabindex              = $this->get_tabindex();
 		$card_name_field_input = GFFormsModel::get_input( $this, $this->id . '.5' );
 		$card_name_label       = rgar( $card_name_field_input, 'customLabel' ) != '' ? $card_name_field_input['customLabel'] : esc_html__( 'Cardholder Name', 'gravityforms' );
-		$card_name_label       = apply_filters( "gform_card_name_{$form_id}", apply_filters( 'gform_card_name', $card_name_label, $form_id ), $form_id );
+		$card_name_label       = gf_apply_filters( 'gform_card_name', $form_id, $card_name_label, $form_id );
 
 		$card_name_placeholder = $this->get_input_placeholder_attribute( $card_name_field_input );
 		if ( $is_sub_label_above ) {

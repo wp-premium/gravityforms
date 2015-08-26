@@ -10,7 +10,7 @@
 admin.css
 Gravity Forms Administration Styles
 http: //www.gravityforms.com
-updated: February 17, 2015 11:53 AM
+updated: August 21, 2015 12:05 PM
 
 Gravity Forms is a Rocketgenius project
 copyright 2008-2015 Rocketgenius Inc.
@@ -27,10 +27,6 @@ AND ANY CHANGES MADE HERE WILL BE OVERWRITTEN.
 
 * {
 	direction: ltr
-}
-
-*:focus {
-	outline: 0 !important;
 }
 
 input,
@@ -68,8 +64,6 @@ select {
 	font-family: verdana,sans-serif;
 	padding: 2px 0;
 }
-
-/* As of 3.7.1, datepicker container shows up at the bottom of the page. This is quick fix to hide it. -----------------------------------------------------------------*/
 
 .ui-datepicker {
     display: none;
@@ -239,7 +233,7 @@ label.float_label {
 
 .field_sublabel_hidden_label .ginput_complex.ginput_container input[type=text],
 .field_sublabel_hidden_label .ginput_complex.ginput_container select {
-	margin-bottom: 0.750em;
+	margin-bottom: 0.750rem;
 }
 
 #gform_fields li ul li {
@@ -318,7 +312,6 @@ label.float_label {
 	vertical-align: top;
 	display: -moz-inline-stack;
 	display: inline-block;
-	zoom: 1;
 }
 
 .gfield_time_ampm select {
@@ -433,7 +426,7 @@ img#gfield_input_datepicker_icon {
 .gfield_time_ampm label {
 	display: block;
 	margin: 4px 0;
-	font-size: .8em;
+	font-size: .8rem;
 }
 
 .ginput_complex .name_prefix {
@@ -443,7 +436,7 @@ img#gfield_input_datepicker_icon {
 }
 
 .ginput_complex .name_prefix select {
-    width: 4em;
+    width: 4rem;
 }
 
 .ginput_complex .name_first,
@@ -452,7 +445,6 @@ img#gfield_input_datepicker_icon {
 	width: 32%;
 	display: -moz-inline-stack; 
 	display: inline-block; 
-	zoom: 1;
 }
 
 .ginput_complex .name_first,
@@ -461,7 +453,6 @@ img#gfield_input_datepicker_icon {
 	width: 32%;
 	display: -moz-inline-stack; 
 	display: inline-block; 
-	zoom: 1;
 }
 
 .ginput_complex .name_suffix {
@@ -531,9 +522,13 @@ img#gfield_input_datepicker_icon {
     padding-bottom:10px;
 }
 
-.gfield label.hidden_sub_label {
-    display:none;
-}
+.gfield label.screen-reader-text, .gfield label.hidden_sub_label {
+ 	clip: rect(1px, 1px, 1px, 1px);
+ 	position: absolute !important;
+ 	height: 1px;
+ 	width: 1px;
+ 	overflow: hidden;
+ }
 
 .gfield .copy_values_option_container {
     padding-bottom: 10px;
@@ -667,7 +662,8 @@ table.gfield_list th {
 
 .gform_wrapper table.gfield_list thead,
 .gform_wrapper table.gfield_list tr {
-	padding: 0; margin: 0
+	padding: 0; 
+	margin: 0
 }
 
 .gform_wrapper table.gfield_list th,
@@ -748,7 +744,7 @@ ul.gfield_checkbox, ul.gfield_radio {
 .description,
 .instruction,
 .gfield_description {
-	font-size: .8em;
+	font-size: .8rem;
 	line-height: 1.5;
 	clear: both;
 	padding: 10px 0 0 0;
@@ -835,7 +831,7 @@ div.gform_admin_icons div.gform_admin_header_title {
 	font-size: 11px;
 	font-weight: bold;
 	color: #47759B;
-	letter-spacing: 0.025em;
+	letter-spacing: 0.025rem;
 }
 
 .gfield {
@@ -855,7 +851,7 @@ div.gform_admin_icons div.gform_admin_header_title {
 	display: block !important;
 	cursor: pointer;
 	color: #47759B;
-	zoom: 1;
+	
 	filter: alpha(opacity=50);
 	opacity: 0.5;
 }
@@ -871,7 +867,7 @@ div.gform_admin_icons div.gform_admin_header_title {
 .field_selected .form_edit_icon:hover,
 .field_selected .form_delete_icon:hover {
 	color: #47759B;
-	zoom: 1;
+	
 	filter: alpha(opacity=100);
 	opacity: 1.0;
 }
@@ -1068,7 +1064,7 @@ div.new-form-option a:hover {
 
 .installation_item_message {
 	padding-left: 15px;
-	font-size: .8em;
+	font-size: .8rem;
 	color: #9E0B0F;
 }
 
@@ -1157,7 +1153,7 @@ div.push-alert-gold {
 	display: block !important;
 	visibility: visible !important;
 	min-width: 800px;
-	font-size: 1.1em;
+	font-size: 1.1rem;
 	background-color: #FFFBCC;
 	border-top: 1px solid #E6DB55;
 	border-bottom: 1px solid #E6DB55;
@@ -1168,7 +1164,7 @@ div.push-alert-green {
 	border-bottom: 1px solid #A7C886;
 	border-top: 1px solid #A7C886;
 	display: block !important;
-	font-size: 1.1em;
+	font-size: 1.1rem;
 	line-height: 1.5;
 	margin: 30px 0 10px;
 	min-width: 800px;
@@ -1182,7 +1178,7 @@ div.push-alert-blue {
 	border-bottom: 1px solid #D2E0EB;
 	border-top: 1px solid #D2E0EB;
 	display: block !important;
-	font-size: 1.1em;
+	font-size: 1.1rem;
 	line-height: 1.5;
 	margin: 30px 0 10px;
 	min-width: 800px;
@@ -1196,7 +1192,7 @@ div.push-alert-red {
 	border-bottom: 1px solid #EAAEAD;
 	border-top: 1px solid #EAAEAD;
 	display: block !important;
-	font-size: 1.1em;
+	font-size: 1.1rem;
 	line-height: 1.5;
 	margin: 30px 0 10px;
 	min-width: 800px;
@@ -1431,7 +1427,7 @@ div.note-avatar {
 
 h6.note-author {
 	font-weight: bold;
-	font-size: 1.1em;
+	font-size: 1.1rem;
 	line-height: 1;
 	margin: 0;
 	padding: 0;
@@ -1446,9 +1442,9 @@ p.note-email {
 
 div.detail-note-content {
 	margin: 1.8em 1em 1.8em 0;
-    padding: 1.8em;
+    padding: 1.8rem;
     position: relative;
-    line-height: 1.8em;
+    line-height: 1.8rem;
  	border-left: 4px solid #E6DB55;
 	background-color: #FFFBCC;
 }
@@ -1495,12 +1491,11 @@ body.forms_page_gf_entries .ginput_complex_admin.ginput_container span.ginput_ri
 	width: 49%;
 	display: -moz-inline-stack;
 	display: inline-block;
-	zoom: 1;
 }
 
 body.forms_page_gf_entries .ginput_complex_admin.ginput_container span.ginput_left,
 body.forms_page_gf_entries .ginput_complex_admin.ginput_container span.ginput_left_admin {
-	margin-right: 1em;
+	margin-right: 1rem;
 }
 
 body.forms_page_gf_entries .ginput_left_admin label,
@@ -1541,7 +1536,7 @@ body.forms_page_gf_entries h2.detail_gsection_title {
 body.forms_page_gf_entries div.ginput_complex_admin span label,
 body.forms_page_gf_entries div.ginput_complex_admin span label {
 	display: block;
-	font-size: .8em;
+	font-size: .8rem;
 	margin: 4px 0;
 }
 
@@ -1687,14 +1682,12 @@ div.panel-buttons {
 div.panel-buttons {
 	display: -moz-inline-stack;
 	display: inline-block;
-	zoom: 1;
 }
 
 div.panel-custom {
 	margin-left: 65px;
 	display: -moz-inline-stack;
 	display: inline-block;
-	zoom: 1;
 }
 
 div#bulk_custom_message {
@@ -1707,7 +1700,7 @@ div#bulk_custom_message {
 	background-color: #FFF;
 	border: 1px solid #FFF;
 	border-left: 4px solid #FFBA00;
-	padding: 0 0.6em;
+	padding: 0 0.6rem;
 	margin: 10px 15px 10px 0;
 	-webkit-box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
 	box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
@@ -1732,7 +1725,7 @@ table.form-table td .updated_base {
     border-color: #CC0000;
     border-width: 1px;
     border-style: solid;
-    padding: 0.6em 0.6em;
+    padding: 0.6em 0.6rem;
     margin: 10px 15px 10px 0;
 }
 
@@ -1741,7 +1734,7 @@ table.form-table td .updated_base {
 	border-color: #CC0000;
 	border-width: 1px;
 	border-style: solid;
-	padding: 0 0.6em;
+	padding: 0 0.6rem;
 	margin: 10px 15px 10px 0;
 	-moz-border-radius: 3px;
 	-khtml-border-radius: 3px;
@@ -1774,7 +1767,6 @@ table.form-table td .error_base {
 	margin-top: -16px;
 	display: -moz-inline-stack;
 	display: inline-block;
-	zoom: 1;
 }
 
 /* HTML block ------------------------------------------------------*/
@@ -2037,7 +2029,6 @@ h3.gf_progressbar_title {
 	opacity: 0.5;
 	display: -moz-inline-stack;
 	display: inline-block;
-	zoom: 1;
 }
 
 .gform_wrapper .gf_step span.gf_step_number {
@@ -2137,7 +2128,7 @@ p.gform_renew_expired,
 p.gform_renew_not_expired {
 	background-position: 0 0;
 	background-repeat: no-repeat;
-	font-size: 1.4em;
+	font-size: 1.4rem;
 }
 
 a.gf_upgrade_link {
@@ -2154,7 +2145,6 @@ a.gf_upgrade_link {
   text-decoration: none;
   display: -moz-inline-stack; 
   display: inline-block; 
-  zoom: 1;
 }
 
 a.gf_upgrade_link:hover {
@@ -2237,7 +2227,6 @@ span.gf_keystatus_valid_text,
 span.gf_keystatus_invalid_text {
 	display: -moz-inline-stack;
 	display: inline-block;
-	zoom: 1;
 }
 
 i.gf_keystatus_valid,
@@ -2337,7 +2326,6 @@ li.gform_setting_left_half {
 	margin-right: 2%;
 	display: -moz-inline-stack;
 	display: inline-block;
-	zoom: 1;
 }
 
 li.gform_setting_right_half {
@@ -2347,7 +2335,6 @@ li.gform_setting_right_half {
 	clear: right;
 	display: -moz-inline-stack;
 	display: inline-block;
-	zoom: 1;
 }
 
 li.gform_setting_left_half select,
@@ -2389,7 +2376,6 @@ ul#gf_form_toolbar_links li {
 	width: auto;
 	display: -moz-inline-stack;
 	display: inline-block;
-	zoom: 1;
 }
 
 ul#gf_form_toolbar_links li.gf_form_toolbar_selectform {
@@ -2414,11 +2400,9 @@ ul#gf_form_toolbar_links li.gf_form_toolbar_results a  {
 ul#gf_form_toolbar_links li a {
 	display: -moz-inline-stack;
 	display: inline-block;
-	zoom: 1;
 }
 
 ul#gf_form_toolbar_links li a:hover,
-ul#gf_form_toolbar_links li a:focus,
 ul#gf_form_toolbar_links li a.gf_toolbar_active {
 	color: #333;
 }
@@ -2428,7 +2412,6 @@ ul#gf_form_toolbar_links li a.gf_toolbar_active {
 }
 
 ul#gf_form_toolbar_links li a:hover i,
-ul#gf_form_toolbar_links li a:focus i,
 ul#gf_form_toolbar_links li a.gf_toolbar_active i {
 	color: #0074A2;
 }
@@ -2555,7 +2538,6 @@ div#add_fields div#floatMenu ul#sidebarmenu1.menu li.add_field_button_container 
 
 div#add_fields div#floatMenu ul#sidebarmenu1.menu li.add_field_button_container ul li.add-buttons ol.field_type li input.button,
 div#add_fields div#floatMenu ul#sidebarmenu1.menu li.add_field_button_container ul li.add-buttons ol.field_type li input.button:hover,
-div#add_fields div#floatMenu ul#sidebarmenu1.menu li.add_field_button_container ul li.add-buttons ol.field_type li input.button:focus,
 div#add_fields div#floatMenu ul#sidebarmenu1.menu li.add_field_button_container ul li.add-buttons ol.field_type li input.button:active {
 	-webkit-border-radius: 3px !important;
 	-moz-border-radius: 3px !important;
@@ -2566,7 +2548,6 @@ div#add_fields div#floatMenu ul#sidebarmenu1.menu li.add_field_button_container 
 	border-color: #CCC;
 }
 
-div#add_fields div#floatMenu ul#sidebarmenu1.menu li.add_field_button_container ul li.add-buttons ol.field_type li input.button:focus,
 div#add_fields div#floatMenu ul#sidebarmenu1.menu li.add_field_button_container ul li.add-buttons ol.field_type li input.button:active {
 	border-color: #BBB;
 }
@@ -2602,7 +2583,6 @@ div.gform_editor_status {
 	color: #F00;
 	display: -moz-inline-stack;
 	display: inline-block;
-	zoom: 1;
 }
 
 #floatMenu a.submitdelete:hover {
@@ -2971,7 +2951,6 @@ div.gform_card_icon {
 	width: 47% !important;
 	display: -moz-inline-stack;
 	display: inline-block;
-	zoom: 1;
 }
 
 .ginput_complex select.ginput_card_expiration.ginput_card_expiration_month {
@@ -2994,7 +2973,6 @@ div.gform_card_icon {
 	left: 6px;
 	display: -moz-inline-stack;
 	display: inline-block;
-	zoom: 1;
 }
 
 div.gfield_creditcard_warning_message {
@@ -3013,7 +2991,7 @@ div.gfield_creditcard_warning_message {
 .wp-media-buttons select {
 	padding: 1px !important;
 	font-size: 10px !important;
-	line-height: 2.2em;
+	line-height: 2.2rem;
 }
 
 /* notification paging ----------------------------------------------------*/
@@ -3067,7 +3045,6 @@ div.gf_entry_detail_pagination ul li {
 	height: 26px;
 	display: -moz-inline-stack;
 	display: inline-block;
-	zoom: 1;
 }
 
 div.gf_entry_detail_pagination ul li.gf_entry_count span {
@@ -3106,7 +3083,7 @@ div.gf_entry_wrap #poststuff .inside .updated {
 a.gf_entry_prev_link.gf_entry_pagination_link.gf_entry_pagination_link_inactive,
 a.gf_entry_next_link.gf_entry_pagination_link.gf_entry_pagination_link_inactive {
  	color: #424242;
- 	zoom: 1;
+ 	
 	filter: alpha(opacity=20);
 	opacity: 0.2;
 }
@@ -3114,17 +3091,15 @@ a.gf_entry_next_link.gf_entry_pagination_link.gf_entry_pagination_link_inactive 
 a.gf_entry_prev_link.gf_entry_pagination_link.gf_entry_pagination_link_active,
 a.gf_entry_next_link.gf_entry_pagination_link.gf_entry_pagination_link_active {
 	color: #424242;
-	zoom: 1;
+	
 	filter: alpha(opacity=50);
 	opacity: 0.5;
 }
 
 a.gf_entry_prev_link.gf_entry_pagination_link.gf_entry_pagination_link_active:hover,
-a.gf_entry_prev_link.gf_entry_pagination_link.gf_entry_pagination_link_active:focus,
-a.gf_entry_next_link.gf_entry_pagination_link.gf_entry_pagination_link_active:hover,
-a.gf_entry_next_link.gf_entry_pagination_link.gf_entry_pagination_link_active:focus {
+a.gf_entry_next_link.gf_entry_pagination_link.gf_entry_pagination_link_active:hover {
 	color: #0074A2;
-	zoom: 1;
+	
 	filter: alpha(opacity=100);
 	opacity: 1.0;
 }
@@ -3185,7 +3160,6 @@ html body.wp-admin div#wpwrap div#tab_notification div#wp-form_notification_mess
 	line-height: 18px;
 	display: -moz-inline-stack;
 	display: inline-block;
-	zoom: 1;
 }
 
 html body.wp-admin div#wpwrap div#tab_notification div#wp-form_notification_message-wrap.wp-editor-wrap div#wp-form_notification_message-editor-tools.wp-editor-tools div#wp-form_notification_message-media-buttons.hide-if-no-js a#form_notification_message-add_media img {
@@ -3211,7 +3185,6 @@ html body.wp-admin div#wpwrap div#tab_notification div#wp-form_notification_mess
 	background-position: center center;
 	display: -moz-inline-stack;
 	display: inline-block;
-	zoom: 1;
 }
 
 .gf_submenu {
@@ -3289,7 +3262,6 @@ ul#gf_form_toolbar_links .gf_submenu ul li:hover {
 	position: relative;
 	display: -moz-inline-stack;
 	display: inline-block;
-	zoom: 1;
 }
 
 .all-merge-tags.textarea {
@@ -3298,7 +3270,7 @@ ul#gf_form_toolbar_links .gf_submenu ul li:hover {
 }
 
 .all-merge-tags a.open-list {
-	text-indent: -999em;
+	text-indent: -999rem;
 	width: 16px;
 	height: 16px;
 	background: url(../images/icon-drop-list.png);
@@ -3307,11 +3279,6 @@ ul#gf_form_toolbar_links .gf_submenu ul li:hover {
 	margin-left: 5px;
 	display: -moz-inline-stack;
 	display: inline-block;
-	zoom: 1;
-}
-
-.all-merge-tags a.open-list:focus {
-	outline: 0 !important;
 }
 
 ul#gf_merge_tag_list {
@@ -3338,7 +3305,7 @@ ul#gf_merge_tag_list li:nth-child(even) {
 
 ul#gf_merge_tag_list li {
 	margin: 0;
-	line-height: 1.4em;
+	line-height: 1.4rem;
 	padding: 0 !important;
 	border-bottom: 1px dotted #ccc;
 }
@@ -3442,7 +3409,7 @@ ul#gf_merge_tag_list a:hover {
 }
 
 .gform_tab_content h3 {
-	font-size: 1.6em;
+	font-size: 1.6rem;
 	margin-top: 2px;
 }
 
@@ -3470,12 +3437,12 @@ ul#gform_fields li#no-fields div.newform_notice span {
 }
 
 h4.gf_nofield_header {
-	font-size: 1.6em;
+	font-size: 1.6rem;
 	font-weight: bold;
 }
 
 h4.gf_settings_subheader {
-	font-size: 1.4em;
+	font-size: 1.4rem;
 	border-bottom: 1px solid #CCC;
 	padding: 0 0 10px 0;
 	margin: 2px 0 30px 0 !important;
@@ -3536,8 +3503,8 @@ div#gf_nofield_4_instructions span,
 div#gf_nofield_5_instructions span {
 	display: block;
 	position: absolute;
-	line-height: 1.1em;
-	word-spacing: -0.1em;
+	line-height: 1.1rem;
+	word-spacing: -0.1rem;
 	text-align: center;
 }
 
@@ -3614,8 +3581,8 @@ span.gf_nofield_5_instructions_heading {
     top: 30px;
     left: 0;
 	font-size: 40px;
-	line-height: 1.1em;
-	word-spacing: -0.2em;
+	line-height: 1.1rem;
+	word-spacing: -0.2rem;
 	text-align: center;
 	-webkit-transform: rotate(3deg);
     -moz-transform: rotate(3deg);
@@ -3828,8 +3795,6 @@ ol.field_type input.button {
 	width: 80px;
 	display: 0;
 	display: inline-block;
-	zoom: 1;
-	display: inline;
 }
 
 .custom_mask_instructions li {
@@ -3898,14 +3863,14 @@ div#form_button_conditional_logic_container.gf_animate_sub_settings {
 h2.gf_admin_page_title span.gf_admin_page_subtitle {
 	display: block;
 	clear: both;
-	font-size: .6em;
+	font-size: .6rem;
 	line-height: 1.8em !important;
 }
 
 h2.gf_admin_page_title span.gf_admin_page_subtitle span.gf_admin_page_formid,
 h2.gf_admin_page_title span.gf_admin_page_subtitle span.gf_admin_page_formname {
 	color: #FFF;
-	letter-spacing: 0.1em;
+	letter-spacing: 0.1rem;
 	padding: 1px 8px 2px 9px;
 	font-size: 11px !important;
 	font-weight: normal !important;
@@ -3918,7 +3883,6 @@ h2.gf_admin_page_title span.gf_admin_page_subtitle span.gf_admin_page_formname {
 	top: -1px;
 	display: -moz-inline-stack;
 	display: inline-block;
-	zoom: 1;
 }
 
 h2.gf_admin_page_title span.gf_admin_page_subtitle span.gf_admin_page_formid {
@@ -4009,7 +3973,7 @@ div.gf_clear.gf_clear_complex {
 	-moz-box-shadow: 0 0 1px 2px rgba(121,0,0,0.2);
 	-webkit-box-shadow: 0 0 1px 2px rgba(121,0,0,0.2);
 	box-shadow: 0 0 1px 2px rgba(121,0,0,0.2);
-	font-size: 1.2em;
+	font-size: 1.2rem;
 }
 
 .slick_button.red_button{
@@ -4051,7 +4015,7 @@ div.gf_clear.gf_clear_complex {
 .gform-filter-value,
 .gform-filter-field,
 .gform-filter-operator {
-	height: 2em;
+	height: 2rem;
     box-sizing: border-box;
     -ms-box-sizing: border-box;
     -moz-box-sizing: border-box;
@@ -4153,7 +4117,6 @@ div.gf-pagebreak-text-main span {
 	padding: 0 10px;
 	display: -moz-inline-stack;
 	display: inline-block;
-	zoom: 1;
 }
 
 .field_hover  div.gf-pagebreak-container div.gf-pagebreak-text-main span,
@@ -4301,7 +4264,6 @@ div#gform_notification_to_routing_rules div input:first-child {
 
 div.wrap.gf_browser_safari div#add_fields div#floatMenu ul#sidebarmenu1.menu li.add_field_button_container ul li.add-buttons ol.field_type li input.button,
 div.wrap.gf_browser_safari div#add_fields div#floatMenu ul#sidebarmenu1.menu li.add_field_button_container ul li.add-buttons ol.field_type li input.button:hover,
-div.wrap.gf_browser_safari div#add_fields div#floatMenu ul#sidebarmenu1.menu li.add_field_button_container ul li.add-buttons ol.field_type li input.button:focus,
 div.wrap.gf_browser_safari div#add_fields div#floatMenu ul#sidebarmenu1.menu li.add_field_button_container ul li.add-buttons ol.field_type li input.button:active {
 	padding-top: 6px;
 	padding-bottom: 6px;
@@ -4313,7 +4275,6 @@ div.wrap.gf_browser_safari .ginput_complex .ginput_cardinfo_right span.ginput_ca
 
 div.wrap.gf_browser_safari div#add_fields div#floatMenu ul#sidebarmenu1.menu li.add_field_button_container ul li.add-buttons ol.field_type li input.button,
 div.wrap.gf_browser_safari div#add_fields div#floatMenu ul#sidebarmenu1.menu li.add_field_button_container ul li.add-buttons ol.field_type li input.button:hover,
-div.wrap.gf_browser_safari div#add_fields div#floatMenu ul#sidebarmenu1.menu li.add_field_button_container ul li.add-buttons ol.field_type li input.button:focus,
 div.wrap.gf_browser_safari div#add_fields div#floatMenu ul#sidebarmenu1.menu li.add_field_button_container ul li.add-buttons ol.field_type li input.button:active {
 	line-height: 10px;
 }
@@ -4405,7 +4366,7 @@ div.wrap.gf_browser_ie input.button-primary.gfbutton,
 div.wrap.gf_browser_ie input.button-primary,
 div.wrap.gf_browser_ie input.gfbutton {
 	padding: 0 6px;
-	line-height: 1em;
+	line-height: 1rem;
 }
 
 div.wrap.gf_browser_ie ol.field_type {
@@ -4447,4 +4408,21 @@ div.wrap.gf_browser_chrome .gfield_checkbox li input {
 #gfield_settings_choices_container,
 .gfield_settings_input_choices_container {
 	max-height: 222px
+}
+
+/* Installation Wizard Styles */
+
+#gform_installation_progress li {
+    display: inline-block;
+    padding: 10px 25px 10px 0;
+}
+
+.gform_installation_progress_current_step,
+.gform_installation_progress_step_wrap p,
+.gform_installation_progress_step_complete{
+    color: black;
+}
+
+.gform_installation_progress_step_pending{
+    color: silver;
 }

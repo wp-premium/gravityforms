@@ -4,7 +4,7 @@
 browsers.css
 Gravity Forms Browser-Specific CSS
 http://www.gravityforms.com
-updated: March 15, 2015 1:44 PM
+updated: August 21, 2015 11:56 AM
 
 Gravity Forms is a Rocketgenius project
 copyright 2008-2015 Rocketgenius Inc.
@@ -82,7 +82,7 @@ to no.
     border-color: #A6A6A6;
     border-style: solid;
     border-collapse: collapse;
-    border-size: 1px;
+    border-width: 1px;
     margin-top: 1px;
     margin-bottom: 1px;
 }

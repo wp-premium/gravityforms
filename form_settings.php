@@ -107,7 +107,7 @@ class GFFormSettings {
 			$form = $updated_form;
 		}
 
-		$form = apply_filters( 'gform_admin_pre_render_' . $form_id, apply_filters( 'gform_admin_pre_render', $form ) );
+		$form = gf_apply_filters( 'gform_admin_pre_render', $form_id, $form );
 
 		self::page_header( __( 'Form Settings', 'gravityforms' ) );
 
@@ -436,7 +436,7 @@ class GFFormSettings {
         <tr id="sub_label_placement_setting">
             <th>
                 ' .
-			__( 'Sub-label placement', 'gravityforms' ) . ' ' .
+			__( 'Sub-Label Placement', 'gravityforms' ) . ' ' .
 			gform_tooltip( 'form_sub_label_placement', '', true ) .
 			'
 			</th>
@@ -1050,7 +1050,7 @@ class GFFormSettings {
 	public static function confirmations_edit_page( $form_id, $confirmation_id ) {
 
 
-		$form = apply_filters( "gform_admin_pre_render_{$form_id}", apply_filters( 'gform_admin_pre_render', GFFormsModel::get_form_meta( $form_id ) ) );
+		$form = gf_apply_filters( 'gform_admin_pre_render', $form_id, GFFormsModel::get_form_meta( $form_id ) );
 
 		$duplicated_cid = rgget( 'duplicatedcid' );
 		$is_duplicate   = empty( $_POST ) && ! empty( $duplicated_cid );
@@ -1350,7 +1350,7 @@ class GFFormSettings {
 
 		<?php
 		ob_end_clean();
-		$ui_settings = apply_filters( "gform_confirmation_ui_settings_{$form_id}", apply_filters( 'gform_confirmation_ui_settings', $ui_settings, $confirmation, $form ), $confirmation, $form );
+		$ui_settings = gf_apply_filters( 'gform_confirmation_ui_settings', $form_id, $ui_settings, $confirmation, $form );
 
 		return $ui_settings;
 	}
@@ -1510,7 +1510,7 @@ class GFFormSettings {
 			return $confirmation;
 
 		// allow user to filter confirmation before save
-		$confirmation = apply_filters( "gform_pre_confirmation_save_{$form['id']}", apply_filters( 'gform_pre_confirmation_save', $confirmation, $form, $is_new_confirmation ), $form, $is_new_confirmation );
+		$confirmation = gf_apply_filters( 'gform_pre_confirmation_save', $form['id'], $confirmation, $form, $is_new_confirmation );
 
 		// trim values
 		$confirmation = GFFormsModel::trim_conditional_logic_values_from_element( $confirmation, $form );
@@ -1770,6 +1770,10 @@ class GFConfirmationTable extends WP_List_Table {
 		echo '<tr id="confirmation-' . $item['id'] . '" ' . $row_class . '>';
 		echo $this->single_row_columns( $item );
 		echo '</tr>';
+	}
+
+	function get_columns() {
+		return $this->_column_headers[0];
 	}
 
 	function column_content( $item ) {

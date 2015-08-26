@@ -375,6 +375,7 @@ if ( class_exists( 'GFForms' ) ) {
 
 			$settings = get_option( 'gravityformsaddon_gravityformswebapi_settings' );
 			if ( empty( $settings ) || ! $settings['enabled'] ) {
+				$this->log_debug('API not enabled, permission denied.');
 				$this->die_permission_denied();
 			}
 
@@ -570,6 +571,7 @@ if ( class_exists( 'GFForms' ) ) {
 									$this->put_entry_properties( $data, $id );
 									break;
 								case '' :
+									$this->log_debug( 'Putting entries' );
 									$this->put_entries( $data, $id );
 									break;
 							}
@@ -825,7 +827,12 @@ if ( class_exists( 'GFForms' ) ) {
 			$capability = apply_filters( 'gform_web_api_capability_post_entries', 'gravityforms_edit_entries' );
 			$this->authorize( $capability );
 
-			$result = GFAPI::add_entries( $data, $form_id );
+			$entries = array();
+			foreach ( $data as $entry ) {
+				$entries[] = $this->maybe_serialize_list_fields( $entry, $form_id );
+			}
+
+			$result = GFAPI::add_entries( $entries, $form_id );
 
 			if ( is_wp_error( $result ) ) {
 				$response = $this->get_error_response( $result );
@@ -842,8 +849,16 @@ if ( class_exists( 'GFForms' ) ) {
 
 			$capability = apply_filters( 'gform_web_api_capability_put_entries', 'gravityforms_edit_entries' );
 			$this->authorize( $capability );
-
-			$result = empty( $entry_id ) ? GFAPI::update_entries( $data ) : $result = GFAPI::update_entry( $data, $entry_id );;
+			$entries = array();
+			if ( empty( $entry_id ) ) {
+				foreach ( $data as $entry ) {
+					$entries[] = $this->maybe_serialize_list_fields( $entry );
+				}
+				$result = GFAPI::update_entries( $entries );
+			} else {
+				$entry = $this->maybe_serialize_list_fields( $data );
+				$result = GFAPI::update_entry( $entry, $entry_id );
+			}
 
 			if ( is_wp_error( $result ) ) {
 				$response = $this->get_error_response( $result );
@@ -961,6 +976,7 @@ if ( class_exists( 'GFForms' ) ) {
 			$count = 0;
 			if ( is_array( $entry_ids ) ) {
 				foreach ( $entry_ids as $entry_id ) {
+					GFCommon::log_debug( 'deleting entry id ' . $entry_id );
 					$result = GFAPI::delete_entry( $entry_id );
 					if ( is_wp_error( $result ) ) {
 						break;
@@ -997,6 +1013,7 @@ if ( class_exists( 'GFForms' ) ) {
 					foreach ( $entry_ids as $entry_id ) {
 						$result = GFAPI::get_entry( $entry_id );
 						if ( ! is_wp_error( $result ) ) {
+							$result = $this->maybe_json_encode_list_fields( $result );
 							$response[ $entry_id ] = $result;
 							if ( ! empty( $field_ids ) && ( ! empty( $response[ $entry_id ] ) ) ) {
 								$response[ $entry_id ] = $this->filter_entry_object( $response[ $entry_id ], $field_ids );
@@ -1006,6 +1023,7 @@ if ( class_exists( 'GFForms' ) ) {
 				} else {
 					$result = GFAPI::get_entry( $entry_ids );
 					if ( ! is_wp_error( $result ) ) {
+						$result = $this->maybe_json_encode_list_fields( $result );
 						$response = $result;
 						if ( ! empty( $field_ids ) && ( ! empty( $response ) ) ) {
 							$response = $this->filter_entry_object( $response, $field_ids );
@@ -1056,6 +1074,9 @@ if ( class_exists( 'GFForms' ) ) {
 				$result = $entry_count > 0 ? GFAPI::get_entries( $form_ids, $search, $sorting, $paging ) : array();
 
 				if ( ! is_wp_error( $result ) ) {
+					foreach ( $result as &$entry ) {
+						$entry = $this->maybe_json_encode_list_fields( $entry );
+					}
 					$response = array( 'total_count' => $entry_count, 'entries' => $result );
 
 					if ( $schema == 'mtd' ) {
@@ -1128,6 +1149,46 @@ if ( class_exists( 'GFForms' ) ) {
 			}
 
 			$this->end( $status, $response );
+		}
+
+		public function maybe_json_encode_list_fields( $entry ) {
+			$form_id = $entry['form_id'];
+			$form = GFAPI::get_form( $form_id );
+			if ( ! empty ( $form['fields'] ) && is_array( $form['fields'] ) ) {
+				foreach ( $form['fields'] as $field ) {
+					/* @var GF_Field $field */
+					if ( $field->get_input_type() == 'list' ) {
+						$new_value = maybe_unserialize( $entry[ $field->id ] );
+
+						if ( ! $this->is_json( $new_value ) ) {
+							$new_value = json_encode( $new_value );
+						}
+
+						$entry[ $field->id ] = $new_value;
+					}
+				}
+			}
+			return $entry;
+		}
+
+		public function maybe_serialize_list_fields( $entry, $form_id = null ) {
+			if ( empty( $form_id ) ) {
+				$form_id = $entry['form_id'];
+			}
+			$form = GFAPI::get_form( $form_id );
+			if ( ! empty ( $form['fields'] ) && is_array( $form['fields'] ) ) {
+				foreach ( $form['fields'] as $field ) {
+					/* @var GF_Field $field */
+					if ( $field->get_input_type() == 'list' ) {
+						$new_list_value = $this->maybe_decode_json( $entry[ $field->id ] );
+						if ( ! is_serialized( $new_list_value ) ) {
+							$new_list_value = serialize( $new_list_value );
+						}
+						$entry[ $field->id ] = $new_list_value;
+					}
+				}
+			}
+			return $entry;
 		}
 
 
@@ -1523,6 +1584,7 @@ if ( class_exists( 'GFForms' ) ) {
 			}
 
 			if ( ! $authenticated ) {
+				$this->log_debug('Could not authenticate, permission denied.');
 				$this->die_permission_denied();
 			}
 		}
@@ -1609,7 +1671,7 @@ if ( class_exists( 'GFForms' ) ) {
 			$response['message'] = $wp_error->get_error_message();
 			$data                = $wp_error->get_error_data();
 			if ( $data ) {
-				$output['data'] = $data;
+				$response['data'] = $data;
 			}
 
 			return $response;

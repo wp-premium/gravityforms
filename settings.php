@@ -50,6 +50,12 @@ class GFSettings {
 				break;
 			default:
 				self::page_header();
+
+				/**
+				 * Fires in the settings page depending on which page of the settings page you are in (the Subview)
+				 *
+				 * @param mixed $subview The sub-section of the main Form's settings
+				 */
 				do_action( 'gform_settings_' . str_replace( ' ', '_', $subview ) );
 				self::page_footer();
 		}
@@ -90,7 +96,7 @@ class GFSettings {
 			update_option( 'recently_activated', array( $plugin => time() ) + (array) get_option( 'recently_activated' ) );
 
 			?>
-			<div class="updated fade" style="padding:20px;"><?php echo sprintf( esc_html__( 'Gravity Forms have been successfully uninstalled. It can be re-activated from the %splugins page%s.', 'gravityforms' ), "<a href='plugins.php'>", '</a>' ) ?></div>
+			<div class="updated fade" style="padding:20px;"><?php echo sprintf( esc_html__( 'Gravity Forms has been successfully uninstalled. It can be re-activated from the %splugins page%s.', 'gravityforms' ), "<a href='plugins.php'>", '</a>' ) ?></div>
 			<?php
 			return;
 		}
@@ -111,6 +117,12 @@ class GFSettings {
 
 				<?php
 				$uninstall_button = '<input type="submit" name="uninstall" value="' . esc_attr__( 'Uninstall Gravity Forms', 'gravityforms' ) . '" class="button" onclick="return confirm(\'' . esc_js( __( "Warning! ALL Gravity Forms data, including form entries will be deleted. This cannot be undone. 'OK' to delete, 'Cancel' to stop", 'gravityforms' ) ) . '\');"/>';
+
+				/**
+				 * Allows for the modification of the Gravity Forms uninstall button
+				 *
+				 * @param string $uninstall_button The HTML of the uninstall button
+				 */
 				echo apply_filters( 'gform_uninstall_button', $uninstall_button );
 				?>
 
@@ -148,7 +160,7 @@ class GFSettings {
 			update_option( 'rg_gforms_enable_html5', (bool) rgpost( 'gforms_enable_html5' ) );
 			update_option( 'gform_enable_noconflict', (bool) rgpost( 'gform_enable_noconflict' ) );
 			update_option( 'gform_enable_background_updates', (bool) rgpost( 'gform_enable_background_updates' ) );
-			update_option( 'rg_gforms_enable_akismet', (bool) rgpost( 'gforms_enable_akismet' ) );
+			update_option( 'rg_gforms_enable_akismet', self::get_posted_akismet_setting() ); // do not cast to bool, option is enabled by default; need a "1" or a "0"
 			update_option( 'rg_gforms_captcha_public_key', sanitize_text_field( rgpost( 'gforms_captcha_public_key' ) ) );
 			update_option( 'rg_gforms_captcha_private_key', sanitize_text_field( rgpost( 'gforms_captcha_private_key' ) ) );
 
@@ -326,6 +338,12 @@ class GFSettings {
 				<p class="submit" style="text-align: left;">
 					<?php
 					$save_button = '<input type="submit" name="submit" value="' . esc_html__( 'Save Settings', 'gravityforms' ) . '" class="button-primary gfbutton"/>';
+
+					/**
+					 * Filters through and allows modification of the Settings save button HTML in a Form
+					 *
+					 * @param string $save_button
+					 */
 					echo apply_filters( 'gform_settings_save_button', $save_button );
 					?>
 				</p>
@@ -346,91 +364,93 @@ class GFSettings {
 				);
 			});
 		</script>
-
-		<div class="hr-divider"></div>
-
-		<h3><span><i class="fa fa-dashboard"></i> <?php esc_html_e( 'Installation Status', 'gravityforms' ); ?><span></h3>
-		<table class="form-table">
-
-			<tr valign="top">
-				<th scope="row"><label><?php esc_html_e( 'PHP Version', 'gravityforms' ); ?></label></th>
-				<td class="installation_item_cell">
-					<strong><?php echo phpversion(); ?></strong>
-				</td>
-				<td>
-					<?php
-					if ( version_compare( phpversion(), '5.0.0', '>' ) ) {
-						?>
-						<i class="fa fa-check gf_valid"></i>
-					<?php
-					} else {
-						?>
-						<i class="fa fa-times gf_invalid"></i>
-						<span class="installation_item_message"><?php esc_html_e( 'Gravity Forms requires PHP 5 or above.', 'gravityforms' ); ?></span>
-					<?php
-					}
-					?>
-				</td>
-			</tr>
-			<tr valign="top">
-				<th scope="row"><label><?php esc_html_e( 'MySQL Version', 'gravityforms' ); ?></label></th>
-				<td class="installation_item_cell">
-					<strong><?php echo esc_html( $wpdb->db_version() ); ?></strong>
-				</td>
-				<td>
-					<?php
-					if ( version_compare( $wpdb->db_version(), '5.0.0', '>' ) ) {
-						?>
-						<i class="fa fa-check gf_valid"></i>
-					<?php
-					} else {
-						?>
-						<i class="fa fa-times gf_invalid"></i>
-						<span class="installation_item_message"><?php esc_html_e( 'Gravity Forms requires MySQL 5 or above.', 'gravityforms' ); ?></span>
-					<?php
-					}
-					?>
-				</td>
-			</tr>
-			<tr valign="top">
-				<th scope="row"><label><?php esc_html_e( 'WordPress Version', 'gravityforms' ); ?></label></th>
-				<td class="installation_item_cell">
-					<strong><?php echo esc_html( get_bloginfo( 'version' ) ); ?></strong>
-				</td>
-				<td>
-					<?php
-					if ( version_compare( get_bloginfo( 'version' ), '3.0', '>' ) ) {
-						?>
-						<i class="fa fa-check gf_valid"></i>
-					<?php
-					} else {
-						?>
-						<i class="fa fa-times gf_invalid"></i>
-						<span class="installation_item_message"><?php printf( esc_html__( 'Gravity Forms requires WordPress v%s or greater. You must upgrade WordPress in order to use this version of Gravity Forms.', 'gravityforms' ), GF_MIN_WP_VERSION ); ?></span>
-					<?php
-					}
-					?>
-				</td>
-			</tr>
-			<tr valign="top">
-				<th scope="row"><label><?php esc_html_e( 'Gravity Forms Version', 'gravityforms' ); ?></label></th>
-				<td class="installation_item_cell">
-					<strong><?php echo esc_html( GFCommon::$version ) ?></strong>
-				</td>
-				<td>
-					<?php
-					if ( version_compare( GFCommon::$version, $version_info['version'], '>=' ) ) {
-						?>
-						<i class="fa fa-check gf_valid"></i>
-					<?php
-					} else {
-						echo sprintf( esc_html__( 'New version %s available. Automatic upgrade available on the %splugins page%s', 'gravityforms' ), esc_html( $version_info['version'] ), '<a href="plugins.php">', '</a>' );
-					}
-					?>
-				</td>
-			</tr>
-		</table>
 		<?php
+		if ( ! apply_filters( 'gform_disable_installation_status', false ) ) { ?>
+			<div class="hr-divider"></div>
+
+			<h3><span><i class="fa fa-dashboard"></i> <?php esc_html_e( 'Installation Status', 'gravityforms' ); ?><span></h3>
+			<table class="form-table">
+
+				<tr valign="top">
+					<th scope="row"><label><?php esc_html_e( 'PHP Version', 'gravityforms' ); ?></label></th>
+					<td class="installation_item_cell">
+						<strong><?php echo phpversion(); ?></strong>
+					</td>
+					<td>
+						<?php
+						if ( version_compare( phpversion(), '5.0.0', '>' ) ) {
+							?>
+							<i class="fa fa-check gf_valid"></i>
+						<?php
+						} else {
+							?>
+							<i class="fa fa-times gf_invalid"></i>
+							<span class="installation_item_message"><?php esc_html_e( 'Gravity Forms requires PHP 5 or above.', 'gravityforms' ); ?></span>
+						<?php
+						}
+						?>
+					</td>
+				</tr>
+				<tr valign="top">
+					<th scope="row"><label><?php esc_html_e( 'MySQL Version', 'gravityforms' ); ?></label></th>
+					<td class="installation_item_cell">
+						<strong><?php echo esc_html( $wpdb->db_version() ); ?></strong>
+					</td>
+					<td>
+						<?php
+						if ( version_compare( $wpdb->db_version(), '5.0.0', '>' ) ) {
+							?>
+							<i class="fa fa-check gf_valid"></i>
+						<?php
+						} else {
+							?>
+							<i class="fa fa-times gf_invalid"></i>
+							<span class="installation_item_message"><?php esc_html_e( 'Gravity Forms requires MySQL 5 or above.', 'gravityforms' ); ?></span>
+						<?php
+						}
+						?>
+					</td>
+				</tr>
+				<tr valign="top">
+					<th scope="row"><label><?php esc_html_e( 'WordPress Version', 'gravityforms' ); ?></label></th>
+					<td class="installation_item_cell">
+						<strong><?php echo esc_html( get_bloginfo( 'version' ) ); ?></strong>
+					</td>
+					<td>
+						<?php
+						if ( version_compare( get_bloginfo( 'version' ), '3.0', '>' ) ) {
+							?>
+							<i class="fa fa-check gf_valid"></i>
+						<?php
+						} else {
+							?>
+							<i class="fa fa-times gf_invalid"></i>
+							<span class="installation_item_message"><?php printf( esc_html__( 'Gravity Forms requires WordPress v%s or greater. You must upgrade WordPress in order to use this version of Gravity Forms.', 'gravityforms' ), GF_MIN_WP_VERSION ); ?></span>
+						<?php
+						}
+						?>
+					</td>
+				</tr>
+				<tr valign="top">
+					<th scope="row"><label><?php esc_html_e( 'Gravity Forms Version', 'gravityforms' ); ?></label></th>
+					<td class="installation_item_cell">
+						<strong><?php echo esc_html( GFCommon::$version ) ?></strong>
+					</td>
+					<td>
+						<?php
+						if ( version_compare( GFCommon::$version, $version_info['version'], '>=' ) ) {
+							?>
+							<i class="fa fa-check gf_valid"></i>
+						<?php
+						} else {
+							echo sprintf( esc_html__( 'New version %s available. Automatic upgrade available on the %splugins page%s', 'gravityforms' ), esc_html( $version_info['version'] ), '<a href="plugins.php">', '</a>' );
+						}
+						?>
+					</td>
+				</tr>
+			</table>
+		<?php
+		}
 		self::page_footer();
 	}
 
@@ -569,4 +589,20 @@ class GFSettings {
 
 		return $subview;
 	}
+
+	public static function get_posted_akismet_setting() {
+
+		$akismet_setting = rgpost( 'gforms_enable_akismet' );
+
+		if( $akismet_setting ) {
+			$akismet_setting = '1';
+		} elseif( $akismet_setting === false ) {
+			$akismet_setting = false;
+		} else {
+			$akismet_setting = '0';
+		}
+
+		return $akismet_setting;
+	}
+
 }

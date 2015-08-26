@@ -34,6 +34,8 @@ class GF_Field_SingleShipping extends GF_Field {
 			$price = 0;
 		}
 
+		$price = esc_attr( $price );
+
 		return "<div class='ginput_container'>
 					<input type='hidden' name='input_{$id}' value='{$price}' class='gform_hidden'/>
 					<span class='ginput_shipping_price' id='{$field_id}'>" . GFCommon::to_money( $price, $currency ) . '</span>

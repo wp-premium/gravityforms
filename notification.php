@@ -39,7 +39,7 @@ Class GFNotification {
 
 		$form = RGFormsModel::get_form_meta( $form_id );
 
-		$form = apply_filters( "gform_form_notification_page_{$form_id}", apply_filters( 'gform_form_notification_page', $form, $notification_id ), $notification_id );
+		$form = gf_apply_filters( 'gform_form_notification_page', $form_id, $form, $notification_id );
 
 		$notification = ! $notification_id ? array() : self::get_notification( $form, $notification_id );
 
@@ -101,7 +101,7 @@ Class GFNotification {
 			if ( rgpost( 'gform_is_default' ) ) {
 				$notification['isDefault'] = true;
 			}
-			$notification = apply_filters( 'gform_pre_notification_save', apply_filters( "gform_pre_notification_save{$form['id']}", $notification, $form, $is_new_notification ), $form, $is_new_notification );
+			$notification = gf_apply_filters( 'gform_pre_notification_save', $form_id, $notification, $form, $is_new_notification );
 
 			//validating input...
 			$is_valid = self::validate_notification();
@@ -552,7 +552,7 @@ Class GFNotification {
 		$ui_settings = array();
 		$form_id     = rgget( 'id' );
 		$form        = RGFormsModel::get_form_meta( $form_id );
-		$form        = apply_filters( 'gform_admin_pre_render_' . $form_id, apply_filters( 'gform_admin_pre_render', $form ) );
+		$form        = gf_apply_filters( 'gform_admin_pre_render', $form_id, $form );
 		$is_valid    = empty( GFCommon::$errors );
 
 		ob_start(); ?>
@@ -664,7 +664,7 @@ Class GFNotification {
 		<?php $ui_settings['notification_to_email'] = ob_get_contents();
 		ob_clean(); ?>
 
-		<?php $email_fields = apply_filters( "gform_email_fields_notification_admin_{$form['id']}", apply_filters( 'gform_email_fields_notification_admin', GFCommon::get_email_fields( $form ), $form ), $form ); ?>
+		<?php $email_fields = gf_apply_filters( 'gform_email_fields_notification_admin', $form['id'], GFCommon::get_email_fields( $form ), $form ); ?>
 		<tr id="gform_notification_to_field_container" class="notification_to_container <?php echo esc_attr( $send_to_class ) ?>" <?php echo $notification_to_type != 'field' ? "style='display:none';" : '' ?>>
 			<?php echo $subsetting_open; ?>
 			<th scope="row"><?php esc_html_e( 'Send to Field', 'gravityforms' ) ?></th>
@@ -928,7 +928,7 @@ Class GFNotification {
 
 		<?php
 		ob_end_clean();
-		$ui_settings = apply_filters( "gform_notification_ui_settings_{$form_id}", apply_filters( 'gform_notification_ui_settings', $ui_settings, $notification, $form ), $notification, $form );
+		$ui_settings = gf_apply_filters( 'gform_notification_ui_settings', $form_id, $ui_settings, $notification, $form );
 
 		return $ui_settings;
 	}
@@ -1216,6 +1216,10 @@ class GFNotificationTable extends WP_List_Table {
 		echo '<tr id="notification-' . esc_attr( $item['id'] ) . '" ' . $row_class . '>';
 		echo $this->single_row_columns( $item );
 		echo '</tr>';
+	}
+	
+	function get_columns() {
+		return $this->_column_headers[0];
 	}
 
 	function column_default( $item, $column ) {

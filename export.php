@@ -80,8 +80,12 @@ class GFExport {
 					}
 				}
 
-				$form = apply_filters( 'gform_export_form', $form );
-				$form = apply_filters( "gform_export_form_{$form['id']}", $form );
+				/**
+				 * Allows you to filter and modify the Export Form
+				 *
+				 * @param array $form Assign which Gravity Form to change the export form for
+				 */
+				$form = gf_apply_filters( 'gform_export_form', $form['id'], $form );
 
 			}
 
@@ -155,7 +159,7 @@ class GFExport {
 		$form_ids = GFAPI::add_forms( $forms );
 
 		if ( is_wp_error( $form_ids ) ) {
-			$form_ids = 0;
+			$form_ids = array();
 		} else {
 			foreach ( $form_ids as $key => $form_id ){
 				$forms[ $key ]['id'] = $form_id;
@@ -649,7 +653,7 @@ class GFExport {
 		$lines = chr( 239 ) . chr( 187 ) . chr( 191 );
 
 		// set the separater
-		$separator = apply_filters( 'gform_export_separator_' . $form_id, apply_filters( 'gform_export_separator', ',', $form_id ), $form_id );
+		$separator = gf_apply_filters( 'gform_export_separator', $form_id, ',', $form_id );
 
 		$field_rows = self::get_field_row_count( $form, $fields, $entry_count );
 
@@ -689,7 +693,7 @@ class GFExport {
 			);
 			$leads  = GFAPI::get_entries( $form_id, $search_criteria, $sorting, $paging );
 
-			$leads = apply_filters( "gform_leads_before_export_$form_id", apply_filters( 'gform_leads_before_export', $leads, $form, $paging ), $form, $paging );
+			$leads = gf_apply_filters( 'gform_leads_before_export', $form_id, $leads, $form, $paging );
 
 			foreach ( $leads as $lead ) {
 				foreach ( $fields as $field_id ) {
@@ -700,27 +704,9 @@ class GFExport {
 							$value           = date_i18n( 'Y-m-d H:i:s', $lead_local_time, true );
 							break;
 						default :
-							$long_text = '';
-							if ( strlen( rgar( $lead, $field_id ) ) >= ( GFORMS_MAX_FIELD_LENGTH - 10 ) ) {
-								$long_text = RGFormsModel::get_field_value_long( $lead, $field_id, $form );
-							}
+							$field = RGFormsModel::get_field( $form, $field_id );
 
-							$value = ! empty( $long_text ) ? $long_text : rgar( $lead, $field_id );
-
-							$field      = RGFormsModel::get_field( $form, $field_id );
-							$input_type = RGFormsModel::get_input_type( $field );
-
-							if ( $input_type == 'checkbox' ) {
-								//pass in label value that has not had quotes escaped so the is_checkbox_checked function compares the unchanged label value with the lead value
-								$header_label_not_escaped = GFCommon::get_label( $field, $field_id );
-								$value = GFFormsModel::is_checkbox_checked( $field_id, $header_label_not_escaped, $lead, $form );
-								if ( $value === false ) {
-									$value = '';
-								}
-							} else if ( $input_type == 'fileupload' && $field->multipleFiles ) {
-								$value = ! empty( $value ) ? implode( ' , ', json_decode( $value, true ) ) : '';
-							}
-
+							$value = is_object( $field ) ? $field->get_value_export( $lead, $field_id, false, true ) : rgar( $lead, $field_id );
 							$value = apply_filters( 'gform_export_field_value', $value, $form_id, $field_id, $lead );
 
 							GFCommon::log_debug( "GFExport::start_export(): Value for field ID {$field_id}: {$value}" );
@@ -771,6 +757,14 @@ class GFExport {
 			$lines = '';
 		}
 
+		/**
+		 * Fires after exporting all the entries in form
+		 *
+		 * @param array $form The Form object to get the entries from
+		 * @param string $start_date The start date for when the export of entries should take place
+		 * @param string $end_date The end date for when the export of entries should stop
+		 * @param array $fields The specified fields where the entries should be exported from
+		 */
 		do_action( 'gform_post_export_entries', $form, $start_date, $end_date, $fields );
 
 	}
