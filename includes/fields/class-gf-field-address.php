@@ -84,7 +84,7 @@ class GF_Field_Address extends GF_Field {
 		$form_sub_label_placement  = rgar( $form, 'subLabelPlacement' );
 		$field_sub_label_placement = $this->subLabelPlacement;
 		$is_sub_label_above        = $field_sub_label_placement == 'above' || ( empty( $field_sub_label_placement ) && $form_sub_label_placement == 'above' );
-		$sub_label_class_attribute = $field_sub_label_placement == 'hidden_label' ? "class='hidden_sub_label'" : '';
+		$sub_label_class_attribute = $field_sub_label_placement == 'hidden_label' ? "class='hidden_sub_label screen-reader-text'" : '';
 
 		$street_value  = '';
 		$street2_value = '';
@@ -144,22 +144,22 @@ class GF_Field_Address extends GF_Field {
 
 		//labels
 		$address_street_sub_label  = rgar( $address_street_field_input, 'customLabel' ) != '' ? $address_street_field_input['customLabel'] : esc_html__( 'Street Address', 'gravityforms' );
-		$address_street_sub_label  = apply_filters( 'gform_address_street_{$form_id}', apply_filters( 'gform_address_street', $address_street_sub_label, $form_id ), $form_id );
+		$address_street_sub_label  = gf_apply_filters( 'gform_address_street', $form_id, $address_street_sub_label, $form_id );
 		$address_street_sub_label  = esc_html( $address_street_sub_label );
 		$address_street2_sub_label = rgar( $address_street2_field_input, 'customLabel' ) != '' ? $address_street2_field_input['customLabel'] : esc_html__( 'Address Line 2', 'gravityforms' );
-		$address_street2_sub_label = apply_filters( "gform_address_street2_{$form_id}", apply_filters( 'gform_address_street2', $address_street2_sub_label, $form_id ), $form_id );
+		$address_street2_sub_label = gf_apply_filters( 'gform_address_street2', $form_id, $address_street2_sub_label, $form_id );
 		$address_street2_sub_label = esc_html( $address_street2_sub_label );
 		$address_zip_sub_label     = rgar( $address_zip_field_input, 'customLabel' ) != '' ? $address_zip_field_input['customLabel'] : $zip_label;
-		$address_zip_sub_label     = apply_filters( "gform_address_zip_{$form_id}", apply_filters( 'gform_address_zip', $address_zip_sub_label, $form_id ), $form_id );
+		$address_zip_sub_label     = gf_apply_filters( 'gform_address_zip', $form_id, $address_zip_sub_label, $form_id );
 		$address_zip_sub_label     = esc_html( $address_zip_sub_label );
 		$address_city_sub_label    = rgar( $address_city_field_input, 'customLabel' ) != '' ? $address_city_field_input['customLabel'] : esc_html__( 'City', 'gravityforms' );
-		$address_city_sub_label    = apply_filters( "gform_address_city_{$form_id}", apply_filters( 'gform_address_city', $address_city_sub_label, $form_id ), $form_id );
+		$address_city_sub_label    = gf_apply_filters( 'gform_address_city', $form_id, $address_city_sub_label, $form_id );
 		$address_city_sub_label    = esc_html( $address_city_sub_label );
 		$address_state_sub_label   = rgar( $address_state_field_input, 'customLabel' ) != '' ? $address_state_field_input['customLabel'] : $state_label;
-		$address_state_sub_label   = apply_filters( "gform_address_state_{$form_id}", apply_filters( 'gform_address_state', $address_state_sub_label, $form_id ), $form_id );
+		$address_state_sub_label   = gf_apply_filters( 'gform_address_state', $form_id, $address_state_sub_label, $form_id );
 		$address_state_sub_label   = esc_html( $address_state_sub_label );
 		$address_country_sub_label = rgar( $address_country_field_input, 'customLabel' ) != '' ? $address_country_field_input['customLabel'] : esc_html__( 'Country', 'gravityforms' );
-		$address_country_sub_label = apply_filters( "gform_address_country_{$form_id}", apply_filters( 'gform_address_country', $address_country_sub_label, $form_id ), $form_id );
+		$address_country_sub_label = gf_apply_filters( 'gform_address_country', $form_id, $address_country_sub_label, $form_id );
 		$address_country_sub_label = esc_html( $address_country_sub_label );
 
 		//address field
@@ -390,12 +390,27 @@ class GF_Field_Address extends GF_Field {
 	public function get_address_types( $form_id ) {
 
 		$addressTypes = array(
-			'international' => array( 'label' => esc_html__( 'International', 'gravityforms' ), 'zip_label' => apply_filters( "gform_address_zip_{$form_id}", apply_filters( 'gform_address_zip', esc_html__( 'ZIP / Postal Code', 'gravityforms' ), $form_id ), $form_id ), 'state_label' => apply_filters( "gform_address_state_{$form_id}", apply_filters( 'gform_address_state', esc_html__( 'State / Province / Region', 'gravityforms' ), $form_id ), $form_id ) ),
-			'us'            => array( 'label' => esc_html__( 'United States', 'gravityforms' ), 'zip_label' => apply_filters( "gform_address_zip_{$form_id}", apply_filters( 'gform_address_zip', esc_html__( 'ZIP Code', 'gravityforms' ), $form_id ), $form_id ), 'state_label' => apply_filters( "gform_address_state_{$form_id}", apply_filters( 'gform_address_state', esc_html__( 'State', 'gravityforms' ), $form_id ), $form_id ), 'country' => 'United States', 'states' => array_merge( array( '' ), $this->get_us_states() ) ),
-			'canadian'      => array( 'label' => esc_html__( 'Canadian', 'gravityforms' ), 'zip_label' => apply_filters( "gform_address_zip_{$form_id}", apply_filters( 'gform_address_zip', esc_html__( 'Postal Code', 'gravityforms' ), $form_id ), $form_id ), 'state_label' => apply_filters( "gform_address_state_{$form_id}", apply_filters( 'gform_address_state', esc_html__( 'Province', 'gravityforms' ), $form_id ), $form_id ), 'country' => 'Canada', 'states' => array_merge( array( '' ), $this->get_canadian_provinces() ) )
+			'international' => array( 'label'       => esc_html__( 'International', 'gravityforms' ),
+			                          'zip_label'   => gf_apply_filters( 'gform_address_zip', $form_id, esc_html__( 'ZIP / Postal Code', 'gravityforms' ), $form_id ),
+			                          'state_label' => gf_apply_filters( 'gform_address_state', $form_id, esc_html__( 'State / Province / Region', 'gravityforms' ), $form_id )
+			),
+			'us'            => array(
+				'label'       => esc_html__( 'United States', 'gravityforms' ),
+				'zip_label'   => gf_apply_filters( 'gform_address_zip', $form_id, esc_html__( 'ZIP Code', 'gravityforms' ), $form_id ),
+				'state_label' => gf_apply_filters( 'gform_address_state', $form_id, esc_html__( 'State', 'gravityforms' ), $form_id ),
+				'country'     => 'United States',
+				'states'      => array_merge( array( '' ), $this->get_us_states() )
+			),
+			'canadian'      => array(
+				'label'       => esc_html__( 'Canadian', 'gravityforms' ),
+				'zip_label'   => gf_apply_filters( 'gform_address_zip', $form_id, esc_html__( 'Postal Code', 'gravityforms' ), $form_id ),
+				'state_label' => gf_apply_filters( 'gform_address_state', $form_id, esc_html__( 'Province', 'gravityforms' ), $form_id ),
+				'country'     => 'Canada',
+				'states'      => array_merge( array( '' ), $this->get_canadian_provinces() )
+			)
 		);
 
-		return apply_filters( "gform_address_types_{$form_id}", apply_filters( 'gform_address_types', $addressTypes, $form_id ), $form_id );
+		return gf_apply_filters( 'gform_address_types', $form_id, $addressTypes, $form_id );
 	}
 
 	public function get_state_field( $id, $field_id, $state_value, $disabled_text, $form_id ) {
@@ -717,7 +732,7 @@ class GF_Field_Address extends GF_Field {
 			strtoupper( esc_html__( 'Delaware', 'gravityforms' ) )              => 'DE',
 			strtoupper( esc_html__( 'District of Columbia', 'gravityforms' ) )  => 'DC',
 			strtoupper( esc_html__( 'Florida', 'gravityforms' ) )               => 'FL',
-			strtoupper( _x( 'Georgia', 'US State', 'gravityforms' ) )   => 'GA',
+			strtoupper( _x( 'Georgia', 'US State', 'gravityforms' ) )           => 'GA',
 			strtoupper( esc_html__( 'Hawaii', 'gravityforms' ) )                => 'HI',
 			strtoupper( esc_html__( 'Idaho', 'gravityforms' ) )                 => 'ID',
 			strtoupper( esc_html__( 'Illinois', 'gravityforms' ) )              => 'IL',
@@ -919,6 +934,34 @@ class GF_Field_Address extends GF_Field {
 		}
 
 	}
+
+	public function get_value_export( $entry, $input_id = '', $use_text = false, $is_csv = false ) {
+		if ( empty( $input_id ) ) {
+			$input_id = $this->id;
+		}
+
+		if ( absint( $input_id ) == $input_id ) {
+			$street_value  = str_replace( '  ', ' ', trim( rgar( $entry, $input_id . '.1' ) ) );
+			$street2_value = str_replace( '  ', ' ', trim( rgar( $entry, $input_id . '.2' ) ) );
+			$city_value    = str_replace( '  ', ' ', trim( rgar( $entry, $input_id . '.3' ) ) );
+			$state_value   = str_replace( '  ', ' ', trim( rgar( $entry, $input_id . '.4' ) ) );
+			$zip_value     = trim( rgar( $entry, $input_id . '.5' ) );
+			$country_value = $this->get_country_code( trim( rgar( $entry, $input_id . '.6' ) ) );
+
+			$address = $street_value;
+			$address .= ! empty( $address ) && ! empty( $street2_value ) ? "  $street2_value" : $street2_value;
+			$address .= ! empty( $address ) && ( ! empty( $city_value ) || ! empty( $state_value ) ) ? ", $city_value," : $city_value;
+			$address .= ! empty( $address ) && ! empty( $city_value ) && ! empty( $state_value ) ? "  $state_value" : $state_value;
+			$address .= ! empty( $address ) && ! empty( $zip_value ) ? "  $zip_value," : $zip_value;
+			$address .= ! empty( $address ) && ! empty( $country_value ) ? "  $country_value" : $country_value;
+
+			return $address;
+		} else {
+
+			return rgar( $entry, $input_id );
+		}
+	}
+
 }
 
 GF_Fields::register( new GF_Field_Address() );

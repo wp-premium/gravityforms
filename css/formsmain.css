@@ -4,7 +4,7 @@
 Gravity Forms Front End Form Styles
 Version 1.9
 http: //www.gravityforms.com
-updated: March 15, 2015 1:05 PM
+updated: August 21, 2015 11:52 AM
 
 Gravity Forms is a Rocketgenius project
 copyright 2008-2015 Rocketgenius Inc.
@@ -32,13 +32,10 @@ to no.
 .gform_wrapper h1, .gform_wrapper h2, .gform_wrapper h3 {
     font-weight: normal;
     border: none;
-    outline: none;
     background: none;
 }
-.gform_wrapper :focus { outline: 0 }
 .gform_wrapper form { text-align: left }
 .gform_wrapper input[type=text], .gform_wrapper input[type=url], .gform_wrapper input[type=email], .gform_wrapper input[type=tel], .gform_wrapper input[type=number], .gform_wrapper input[type=password] {
-    outline-style: none;
     font-size: inherit;
     font-family: inherit;
     padding: .313em 0 .313em 0;
@@ -51,7 +48,6 @@ to no.
     width: auto !important;
 }
 .gform_wrapper textarea {
-    outline-style: none;
     font-size: inherit;
     font-family: inherit;
     letter-spacing: normal;
@@ -99,7 +95,6 @@ html>body .entry ul, .gform_wrapper ul { text-indent: 0 }
     vertical-align: top;
     display: -moz-inline-stack;
     display: inline-block;
-    zoom: 1;
 }
 .gform_wrapper .gfield_time_hour i {
     font-style: normal !important;
@@ -114,14 +109,12 @@ html>body .entry ul, .gform_wrapper ul { text-indent: 0 }
     vertical-align: top;
     display: -moz-inline-stack;
     display: inline-block;
-    zoom: 1;
 }
 .gform_wrapper .gfield_date_dropdown_month, .gform_wrapper .gfield_date_dropdown_day, .gform_wrapper .gfield_date_dropdown_year { margin-right: .375em }
 .gform_wrapper .gfield_time_ampm {
     vertical-align: top;
     display: -moz-inline-stack;
     display: inline-block;
-    zoom: 1;
 }
 .gform_wrapper .gfield_time_ampm select { width: 4.688em !important }
 .gform_wrapper .gfield_time_hour input, .gform_wrapper .gfield_time_minute input, .gform_wrapper .gfield_date_month input, .gform_wrapper .gfield_date_day input, .gform_wrapper .gfield_date_year input { width: 70% !important }
@@ -144,7 +137,6 @@ html>body .entry ul, .gform_wrapper ul { text-indent: 0 }
     width: 49.5%;
     display: -moz-inline-stack;
     display: inline-block;
-    zoom: 1;
     vertical-align: top;
 }
 .gform_wrapper .ginput_complex.ginput_container {
@@ -159,12 +151,11 @@ html>body .entry ul, .gform_wrapper ul { text-indent: 0 }
     width: 48.5%;
     display: -moz-inline-stack;
     display: inline-block;
-    zoom: 1;
     vertical-align: top;
 }
 .gform_wrapper .ginput_complex .ginput_right { margin-left: 1.6% }
 .gform_wrapper .gfield_error .ginput_complex .ginput_left, .gform_wrapper .gfield_error .ginput_complex .ginput_right { width: 48.5% }
-.gform_wrapper .gfield_error .ginput_complex .ginput_left input[type=text], .gform_wrapper .gfield_error .ginput_complex .ginput_left input[type=url], .gform_wrapper .gfield_error .ginput_complex .ginput_left input[type=email], .gform_wrapper .gfield_error .ginput_complex .ginput_left input[type=tel], .gform_wrapper .gfield_error .ginput_complex .ginput_left input[type=number], .gform_wrapper .gfield_error .ginput_complex .ginput_left input[type=password] { width: 97.5 }
+.gform_wrapper .gfield_error .ginput_complex .ginput_left input[type=text], .gform_wrapper .gfield_error .ginput_complex .ginput_left input[type=url], .gform_wrapper .gfield_error .ginput_complex .ginput_left input[type=email], .gform_wrapper .gfield_error .ginput_complex .ginput_left input[type=tel], .gform_wrapper .gfield_error .ginput_complex .ginput_left input[type=number], .gform_wrapper .gfield_error .ginput_complex .ginput_left input[type=password] { width: 97.5%}
 .gform_wrapper .gfield_error .ginput_complex .ginput_right input[type=text], .gform_wrapper .gfield_error .ginput_complex .ginput_right input[type=url], .gform_wrapper .gfield_error .ginput_complex .ginput_right input[type=email], .gform_wrapper .gfield_error .ginput_complex .ginput_right input[type=tel], .gform_wrapper .gfield_error .ginput_complex .ginput_right input[type=number], .gform_wrapper .gfield_error .ginput_complex .ginput_right input[type=password] { width: 97.5% }
 .gform_wrapper .ginput_complex input[type=text], .gform_wrapper .ginput_complex input[type=url], .gform_wrapper .ginput_complex input[type=email], .gform_wrapper .ginput_complex input[type=tel], .gform_wrapper .ginput_complex input[type=number], .gform_wrapper .ginput_complex input[type=password] { width: 97.5% }
 .gform_wrapper .ginput_complex .ginput_right select, .gform_wrapper .ginput_complex select { width: 97% !important }
@@ -193,7 +184,6 @@ html>body .entry ul, .gform_wrapper ul { text-indent: 0 }
 .gform_wrapper .ginput_complex.ginput_container.has_first_name.no_middle_name.has_last_name span, .gform_wrapper .ginput_complex.ginput_container.no_first_name.has_middle_name.has_last_name span, .gform_wrapper .ginput_complex.ginput_container.has_first_name.has_middle_name.no_last_name span {
     display: -moz-inline-stack;
     display: inline-block;
-    zoom: 1;
     width: 48.5%;
     vertical-align: top;
 }
@@ -204,7 +194,6 @@ html>body .entry ul, .gform_wrapper ul { text-indent: 0 }
 .gform_wrapper .ginput_complex.ginput_container.has_first_name.has_middle_name.has_last_name span.name_first, .gform_wrapper .ginput_complex.ginput_container.has_first_name.has_middle_name.has_last_name span.name_middle, .gform_wrapper .ginput_complex.ginput_container.has_first_name.has_middle_name.has_last_name span.name_last {
     display: -moz-inline-stack;
     display: inline-block;
-    zoom: 1;
     vertical-align: top;
 }
 .gform_wrapper .ginput_complex.ginput_container.has_first_name.has_middle_name.has_last_name span.name_first, .gform_wrapper .ginput_complex.ginput_container.has_first_name.has_middle_name.has_last_name span.name_middle, .gform_wrapper .ginput_complex.ginput_container.has_first_name.no_middle_name.has_last_name span.name_first { margin-right: 1.3% }
@@ -239,15 +228,32 @@ html>body .entry ul, .gform_wrapper ul { text-indent: 0 }
 .gform_wrapper .left_label li.hidden_label input, .gform_wrapper .right_label li.hidden_label input { margin-left: 3.7% }
 .gform_wrapper .left_label li.gfield .gfield_password_strength, .gform_wrapper .right_label li.gfield .gfield_password_strength { margin-left: 30% }
 body .gform_wrapper label.gfield_label + div.ginput_container { margin-top: .375em }
-.gform_wrapper .hidden_label .gfield_label { display: none !important }
+
+.gform_wrapper .hidden_label .gfield_label {
+    clip: rect(1px, 1px, 1px, 1px);
+    position: absolute !important;
+    height: 1px;
+    width: 1px;
+    overflow: hidden;
+}
+
 .gfield.right_label, .gfield.left_label { padding-top: 10px }
 .gform_wrapper li.hidden_label input { margin-top: .75em }
-.gform_wrapper label.hidden_sub_label { display: none }
+
 .gform_wrapper .field_sublabel_hidden_label .ginput_complex.ginput_container input[type=text], .gform_wrapper .field_sublabel_hidden_label .ginput_complex.ginput_container select { margin-bottom: .75em }
 .gform_wrapper .left_label ul.gfield_checkbox, .gform_wrapper .right_label ul.gfield_checkbox, .gform_wrapper .left_label ul.gfield_radio, .gform_wrapper .right_label ul.gfield_radio {
     margin-left: 30% !important;
     overflow: hidden;
 }
+
+.gform_wrapper label.screen-reader-text, .gform_wrapper label.hidden_sub_label {
+    clip: rect(1px, 1px, 1px, 1px);
+    position: absolute !important;
+    height: 1px;
+    width: 1px;
+    overflow: hidden;
+ }
+
 .gform_wrapper .top_label input.small, .gform_wrapper .top_label select.small { width: 25% }
 .gform_wrapper .top_label input.medium, .gform_wrapper .top_label select.medium { width: 47.5% }
 .gform_wrapper .top_label input.large, .gform_wrapper .top_label select.large, .gform_wrapper .hidden_label input.large, .gform_wrapper .hidden_label select.large { width: 97.5% }
@@ -460,14 +466,12 @@ div.gf_page_steps+div.validation_error { margin-top: 1em }
 .gform_wrapper .gform_footer input.button, .gform_wrapper .gform_footer input[type=submit], .gform_wrapper .gform_footer input[type=image] {
     display: -moz-inline-stack;
     display: inline-block;
-    zoom: 1;
 }
 .gform_wrapper .gform_footer a.gform_save_link {
     font-size: 1em;
     margin-left: 1em;
     display: -moz-inline-stack;
     display: inline-block;
-    zoom: 1;
 }
 .gform_wrapper .gform_footer input[type=image] {
     padding: 0;
@@ -486,7 +490,6 @@ div.gf_page_steps+div.validation_error { margin-top: 1em }
     margin-right: .25em !important;
     display: -moz-inline-stack;
     display: inline-block;
-    zoom: 1;
 }
 .gform_wrapper input[type=hidden], .gform_wrapper input.gform_hidden, .gform_wrapper .gform_hidden, .gform_wrapper .gf_hidden {
     display: none !important;
@@ -581,7 +584,6 @@ body .gform_wrapper ul li.gfield.gfield_html img { max-width: 97.5%  !important 
 .gform_wrapper .gform_page_footer .button.gform_previous_button, .gform_wrapper .gform_page_footer .button.gform_next_button {
     display: -moz-inline-stack;
     display: inline-block;
-    zoom: 1;
 }
 .gform_wrapper .gform_page_footer .button.gform_previous_button { margin-bottom: .5em }
 .gform_wrapper .gform_page_footer .button.gform_next_button, .gform_wrapper .gform_page_footer .button.gform_button { margin-right: .625em }
@@ -691,7 +693,6 @@ body .gform_wrapper ul li.gfield.gfield_html img { max-width: 97.5%  !important 
     font-family: arial,sans-serif;
     display: -moz-inline-stack;
     display: inline-block;
-    zoom: 1;
 }
 .gform_wrapper .gf_step span.gf_step_number {
     font-size: 1.25em;
@@ -822,7 +823,6 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
 .gform_wrapper table.gfield_list td.gfield_list_icons img {
     display: -moz-inline-stack;
     display: inline-block;
-    zoom: 1;
     vertical-align: middle;
 }
 .gform_wrapper table.gfield_list td.gfield_list_cell { width: auto !important }
@@ -836,7 +836,7 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
     display: inline-block;
     vertical-align: middle;
     font-size: 13px;
-    zoom: 1;
+    
     -webkit-user-select: none;
     -moz-user-select: none;
     user-select: none;
@@ -928,7 +928,6 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
     padding: 4px 20px 4px 5px;
     width: 100%;
     height: auto;
-    outline: 0;
     border: 1px solid #AAA;
     background: white url('../images/chosen-sprite.png') no-repeat 100% -20px;
     background: url('../images/chosen-sprite.png') no-repeat 100% -20px;
@@ -1028,7 +1027,6 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
     margin: 1px 0;
     padding: 5px;
     height: 15px;
-    outline: 0;
     border: 0 !important;
     background: transparent !important;
     box-shadow: none;
@@ -1256,7 +1254,6 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
     width: 47% !important;
     display: -moz-inline-stack;
     display: inline-block;
-    zoom: 1;
 }
 .gform_wrapper .ginput_complex .ginput_cardinfo_left select.ginput_card_expiration.ginput_card_expiration_month { margin-right: 4px }
 .gform_wrapper .ginput_complex .ginput_cardinfo_right input.ginput_card_security_code { max-width: 50% !important }
@@ -1271,7 +1268,6 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
     left: 6px;
     display: -moz-inline-stack;
     display: inline-block;
-    zoom: 1;
 }
 .gform_wrapper .gform_fileupload_multifile .gform_drop_area {
     padding: 25px;
@@ -1347,12 +1343,13 @@ body .gform_wrapper img.ui-datepicker-trigger {
     height: 16px !important;
     display: -moz-inline-stack;
     display: inline-block;
-    zoom: 1;
 }
 body .gform_wrapper img.add_list_item, body .gform_wrapper img.delete_list_item {
     display: -moz-inline-stack;
     display: inline-block;
-    zoom: 1;
 }
 .gform_wrapper ul li.gfield.field_sublabel_above.field_description_below + li.gfield { margin-top: 1em }
 .gform_wrapper li.gfield ul.gfield_radio li input[type="radio"] + input[type="text"] { width: 45.25% }
+.gform_wrapper table.recaptchatable {
+    table-layout: auto;
+}

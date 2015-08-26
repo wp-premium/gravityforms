@@ -76,6 +76,12 @@ if ( ! empty( $styles ) ) {
 	?>
 </div>
 <?php
+
+/**
+ * Fires in the footer of a Form Preview page
+ *
+ * @param int $_GET['id'] The ID of the form currently being previewed
+ */
 do_action( 'gform_preview_footer', $_GET['id'] );
 ?>
 </body>

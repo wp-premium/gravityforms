@@ -186,7 +186,7 @@ if ( ! class_exists( 'GFResults' ) ) {
 				}
 			}
 			$form = GFFormsModel::get_form_meta( $form_id );
-			$form = apply_filters( "gform_form_pre_results_$form_id", apply_filters( 'gform_form_pre_results', $form ) );
+			$form = gf_apply_filters( 'gform_form_pre_results', $form_id, $form );
 
 			// set up filter vars
 			$start_date = rgget( 'start' );
@@ -364,7 +364,7 @@ if ( ! class_exists( 'GFResults' ) ) {
 			$html                      = '';
 			$form_id                   = rgpost( 'id' );
 			$form                      = GFFormsModel::get_form_meta( $form_id );
-			$form                      = apply_filters( "gform_form_pre_results_$form_id", apply_filters( 'gform_form_pre_results', $form ) );
+			$form                      = gf_apply_filters( 'gform_form_pre_results', $form_id, $form );
 			$search_criteria['status'] = 'active';
 			$fields                    = $this->get_fields( $form );
 			$total_entries             = GFAPI::count_entries( $form_id, $search_criteria );

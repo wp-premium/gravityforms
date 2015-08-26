@@ -124,6 +124,13 @@ class GF_Field_FileUpload extends GF_Field {
 		$is_admin = $is_entry_detail || $is_form_editor;
 
 		$max_upload_size = ! $is_admin && $this->maxFileSize > 0 ? $this->maxFileSize * 1048576 : wp_max_upload_size();
+		$allowed_extensions = ! empty( $this->allowedExtensions ) ? join( ',', GFCommon::clean_extensions( explode( ',', strtolower( $this->allowedExtensions ) ) ) ) : array();
+		if ( ! empty( $allowed_extensions ) ) {
+			$extensions_message = esc_attr( sprintf( __( 'Accepted file types: %s.', 'gravityforms' ), str_replace( ',', ', ', $allowed_extensions ) ) );
+		} else {
+			$extensions_message = '';
+		}
+
 		if ( $multiple_files ) {
 			$upload_action_url = trailingslashit( site_url() ) . '?gf_page=' . GFCommon::get_upload_page_slug();
 			$max_files         = $this->maxFiles > 0 ? $this->maxFiles : 0;
@@ -132,7 +139,6 @@ class GF_Field_FileUpload extends GF_Field {
 			$drag_drop_id      = 'gform_drag_drop_area_' . $form_id . '_' . $id;
 
 			$messages_id        = "gform_multifile_messages_{$form_id}_{$id}";
-			$allowed_extensions = ! empty( $this->allowedExtensions ) ? join( ',', GFCommon::clean_extensions( explode( ',', strtolower( $this->allowedExtensions ) ) ) ) : array();
 			if ( empty( $allowed_extensions ) ) {
 				$allowed_extensions = '*';
 			}
@@ -180,7 +186,7 @@ class GF_Field_FileUpload extends GF_Field {
 				}
 			}
 
-			$plupload_init = apply_filters( "gform_plupload_settings_{$form_id}", apply_filters( 'gform_plupload_settings', $plupload_init, $form_id, $this ), $form_id, $this );
+			$plupload_init = gf_apply_filters( 'gform_plupload_settings', $form_id, $plupload_init, $form_id, $this );
 
 			$drop_files_here_text = esc_html__( 'Drop files here or', 'gravityforms' );
 			$select_files_text    = esc_attr__( 'Select files', 'gravityforms' );
@@ -189,10 +195,11 @@ class GF_Field_FileUpload extends GF_Field {
 			$upload             = "<div id='{$container_id}' data-settings='{$plupload_init_json}' class='gform_fileupload_multifile'>
 										<div id='{$drag_drop_id}' class='gform_drop_area'>
 											<span class='gform_drop_instructions'>{$drop_files_here_text} </span>
-											<input id='{$browse_button_id}' type='button' value='{$select_files_text}' class='button gform_button_select_files'/>
+											<input id='{$browse_button_id}' type='button' value='{$select_files_text}' class='button gform_button_select_files' aria-describedby='extensions_message' />
 										</div>
 									</div>";
 			if ( ! $is_admin ) {
+				$upload .= "<span id='extensions_message' class='screen-reader-text'>{$extensions_message}</span>";
 				$upload .= "<div class='validation_message'>
 								<ul id='{$messages_id}'>
 								</ul>
@@ -208,7 +215,11 @@ class GF_Field_FileUpload extends GF_Field {
 				//  MAX_FILE_SIZE > 2048MB fails. The file size is checked anyway once uploaded, so it's not necessary.
 				$upload = sprintf( "<input type='hidden' name='MAX_FILE_SIZE' value='%d' />", $max_upload_size );
 			}
-			$upload .= sprintf( "<input name='input_%d' id='%s' type='file' class='%s' {$tabindex} %s/>", $id, $field_id, esc_attr( $class ), $disabled_text );
+			$upload .= sprintf( "<input name='input_%d' id='%s' type='file' class='%s' aria-describedby='extensions_message' {$tabindex} %s/>", $id, $field_id, esc_attr( $class ), $disabled_text );
+
+			if ( ! $is_admin ) {
+				$upload .= "<span id='extensions_message' class='screen-reader-text'>{$extensions_message}</span>";
+			}
 		}
 
 		if ( $is_entry_detail && ! empty( $value ) ) { // edit entry
@@ -483,6 +494,19 @@ class GF_Field_FileUpload extends GF_Field {
 
 		$this->allowedExtensions = sanitize_text_field( $this->allowedExtensions );
 
+	}
+
+	public function get_value_export( $entry, $input_id = '', $use_text = false, $is_csv = false ) {
+		if ( empty( $input_id ) ) {
+			$input_id = $this->id;
+		}
+
+		$value = rgar( $entry, $input_id );
+		if ( $this->multipleFiles && ! empty( $value ) ) {
+			return implode( ' , ', json_decode( $value, true ) );
+		}
+
+		return $value;
 	}
 
 }

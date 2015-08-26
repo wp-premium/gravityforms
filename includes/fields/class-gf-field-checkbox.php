@@ -104,7 +104,7 @@ class GF_Field_Checkbox extends GF_Field {
 		} else {
 			$value = '';
 
-			if ( GFFormsModel::is_checkbox_checked( $field_id, $columns[ $field_id ]['label'], $entry, $form ) ) {
+			if ( $this->is_checkbox_checked( $field_id, $columns[ $field_id ]['label'], $entry ) ) {
 				$value = "<i class='fa fa-check gf_valid'></i>";
 			}
 		}
@@ -237,7 +237,10 @@ class GF_Field_Checkbox extends GF_Field {
 								<label for='choice_{$id}' id='label_{$id}'>{$choice['text']}</label>
 							</li>";
 
-				$choices .= apply_filters( 'gform_field_choice_markup_pre_render_' . $this->formId, apply_filters( 'gform_field_choice_markup_pre_render', $choice_markup, $choice, $this, $value ), $choice, $this, $value );
+				$choices .= gf_apply_filters( 'gform_field_choice_markup_pre_render', array(
+					$this->formId,
+					$this->id
+				), $choice_markup, $choice, $this, $value );
 
 				$is_entry_detail = $this->is_entry_detail();
 				$is_form_editor  = $this->is_form_editor();
@@ -256,7 +259,7 @@ class GF_Field_Checkbox extends GF_Field {
 			}
 		}
 
-		return apply_filters( 'gform_field_choices_' . $this->formId, apply_filters( 'gform_field_choices', $choices, $this ), $this );
+		return gf_apply_filters( 'gform_field_choices', $this->formId, $choices, $this );
 
 	}
 
@@ -273,6 +276,62 @@ class GF_Field_Checkbox extends GF_Field {
 		if ( $this->type === 'post_category' ) {
 			$this->displayAllCategories = (bool) $this->displayAllCategories;
 		}
+	}
+
+	public function get_value_export( $entry, $input_id = '', $use_text = false, $is_csv = false ) {
+		if ( empty( $input_id ) || absint( $input_id ) == $input_id ) {
+			$selected = array();
+
+			foreach ( $this->inputs as $input ) {
+				$index = (string) $input['id'];
+				if ( ! rgempty( $index, $entry ) ) {
+					$selected[] = GFCommon::selection_display( rgar( $entry, $index ), $this, rgar( $entry, 'currency' ), $use_text );
+				}
+			}
+
+			return implode( ', ', $selected );
+		} elseif ( $is_csv ) {
+
+			$value = $this->is_checkbox_checked( $input_id, GFCommon::get_label( $this, $input_id ), $entry );
+
+			return empty( $value ) ? '' : $value;
+		} else {
+
+			return GFCommon::selection_display( rgar( $entry, $input_id ), $this, rgar( $entry, 'currency' ), $use_text );
+		}
+	}
+
+	public function is_checkbox_checked( $field_id, $field_label, $entry ) {
+
+		//looping through lead detail values trying to find an item identical to the column label. Mark with a tick if found.
+		$lead_field_keys = array_keys( $entry );
+		foreach ( $lead_field_keys as $input_id ) {
+			//mark as a tick if input label (from form meta) is equal to submitted value (from lead)
+			if ( is_numeric( $input_id ) && absint( $input_id ) == absint( $field_id ) ) {
+				$sanitized_value = wp_kses( $entry[ $input_id ], wp_kses_allowed_html( 'post' ) );
+				if ( $sanitized_value == $field_label ) {
+					return $entry[ $input_id ];
+				} else {
+					if ( $this->enableChoiceValue || $this->enablePrice ) {
+						foreach ( $this->choices as $choice ) {
+							if ( $choice['value'] == $entry[ $field_id ] ) {
+								return $choice['value'];
+							} elseif ( $this->enablePrice ) {
+								$ary   = explode( '|', $entry[ $field_id ] );
+								$val   = count( $ary ) > 0 ? $ary[0] : '';
+								$price = count( $ary ) > 1 ? $ary[1] : '';
+
+								if ( $val == $choice['value'] ) {
+									return $choice['value'];
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		return false;
 	}
 
 }

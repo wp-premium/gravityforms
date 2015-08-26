@@ -27,8 +27,8 @@ table.settings-field-map-table tbody td { padding: 0px 0px 8px 0px;}
 
 .gaddon-setting-select-custom-container { display:inline-block;position:relative; }
 .gaddon-setting-select-custom-container .select-custom-reset {
+	left: 171px;
 	top: 10px;
-	right: 10px;
 }
 .gaddon-section .required { color: #f00; }
 .gaddon-setting-inline{

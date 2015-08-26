@@ -21,11 +21,14 @@ if ( ! class_exists( 'GFWidget' ) ) {
 			GFCommon::load_gf_text_domain( 'gravityforms' );
 
 			$description = esc_html__( 'Gravity Forms Widget', 'gravityforms' );
-			$this->WP_Widget(
-				'gform_widget', __( 'Form', 'gravityforms' ),
+
+			WP_Widget::__construct( 
+				'gform_widget',
+				__( 'Form', 'gravityforms' ),
 				array( 'classname' => 'gform_widget', 'description' => $description ),
 				array( 'width' => 200, 'height' => 250, 'id_base' => 'gform_widget' )
 			);
+
 		}
 
 		function widget( $args, $instance ) {

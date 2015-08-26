@@ -912,7 +912,7 @@ function LoadFieldSettings(){
     }
 
     // if a product or option field, hide "other choice" setting
-    if(jQuery.inArray(field['type'], ['product', 'option']) != -1) {
+    if(jQuery.inArray(field['type'], ['product', 'option', 'shipping']) != -1) {
         jQuery(".other_choice_setting").hide();
     }
 

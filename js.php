@@ -617,8 +617,8 @@ if ( ! class_exists( 'GFForms' ) ) {
 
 				if (!field.label)
 					field.label = <?php echo json_encode( esc_html__( 'Address', 'gravityforms' ) ); ?>;
-				field.inputs = [new Input(field.id + 0.1, <?php echo json_encode( apply_filters( 'gform_address_street_' . rgget( 'id' ), apply_filters( 'gform_address_street', esc_html__( 'Street Address', 'gravityforms' ), rgget( 'id' ) ), rgget( 'id' ) ) ); ?>), new Input(field.id + 0.2, <?php echo json_encode( apply_filters( 'gform_address_street2_' . rgget( 'id' ), apply_filters( 'gform_address_street2', esc_html__( 'Address Line 2', 'gravityforms' ), rgget( 'id' ) ), rgget( 'id' ) ) ); ?>), new Input(field.id + 0.3, <?php echo json_encode( apply_filters( 'gform_address_city_' . rgget( 'id' ), apply_filters( 'gform_address_city', esc_html__( 'City', 'gravityforms' ), rgget( 'id' ) ), rgget( 'id' ) ) ); ?>),
-					new Input(field.id + 0.4, <?php echo json_encode( apply_filters( 'gform_address_state_' . rgget( 'id' ), apply_filters( 'gform_address_state',__( 'State / Province', 'gravityforms' ), rgget( 'id' ) ), rgget( 'id' ) ) ); ?>), new Input(field.id + 0.5, <?php echo json_encode( apply_filters( 'gform_address_zip_' . rgget( 'id' ), apply_filters( 'gform_address_zip', esc_html__( 'ZIP / Postal Code', 'gravityforms' ), rgget( 'id' ) ), rgget( 'id' ) ) ); ?>), new Input(field.id + 0.6, <?php echo json_encode( apply_filters( 'gform_address_country_' . rgget( 'id' ), apply_filters( 'gform_address_country', esc_html__( 'Country', 'gravityforms' ), rgget( 'id' ) ), rgget( 'id' ) ) ); ?>)];
+				field.inputs = [new Input(field.id + 0.1, <?php echo json_encode( gf_apply_filters( 'gform_address_street', rgget( 'id' ), esc_html__( 'Street Address', 'gravityforms' ), rgget( 'id' ) ) ); ?>), new Input(field.id + 0.2, <?php echo json_encode( gf_apply_filters( 'gform_address_street2', rgget( 'id' ), esc_html__( 'Address Line 2', 'gravityforms' ), rgget( 'id' ) ) ); ?>), new Input(field.id + 0.3, <?php echo json_encode( gf_apply_filters( 'gform_address_city', rgget( 'id' ), esc_html__( 'City', 'gravityforms' ), rgget( 'id' ) ) ); ?>),
+					new Input(field.id + 0.4, <?php echo json_encode( gf_apply_filters( 'gform_address_state', rgget( 'id' ), __( 'State / Province', 'gravityforms' ), rgget( 'id' ) ) ); ?>), new Input(field.id + 0.5, <?php echo json_encode( gf_apply_filters( 'gform_address_zip', rgget( 'id' ), esc_html__( 'ZIP / Postal Code', 'gravityforms' ), rgget( 'id' ) ) ); ?>), new Input(field.id + 0.6, <?php echo json_encode( gf_apply_filters( 'gform_address_country', rgget( 'id' ), esc_html__( 'Country', 'gravityforms' ), rgget( 'id' ) ) ); ?>)];
 				break;
 			case "creditcard" :
 
@@ -626,13 +626,13 @@ if ( ! class_exists( 'GFForms' ) ) {
 					field.label = <?php echo json_encode( esc_html__( 'Credit Card', 'gravityforms' ) ); ?>;
 				var ccNumber, ccExpirationMonth, ccExpirationYear, ccSecruityCode, ccCardType, ccName;
 
-				ccNumber = new Input(field.id + ".1", <?php echo json_encode( apply_filters( 'gform_card_number_' . rgget( 'id' ), apply_filters( 'gform_card_number', esc_html__( 'Card Number', 'gravityforms' ), rgget( 'id' ) ), rgget( 'id' ) ) ); ?>);
-				ccExpirationMonth = new Input(field.id + ".2_month", <?php echo json_encode( apply_filters( 'gform_card_expiration_' . rgget( 'id' ), apply_filters( 'gform_card_expiration', esc_html__( 'Expiration Month', 'gravityforms' ), rgget( 'id' ) ), rgget( 'id' ) ) ); ?>);
+				ccNumber = new Input(field.id + ".1", <?php echo json_encode( gf_apply_filters( 'gform_card_number', rgget( 'id' ), esc_html__( 'Card Number', 'gravityforms' ), rgget( 'id' ) ) ); ?>);
+				ccExpirationMonth = new Input(field.id + ".2_month", <?php echo json_encode( gf_apply_filters( 'gform_card_expiration', rgget( 'id' ), esc_html__( 'Expiration Month', 'gravityforms' ), rgget( 'id' ) ) ); ?>);
 				ccExpirationMonth.defaultLabel = <?php echo json_encode( esc_html__( 'Expiration Date', 'gravityforms' ) ); ?>;
-				ccExpirationYear = new Input(field.id + ".2_year", <?php echo json_encode( apply_filters( 'gform_card_expiration_' . rgget( 'id' ), apply_filters( 'gform_card_expiration', esc_html__( 'Expiration Year', 'gravityforms' ), rgget( 'id' ) ), rgget( 'id' ) ) ); ?>);
-				ccSecruityCode = new Input(field.id + ".3", <?php echo json_encode( apply_filters( 'gform_card_security_code_' . rgget( 'id' ), apply_filters( 'gform_card_security_code', esc_html__( 'Security Code', 'gravityforms' ), rgget( 'id' ) ), rgget( 'id' ) ) ); ?>);
-				ccCardType = new Input(field.id + ".4", <?php echo json_encode( apply_filters( 'gform_card_type_' . rgget( 'id' ), apply_filters( 'gform_card_type',__( 'Card Type', 'gravityforms' ), rgget( 'id' ) ), rgget( 'id' ) ) ); ?>);
-				ccName = new Input(field.id + ".5", <?php echo json_encode( apply_filters( 'gform_card_name_' . rgget( 'id' ), apply_filters( 'gform_card_name', esc_html__( 'Cardholder Name', 'gravityforms' ), rgget( 'id' ) ), rgget( 'id' ) ) ); ?>);
+				ccExpirationYear = new Input(field.id + ".2_year", <?php echo json_encode( gf_apply_filters( 'gform_card_expiration', rgget( 'id' ), esc_html__( 'Expiration Year', 'gravityforms' ), rgget( 'id' ) ) ); ?>);
+				ccSecruityCode = new Input(field.id + ".3", <?php echo json_encode( gf_apply_filters( 'gform_card_security_code', rgget( 'id' ), esc_html__( 'Security Code', 'gravityforms' ), rgget( 'id' ) ) ); ?>);
+				ccCardType = new Input(field.id + ".4", <?php echo json_encode( gf_apply_filters( 'gform_card_type', rgget( 'id' ), __( 'Card Type', 'gravityforms' ), rgget( 'id' ) ) ); ?>);
+				ccName = new Input(field.id + ".5", <?php echo json_encode( gf_apply_filters( 'gform_card_name', rgget( 'id' ), esc_html__( 'Cardholder Name', 'gravityforms' ), rgget( 'id' ) ) ); ?>);
 				field.inputs = [ccNumber, ccExpirationMonth, ccExpirationYear, ccSecruityCode, ccCardType, ccName];
 				break;
 			case "email" :
@@ -839,16 +839,16 @@ if ( ! class_exists( 'GFForms' ) ) {
 	}
 
 	function GetAdvancedNameFieldInputs(field, prefixHidden, middleHidden, suffixHidden) {
-		var prefixInput = new Input(field.id + '.2', <?php echo json_encode( apply_filters( 'gform_name_prefix_' . rgget( 'id' ), apply_filters( 'gform_name_prefix', esc_html__( 'Prefix', 'gravityforms' ), rgget( 'id' ) ), rgget( 'id' ) ) ); ?>);
+		var prefixInput = new Input(field.id + '.2', <?php echo json_encode( gf_apply_filters( 'gform_name_prefix', rgget( 'id' ), esc_html__( 'Prefix', 'gravityforms' ), rgget( 'id' ) ) ); ?>);
 		prefixInput.choices = GetDefaultPrefixChoices();
 		prefixInput.isHidden = prefixHidden;
 
-		var firstInput = new Input(field.id + '.3', <?php echo json_encode( apply_filters( 'gform_name_first_' . rgget( 'id' ), apply_filters( 'gform_name_first', esc_html__( 'First', 'gravityforms' ), rgget( 'id' ) ), rgget( 'id' ) ) ); ?>);
-		var middleInput = new Input(field.id + '.4', <?php echo json_encode( apply_filters( 'gform_name_middle_' . rgget( 'id' ), apply_filters( 'gform_name_middle', esc_html__( 'Middle', 'gravityforms' ), rgget( 'id' ) ), rgget( 'id' ) ) ); ?>);
+		var firstInput = new Input(field.id + '.3', <?php echo json_encode( gf_apply_filters( 'gform_name_first', rgget( 'id' ), esc_html__( 'First', 'gravityforms' ), rgget( 'id' ) ) ); ?>);
+		var middleInput = new Input(field.id + '.4', <?php echo json_encode( gf_apply_filters( 'gform_name_middle', rgget( 'id' ), esc_html__( 'Middle', 'gravityforms' ), rgget( 'id' ) ) ); ?>);
 		middleInput.isHidden = middleHidden;
 
-		var lastInput = new Input(field.id + '.6', <?php echo json_encode( apply_filters( 'gform_name_last_' . rgget( 'id' ), apply_filters( 'gform_name_last', esc_html__( 'Last', 'gravityforms' ), rgget( 'id' ) ), rgget( 'id' ) ) ); ?>);
-		var suffixInput = new Input(field.id + '.8', <?php echo json_encode( apply_filters( 'gform_name_suffix_' . rgget( 'id' ), apply_filters( 'gform_name_suffix', esc_html__( 'Suffix', 'gravityforms' ), rgget( 'id' ) ), rgget( 'id' ) ) ); ?>);
+		var lastInput = new Input(field.id + '.6', <?php echo json_encode( gf_apply_filters( 'gform_name_last', rgget( 'id' ), esc_html__( 'Last', 'gravityforms' ), rgget( 'id' ) ) ); ?>);
+		var suffixInput = new Input(field.id + '.8', <?php echo json_encode( gf_apply_filters( 'gform_name_suffix', rgget( 'id' ), esc_html__( 'Suffix', 'gravityforms' ), rgget( 'id' ) ) ); ?>);
 		suffixInput.isHidden = suffixHidden;
 		prefixInput.inputType = 'radio';
 
@@ -923,12 +923,12 @@ if ( ! class_exists( 'GFForms' ) ) {
 		var legacyExpirationInput = GetInput(field, field.id + ".2");
 
 		if (legacyExpirationInput) {
-			var monthInput = new Input(field.id + ".2_month", <?php echo json_encode( apply_filters( 'gform_card_expiration_' . rgget( 'id' ), apply_filters( 'gform_card_expiration', esc_html__( 'Expiration Month', 'gravityforms' ), rgget( 'id' ) ), rgget( 'id' ) ) ); ?>);
+			var monthInput = new Input(field.id + ".2_month", <?php echo json_encode( gf_apply_filters( 'gform_card_expiration', rgget( 'id' ), esc_html__( 'Expiration Month', 'gravityforms' ), rgget( 'id' ) ) ); ?>);
 			monthInput.defaultLabel = <?php echo json_encode( esc_html__( 'Expiration Date', 'gravityforms' ) ); ?>;
 			var yearInput = new Input(field.id + ".2_year", <?php echo json_encode( esc_html__( 'Expiration Year', 'gravityforms' ) ); ?>);
 			field.inputs.splice(1, 1, monthInput, yearInput);
 			var nameInput = GetInput(field, field.id + ".5");
-			nameInput.label = <?php echo json_encode( apply_filters( 'gform_card_name_' . rgget( 'id' ), apply_filters( 'gform_card_name',__( 'Cardholder Name', 'gravityforms' ), rgget( 'id' ) ), rgget( 'id' ) ) ); ?>;
+			nameInput.label = <?php echo json_encode( gf_apply_filters( 'gform_card_name', rgget( 'id' ), __( 'Cardholder Name', 'gravityforms' ), rgget( 'id' ) ) ); ?>;
 		}
 
 		return field;

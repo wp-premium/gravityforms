@@ -207,7 +207,11 @@ class GF_Field_List extends GF_Field {
 		}
 		$input_info = array( 'type' => 'text' );
 
-		$input_info = apply_filters( "gform_column_input_{$form_id}_{$this->id}_{$column_index}", apply_filters( 'gform_column_input', $input_info, $this, rgar( $column, 'text' ), $value, $form_id ), $this, rgar( $column, 'text' ), $value, $form_id );
+		$input_info = gf_apply_filters( 'gform_column_input', array(
+			$form_id,
+			$this->id,
+			$column_index
+		), $input_info, $this, rgar( $column, 'text' ), $value, $form_id );
 
 		switch ( $input_info['type'] ) {
 
@@ -240,11 +244,11 @@ class GF_Field_List extends GF_Field {
 				break;
 		}
 
-		return apply_filters(
-			"gform_column_input_content_{$form_id}_{$this->id}_{$column_index}",
-			apply_filters( 'gform_column_input_content', $input, $input_info, $this, rgar( $column, 'text' ), $value, $form_id ),
-			$input_info, $this, rgar( $column, 'text' ), $value, $form_id
-		);
+		return gf_apply_filters( 'gform_column_input_content', array(
+			$form_id,
+			$this->id,
+			$column_index
+		), $input, $input_info, $this, rgar( $column, 'text' ), $value, $form_id );
 
 	}
 
@@ -305,6 +309,7 @@ class GF_Field_List extends GF_Field {
 			$items = '';
 			foreach ( $value as $key => $item ) {
 				if ( ! empty( $item ) ) {
+					$item = wp_kses_post( $item );
 					switch ( $format ) {
 						case 'text' :
 							$items .= $item . ', ';
@@ -347,6 +352,8 @@ class GF_Field_List extends GF_Field {
 							$list .= "\n\n" . $this->label . ': ';
 						}
 
+						$item = array_map( 'wp_kses_post', $item );
+
 						$list .= implode( ',', array_values( $item ) );
 
 						$is_first_row = false;
@@ -355,6 +362,7 @@ class GF_Field_List extends GF_Field {
 
 				case 'url' :
 					foreach ( $value as $item ) {
+						$item = array_map( 'wp_kses_post', $item );
 						$list .= implode( "|", array_values( $item ) ) . ',';
 					}
 					if ( ! empty( $list ) ) {
@@ -378,6 +386,7 @@ class GF_Field_List extends GF_Field {
 							$list .= '<tr>';
 							foreach ( $columns as $column ) {
 								$val = rgar( $item, $column );
+								$val = wp_kses_post( $val );
 								$list .= "<td style='padding: 6px 10px; border-right: 1px solid #DFDFDF; border-bottom: 1px solid #DFDFDF; border-top: 1px solid #FFF; font-family: sans-serif; font-size:12px;'>{$val}</td>\n";
 							}
 
@@ -399,6 +408,7 @@ class GF_Field_List extends GF_Field {
 							$list .= '<tr>';
 							foreach ( $columns as $column ) {
 								$val = rgar( $item, $column );
+								$val = wp_kses_post( $val );
 								$list .= "<td>{$val}</td>\n";
 							}
 
@@ -465,6 +475,37 @@ class GF_Field_List extends GF_Field {
 	public function sanitize_settings() {
 		parent::sanitize_settings();
 		$this->maxRows = absint( $this->maxRows );
+	}
+
+	public function get_value_export( $entry, $input_id = '', $use_text = false, $is_csv = false ) {
+		if ( empty( $input_id ) ) {
+			$input_id = $this->id;
+		} elseif ( ! ctype_digit( $input_id ) ) {
+			$field_id_array = explode( '.', $input_id );
+			$input_id       = rgar( $field_id_array, 0 );
+			$column_num     = rgar( $field_id_array, 1 );
+		}
+
+		$value = rgar( $entry, $input_id );
+		if ( empty( $value ) || $is_csv ) {
+
+			return $value;
+		}
+
+		$list_values = $column_values = unserialize( $value );
+
+		if ( isset( $column_num ) && is_numeric( $column_num ) && $this->enableColumns ) {
+			$column        = rgars( $this->choices, "{$column_num}/text" );
+			$column_values = array();
+			foreach ( $list_values as $value ) {
+				$column_values[] = rgar( $value, $column );
+			}
+		} elseif ( $this->enableColumns ) {
+
+			return json_encode( $list_values );
+		}
+
+		return GFCommon::implode_non_blank( ', ', $column_values );
 	}
 
 }

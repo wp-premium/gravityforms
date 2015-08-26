@@ -234,9 +234,21 @@ class GF_Field extends stdClass implements ArrayAccess {
 			'creditcard'
 		);
 		$duplicate_field_link = ! in_array( $this->type, $duplicate_disabled ) ? "<a class='field_duplicate_icon' id='gfield_duplicate_{$this->id}' title='" . esc_attr__( 'click to duplicate this field', 'gravityforms' ) . "' href='#' onclick='StartDuplicateField(this); return false;'><i class='fa fa-files-o fa-lg'></i></a>" : '';
+
+		/**
+		 * This filter allows for modification of the form field duplicate link. This will change the link for all fields
+		 *
+		 * @param string $duplicate_field_link The Duplicate Field Link (in HTML)
+		 */
 		$duplicate_field_link = apply_filters( 'gform_duplicate_field_link', $duplicate_field_link );
 
 		$delete_field_link = "<a class='field_delete_icon' id='gfield_delete_{$this->id}' title='" . esc_attr__( 'click to delete this field', 'gravityforms' ) . "' href='#' onclick='StartDeleteField(this); return false;'><i class='fa fa-times fa-lg'></i></a>";
+
+		/**
+		 * This filter allows for modification of a form field delete link. This will change the link for all fields
+		 *
+		 * @param string $delete_field_link The Delete Field Link (in HTML)
+		 */
 		$delete_field_link = apply_filters( 'gform_delete_field_link', $delete_field_link );
 		$field_type_title  = esc_html( GFCommon::get_field_type_title( $this->type ) );
 
@@ -526,7 +538,7 @@ class GF_Field extends stdClass implements ArrayAccess {
 		//allow HTML for certain field types
 		$allow_html = $this->allow_html();
 
-		$allowable_tags = apply_filters( "gform_allowable_tags_{$form_id}", apply_filters( 'gform_allowable_tags', $allow_html, $this, $form_id ), $this, $form_id );
+		$allowable_tags = gf_apply_filters( 'gform_allowable_tags', $form_id, $allow_html, $this, $form_id );
 
 
 		if ( $allowable_tags !== true ) {
@@ -685,5 +697,21 @@ class GF_Field extends stdClass implements ArrayAccess {
 	public function get_input_type() {
 
 		return empty( $this->inputType ) ? $this->type : $this->inputType;
+	}
+
+	/**
+	 * @param array $entry The entry currently being processed.
+	 * @param string $input_id The field or input ID.
+	 * @param bool|false $use_text When processing choice based fields should the choice text be returned instead of the value.
+	 * @param bool|false $is_csv Is the value going to be used in the .csv entries export?
+	 *
+	 * @return string
+	 */
+	public function get_value_export( $entry, $input_id = '', $use_text = false, $is_csv = false ) {
+		if ( empty( $input_id ) ) {
+			$input_id = $this->id;
+		}
+
+		return rgar( $entry, $input_id );
 	}
 }

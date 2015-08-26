@@ -68,7 +68,7 @@ class GF_Field_SingleProduct extends GF_Field {
 
 		$qty_min_attr = GFFormsModel::is_html5_enabled() ? "min='0'" : '';
 
-		$product_quantity_sub_label = apply_filters( "gform_product_quantity_{$form_id}", apply_filters( 'gform_product_quantity', esc_html__( 'Quantity:', 'gravityforms' ), $form_id ), $form_id );
+		$product_quantity_sub_label = gf_apply_filters( 'gform_product_quantity', $form_id, esc_html__( 'Quantity:', 'gravityforms' ), $form_id );
 
 		if ( $is_entry_detail || $is_form_editor  ) {
 			$disabled_text  = $is_form_editor ? 'disabled="disabled"' : '';
@@ -89,7 +89,7 @@ class GF_Field_SingleProduct extends GF_Field {
 
 		return "<div class='ginput_container'>
 					<input type='hidden' name='input_{$id}.1' value='{$product_name}' class='gform_hidden' />
-					<span class='ginput_product_price_label'>" . apply_filters( "gform_product_price_{$form_id}", apply_filters( 'gform_product_price', esc_html__( 'Price', 'gravityforms' ), $form_id ), $form_id ) . ":</span> <span class='ginput_product_price' id='{$field_id}'>" . esc_html( GFCommon::to_money( $price, $currency ) ) . "</span>
+					<span class='ginput_product_price_label'>" . gf_apply_filters( 'gform_product_price', $form_id, esc_html__( 'Price', 'gravityforms' ), $form_id ) . ":</span> <span class='ginput_product_price' id='{$field_id}'>" . esc_html( GFCommon::to_money( $price, $currency ) ) . "</span>
 					<input type='hidden' name='input_{$id}.2' id='ginput_base_price_{$form_id}_{$this->id}' class='gform_hidden' value='" . esc_attr( $price ) . "'/>
 					{$quantity_field}
 				</div>";
