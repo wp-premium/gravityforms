@@ -1838,7 +1838,8 @@ class GFCommon {
 	}
 
 	public static function is_product_field( $field_type ) {
-		return in_array( $field_type, array( 'option', 'quantity', 'product', 'total', 'shipping', 'calculation' ) );
+		$product_fields = apply_filters( 'gform_product_field_types', array( 'option', 'quantity', 'product', 'total', 'shipping', 'calculation' ) );
+		return in_array( $field_type, $product_fields );
 	}
 
 	public static function all_caps() {
@@ -4115,6 +4116,22 @@ class GFCommon {
 		}
 	}
 
+
+	/**
+	 * @param string $string
+	 *
+	 * @return string
+	 */
+	public static function safe_strtoupper( $string ) {
+
+		if ( function_exists( 'mb_strtoupper' ) ) {
+			return mb_strtoupper( $string );
+		} else {
+			return strtoupper( $string );
+		}
+
+	}
+
 	/**
 	 * Reliably compare floats.
 	 *
@@ -4330,7 +4347,7 @@ class GFCache {
 	private static $_transient_prefix = 'GFCache_';
 	private static $_cache = array();
 
-	public static function get( $key, &$found = null ) {
+	public static function get( $key, &$found = null, $is_persistent=true ) {
 		global $blog_id;
 		if ( is_multisite() ) {
 			$key = $blog_id . ':' . $key;
@@ -4341,6 +4358,12 @@ class GFCache {
 			$data  = rgar( self::$_cache[ $key ], 'data' );
 
 			return $data;
+		}
+
+		//If set to not persistent, do not check transient for performance reasons
+		if (! $is_persistent ){
+			$found = false;
+			return false;
 		}
 
 		$data = self::get_transient( $key );

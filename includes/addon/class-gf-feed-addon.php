@@ -15,17 +15,21 @@ require_once( 'class-gf-addon.php' );
 
 abstract class GFFeedAddOn extends GFAddOn {
 
+	/**
+	 * If set to true, Add-On can have multiple feeds configured. If set to false, feed list page doesn't exist and only one feed can be configured.
+	 * @var bool
+	 */
 	protected $_multiple_feeds = true;
 
 	/**
-	 * If true, only first matching feed will be processed.
+	 * If true, only first matching feed will be processed. Multiple feeds can still be configured, but only one is executed during the submission (i.e. Payment Add-Ons)
 	 * @var bool
 	 */
 	protected $_single_feed_submission = false;
 
 	/**
 	 * If $_single_feed_submission is true, $_single_submission_feed will store the current single submission feed as stored by the get_single_submission_feed() method.
-	 * @var bool
+	 * @var mixed (bool | Feed Object)
 	 */
 	protected $_single_submission_feed = false;
 
@@ -188,6 +192,17 @@ abstract class GFFeedAddOn extends GFAddOn {
 				$is_delayed = true;
 			}
 		}
+
+		/**
+		 * Allow feed processing to be delayed.
+		 *
+		 * bool $is_delayed Is feed processing delayed?
+		 * array $form The Form Object currently being processed.
+		 * array $entry The Entry Object currently being processed.
+		 * string $_slug The Add-On slug e.g. gravityformsmailchimp
+		 */
+		$is_delayed = gf_apply_filters( 'gform_is_delayed_pre_process_feed', $form['id'], $is_delayed, $form, $entry, $this->_slug );
+
 
 		//Processing feeds
 		$processed_feeds = array();
@@ -1115,7 +1130,7 @@ abstract class GFFeedAddOn extends GFAddOn {
 		return $total;
 	}
 
-	protected function has_feed( $form_id, $meets_conditional_logic = null ) {
+	public function has_feed( $form_id, $meets_conditional_logic = null ) {
 
 		$feeds = $this->get_feeds( $form_id );
 		if ( ! $feeds ) {

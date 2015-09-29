@@ -498,7 +498,14 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		$txn_id = $wpdb->insert_id;
 
 		/**
+		 * Fires after a payment transaction is created in Gravity Forms
 		 *
+		 * @param int $txn_id The overall Transaction ID
+		 * @param int $entry_id The new Entry ID
+		 * @param string $transaction_type The Type of transaction that was made
+		 * @param int $transaction_id The transaction ID
+		 * @param string $amount The amount payed in the transaction
+		 * @param bool $is_recurring True or false if this is an ongoing payment
 		 */
 		do_action( 'gform_post_payment_transaction', $txn_id, $entry_id, $transaction_type, $transaction_id, $amount, $is_recurring );
 		if ( has_filter( 'gform_post_payment_transaction' ) ) {
@@ -612,7 +619,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		foreach ( $products['products'] as $field_id => $product ) {
 
 			$quantity      = $product['quantity'] ? $product['quantity'] : 1;
-			$product_price = GFCommon::to_number( $product['price'] );
+			$product_price = GFCommon::to_number( $product['price'], $entry['currency'] );
 
 			$options = array();
 			if ( is_array( rgar( $product, 'options' ) ) ) {
@@ -658,7 +665,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 					'name'        => $product['name'],
 					'description' => $description,
 					'quantity'    => $quantity,
-					'unit_price'  => GFCommon::to_number( $product_price ),
+					'unit_price'  => GFCommon::to_number( $product_price, $entry['currency'] ),
 					'options'     => rgar( $product, 'options' )
 				);
 			} else {
@@ -667,14 +674,14 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 					'name'        => $product['name'],
 					'description' => $description,
 					'quantity'    => $quantity,
-					'unit_price'  => GFCommon::to_number( $product_price ),
+					'unit_price'  => GFCommon::to_number( $product_price, $entry['currency'] ),
 					'options'     => rgar( $product, 'options' )
 				);
 			}
 		}
 
 		if ( $trial_field == 'enter_amount' ) {
-			$trial_amount = rgar( $feed['meta'], 'trial_amount' ) ? GFCommon::to_number( rgar( $feed['meta'], 'trial_amount' ) ) : 0;
+			$trial_amount = rgar( $feed['meta'], 'trial_amount' ) ? GFCommon::to_number( rgar( $feed['meta'], 'trial_amount' ), $entry['currency'] ) : 0;
 		}
 
 		if ( ! empty( $products['shipping']['name'] ) && ! is_numeric( $payment_field ) ) {
@@ -683,7 +690,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 				'name'        => $products['shipping']['name'],
 				'description' => '',
 				'quantity'    => 1,
-				'unit_price'  => GFCommon::to_number( $products['shipping']['price'] ),
+				'unit_price'  => GFCommon::to_number( $products['shipping']['price'], $entry['currency'] ),
 				'is_shipping' => 1
 			);
 			$amount += $products['shipping']['price'];
@@ -965,7 +972,6 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		$entry['payment_amount']   = rgar( $action, 'amount' );
 		$entry['payment_date']     = $action['payment_date'];
 		$entry['payment_method']   = rgar( $action, 'payment_method' );
-		$entry['currency']         = GFCommon::get_currency();
 
 		if ( ! rgar( $action, 'note' ) ) {
 			$amount_formatted = GFCommon::to_money( $action['amount'], $entry['currency'] );

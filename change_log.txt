@@ -1,3 +1,101 @@
+------------------------------------------------------------------------------------------------------------------
+Version 1.9.13.26
+    - Added gform_currency_pre_save_entry filter allowing entry currency code to be overridden. See https://www.gravityhelp.com/documentation/article/gform_currency_pre_save_entry/
+    - AF: Updated uses of GFCommon::to_number in GFPaymentAddOn to also pass the entry currency code.
+    - AF: Fixed an issue in GFPaymentAddOn::complete_payment where the entry currency was being reset to the currency from the settings page.
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.9.13.25
+	- Added extra parameter to GFCache::get() to optimize performance for non persistent cache gets
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.9.13.24
+    - AF: Added gform_is_delayed_pre_process_feed filter, including form specific version, to allow feed processing to be delayed. See https://www.gravityhelp.com/documentation/article/gform_is_delayed_pre_process_feed/
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.9.13.23
+	- Added gform_is_encrypted_field hook to allow custom logic to check if a field is encrypted as well as disabling encryption checking
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.9.13.22
+    - Added GFCommon::safe_strtoupper. Uses mb_strtoupper if available; with a fallback to strtoupper.
+    - Updated German translation, thanks to David Steinbauer.
+    - Fixed an issue with GF_Field_Address::get_country_code which failed to return a value if the passed country contained cyrillic characters.
+    - Fixed an issue with the List field which could occur if gform_column_input was used to return a comma and space separated string for $input_info['choices'].
+    - API: Added the gform_webapi_authentication_required_ENDPOINT filter. Allows overriding of authentication for all the endpoints of the Web API.
+        For example, require authentication on the POST forms/[ID]/submissions endpoint:
+        add_filter( 'gform_webapi_authentication_required_post_form_submissions', '__return_true' );
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.13.21
+    - Added tabindex and onkeypress attributes to list field add/delete row buttons.
+    - Added the gform_pre_entry_list and gform_post_entry_list action hooks to the entry list page. $form_id is the only parameter.
+    - Fixed an issue with product field validation.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.13.20
+   - Added "gform_product_field_types" hook to support custom product fields.
+   - Removed "gform_has_price_field" hook.
+   - AF: Updated "select_custom" settings field to only show input field when only select choice is "gf_custom".
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.13.19
+    - Updated the gform_multiselect_placeholder filter to include a field specific version and to include $field as the third parameter.
+    - AF: Added entry_list to the page conditions for script loading.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.13.18
+    - Added "gform_has_price_field" hook to support custom product fields.
+    - Fixed PHP notice on the confirmations page if confirmation type not set.
+    - AF: Added support for "Entry ID" to field maps
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.13.17
+    - Added the tabindex attribute to the button input of the multi-file enabled upload field.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.13.16
+    - Added security enhancements.
+	- Added Bengali translation, thanks to Md Akter Hosen
+	- Fixed an issue when searching for entries that are non-blanks.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.13.15
+	- Fixed an issue where entry detail page would save notes to the wrong entry.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.13.14
+    - Fixed an issue with the caching of the form meta.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.13.13
+    - Fixed an issue with the caching of the form meta. This fixes an issue with the export of entries in some cases.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.13.12
+    - Fixed an issue with the plugin page not displaying HTML correctly in the upgrade message.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.13.11
+    - Fixed an issue with PHP7 list() function with the calculation field.
+    - Fixed a PHP notice which could occur if a required radio type Product field was submitted without a choice being selected.
+    - Fixed an issue with empty form validation not taking field conditional logic into account.
+    - API: Fixed a JS error on the API settings page.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.13.10
+    - Fixed an issue with the list field values restored by conditional logic when the field is populated by gform_field_value using the new array format.
+    - API: Fixed an issue with the API settings page.
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.13.9
+    - Fixed an issue with GFNotification::is_valid_notification_email().
+
+-------------------------------------------------------------------------------------------------------------------
+Version 1.9.13.8
+    - Added a deactivation hook to flush the Gravity Forms Cache including persistent transients. This provides a workaround for a rare issue on WordPress 4.3 where Gravity Forms user locks are not released automatically on some systems.
+    - AF: Updated GFFeedAddon::has_feed() to be a public method.
+
 -------------------------------------------------------------------------------------------------------------------
 Version 1.9.13.7
     - Fixed an issue with GF_Field_List::get_value_export retrieving the values for the first column when multiple columns enabled.
@@ -1195,10 +1293,10 @@ Version 1.8.9
 
     - Added "password" to the list of fields which allow HTML input.
     - Added 'gform_field_container' filter to allow modifying the field container markup.
-        add_filter( 'gform_field_container', 'my_field_container', 10, 6 );
-        function my_field_container( $field_container, $field, $form, $class_attr, $style, $field_content ) {
-            return '<li style="border: 1px solid #f00;">{FIELD_CONTENT}</li>';
-        }
+add_filter( 'gform_field_container', 'my_field_container', 10, 6 );
+function my_field_container( $field_container, $field, $form, $class_attr, $style, $field_content ) {
+    return '<li style="border: 1px solid #f00;">{FIELD_CONTENT}</li>';
+}
     - Updated entry detail screen so that the payment details heading is defaulted to "Payment Details".
     - Updated Akismet integration to use Akismet::http_post instead of the deprecated function akismet_http_post when the Akismet version is 3.0 and greater.
     - Updated Spanish translation to properly escape a string causing issues when resending notifications.

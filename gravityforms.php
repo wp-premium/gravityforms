@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms
 Plugin URI: http://www.gravityforms.com
 Description: Easily create web forms and manage form entries within the WordPress admin.
-Version: 1.9.13.7
+Version: 1.9.13.26
 Author: rocketgenius
 Author URI: http://www.rocketgenius.com
 Text Domain: gravityforms
@@ -110,9 +110,11 @@ if ( is_admin() && ( RGForms::is_gravity_page() || RGForms::is_gravity_ajax_acti
 
 add_action( 'plugins_loaded', array( 'GFForms', 'loaded' ) );
 
+register_deactivation_hook( __FILE__, array( 'GFForms', 'deactivation_hook' ) );
+
 class GFForms {
 
-	public static $version = '1.9.13.7';
+	public static $version = '1.9.13.26';
 
 	public static function loaded() {
 
@@ -289,6 +291,10 @@ class GFForms {
 			array_unshift( $active_plugins, $plugin_path );
 			update_option( 'active_plugins', $active_plugins );
 		}
+	}
+
+	public static function deactivation_hook() {
+		GFCache::flush( true );
 	}
 
 	public static function set_logging_supported( $plugins ) {
@@ -1329,7 +1335,11 @@ class GFForms {
 			$tabindex = isset( $tabindex ) ? absint( $tabindex ) : 1;
 			require_once( GFCommon::get_base_path() . '/form_display.php' );
 
-			$result = GFFormDisplay::get_form( $form_id, $title, $description, false, $_POST['gform_field_values'], true, $tabindex );
+			$form_id = absint( $form_id );
+			$display_title = (bool) $title;
+			$display_description = (bool) $description;
+
+			$result = GFFormDisplay::get_form( $form_id, $display_title, $display_description, false, $_POST['gform_field_values'], true, $tabindex );
 			die( $result );
 		}
 	}
@@ -1448,9 +1458,9 @@ class GFForms {
 
 			$plugin_name = 'gravityforms/gravityforms.php';
 
-			$new_version = version_compare( GFCommon::$version, $version_info['version'], '<' ) ? __( 'There is a new version of Gravity Forms available.', 'gravityforms' ) . ' <a class="thickbox" title="Gravity Forms" href="plugin-install.php?tab=plugin-information&plugin=gravityforms&TB_iframe=true&width=640&height=808">' . sprintf( __( 'View version %s Details', 'gravityforms' ), $version_info['version'] ) . '</a>. ' : '';
+			$new_version = version_compare( GFCommon::$version, $version_info['version'], '<' ) ? esc_html__( 'There is a new version of Gravity Forms available.', 'gravityforms' ) . ' <a class="thickbox" title="Gravity Forms" href="plugin-install.php?tab=plugin-information&plugin=gravityforms&TB_iframe=true&width=640&height=808">' . sprintf( esc_html__( 'View version %s Details', 'gravityforms' ), $version_info['version'] ) . '</a>. ' : '';
 
-			echo '</tr><tr class="plugin-update-tr"><td colspan="3" class="plugin-update"><div class="update-message">' . esc_html( $new_version ) . __( sprintf( '%sRegister%s your copy of Gravity Forms to receive access to automatic upgrades and support. Need a license key? %sPurchase one now%s.', '<a href="' . admin_url() . 'admin.php?page=gf_settings">', '</a>', '<a href="http://www.gravityforms.com">', '</a>' ), 'gravityforms' ) . '</div></td>';
+			echo '</tr><tr class="plugin-update-tr"><td colspan="3" class="plugin-update"><div class="update-message">' . $new_version . sprintf( esc_html__( '%sRegister%s your copy of Gravity Forms to receive access to automatic upgrades and support. Need a license key? %sPurchase one now%s.', 'gravityforms' ), '<a href="' . admin_url() . 'admin.php?page=gf_settings">', '</a>', '<a href="http://www.gravityforms.com">', '</a>' ) . '</div></td>';
 		}
 	}
 
@@ -1805,6 +1815,10 @@ class GFForms {
 			wp_localize_script( 'gform_shortcode_ui', 'gfShortcodeUIData', array(
 				'shortcodes' => self::get_shortcodes(),
 				'previewNonce' => wp_create_nonce( 'gf-shortcode-ui-preview' ),
+
+				/**
+				 * A filter that allows the enabling (false) or disabling (true) of a shortcode preview of a form
+				 */
 				'previewDisabled' => apply_filters( 'gform_shortcode_preview_disabled', true ),
 				'strings' => array(
 					'pleaseSelectAForm' => esc_html__( 'Please select a form.', 'gravityforms' ),
@@ -2094,6 +2108,10 @@ class GFForms {
 			GFEntryList::all_leads_page();
 		} else {
 			$form_id = rgget( 'id' );
+			/**
+			 * Fires when viewing entries of a certain form
+			 *
+			 */
 			do_action( 'gform_entries_view', $view, $form_id, $lead_id );
 		}
 
@@ -2165,7 +2183,7 @@ class GFForms {
 	public static function resend_notifications() {
 
 		check_admin_referer( 'gf_resend_notifications', 'gf_resend_notifications' );
-		$form_id = rgpost( 'formId' );
+		$form_id = absint( rgpost( 'formId' ) );
 		$leads   = rgpost( 'leadIds' ); // may be a single ID or an array of IDs
 		if ( 0 == $leads ) {
 			// get all the lead ids for the current filter / search
@@ -2378,6 +2396,12 @@ class GFForms {
 		$form_id = intval( $_POST['form_id'] );
 		$form    = RGFormsModel::get_form_meta( $form_id );
 
+		/**
+		 * Filters through the Form Export Page
+		 *
+		 * @param int $form_id The ID of the form to export
+		 * @param int $form The Form Object of the form to export
+		 */
 		$form = gf_apply_filters( 'gform_form_export_page', $form_id, $form );
 
 		$filter_settings      = GFCommon::get_field_filter_settings( $form );
@@ -2603,6 +2627,12 @@ class GFForms {
 					$link   	= "<a class='{$link_class}' onclick='{$onclick}' title='{$title}' href='{$url}' target='{$target}'>{$icon} {$label}</a>" . $sub_menu_str;
 					if ( $compact ) {
 						if ( $key == 'delete' ) {
+
+							/**
+							 * A filter to allow the modification of the HTML link to delete a form
+							 *
+							 * @param string $link The HTML "Delete Form" Link
+							 */
 							$link = apply_filters( 'gform_form_delete_link', $link );
 						}
 						$divider = $key == $last_key ? '' : ' | ';
@@ -3043,6 +3073,9 @@ class GFForms {
 
 		);
 
+		/**
+		 * Filters through the shortcode builder actions (ajax, tabeindex, form title) for adding a new form to a post, page, etc.
+		 */
 		$add_on_actions = apply_filters( 'gform_shortcode_builder_actions', array() );
 
 		if ( ! empty( $add_on_actions ) ) {

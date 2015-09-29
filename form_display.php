@@ -140,7 +140,9 @@ class GFFormDisplay {
 				$form_unique_id = GFFormsModel::get_form_unique_id( $form_id );
 				$ip             = GFFormsModel::get_ip();
 				$source_url     = GFFormsModel::get_current_page_url();
+				$source_url = esc_url_raw( $source_url );
 				$resume_token   = rgpost( 'gform_resume_token' );
+				$resume_token = sanitize_key( $resume_token );
 				$resume_token   = GFFormsModel::save_incomplete_submission( $form, $lead, $field_values, $page_number, $files, $form_unique_id, $ip, $source_url, $resume_token );
 
 				$notifications_to_send = GFCommon::get_notifications_to_send( 'form_saved', $form, $lead );
@@ -502,7 +504,11 @@ class GFFormDisplay {
 
 	public static function get_form( $form_id, $display_title = true, $display_description = true, $force_display = false, $field_values = null, $ajax = false, $tabindex = 1 ) {
 
-		// provides the ability to modify the options used to display the form
+		/**
+		 * Provides the ability to modify the options used to display the form
+		 *
+		 * @param array An array of Form Arguments when adding it to a page/post (Like the ID, Title, AJAX or not, etc)
+		 */
 		$form_args = apply_filters( 'gform_form_args', compact( 'form_id', 'display_title', 'display_description', 'force_display', 'field_values', 'ajax', 'tabindex' ) );
 		extract( $form_args );
 
@@ -525,7 +531,8 @@ class GFFormDisplay {
 			$save_email_confirmation = self::handle_save_email_confirmation( $form, $ajax );
 			if ( is_wp_error( $save_email_confirmation ) ) { // Failed email validation
 				$resume_token               = rgpost( 'gform_resume_token' );
-				$incomplete_submission_info = GFFormsModel::get_incomplete_submission_values( rgpost( 'gform_resume_token' ) );
+				$resume_token = sanitize_key( $resume_token );
+				$incomplete_submission_info = GFFormsModel::get_incomplete_submission_values( $resume_token );
 				if ( $incomplete_submission_info['form_id'] == $form_id ) {
 					$submission_details_json = $incomplete_submission_info['submission'];
 					$submission_details      = json_decode( $submission_details_json, true );
@@ -574,6 +581,13 @@ class GFFormDisplay {
 		}
 
 		if ( ! is_array( $partial_entry ) ) {
+
+			/**
+			 * A filter that allows disabling of the form view counter
+			 *
+			 * @param int $form_id The Form ID to filter when disabling the form view counter
+			 * @param bool Default set to false (view counter enabled), can be set to true to disable the counter
+			 */
 			$view_counter_disabled = gf_apply_filters( 'gform_disable_view_counter', $form_id, false );
 
 			if ( $submission_info ) {
@@ -774,6 +788,14 @@ class GFFormDisplay {
 
 			if ( $has_pages ) {
 				$previous_button = self::get_form_button( $form['id'], "gform_previous_button_{$form['id']}", $form['lastPageButton'], __( 'Previous', 'gravityforms' ), 'gform_previous_button', __( 'Previous Page', 'gravityforms' ), self::get_current_page( $form_id ) - 1 );
+
+				/**
+				 * Filter through the form previous button when paged
+				 *
+				 * @param int $form_id The Form ID to filter through
+				 * @param string $previous_button The HTML rendered button (rendered with the form ID and the function get_form_button)
+				 * @param array $form The Form object to filter through
+				 */
 				$previous_button = gf_apply_filters( 'gform_previous_button', $form_id, $previous_button, $form );
 				$form_string .= '</div>' . self::gform_footer( $form, 'gform_page_footer ' . $form['labelPlacement'], $ajax, $field_values, $previous_button, $display_title, $display_description, $is_postback ) . '
                         </div>'; //closes gform_page
@@ -909,6 +931,14 @@ class GFFormDisplay {
 		$current_page = self::get_current_page( $form_id );
 		$form_string .= "<script type='text/javascript'>" . apply_filters( 'gform_cdata_open', '' ) . " jQuery(document).ready(function(){jQuery(document).trigger('gform_post_render', [{$form_id}, {$current_page}]) } ); " . apply_filters( 'gform_cdata_close', '' ) . '</script>';
 
+		/**
+		 * A filter to allow modification of scripts that fire in the footer
+		 *
+		 * @param int $form_id The Form ID to filter through
+		 * @param string $form_string Get the form scripts in a string
+		 * @param array $form The Form object to filter through
+		 * @param int $current_page The Current form page ID (If paging is enabled)
+		 */
 		$form_string = gf_apply_filters( 'gform_footer_init_scripts_filter', $form_id, $form_string, $form, $current_page );
 
 		if ( ! isset( $_init_forms[ $form_id ] ) ) {
@@ -1002,7 +1032,7 @@ class GFFormDisplay {
 		$save_inputs = '';
 		if ( rgars( $form, 'save/enabled' ) ) {
 			$resume_token = isset( $_POST['gform_resume_token'] ) ? $_POST['gform_resume_token'] : rgget( 'gf_token' );
-			$resume_token = esc_attr( $resume_token );
+			$resume_token = sanitize_key( $resume_token );
 			$save_inputs  = "<input type='hidden' class='gform_hidden' name='gform_save' id='gform_save_{$form_id}' value='' />
                              <input type='hidden' class='gform_hidden' name='gform_resume_token' id='gform_resume_token_{$form_id}' value='{$resume_token}' />";
 		}
@@ -1107,6 +1137,15 @@ class GFFormDisplay {
 
 		//if Akismet plugin is installed, run lead through Akismet and mark it as Spam when appropriate
 		$is_spam = GFCommon::akismet_enabled( $form['id'] ) && GFCommon::is_akismet_spam( $form, $lead );
+
+		/**
+		 * A filter to set if an entry is spam
+		 *
+		 * @param int $form['id'] The Form ID to filter through (take directly from the form object)
+		 * @param bool $is_spam True or false to filter if the entry is spam
+		 * @param array $form The Form object to filer through
+		 * @param array $lead The Lead object to filter through
+		 */
 		$is_spam = gf_apply_filters( 'gform_entry_is_spam', $form['id'], $is_spam, $form, $lead );
 
 		if ( GFCommon::spam_enabled( $form['id'] ) ) {
@@ -1162,6 +1201,10 @@ class GFFormDisplay {
 		$files = glob( $target_path . '*' );
 		if ( is_array( $files ) ) {
 			$seconds_in_day = 24 * 60 * 60;
+
+			/**
+			 * Filter through the experiation days of a incomplete form submission
+			 */
 			$lifespan       = rgars( $form, 'save/enabled' ) ? $expiration_days = apply_filters( 'gform_incomplete_submissions_expiration_days', 30 ) * $seconds_in_day : 2 * $seconds_in_day;
 			foreach ( $files as $file ) {
 				if ( is_file( $file ) && time() - filemtime( $file ) >= $lifespan ) {
@@ -1286,6 +1329,8 @@ class GFFormDisplay {
 
 			//ignore validation if field is hidden or admin only
 			if ( RGFormsModel::is_field_hidden( $form, $field, $field_values ) || $field->adminOnly ) {
+				$field->is_field_hidden = true;
+
 				continue;
 			}
 
@@ -1344,9 +1389,10 @@ class GFFormDisplay {
 		$is_last_page = self::get_target_page( $form, $page_number, $field_values ) == '0';
 		if ( $is_valid && $is_last_page && self::is_form_empty( $form ) ) {
 			foreach ( $form['fields'] as &$field ) {
-				$field->failed_validation = true;
+				$field->failed_validation  = true;
 				$field->validation_message = esc_html__( 'At least one field must be filled out', 'gravityforms' );
-				$is_valid = false;
+				$is_valid                  = false;
+				unset( $field->is_field_hidden );
 			}
 		}
 
@@ -1361,10 +1407,11 @@ class GFFormDisplay {
 	public static function is_form_empty( $form ) {
 
 		foreach ( $form['fields'] as $field ) {
-			if ( ! self::is_empty( $field, $form['id'] ) ) {
+			if ( ! self::is_empty( $field, $form['id'] ) && ! $field->is_field_hidden ) {
 				return false;
 			}
 		}
+
 		return true;
 	}
 
@@ -1375,7 +1422,7 @@ class GFFormDisplay {
 		//if field can be populated dynamically, disable state validation
 		if ( $field->allowsPrepopulate ) {
 			return false;
-		} else if ( ! GFCommon::is_product_field( $field->type && $field->type != 'donation' ) ) {
+		} else if ( ! GFCommon::is_product_field( $field->type ) && $field->type != 'donation' ) {
 			return false;
 		} else if ( ! in_array( $field->inputType, array( 'singleshipping', 'singleproduct', 'hiddenproduct', 'checkbox', 'radio', 'select' ) ) ) {
 			return false;
@@ -1466,7 +1513,7 @@ class GFFormDisplay {
 
 		// adding pre enqueue scripts hook so that scripts can be added first if a need exists
 		/**
-		 * Fires before any scripts are enqueued (form specific as well)
+		 * Fires before any scripts are enqueued (form specific using the ID as well)
 		 *
 		 * @param array $form The Form Object
 		 * @param bool $ajax Whether AJAX is on or off (True or False)
@@ -1633,6 +1680,12 @@ class GFFormDisplay {
 	public static function has_conditional_logic( $form ) {
 		$has_conditional_logic = self::has_conditional_logic_legwork( $form );
 
+		/**
+		 * A filter that runs through a form that has conditional logic
+		 *
+		 * @param bool $has_conditional_logic True or False if the user has conditional logic active in their current form settings
+		 * @param array $form The Current form object
+		 */
 		return apply_filters( 'gform_has_conditional_logic', $has_conditional_logic, $form );
 	}
 
@@ -1707,23 +1760,22 @@ class GFFormDisplay {
 
 			//-- Saving default values so that they can be restored when toggling conditional logic ---
 			$field_val  = '';
-			$input_type = RGFormsModel::get_input_type( $field );
-			$inputs = $field->get_entry_inputs();
+			$input_type = $field->get_input_type();
+			$inputs     = $field->get_entry_inputs();
 
 			//get parameter value if pre-populate is enabled
 			if ( $field->allowsPrepopulate ) {
-				if ( $input_type == 'checkbox' ){
+				if ( $input_type == 'checkbox' ) {
 					$field_val = RGFormsModel::get_parameter_value( $field->inputName, $field_values, $field );
-					if ( ! is_array( $field_val ) ){
+					if ( ! is_array( $field_val ) ) {
 						$field_val = explode( ',', $field_val );
 					}
-				}
-				else if ( is_array( $inputs ) ) {
+				} elseif ( is_array( $inputs ) ) {
 					$field_val = array();
 					foreach ( $inputs as $input ) {
-						$field_val[ "input_{$input['id']}" ] = RGFormsModel::get_parameter_value( rgar( $input, 'name' ), $field_values, $field );
+						$field_val["input_{$input['id']}"] = RGFormsModel::get_parameter_value( rgar( $input, 'name' ), $field_values, $field );
 					}
-				} else if ( $input_type == 'time' ) { // maintained for backwards compatibility. The Time field now has an inputs array.
+				} elseif ( $input_type == 'time' ) { // maintained for backwards compatibility. The Time field now has an inputs array.
 					$parameter_val = RGFormsModel::get_parameter_value( $field->inputName, $field_values, $field );
 					if ( ! empty( $parameter_val ) && preg_match( '/^(\d*):(\d*) ?(.*)$/', $parameter_val, $matches ) ) {
 						$field_val   = array();
@@ -1731,9 +1783,17 @@ class GFFormDisplay {
 						$field_val[] = esc_attr( $matches[2] ); //minute
 						$field_val[] = rgar( $matches, 3 );     //am or pm
 					}
-				} else if ( $input_type == 'list' ) {
+				} elseif ( $input_type == 'list' ) {
 					$parameter_val = RGFormsModel::get_parameter_value( $field->inputName, $field_values, $field );
 					$field_val     = is_array( $parameter_val ) ? $parameter_val : explode( ',', str_replace( '|', ',', $parameter_val ) );
+
+					if ( is_array( rgar( $field_val, 0 ) ) ) {
+						$list_values = array();
+						foreach ( $field_val as $row ) {
+							$list_values = array_merge( $list_values, array_values( $row ) );
+						}
+						$field_val = $list_values;
+					}
 				} else {
 					$field_val = RGFormsModel::get_parameter_value( $field->inputName, $field_values, $field );
 				}
@@ -1745,7 +1805,7 @@ class GFFormDisplay {
 			if ( is_array( $field->choices ) && $input_type != 'list' ) {
 
 				//radio buttons start at 0 and checkboxes start at 1
-				$choice_index = $input_type == 'radio' ? 0 : 1;
+				$choice_index     = $input_type == 'radio' ? 0 : 1;
 				$is_pricing_field = GFCommon::is_pricing_field( $field->type );
 
 				foreach ( $field->choices as $choice ) {
@@ -1754,14 +1814,14 @@ class GFFormDisplay {
 						$choice_index++;
 					}
 
-					$is_prepopulated = is_array( $field_val ) ? in_array( $choice['value'], $field_val ) : $choice['value'] == $field_val;
-					$is_choice_selected = rgar( $choice, 'isSelected' ) ||  $is_prepopulated;
+					$is_prepopulated    = is_array( $field_val ) ? in_array( $choice['value'], $field_val ) : $choice['value'] == $field_val;
+					$is_choice_selected = rgar( $choice, 'isSelected' ) || $is_prepopulated;
 
 					if ( $is_choice_selected && $input_type == 'select' ) {
 						$price = GFCommon::to_number( rgar( $choice, 'price' ) ) == false ? 0 : GFCommon::to_number( rgar( $choice, 'price' ) );
-						$val = $is_pricing_field && $field->type != 'quantity' ? $choice['value'] . '|' . $price: $choice['value'];
+						$val   = $is_pricing_field && $field->type != 'quantity' ? $choice['value'] . '|' . $price : $choice['value'];
 						$default_values[ $field->id ] = $val;
-					} else if ( $is_choice_selected ) {
+					} elseif ( $is_choice_selected ) {
 						if ( ! isset( $default_values[ $field->id ] ) ) {
 							$default_values[ $field->id ] = array();
 						}
@@ -1770,9 +1830,7 @@ class GFFormDisplay {
 					}
 					$choice_index ++;
 				}
-			} else if ( ! empty( $field_val ) ) {
-
-				$input_type = GFFormsModel::get_input_type( $field );
+			} elseif ( ! empty( $field_val ) ) {
 
 				switch ( $input_type ) {
 					case 'date':
@@ -1790,7 +1848,7 @@ class GFFormDisplay {
 						break;
 					case 'time':
 						if ( is_array( $field_val ) ) {
-							$ampm_key = key( array_slice( $field_val, - 1, 1, true ) );
+							$ampm_key               = key( array_slice( $field_val, - 1, 1, true ) );
 							$field_val[ $ampm_key ] = strtolower( $field_val[ $ampm_key ] );
 						}
 						break;
@@ -2179,9 +2237,13 @@ class GFFormDisplay {
 	}
 
 	private static function has_price_field( $form ) {
-		$price_fields = GFAPI::get_fields_by_type( $form, array( 'product', 'donation' ) );
-
-		return ! empty( $price_fields );
+		$has_price_field = false;
+		foreach ( $form['fields'] as $field ) {
+			$input_type      = GFFormsModel::get_input_type( $field );
+			$has_price_field = GFCommon::is_product_field( $input_type ) ? true : $has_price_field;
+		}
+		
+		return $has_price_field;
 	}
 
 	private static function has_fileupload_field( $form ) {
@@ -2637,6 +2699,7 @@ class GFFormDisplay {
 		$form_id      = absint( $form_id );
 		$email        = rgpost( 'gform_resume_email' );
 		$resume_token = rgpost( 'gform_resume_token' );
+		$resume_token = sanitize_key( $resume_token );
 
 		if ( empty( $form_id ) || empty( $email ) || empty( $resume_token ) || ! GFCommon::is_valid_email( $email ) ) {
 			return;
@@ -2682,7 +2745,7 @@ class GFFormDisplay {
 	}
 
 	public static function replace_save_variables( $text, $form, $resume_token, $email = null ) {
-
+		$resume_token = sanitize_key( $resume_token );
 		$form_id = intval( $form['id'] );
 
 		$resume_url  = apply_filters( 'gform_save_and_continue_resume_url', add_query_arg( array( 'gf_token' => $resume_token ), GFFormsModel::get_current_page_url() ), $form, $resume_token, $email );

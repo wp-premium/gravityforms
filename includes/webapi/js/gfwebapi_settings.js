@@ -4,15 +4,7 @@ function gfapiCalculateSig(stringToSign, privateKey) {
     return encodeURIComponent(base64);
 }
 
-
-function gfapiToggleSettings(enabled) {
-    jQuery("#gform_section_authentication").toggle(enabled);
-}
-
 jQuery(document).ready(function () {
-
-    var enabled = jQuery("#enabled").prop("checked");
-    gfapiToggleSettings(enabled);
 
     jQuery("#gfwebapi-qrbutton").click(function () {
         jQuery("#gfwebapi-qrcode-container").toggle();
@@ -25,7 +17,7 @@ jQuery(document).ready(function () {
 
     jQuery("#public_key, #private_key").on("keyup", function () {
         jQuery("#gfwebapi-qrcode-container").html("The keys have changes. Please save the changes and try again.")
-    })
+    });
 
     jQuery("#gfapi-url-builder-button").click(function (e) {
         e.preventDefault();
@@ -86,4 +78,4 @@ jQuery(document).ready(function () {
         return false;
     });
 
-})
+});

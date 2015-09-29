@@ -18,7 +18,7 @@ class GFEntryDetail {
 		$form    = RGFormsModel::get_form_meta( absint( $_GET['id'] ) );
 		$form_id = absint( $form['id'] );
 		$form    = gf_apply_filters( 'gform_admin_pre_render', $form_id, $form );
-		$lead_id = absint( rgget( 'lid' ) );
+		$lead_id = rgpost( 'entry_id' ) ? absint( rgpost( 'entry_id' ) ): absint( rgget( 'lid' ) );
 
 		$filter = rgget( 'filter' );
 		$status = in_array( $filter, array( 'trash', 'spam' ) ) ? $filter : 'active';
@@ -368,6 +368,8 @@ class GFEntryDetail {
 		<input type="hidden" name="action" id="action" value="" />
 		<input type="hidden" name="screen_mode" id="screen_mode" value="<?php echo esc_attr( rgpost( 'screen_mode' ) ) ?>" />
 
+		<input type="hidden" name="entry_id" id="entry_id" value="<?php echo absint( $lead['id'] ) ?>" />
+
 		<div class="wrap gf_entry_wrap">
 		<h2 class="gf_admin_page_title">
 			<span><?php echo esc_html__( 'Entry #', 'gravityforms' ) . absint( $lead['id'] ); ?></span><span class="gf_admin_page_subtitle"><span class="gf_admin_page_formid">ID: <?php echo absint( $form['id'] ); ?></span><span class='gf_admin_page_formname'><?php esc_html_e( 'Form Name', 'gravityforms' ) ?>: <?php echo esc_html( $form['title'] );
@@ -433,7 +435,15 @@ class GFEntryDetail {
 
 							if ( ! empty( $lead['payment_status'] ) ) {
 								echo $lead['transaction_type'] != 2 ? esc_html__( 'Payment Status', 'gravityforms' ) : esc_html__( 'Subscription Status', 'gravityforms' ); ?>:
-								<span id="gform_payment_status"><?php echo apply_filters( 'gform_payment_status', $lead['payment_status'], $form, $lead ) ?></span>
+								<span id="gform_payment_status"><?php
+									/**
+									 * Filters through a form payment status and allows modification
+									 *
+									 * @param string $lead['payment_status] A payment status to filter though
+									 * @param array $form The Form Object to filter through
+									 * @param array $lead The Lead Object to filter through
+									 */
+									echo apply_filters( 'gform_payment_status', $lead['payment_status'], $form, $lead ) ?></span>
 								<br /><br />
 								<?php
 								if ( ! empty( $lead['payment_date'] ) ) {
@@ -536,6 +546,13 @@ class GFEntryDetail {
 		</div>
 
 		<?php
+		
+		/**
+		 * A filter to enable or disable the extra payment details box in an entry
+		 *
+		 * @param bool To enable (true) or disable (false)
+		 * @param array $lead The Lead object to filter
+		 */
 		if ( ! empty( $lead['payment_status'] ) && ! apply_filters( 'gform_enable_entry_info_payment_details', true, $lead ) ) {
 			self::payment_details_box( $lead, $form );
 		}
@@ -794,7 +811,13 @@ class GFEntryDetail {
 						$class = $note->note_type ? " gforms_note_{$note->note_type}" : '';
 						?>
 						<div style="margin-top:4px;">
-							<div class="note-avatar"><?php echo apply_filters( 'gform_notes_avatar', get_avatar( $note->user_id, 48 ), $note ); ?></div>
+							<div class="note-avatar"><?php
+								/**
+								 * Allows filtering of the notes avatar
+								 *
+								 * @param array $note The Note object that is being filtered when modifying the avatar
+								 */
+								echo apply_filters( 'gform_notes_avatar', get_avatar( $note->user_id, 48 ), $note ); ?></div>
 							<h6 class="note-author"><?php echo esc_html( $note->user_name ) ?></h6>
 							<p class="note-email">
 								<a href="mailto:<?php echo esc_attr( $note->user_email ) ?>"><?php echo esc_html( $note->user_email ) ?></a><br />
@@ -858,6 +881,13 @@ class GFEntryDetail {
 			$display_empty_fields = rgget( 'gf_display_empty_fields', $_COOKIE );
 		}
 
+		/**
+		 * A filter to set if empty fields shown be shown in the entry details
+		 *
+		 * @param bool $display_empty_fields True or false to show the fields
+		 * @param array $form The Form object to filter
+		 * @param array $lead The Lead object to filter
+		 */
 		$display_empty_fields = apply_filters( 'gform_entry_detail_grid_display_empty_fields', $display_empty_fields, $form, $lead );
 
 		?>
@@ -1077,6 +1107,12 @@ class GFEntryDetail {
 
 							<?php
 
+							/**
+							 * Allows for modification on the form payment date format
+							 *
+							 * @param array $form The Form object to filter through
+							 * @param array $lead The Lead object to filter through
+							 */
 							$payment_date = apply_filters( 'gform_payment_date', GFCommon::format_date( $lead['payment_date'], false, 'Y/m/d', $lead['transaction_type'] != 2 ), $form, $lead );
 							if ( ! empty( $payment_date ) ) {
 								?>
@@ -1087,6 +1123,13 @@ class GFEntryDetail {
 							<?php
 							}
 
+							/**
+							 * Allows filtering through a payment transaction ID
+							 *
+							 * @param int $lead['transaction_id'] The transaction ID that can be modified
+							 * @param array $form The Form object to be filtered when modifying the transaction ID
+							 * @param array $lead The Lead object to be filtered when modifying the transaction ID
+							 */
 							$transaction_id = apply_filters( 'gform_payment_transaction_id', $lead['transaction_id'], $form, $lead );
 							if ( ! empty( $transaction_id ) ) {
 								?>
@@ -1097,6 +1140,14 @@ class GFEntryDetail {
 							<?php
 							}
 
+							/**
+							 * Filter through the way the Payment Amount is rendered
+							 *
+							 * @param string $lead['payment_amount'] The payment amount taken from the lead object
+							 * @param string $lead['currency'] The payment currency taken from the lead object
+							 * @param array $form The Form onject to filter through
+							 * @param array $lead The lead object to filter through
+							 */
 							$payment_amount = apply_filters( 'gform_payment_amount', GFCommon::to_money( $lead['payment_amount'], $lead['currency'] ), $form, $lead );
 							if ( ! rgblank( $payment_amount ) ) {
 								?>
@@ -1109,7 +1160,7 @@ class GFEntryDetail {
 						}
 
 						/**
-						 * Fires at the Form Payment Details (The type of payment, the cost, the ID, etc)
+						 * Fires after the Form Payment Details (The type of payment, the cost, the ID, etc)
 						 *
 						 * @param int $form['id'] The current Form ID
 						 * @param array $lead The current Lead object

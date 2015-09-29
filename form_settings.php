@@ -1567,6 +1567,12 @@ class GFFormSettings {
 
 		$form = ! is_array( $form_id ) ? RGFormsModel::get_form_meta( $form_id ) : $form_id;
 
+		/**
+		 * Fires right before the confirmation that a form is deleted
+		 *
+		 * @param int $form['confirmations'][ $confirmation_id ] The delete confirmation object ID
+		 * @para array $form The Form object to filter through
+		 */
 		do_action( 'gform_pre_confirmation_deleted', $form['confirmations'][ $confirmation_id ], $form );
 
 		unset( $form['confirmations'][ $confirmation_id ] );
@@ -1865,18 +1871,18 @@ class GFConfirmationTable extends WP_List_Table {
 	}
 
 	public static function get_column_type( $item ) {
-		switch ( $item['type'] ) {
+		switch ( rgar( $item, 'type' ) ) {
 			case 'message':
-				$type = __( 'Text', 'gravityforms' );
-				break;
+				return __( 'Text', 'gravityforms' );
+
 			case 'page':
-				$type = __( 'Page', 'gravityforms' );
-				break;
+				return __( 'Page', 'gravityforms' );
+
 			case 'redirect':
-				$type = __( 'Redirect', 'gravityforms' );
-				break;
+				return __( 'Redirect', 'gravityforms' );
 		}
-		return $type;
+
+		return '';
 	}
 
 }
