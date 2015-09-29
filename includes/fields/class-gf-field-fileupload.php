@@ -61,6 +61,11 @@ class GF_Field_FileUpload extends GF_Field {
 				return;
 			}
 
+			/**
+			 * A filter to allow or disallow whitelisting when uploading a file
+			 *
+			 * @param bool To set upload whitelisting to true or false (default is false, which means it is enabled)
+			 */
 			$whitelisting_disabled = apply_filters( 'gform_file_upload_whitelisting_disabled', false );
 
 			if ( ! empty( $_FILES[ $input_name ]['name'] ) && empty( $allowed_extensions ) && ! $whitelisting_disabled ) {
@@ -195,7 +200,7 @@ class GF_Field_FileUpload extends GF_Field {
 			$upload             = "<div id='{$container_id}' data-settings='{$plupload_init_json}' class='gform_fileupload_multifile'>
 										<div id='{$drag_drop_id}' class='gform_drop_area'>
 											<span class='gform_drop_instructions'>{$drop_files_here_text} </span>
-											<input id='{$browse_button_id}' type='button' value='{$select_files_text}' class='button gform_button_select_files' aria-describedby='extensions_message' />
+											<input id='{$browse_button_id}' type='button' value='{$select_files_text}' class='button gform_button_select_files' aria-describedby='extensions_message' {$tabindex} />
 										</div>
 									</div>";
 			if ( ! $is_admin ) {

@@ -11,21 +11,39 @@ class GFEntryList {
 			return;
 		}
 
-		$forms = RGFormsModel::get_forms( null, 'title' );
-		$id    = RGForms::get( 'id' );
+		$forms   = RGFormsModel::get_forms( null, 'title' );
+		$form_id = RGForms::get( 'id' );
 
 		if ( sizeof( $forms ) == 0 ) {
 			?>
 			<div style="margin:50px 0 0 10px;">
 				<?php echo sprintf( esc_html__( "You don't have any active forms. Let's go %screate one%s", 'gravityforms' ), '<a href="?page=gf_new_form">', '</a>' ); ?>
 			</div>
-		<?php
+			<?php
 		} else {
-			if ( empty( $id ) ) {
-				$id = $forms[0]->id;
+			if ( empty( $form_id ) ) {
+				$form_id = $forms[0]->id;
 			}
 
-			self::leads_page( $id );
+			/**
+			 * Fires before the entry list content is generated.
+			 *
+			 * Echoed content would appear above the page title.
+			 *
+			 * int $form_id The ID of the form the entry list is being displayed for.
+			 */
+			do_action( 'gform_pre_entry_list', $form_id );
+
+			self::leads_page( $form_id );
+
+			/**
+			 * Fires after the entry list content is generated.
+			 *
+			 * Echoed content would appear after the bulk actions/paging links below the entry list table.
+			 *
+			 * int $form_id The ID of the form the entry list is being displayed for.
+			 */
+			do_action( 'gform_post_entry_list', $form_id );
 		}
 	}
 

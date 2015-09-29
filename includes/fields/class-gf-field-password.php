@@ -141,6 +141,13 @@ class GF_Field_Password extends GF_Field {
 	}
 
 	public function get_value_save_entry( $value, $form, $input_name, $lead_id, $lead ) {
+
+		/**
+		 * A filter to allow the password to be encrypted (default set to false)
+		 *
+		 * @param bool Whether to encrypt the Password field with true or false
+		 * @param array $form The Current Form Object
+		 */
 		$encrypt_password = apply_filters( 'gform_encrypt_password', false, $this, $form );
 		if ( $encrypt_password ) {
 			$value = GFCommon::encrypt( $value );

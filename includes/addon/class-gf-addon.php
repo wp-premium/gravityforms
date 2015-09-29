@@ -697,6 +697,13 @@ abstract class GFAddOn {
 
 					break;
 
+				case 'entry_list' :
+					if ( $this->is_entry_list() ) {
+						return true;
+					}
+
+					break;
+
 				case 'entry_view' :
 					if ( $this->is_entry_view() ) {
 						return true;
@@ -1621,13 +1628,6 @@ abstract class GFAddOn {
 		$input_field['name'] .= '_custom';
 		$input_field_display  = '';
 
-		/* If select value is "gf_custom", hide the select field and display the input field. */
-		if ( $select_field_value == 'gf_custom' ) {
-			$select_field['style'] = 'display:none;';
-		} else {
-			$input_field_display   = ' style="display:none;"';
-		}
-				
 		/* Loop through select choices and make sure option for custom exists */
 		$has_gf_custom = false;
 		foreach ( $select_field['choices'] as $choice ) {
@@ -1641,15 +1641,22 @@ abstract class GFAddOn {
 				'value' => 'gf_custom'
 			);
 		}
-				
+		
+		/* If select value is "gf_custom", hide the select field and display the input field. */
+		if ( $select_field_value == 'gf_custom' || ( count( $select_field['choices'] ) == 1 && $select_field['choices'][0]['value'] == 'gf_custom' ) ) {
+			$select_field['style'] = 'display:none;';
+		} else {
+			$input_field_display   = ' style="display:none;"';
+		}
+								
 		/* Add select field */
 		$html = $this->settings_select( $select_field, false );
 		
 		/* Add input field */
-		$html .= '<div class="gaddon-setting-select-custom-container"'. $input_field_display .'>
-			<a href="#" class="select-custom-reset">Reset</a>'.
-			$this->settings_text( $input_field, false ) .'
-		</div>';
+		$html .= '<div class="gaddon-setting-select-custom-container"'. $input_field_display .'>';
+		$html .= count( $select_field['choices'] ) > 1 ? '<a href="#" class="select-custom-reset">Reset</a>' : '';
+		$html .= $this->settings_text( $input_field, false );
+		$html .= '</div>';
 
 		if ( $echo ) {
 			echo $html;
@@ -1805,6 +1812,7 @@ abstract class GFAddOn {
 
 		// Adding default fields
 		if ( is_null( $field_type ) ) {
+			$fields[] = array( 'value' => 'id', 'label' => esc_html__( 'Entry ID', 'gravityforms' ) );
 			$fields[] = array( 'value' => 'date_created', 'label' => esc_html__( 'Entry Date', 'gravityforms' ) );
 			$fields[] = array( 'value' => 'ip', 'label' => esc_html__( 'User IP', 'gravityforms' ) );
 			$fields[] = array( 'value' => 'source_url', 'label' => esc_html__( 'Source Url', 'gravityforms' ) );
@@ -3135,6 +3143,11 @@ abstract class GFAddOn {
 
 		$addon_menus = array();
 
+		/**
+		 * Filters through addon menus (filter by addon slugs)
+		 *
+		 * @param array $addon_menus A modifiable array of admin addon menus
+		 */
 		$addon_menus = apply_filters( 'gform_addon_app_navigation_' . $this->_slug, $addon_menus );
 
 		$parent_menu = self::get_parent_menu( $menu_items, $addon_menus );
@@ -3153,6 +3166,12 @@ abstract class GFAddOn {
 			$number += 10;
 			$menu_position = '16.' . $number;
 		}
+
+		/**
+		 * Modify the menu position of an add-on menu
+		 *
+		 * @param int $menu_position The Menu position of the add-on menu
+		 */
 		$menu_position = apply_filters( 'gform_app_menu_position_' . $this->_slug, $menu_position );
 		$this->app_hook_suffix = add_menu_page( $this->get_short_title(), $this->get_short_title(), $has_full_access ? 'gform_full_access' : $min_cap, $parent_menu['name'], $callback, $this->get_app_menu_icon(), $menu_position );
 
@@ -4203,6 +4222,7 @@ abstract class GFAddOn {
 
 			case 'ip':
 			case 'source_url':
+			case 'id':
 				$field_value = rgar( $entry, strtolower( $field_id ) );
 				break;
 

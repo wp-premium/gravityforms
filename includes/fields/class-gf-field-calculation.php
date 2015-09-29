@@ -105,7 +105,7 @@ class GF_Field_Calculation extends GF_Field {
 
 	public function get_value_save_entry( $value, $form, $input_name, $lead_id, $lead ) {
 		// ignore submitted value and recalculate price in backend
-		list( , , $input_id ) = rgexplode( '_', $input_name, 3 );
+		list( $prefix, $field_id, $input_id ) = rgexplode( '_', $input_name, 3 );
 		if ( $input_id == 2 ) {
 			require_once( GFCommon::get_base_path() . '/currency.php' );
 			$currency = new RGCurrency( GFCommon::get_currency() );

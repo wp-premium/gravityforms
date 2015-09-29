@@ -790,7 +790,7 @@ class GFAPI {
 		$is_starred     = isset( $entry['is_starred'] ) ? $entry['is_starred'] : 0;
 		$is_read        = isset( $entry['is_read'] ) ? $entry['is_read'] : 0;
 		$ip             = isset( $entry['ip'] ) ? $entry['ip'] : GFFormsModel::get_ip();
-		$source_url     = isset( $entry['source_url'] ) ? $entry['source_url'] : GFFormsModel::get_current_page_url();
+		$source_url     = isset( $entry['source_url'] ) ? $entry['source_url'] : esc_url_raw( GFFormsModel::get_current_page_url() );
 		$user_agent     = isset( $entry['user_agent'] ) ? $entry['user_agent'] : 'API';
 		$currency       = isset( $entry['currency'] ) ? $entry['currency'] : GFCommon::get_currency();
 		$payment_status = isset( $entry['payment_status'] ) ? sprintf( "'%s'", esc_sql( $entry['payment_status'] ) ) : 'NULL';

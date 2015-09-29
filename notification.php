@@ -975,7 +975,8 @@ Class GFNotification {
 		foreach ( $emails as $email ) {
 			$email            = trim( $email );
 			$invalid_email    = GFCommon::is_invalid_or_empty_email( $email );
-			$invalid_variable = ! preg_match( '/^({[^{]*?:(\d+(\.\d+)?)(:(.*?))?},? *)+$/', $email ) && $email != '{admin_email}';
+			// this used to be more strict; updated to match any merge-tag-like string
+			$invalid_variable = ! preg_match( '/^{.+}$/', $email );
 
 			if ( $invalid_email && $invalid_variable ) {
 				return false;

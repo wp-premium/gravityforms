@@ -340,9 +340,9 @@ class GFSettings {
 					$save_button = '<input type="submit" name="submit" value="' . esc_html__( 'Save Settings', 'gravityforms' ) . '" class="button-primary gfbutton"/>';
 
 					/**
-					 * Filters through and allows modification of the Settings save button HTML in a Form
+					 * Filters through and allows modification of the Settings save button HTML for the overall Gravity Forms Settings
 					 *
-					 * @param string $save_button
+					 * @param string $save_button The HTML rendered for the save button
 					 */
 					echo apply_filters( 'gform_settings_save_button', $save_button );
 					?>
