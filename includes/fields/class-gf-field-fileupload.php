@@ -272,12 +272,12 @@ class GF_Field_FileUpload extends GF_Field {
 					$upload = str_replace( " class='", " class='gform_hidden ", $upload );
 				}
 
-				return "<div class='ginput_container'>" . $upload . " {$preview}</div>";
+				return "<div class='ginput_container ginput_container_fileupload'>" . $upload . " {$preview}</div>";
 			} else {
 
 				$preview = $multiple_files ? sprintf( "<div id='%s'></div>", $file_list_id ) : '';
 
-				return "<div class='ginput_container'>$upload</div>" . $preview;
+				return "<div class='ginput_container ginput_container_fileupload'>$upload</div>" . $preview;
 			}
 		}
 	}

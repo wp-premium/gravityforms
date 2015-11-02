@@ -69,11 +69,13 @@ class GFEntryList {
 
 		$search_criteria['status'] = $status;
 
-		if ( $star ) {
-			$search_criteria['field_filters'][] = array( 'key' => 'is_starred', 'value' => (bool) $star );
-		}
-		if ( ! is_null( $read ) ) {
-			$search_criteria['field_filters'][] = array( 'key' => 'is_read', 'value' => (bool) $read );
+		$filter_links = self::get_filter_links( $form );
+
+		foreach ( $filter_links as $filter_link ) {
+			if ( $filter == $filter_link['id'] ) {
+				$search_criteria['field_filters'] = $filter_link['field_filters'];
+				break;
+			}
 		}
 
 		$search_field_id = rgget( 'field_id' );
@@ -182,6 +184,9 @@ class GFEntryList {
 						$update_message = sprintf( esc_html__( '%s unstarred.', 'gravityforms' ), $entry_count );
 						break;
 				}
+
+				// Refresh counts
+				$filter_links = self::get_filter_links( $form );
 				break;
 
 			case 'change_columns':
@@ -217,12 +222,6 @@ class GFEntryList {
 
 		$leads = GFAPI::get_entries( $form_id, $search_criteria, $sorting, $paging, $total_count );
 
-		$summary           = RGFormsModel::get_form_counts( $form_id );
-		$active_lead_count = $summary['total'];
-		$unread_count      = $summary['unread'];
-		$starred_count     = $summary['starred'];
-		$spam_count        = $summary['spam'];
-		$trash_count       = $summary['trash'];
 
 		$columns = RGFormsModel::get_grid_columns( $form_id, true );
 
@@ -273,14 +272,14 @@ class GFEntryList {
 
 		var messageTimeout = false,
 			gformFieldFilters = <?php echo json_encode( $field_filters ) ?>,
-			gformInitFilter = <?php echo json_encode( $init_filter_vars ) ?>
+			gformInitFilter = <?php echo json_encode( $init_filter_vars ) ?>;
 
-				function ChangeColumns(columns) {
-					jQuery("#action").val("change_columns");
-					jQuery("#grid_columns").val(jQuery.toJSON(columns));
-					tb_remove();
-					jQuery("#lead_form")[0].submit();
-				}
+		function ChangeColumns(columns) {
+			jQuery("#action").val("change_columns");
+			jQuery("#grid_columns").val(jQuery.toJSON(columns));
+			tb_remove();
+			jQuery("#lead_form")[0].submit();
+		}
 
 		function Search(sort_field_id, sort_direction, form_id, search, star, read, filter, field_id, operator) {
 			var search_qs = search == "" ? "" : "&s=" + encodeURIComponent(search);
@@ -596,7 +595,7 @@ class GFEntryList {
 
 		function getSelectAllText() {
 			var count;
-			count = jQuery("#gf_entry_list tr:visible:not('#gform-select-all-message')").length;
+			count = jQuery("#gf_entry_list tr.gf_entry_row:visible:not('#gform-select-all-message')").length;
 			return gformStrings.allEntriesOnPageAreSelected.format(count) + " <a href='javascript:void(0)' onclick='selectAllEntriesOnAllPages();'>" + gformStrings.selectAll.format(gformVars.countAllEntries) + "</a>";
 		}
 
@@ -649,6 +648,13 @@ class GFEntryList {
 			}
 		}
 
+		function afterAjaxDelete ( r, settings ) {
+			var counts = settings.parsed.responses[0].supplemental;
+			jQuery.each( counts, function( id, count ) {
+				jQuery('#' + id).text(count);
+			});
+		}
+
 		String.prototype.format = function () {
 			var args = arguments;
 			return this.replace(/{(\d+)}/g, function (match, number) {
@@ -666,9 +672,10 @@ class GFEntryList {
 			if (action && message)
 				displayMessage(message, 'updated', '#lead_form');
 
-			var list = jQuery("#gf_entry_list").wpList({ alt: <?php echo json_encode( esc_html__( 'Entry List', 'gravityforms' ) ) ?>});
-			list.bind('wpListDelEnd', function (e, s, list) {
 
+
+			var list = jQuery("#gf_entry_list").wpList({ delAfter: afterAjaxDelete, alt: <?php echo json_encode( esc_html__( 'Entry List', 'gravityforms' ) ) ?>});
+			list.bind('wpListDelEnd', function (e, s, list) {
 				var currentStatus = <?php echo json_encode( $filter == 'trash' || $filter == 'spam' ? $filter : 'active' ); ?>;
 				var filter = <?php echo json_encode( $filter ); ?>;
 				var movingTo = "active";
@@ -681,31 +688,10 @@ class GFEntryList {
 
 				var id = s.data.entry;
 				var title = jQuery("#lead_row_" + id);
-				var isUnread = title.hasClass("lead_unread");
-				var isStarred = title.hasClass("lead_starred");
 
-				if (movingTo != "delete") {
-					//Updating All count
-					var allCount = currentStatus == "active" ? -1 : 1;
-					UpdateCount("all_count", allCount);
-
-					//Updating Unread count
-					if (isUnread) {
-						var unreadCount = currentStatus == "active" ? -1 : 1;
-						UpdateCount("unread_count", unreadCount);
-					}
-
-					//Updating Starred count
-					if (isStarred) {
-						var starCount = currentStatus == "active" ? -1 : 1;
-						UpdateCount("star_count", starCount);
-					}
-				}
-
-				//Updating Spam count
+				// Updating Paging counts
 				if (currentStatus == "spam" || movingTo == "spam") {
 					var spamCount = movingTo == "spam" ? 1 : -1;
-					UpdateCount("spam_count", spamCount);
 					//adjust paging counts
 					if (filter == "spam") {
 						UpdatePagingCounts(1);
@@ -714,12 +700,8 @@ class GFEntryList {
 						UpdatePagingCounts(spamCount);
 					}
 				}
-
-				//Updating trash count
 				if (currentStatus == "trash" || movingTo == "trash") {
 					var trashCount = movingTo == "trash" ? 1 : -1;
-					UpdateCount("trash_count", trashCount);
-					//adjust paging counts
 					if (filter == "trash") {
 						UpdatePagingCounts(1);
 					}
@@ -785,31 +767,29 @@ class GFEntryList {
 		<input type="hidden" value="" name="all_entries" id="all_entries" />
 
 		<ul class="subsubsub">
-			<li>
-				<a class="<?php echo empty( $filter ) ? 'current' : '' ?>" href="?page=gf_entries&view=entries&id=<?php echo absint( $form_id ) ?>"><?php _ex( 'All', 'Entry List', 'gravityforms' ); ?>
-					<span class="count">(<span id="all_count"><?php echo $active_lead_count ?></span>)</span></a> |
-			</li>
-			<li>
-				<a class="<?php echo $read !== null ? 'current' : '' ?>" href="?page=gf_entries&view=entries&id=<?php echo absint( $form_id ) ?>&filter=unread"><?php _ex( 'Unread', 'Entry List', 'gravityforms' ); ?>
-					<span class="count">(<span id="unread_count"><?php echo $unread_count ?></span>)</span></a> |
-			</li>
-			<li>
-				<a class="<?php echo $star !== null ? 'current' : '' ?>" href="?page=gf_entries&view=entries&id=<?php echo absint( $form_id ) ?>&filter=star"><?php _ex( 'Starred', 'Entry List', 'gravityforms' ); ?>
-					<span class="count">(<span id="star_count"><?php echo $starred_count ?></span>)</span></a> |
-			</li>
 			<?php
-			if ( GFCommon::spam_enabled( $form_id ) ) {
+			$filter_links_count = count( $filter_links );
+			foreach ( $filter_links as $filter_link_index => $filter_link ) {
+				$separator = ( $filter_link_index == $filter_links_count - 1 ) ? '' : ' | ';
+				$filter_arg = '&filter=';
+				if ( $filter_link['id'] !== 'all' ) {
+					$filter_arg .= $filter_link['id'];
+				}
+				if ( $filter == '' ){
+					$selected = $filter_link['id'] == 'all' ? 'current' : '';
+				} else {
+					$selected = ( $filter == $filter_link['id'] ) ? 'current' : '';
+				}
 				?>
 				<li>
-					<a class="<?php echo $filter == 'spam' ? 'current' : '' ?>" href="?page=gf_entries&view=entries&id=<?php echo absint( $form_id ) ?>&filter=spam"><?php esc_html_e( 'Spam', 'gravityforms' ); ?>
-						<span class="count">(<span id="spam_count"><?php echo esc_html( $spam_count ); ?></span>)</span></a> |
+					<a class="<?php echo $selected ?>"
+					   href="?page=gf_entries&view=entries&id=<?php echo absint( $form_id ) . esc_attr( $filter_arg ) ?>"><?php echo esc_html( $filter_link['label'] ); ?>
+						<span class="count">(<span
+								id="<?php echo esc_attr( $filter_link['id'] ); ?>_count"><?php echo absint( rgar( $filter_link, 'count' ) ); ?></span>)</span></a><?php echo esc_html( $separator ); ?>
 				</li>
-			<?php
+				<?php
 			}
 			?>
-			<li>
-				<a class="<?php echo $filter == 'trash' ? 'current' : '' ?>" href="?page=gf_entries&view=entries&id=<?php echo absint( $form_id ) ?>&filter=trash"><?php esc_html_e( 'Trash', 'gravityforms' ); ?>
-					<span class="count">(<span id="trash_count"><?php echo esc_html( $trash_count ); ?></span>)</span></a></li>
 		</ul>
 		<div style="margin-top:12px;float:right;">
 			<a style="float:right;" class="button" id="lead_search_button" href="javascript:Search('<?php echo esc_js( $sort_field ); ?>', '<?php echo esc_js( $sort_direction ) ?>', <?php echo absint( $form_id ); ?>, jQuery('.gform-filter-value').val(), '<?php echo esc_js( $star ); ?>', '<?php echo esc_js( $read ); ?>', '<?php echo esc_js( $filter ) ?>', jQuery('.gform-filter-field').val(), jQuery('.gform-filter-operator').val());"><?php esc_html_e( 'Search', 'gravityforms' ) ?></a>
@@ -1043,7 +1023,7 @@ class GFEntryList {
 				$position = ( $page_size * $page_index ) + $position;
 
 				?>
-				<tr id="lead_row_<?php echo esc_attr( $lead['id'] ) ?>" class='author-self status-inherit <?php echo $lead['is_read'] ? '' : 'lead_unread' ?> <?php echo $lead['is_starred'] ? 'lead_starred' : '' ?> <?php echo in_array( $filter, array( 'trash', 'spam' ) ) ? 'lead_spam_trash' : '' ?> <?php $gf_entry_locking->list_row_class( $lead['id'] ); ?> <?php echo ( $alternate_row = ! $alternate_row ) ? 'alternate' : '' ?>' valign="top" data-id="<?php echo esc_attr( $lead['id'] ) ?>">
+				<tr id="lead_row_<?php echo esc_attr( $lead['id'] ) ?>" class='gf_entry_row author-self status-inherit <?php echo $lead['is_read'] ? '' : 'lead_unread' ?> <?php echo $lead['is_starred'] ? 'lead_starred' : '' ?> <?php echo in_array( $filter, array( 'trash', 'spam' ) ) ? 'lead_spam_trash' : '' ?> <?php $gf_entry_locking->list_row_class( $lead['id'] ); ?> <?php echo ( $alternate_row = ! $alternate_row ) ? 'alternate' : '' ?>' valign="top" data-id="<?php echo esc_attr( $lead['id'] ) ?>">
 				<th scope="row" class="check-column">
 					<input type="checkbox" name="lead[]" value="<?php echo esc_attr( $lead['id'] ); ?>" />
 					<?php $gf_entry_locking->lock_indicator(); ?>
@@ -1455,11 +1435,6 @@ class GFEntryList {
 		return GFCommon::get_base_url() . "/images/doctypes/$file_name";
 	}
 
-	private static function update_message() {
-
-
-	}
-
 	private static function display_paging_links( $which, $page_links, $first_item_index, $page_size, $total_lead_count ) {
 		//Displaying paging links if appropriate
 		//$which - header or footer, so the items can have unique names
@@ -1483,5 +1458,74 @@ class GFEntryList {
 		}
 
 		return $paging_html;
+	}
+
+	public static function get_filter_links( $form, $include_counts = true ){
+
+		$form_id = absint( $form['id'] );
+
+		$summary = $include_counts ? GFFormsModel::get_form_counts( $form_id ) : array();
+
+		$active_lead_count = rgar( $summary, 'total' );
+		$unread_count      = rgar( $summary, 'unread' );
+		$starred_count     = rgar( $summary, 'starred' );
+		$spam_count        = rgar( $summary,'spam' );
+		$trash_count       = rgar( $summary,'trash' );
+
+		$filter_links = array(
+			array(
+				'id' => 'all',
+				'field_filters' => array(),
+				'count' => $active_lead_count,
+				'label'   => esc_html_x( 'All', 'Entry List', 'gravityforms' ),
+			),
+			array(
+				'id' => 'unread',
+				'field_filters' => array(
+					array( 'key' => 'is_read', 'value' => false ),
+				),
+				'count' => $unread_count,
+				'label'   => esc_html_x( 'Unread', 'Entry List', 'gravityforms' ),
+			),
+			array(
+				'id' => 'star',
+				'field_filters' => array(
+					array( 'key' => 'is_starred', 'value' => true ),
+				),
+				'count' => $starred_count,
+				'label'   => esc_html_x( 'Starred', 'Entry List', 'gravityforms' ),
+			),
+		);
+		if ( GFCommon::spam_enabled( $form_id ) ) {
+			$filter_links[] = array(
+				'id' => 'spam',
+				'field_filters' => array(),
+				'count' => $spam_count,
+				'label'   => esc_html__( 'Spam', 'gravityforms' ),
+			);
+		}
+		$filter_links[] = array(
+			'id' => 'trash',
+			'field_filters' => array(),
+			'count' => $trash_count,
+			'label'   => esc_html__( 'Trash', 'gravityforms' ),
+		);
+
+		/**
+		 * ---Provisional and may be subject to change---
+		 *
+		 * Allow the row of filter links to be modified.
+		 *
+		 * Array elements:
+		 * selected - bool
+		 * filter   - string
+		 * label    - string
+		 *
+		 * @param array $filter_links The filter links.
+		 *
+		 */
+		$filter_links = apply_filters( 'gform_filter_links_entry_list', $filter_links, $form, $include_counts );
+
+		return $filter_links;
 	}
 }

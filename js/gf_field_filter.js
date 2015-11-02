@@ -166,7 +166,7 @@
     }
 
     function getFilterValues (filter, selectedOperator) {
-        var i, val, text, str, options = "", placeholder, cssClass;
+        var i, val, text, str, options = "", placeholder, cssClass, supporterOperators;
         cssClass = 'gform-filter-value';
 
         if ( filter && typeof filter.cssClass != 'undefined' ) {
@@ -182,6 +182,9 @@
             for (i = 0; i < filter.values.length; i++) {
                 val = filter.values[i].value;
                 text = filter.values[i].text;
+                if ( filter.values[i].operators && $.inArray( selectedOperator, filter.values[i].operators ) === -1 ) {
+                    continue;
+                }
                 options += '<option value="{0}">{1}</option>'.format(val, text);
             }
             str = "<select name='v[]' class='{0}'>{1}</select>".format(cssClass, options);

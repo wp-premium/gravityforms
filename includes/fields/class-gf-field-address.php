@@ -384,6 +384,8 @@ class GF_Field_Address extends GF_Field {
 			$css_class .= 'has_country ';
 		}
 
+		$css_class .= 'ginput_container_address';
+
 		return trim( $css_class );
 	}
 

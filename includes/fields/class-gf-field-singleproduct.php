@@ -87,7 +87,7 @@ class GF_Field_SingleProduct extends GF_Field {
 			}
 		}
 
-		return "<div class='ginput_container'>
+		return "<div class='ginput_container ginput_container_singleproduct'>
 					<input type='hidden' name='input_{$id}.1' value='{$product_name}' class='gform_hidden' />
 					<span class='ginput_product_price_label'>" . gf_apply_filters( 'gform_product_price', $form_id, esc_html__( 'Price', 'gravityforms' ), $form_id ) . ":</span> <span class='ginput_product_price' id='{$field_id}'>" . esc_html( GFCommon::to_money( $price, $currency ) ) . "</span>
 					<input type='hidden' name='input_{$id}.2' id='ginput_base_price_{$form_id}_{$this->id}' class='gform_hidden' value='" . esc_attr( $price ) . "'/>

@@ -964,7 +964,7 @@ class GFFormDisplay {
 		}
 	}
 
-	private static function get_form_button( $form_id, $button_input_id, $button, $default_text, $class, $alt, $target_page_number, $onclick = '' ) {
+	public static function get_form_button( $form_id, $button_input_id, $button, $default_text, $class, $alt, $target_page_number, $onclick = '' ) {
 
 		$tabindex = GFCommon::get_tabindex();
 
@@ -1078,7 +1078,7 @@ class GFFormDisplay {
 		return $field;
 	}
 
-	private static function get_max_field_id( $form ) {
+	public static function get_max_field_id( $form ) {
 		$max = 0;
 		foreach ( $form['fields'] as $field ) {
 			if ( floatval( $field->id ) > $max ) {
@@ -1732,6 +1732,11 @@ class GFFormDisplay {
 
 			/* @var GF_Field $field */
 
+			$field_deps = self::get_conditional_logic_fields( $form, $field->id );
+			if( ! empty( $field_deps ) ) {
+				$field_depenents[ $field->id ] = $field_deps;
+			}
+
 			//use section's logic if one exists
 			$section       = RGFormsModel::get_section( $form, $field->id );
 			$section_logic = ! empty( $section ) ? rgar( $section, 'conditionalLogic' ) : null;
@@ -1870,6 +1875,7 @@ class GFFormDisplay {
 				$default_values[ $field->id ] = $field_val;
 
 			}
+
 		}
 
 		$button_conditional_script = '';
@@ -1904,7 +1910,8 @@ class GFFormDisplay {
 
 			"if(!window['gf_form_conditional_logic'])" .
 			"window['gf_form_conditional_logic'] = new Array();" .
-			"window['gf_form_conditional_logic'][{$form['id']}] = {'logic' : {" . $logics . " }, 'dependents' : {" . $dependents . " }, 'animation' : " . $animation . " , 'defaults' : " . json_encode( $default_values ) . ' }; ' .
+		    "window['gf_form_conditional_logic'][{$form['id']}] = { logic: { {$logics} }, dependents: { {$dependents} }, animation: {$animation}, defaults: " . json_encode( $default_values ) . ", fields: " . json_encode( $field_depenents ) . " }; " .
+
 			"if(!window['gf_number_format'])" .
 			"window['gf_number_format'] = '" . $number_format . "';" .
 
@@ -1936,6 +1943,7 @@ class GFFormDisplay {
 		// get_conditional_logic also adds the chosen script for the enhanced dropdown option.
 		// if this form does not have conditional logic, add chosen script separately
 		if ( self::has_conditional_logic( $form ) ) {
+			self::add_init_script( $form['id'], 'number_formats', self::ON_PAGE_RENDER, self::get_number_formats_script( $form ) );
 			self::add_init_script( $form['id'], 'conditional_logic', self::ON_PAGE_RENDER, self::get_conditional_logic( $form, $field_values ) );
 		}
 
@@ -1964,6 +1972,7 @@ class GFFormDisplay {
 		}
 
 		if ( self::has_calculation_field( $form ) ) {
+			self::add_init_script( $form['id'], 'number_formats', self::ON_PAGE_RENDER, self::get_number_formats_script( $form ) );
 			self::add_init_script( $form['id'], 'calculation', self::ON_PAGE_RENDER, self::get_calculations_init_script( $form ) );
 		}
 
@@ -2160,15 +2169,13 @@ class GFFormDisplay {
 			}
 
 			$formula_fields[] = array( 'field_id' => $field->id, 'formula' => $field->calculationFormula, 'rounding' => $field->calculationRounding );
-
 		}
 
 		if ( empty( $formula_fields ) ) {
 			return '';
 		}
 
-		$script = self::get_number_formats_script( $form );
-		$script .= 'new GFCalc(' . $form['id'] . ', ' . GFCommon::json_encode( $formula_fields ) . ');';
+		$script = 'new GFCalc(' . $form['id'] . ', ' . GFCommon::json_encode( $formula_fields ) . ');';
 
 		return $script;
 	}
@@ -2188,6 +2195,8 @@ class GFFormDisplay {
 	 * @return string
 	 */
 	public static function get_number_formats_script( $form ) {
+
+		require_once ( GFCommon::get_base_path() . '/currency.php' );
 
 		$number_formats = array();
 		$currency       = RGCurrency::get_currency( GFCommon::get_currency() );
@@ -2240,7 +2249,7 @@ class GFFormDisplay {
 		$has_price_field = false;
 		foreach ( $form['fields'] as $field ) {
 			$input_type      = GFFormsModel::get_input_type( $field );
-			$has_price_field = GFCommon::is_product_field( $input_type ) ? true : $has_price_field;
+			$has_price_field = GFCommon::is_product_field( $input_type )  ? true : $has_price_field;
 		}
 		
 		return $has_price_field;
@@ -2361,7 +2370,7 @@ class GFFormDisplay {
 
 			if ( $field->type != 'page' && ! empty( $field->conditionalLogic ) ) {
 				foreach ( $field->conditionalLogic['rules'] as $rule ) {
-					if ( $rule['fieldId'] == $fieldId ) {
+					if ( intval( $rule['fieldId'] ) == $fieldId ) {
 						$fields[] = floatval( $field->id );
 
 						//if field is a section, add all fields in the section that have conditional logic (to support nesting)

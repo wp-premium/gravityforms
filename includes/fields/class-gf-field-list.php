@@ -58,7 +58,7 @@ class GF_Field_List extends GF_Field {
 		$shim_style  = is_rtl() ? 'position:absolute;left:999em;' : 'position:absolute;left:-999em;';
 		$label_target_shim = sprintf( '<input type=\'text\' id=\'input_%1$s_%2$s_shim\' style=\'%3$s\' onfocus=\'jQuery( "#field_%1$s_%2$s table tr td:first-child input" ).focus();\' />', $form_id, $this->id, $shim_style );
 
-		$list = "<div class='ginput_container ginput_list'>" .
+		$list = "<div class='ginput_container ginput_container_list ginput_list'>" .
 			$label_target_shim .
 			"<table class='gfield_list'>";
 

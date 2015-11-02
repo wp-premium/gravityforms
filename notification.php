@@ -574,7 +574,7 @@ Class GFNotification {
 		<?php
 		$notification_events = array( 'form_submission' => esc_html__( 'Form is submitted', 'gravityforms' ) );
 		if ( rgars( $form, 'save/enabled' ) ) {
-			$notification_events['form_saved'] = esc_html__( 'Form is saved', 'gravityforms' );
+			$notification_events['form_saved']                = esc_html__( 'Form is saved', 'gravityforms' );
 			$notification_events['form_save_email_requested'] = esc_html__( 'Save and continue email is requested', 'gravityforms' );
 		}
 		$notification_events = apply_filters( 'gform_notification_events', $notification_events, $form );
@@ -1001,8 +1001,7 @@ Class GFNotification {
 
 	private static function get_first_routing_field( $form ) {
 		foreach ( $form['fields'] as $field ) {
-			$input_type = RGFormsModel::get_input_type( $field );
-			if ( in_array( $input_type, self::$supported_fields ) ) {
+			if ( in_array( $field->get_input_type(), self::get_routing_field_types() ) ) {
 				return $field->id;
 			}
 		}
@@ -1013,9 +1012,8 @@ Class GFNotification {
 	private static function get_routing_fields( $form, $selected_field_id ) {
 		$str = '';
 		foreach ( $form['fields'] as $field ) {
-			$input_type  = RGFormsModel::get_input_type( $field );
 			$field_label = RGFormsModel::get_label( $field );
-			if ( in_array( $input_type, self::get_routing_field_types() ) ) {
+			if ( in_array( $field->get_input_type(), self::get_routing_field_types() ) ) {
 				$selected = $field->id == $selected_field_id ? "selected='selected'" : '';
 				$str .= "<option value='" . $field->id . "' " . $selected . '>' . $field_label . '</option>';
 			}

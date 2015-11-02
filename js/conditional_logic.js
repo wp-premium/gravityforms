@@ -1,6 +1,13 @@
 
 var __gf_timeout_handle;
 
+gform.addAction( 'gform_input_change', function( elem, formId, fieldId ) {
+	var dependentFieldIds = rgars( gf_form_conditional_logic, [ formId, 'fields', fieldId ].join( '/' ) );
+	if( dependentFieldIds ) {
+		gf_apply_rules( formId, dependentFieldIds );
+	}
+}, 10 );
+
 function gf_apply_rules(formId, fields, isInit){
 	var rule_applied = 0;
 	jQuery(document).trigger( 'gform_pre_conditional_logic', [ formId, fields, isInit ] );

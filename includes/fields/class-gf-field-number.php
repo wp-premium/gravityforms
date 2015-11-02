@@ -176,7 +176,7 @@ class GF_Field_Number extends GF_Field {
 
 		$tabindex = $this->get_tabindex();
 
-		$input = sprintf( "<div class='ginput_container'><input name='input_%d' id='%s' type='{$html_input_type}' {$step_attr} {$min_attr} {$max_attr} value='%s' class='%s' {$tabindex} {$logic_event} {$read_only} %s %s/>%s</div>", $id, $field_id, esc_attr( $value ), esc_attr( $class ), $disabled_text, $placeholder_attribute, $instruction );
+		$input = sprintf( "<div class='ginput_container ginput_container_number'><input name='input_%d' id='%s' type='{$html_input_type}' {$step_attr} {$min_attr} {$max_attr} value='%s' class='%s' {$tabindex} {$logic_event} {$read_only} %s %s/>%s</div>", $id, $field_id, esc_attr( $value ), esc_attr( $class ), $disabled_text, $placeholder_attribute, $instruction );
 		return $input;
 	}
 

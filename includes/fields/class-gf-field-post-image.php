@@ -83,7 +83,7 @@ class GF_Field_Post_Image extends GF_Field_Fileupload {
 
 		$description_field = $this->displayDescription || $is_admin ? sprintf( "<span class='ginput_full$class_suffix ginput_post_image_description' $description_style><input type='text' name='input_%d.7' id='%s_7' value='%s' $tabindex %s/><label for='%s_7'>" . gf_apply_filters( 'gform_postimage_description', $form_id, __( 'Description', 'gravityforms' ), $form_id ) . '</label></span>', $id, $field_id, $description, $disabled_text, $field_id ) : '';
 
-		return "<div class='ginput_complex$class_suffix ginput_container'>" . $upload . $title_field . $caption_field . $description_field . '</div>';
+		return "<div class='ginput_complex$class_suffix ginput_container ginput_container_post_image'>" . $upload . $title_field . $caption_field . $description_field . '</div>';
 	}
 
 	public function get_value_save_entry( $value, $form, $input_name, $lead_id, $lead ) {

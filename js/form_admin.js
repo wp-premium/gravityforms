@@ -190,16 +190,27 @@ function GetRuleFields( objectType, ruleIndex, selectedFieldId ) {
 
     options = gform.applyFilters( 'gform_conditional_logic_fields', options, form, selectedFieldId );
 
-    // create the actual <option> strings
+    str += GetRuleFieldsOptions( options, selectedFieldId );
+
+    str += "</select>";
+    return str;
+}
+
+function GetRuleFieldsOptions( options, selectedFieldId ){
+    var str = '';
     for( var i = 0; i < options.length; i++ ) {
 
         var option = options[i];
-        var selected = option.value == selectedFieldId ? "selected='selected'" : '';
+        if ( typeof option.options !== 'undefined' ) {
+            str += '<optgroup label=" ' + option.label + '">';
+            str += GetRuleFieldsOptions( option.options, selectedFieldId );
+            str += '</optgroup>';
+        } else {
+            var selected = option.value == selectedFieldId ? "selected='selected'" : '';
 
-        str += "<option value='" + option.value + "' " + selected + ">" + option.label + "</option>";
+            str += "<option value='" + option.value + "' " + selected + ">" + option.label + "</option>";
+        }
     }
-
-    str += "</select>";
     return str;
 }
 
@@ -1148,7 +1159,7 @@ var gfMergeTagsObj = function(form) {
                     continue;
 
                 var input = field.inputs[i];
-                if(inputType == "creditcard" && jQuery.inArray(input.id,[parseFloat(field.id + ".2"), parseFloat(field.id + ".3"), parseFloat(field.id + ".5")]) > -1)
+                if(inputType == "creditcard" && jQuery.inArray(parseFloat(input.id),[parseFloat(field.id + ".2"), parseFloat(field.id + ".3"), parseFloat(field.id + ".5")]) > -1)
                     continue;
                 label = GetLabel(field, input.id).replace("'", "\\'");
                 value = "{" + label + ":" + input.id + tagArgs + "}";

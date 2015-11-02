@@ -59,7 +59,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
 		add_filter( 'gform_confirmation', array( $this, 'confirmation' ), 20, 4 );
 
-		add_filter( 'gform_validation', array( $this, 'validation' ), 20 );
+		add_filter( 'gform_validation', array( $this, 'maybe_validate' ), 20 );
 		add_filter( 'gform_entry_post_save', array( $this, 'entry_post_save' ), 10, 2 );
 
 	}
@@ -193,9 +193,34 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
 	}
 
+	/**
+	 * Check if the rest of the form has passed validation, is the last page, and that the honeypot field has not been completed.
+	 *
+	 * @param array $validation_result Contains the validation result, the form object, and the failed validation page number.
+	 *
+	 * @return array $validation_result
+	 */
+	public function maybe_validate( $validation_result ) {
+
+		$form            = $validation_result['form'];
+		$is_last_page    = GFFormDisplay::is_last_page( $form );
+		$failed_honeypot = false;
+
+		if ( $is_last_page && rgar( $form, 'enableHoneypot' ) ) {
+			$honeypot_id     = GFFormDisplay::get_max_field_id( $form ) + 1;
+			$failed_honeypot = ! rgempty( "input_{$honeypot_id}" );
+		}
+
+		if ( ! $validation_result['is_valid'] || ! $is_last_page || $failed_honeypot ) {
+			return $validation_result;
+		}
+
+		return $this->validation( $validation_result );
+	}
+
 	public function validation( $validation_result ) {
 
-		if ( ! $validation_result['is_valid'] || ! GFFormDisplay::is_last_page( $validation_result['form'] ) ) {
+		if ( ! $validation_result['is_valid'] ) {
 			return $validation_result;
 		}
 
@@ -548,7 +573,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		return $gateway == $this->_slug;
 	}
 
-	protected function get_submission_data( $feed, $form, $entry ) {
+	public function get_submission_data( $feed, $form, $entry ) {
 
 		$submission_data = array();
 
