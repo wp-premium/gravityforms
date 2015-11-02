@@ -57,7 +57,7 @@ class GF_Field_Textarea extends GF_Field {
 
 		$value = esc_textarea( $value );
 
-		return "<div class='ginput_container'>
+		return "<div class='ginput_container ginput_container_textarea'>
 					<textarea name='input_{$id}' id='{$field_id}' class='textarea {$class}' {$tabindex} {$logic_event} {$placeholder_attribute} {$disabled_text} rows='10' cols='50'>{$value}</textarea>
 				</div>";
 	}

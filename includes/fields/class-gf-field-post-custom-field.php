@@ -55,7 +55,7 @@ class GF_Field_Post_Custom_Field extends GF_Field {
 		$logic_event           = $this->get_conditional_logic_event( 'keyup' );
 		$placeholder_attribute = $this->get_field_placeholder_attribute();
 
-		return "<div class='ginput_container'>
+		return "<div class='ginput_container ginput_container_post_custom_field'>
 					<input name='input_{$id}' id='{$field_id}' type='text' value='{$value}' class='{$class}' {$tabindex} {$logic_event} {$placeholder_attribute} {$disabled_text}/>
 				</div>";
 	}

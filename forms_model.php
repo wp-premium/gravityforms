@@ -6,7 +6,8 @@ if ( ! class_exists( 'GFForms' ) ) {
 
 require_once( ABSPATH . WPINC . '/post.php' );
 
-define( 'GFORMS_MAX_FIELD_LENGTH', 200 );
+// Upgraded value columns can hold 4GB
+define( 'GFORMS_MAX_FIELD_LENGTH', get_option( 'gform_longtext_ready' ) ? 4294967295 : 200 );
 
 class GFFormsModel {
 
@@ -1802,12 +1803,20 @@ class GFFormsModel {
 	}
 
 	private static function try_convert_float( $text ) {
+
+		/*
 		global $wp_locale;
 		$number_format = $wp_locale->number_format['decimal_point'] == ',' ? 'decimal_comma' : 'decimal_dot';
 
 		if ( is_numeric( $text ) && $number_format == 'decimal_comma' ) {
 			return GFCommon::format_number( $text, 'decimal_comma' );
 		} else if ( GFCommon::is_numeric( $text, $number_format ) ) {
+			return GFCommon::clean_number( $text, $number_format );
+		}
+		*/
+		
+		$number_format = 'decimal_dot';
+		if ( GFCommon::is_numeric( $text, $number_format ) ) {
 			return GFCommon::clean_number( $text, $number_format );
 		}
 
@@ -2116,7 +2125,7 @@ class GFFormsModel {
 		self::purge_expired_incomplete_submissions();
 
 		$table = self::get_incomplete_submissions_table_name();
-		$sql   = $wpdb->prepare( "SELECT date_created, form_id, submission FROM {$table} WHERE uuid = %s", $token );
+		$sql   = $wpdb->prepare( "SELECT date_created, form_id, submission, source_url FROM {$table} WHERE uuid = %s", $token );
 		$row   = $wpdb->get_row( $sql, ARRAY_A );
 
 		return $row;
@@ -2215,14 +2224,14 @@ class GFFormsModel {
 
 	private static function get_post_field_value( $field, $lead ) {
 
-		if ( is_array( $field->inputs ) ) {
+		if ( is_array( $field->get_entry_inputs() ) ) {
 			$value = array();
 			foreach ( $field->inputs as $input ) {
 				$val = isset( $lead[ strval( $input['id'] ) ] ) ? $lead[ strval( $input['id'] ) ] : '';
 				if ( ! empty( $val ) ) {
 
 					// replace commas in individual values to prevent individual value from being split into multiple values (checkboxes, multiselects)
-					if ( in_array( RGFormsModel::get_input_type( $field ), array( 'checkbox', 'multiselect' ) ) ) {
+					if ( in_array( $field->get_input_type(), array( 'checkbox', 'multiselect' ) ) ) {
 						$val = str_replace( ',', '&#44;', $val );
 					}
 
@@ -2996,7 +3005,8 @@ class GFFormsModel {
 		if ( ! rgblank( $value ) ) {
 
 			$value           = gf_apply_filters( 'gform_save_field_value', array( $form['id'], $field->id ), $value, $lead, $field, $form, $input_id );
-			$truncated_value = GFCommon::safe_substr( $value, 0, GFORMS_MAX_FIELD_LENGTH );
+
+			$truncated_value = get_option( 'gform_longtext_ready' ) ? $value : GFCommon::safe_substr( $value, 0, GFORMS_MAX_FIELD_LENGTH );
 
 			if ( $lead_detail_id > 0 ) {
 

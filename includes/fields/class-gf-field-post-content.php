@@ -62,7 +62,7 @@ class GF_Field_Post_Content extends GF_Field {
 		$logic_event           = $this->get_conditional_logic_event( 'keyup' );
 		$placeholder_attribute = $this->get_field_placeholder_attribute();
 
-		return "<div class='ginput_container'>
+		return "<div class='ginput_container ginput_container_post_content'>
 					<textarea name='input_{$id}' id='{$field_id}' class='textarea {$class}' {$tabindex} {$logic_event} {$placeholder_attribute} {$disabled_text} rows='10' cols='50'>{$value}</textarea>
 				</div>";
 	}

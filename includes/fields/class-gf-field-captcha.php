@@ -152,7 +152,7 @@ class GF_Field_CAPTCHA extends GF_Field {
 					if ( empty( $publickey ) || empty( $privatekey ) ) {
 						return "<div class='captcha_message'>" . esc_html__( 'To use the reCaptcha field you must first do the following:', 'gravityforms' ) . "</div><div class='captcha_message'>1 - <a href='http://www.google.com/recaptcha' target='_blank'>" . sprintf( esc_html__( 'Sign up%s for a free reCAPTCHA account', 'gravityforms' ), '</a>' ) . "</div><div class='captcha_message'>2 - " . sprintf( esc_html__( 'Enter your reCAPTCHA keys in the %ssettings page%s', 'gravityforms' ), "<a href='?page=gf_settings'>", '</a>' ) . '</div>';
 					} else {
-						return "<div class='ginput_container'><img class='gfield_captcha' src='" . GFCommon::get_base_url() . "/images/captcha_$theme.jpg' alt='reCAPTCHA' title='reCAPTCHA'/></div>";
+						return "<div class='ginput_container ginput_container_captcha'><img class='gfield_captcha' src='" . GFCommon::get_base_url() . "/images/captcha_$theme.jpg' alt='reCAPTCHA' title='reCAPTCHA'/></div>";
 					}
 				} else {
 					$language = empty( $this->captchaLanguage ) ? 'en' : esc_attr( $this->captchaLanguage );
@@ -167,7 +167,7 @@ class GF_Field_CAPTCHA extends GF_Field {
 
 					$is_ssl = GFCommon::is_ssl();
 
-					return $options . "<div class='ginput_container' id='$field_id'>" . recaptcha_get_html( $publickey, null, $is_ssl, $language ) . '</div>';
+					return $options . "<div class='ginput_container ginput_container_captcha' id='$field_id'>" . recaptcha_get_html( $publickey, null, $is_ssl, $language ) . '</div>';
 				}
 		}
 	}

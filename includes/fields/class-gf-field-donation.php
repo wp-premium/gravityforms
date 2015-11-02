@@ -68,7 +68,7 @@ class GF_Field_Donation extends GF_Field {
 
 		$tabindex = $this->get_tabindex();
 
-		return "<div class='ginput_container'>
+		return "<div class='ginput_container ginput_container_donation'>
 					<input name='input_{$id}' id='{$field_id}' type='text' value='{$value}' class='{$class} ginput_donation_amount' {$tabindex} {$placeholder_attribute} {$disabled_text}/>
 				</div>";
 

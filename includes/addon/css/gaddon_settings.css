@@ -25,7 +25,11 @@ table.settings-field-map-table tbody td { padding: 0px 0px 8px 0px;}
 .settings-field-map-table .custom-key-container:hover .custom-key-reset, .gaddon-setting-select-custom-container:hover .select-custom-reset { display:block; }
 
 
-.gaddon-setting-select-custom-container { display:inline-block;position:relative; }
+.gaddon-setting-select-custom-container {
+	display:inline-block;
+	position:relative;
+	width: 210px;
+}
 .gaddon-setting-select-custom-container .select-custom-reset {
 	left: 171px;
 	top: 10px;

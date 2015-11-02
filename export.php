@@ -164,6 +164,13 @@ class GFExport {
 			foreach ( $form_ids as $key => $form_id ){
 				$forms[ $key ]['id'] = $form_id;
 			}
+			/**
+			 * Fires after forms have been imported.
+			 *
+			 * @param array $forms An array imported form objects.
+			 *
+			 */
+			do_action( 'gform_forms_post_import', $forms );
 		}
 
 		return sizeof( $form_ids );
@@ -669,6 +676,11 @@ class GFExport {
 
 			GFCommon::log_debug( "GFExport::start_export(): Header for field ID {$field_id}: {$value}" );
 
+			if ( strpos( $value, '=' ) === 0 ) {
+				// Prevent Excel formulas
+				$value = "'" . $value;
+			}
+
 			$headers[ $field_id ] = $value;
 
 			$subrow_count = isset( $field_rows[ $field_id ] ) ? intval( $field_rows[ $field_id ] ) : 0;
@@ -719,6 +731,12 @@ class GFExport {
 						foreach ( $list as $row ) {
 							$row_values = array_values( $row );
 							$row_str    = implode( '|', $row_values );
+
+							if ( strpos( $row_str, '=' ) === 0 ) {
+								// Prevent Excel formulas
+								$row_str = "'" . $row_str;
+							}
+
 							$lines .= '"' . str_replace( '"', '""', $row_str ) . '"' . $separator;
 						}
 
@@ -731,6 +749,11 @@ class GFExport {
 						$value = maybe_unserialize( $value );
 						if ( is_array( $value ) ) {
 							$value = implode( '|', $value );
+						}
+
+						if ( strpos( $value, '=' ) === 0 ) {
+							// Prevent Excel formulas
+							$value = "'" . $value;
 						}
 
 						$lines .= '"' . str_replace( '"', '""', $value ) . '"' . $separator;

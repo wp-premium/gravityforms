@@ -33,11 +33,11 @@ class GF_Field_Total extends GF_Field {
 		$field_id    = $is_entry_detail || $is_form_editor || $form_id == 0 ? "input_$id" : 'input_' . $form_id . "_$id";
 
 		if ( $is_entry_detail ) {
-			return "<div class='ginput_container'>
+			return "<div class='ginput_container ginput_container_total'>
 						<input type='text' name='input_{$id}' value='{$value}' />
 					</div>";
 		} else {
-			return "<div class='ginput_container'>
+			return "<div class='ginput_container ginput_container_total'>
 						<span class='ginput_total ginput_total_{$form_id}'>" . GFCommon::to_money( '0' ) . "</span>
 						<input type='hidden' name='input_{$id}' id='{$field_id}' class='gform_hidden'/>
 					</div>";

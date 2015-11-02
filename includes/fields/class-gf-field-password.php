@@ -113,7 +113,7 @@ class GF_Field_Password extends GF_Field {
 		$confirm_password_placeholder_attribute = GFCommon::get_input_placeholder_attribute( $confirm_password_field_input );
 
 		if ( $is_sub_label_above ) {
-			return "<div class='ginput_complex$class_suffix ginput_container' id='{$field_id}_container'>
+			return "<div class='ginput_complex$class_suffix ginput_container ginput_container_password' id='{$field_id}_container'>
 					<span id='{$field_id}_1_container' class='ginput_left'>
 						<label for='{$field_id}' {$sub_label_class_attribute}>{$enter_password_label}</label>
 						<input type='password' name='input_{$id}' id='{$field_id}' {$onkeyup} {$onchange} value='{$password_value}' {$first_tabindex} {$enter_password_placeholder_attribute} {$disabled_text}/>
@@ -125,7 +125,7 @@ class GF_Field_Password extends GF_Field {
 					<div class='gf_clear gf_clear_complex'></div>
 				</div>{$strength}";
 		} else {
-			return "<div class='ginput_complex$class_suffix ginput_container' id='{$field_id}_container'>
+			return "<div class='ginput_complex$class_suffix ginput_container ginput_container_password' id='{$field_id}_container'>
 					<span id='{$field_id}_1_container' class='ginput_left'>
 						<input type='password' name='input_{$id}' id='{$field_id}' {$onkeyup} {$onchange} value='{$password_value}' {$first_tabindex} {$enter_password_placeholder_attribute} {$disabled_text}/>
 						<label for='{$field_id}' {$sub_label_class_attribute}>{$enter_password_label}</label>

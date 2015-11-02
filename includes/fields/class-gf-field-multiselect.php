@@ -93,7 +93,7 @@ class GF_Field_MultiSelect extends GF_Field {
 			$size = 7;
 		}
 
-		return sprintf( "<div class='ginput_container'><select multiple='multiple' {$placeholder} size='{$size}' name='input_%d[]' id='%s' {$logic_event} class='%s' $tabindex %s>%s</select></div>", $id, esc_attr( $field_id ), $css_class, $disabled_text, $this->get_choices( $value ) );
+		return sprintf( "<div class='ginput_container ginput_container_multiselect'><select multiple='multiple' {$placeholder} size='{$size}' name='input_%d[]' id='%s' {$logic_event} class='%s' $tabindex %s>%s</select></div>", $id, esc_attr( $field_id ), $css_class, $disabled_text, $this->get_choices( $value ) );
 	}
 
 	/**
@@ -104,7 +104,7 @@ class GF_Field_MultiSelect extends GF_Field {
 	 * @return string
 	 */
 	public function get_choices( $value ) {
-		return GFCommon::get_select_choices( $this, $value );
+		return GFCommon::get_select_choices( $this, $value, false );
 	}
 
 	/**
@@ -183,21 +183,20 @@ class GF_Field_MultiSelect extends GF_Field {
 	 * @return string
 	 */
 	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {
+		$items = explode( ',', $value );
+
 		if ( $this->type == 'post_category' ) {
 			$use_id = $modifier == 'id';
-			$items  = explode( ',', $value );
 
 			if ( is_array( $items ) ) {
-				$cats = array();
-				foreach ( $items as $item ) {
+				foreach ( $items as &$item ) {
 					$cat    = GFCommon::format_post_category( $item, $use_id );
-					$cats[] = GFCommon::format_variable_value( $cat, $url_encode, $esc_html, $format );
+					$item = GFCommon::format_variable_value( $cat, $url_encode, $esc_html, $format );
 				}
-				$value = GFCommon::implode_non_blank( ', ', $cats );
 			}
 		}
 
-		return $value;
+		return GFCommon::implode_non_blank( ', ', $items );
 	}
 
 	/**

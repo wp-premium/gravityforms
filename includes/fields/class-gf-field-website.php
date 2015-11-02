@@ -76,7 +76,7 @@ class GF_Field_Website extends GF_Field {
 		$value    = esc_attr( $value );
 		$class    = esc_attr( $class );
 
-		return "<div class='ginput_container'>
+		return "<div class='ginput_container ginput_container_website'>
                     <input name='input_{$id}' id='{$field_id}' type='$html_input_type' value='{$value}' class='{$class}' {$max_length} {$tabindex} {$logic_event} {$disabled_text} {$placeholder_attribute}/>
                 </div>";
 	}

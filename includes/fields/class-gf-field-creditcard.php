@@ -271,7 +271,7 @@ class GF_Field_CreditCard extends GF_Field {
                                         </span>";
 		}
 
-		return "<div class='ginput_complex{$class_suffix} ginput_container' id='{$field_id}'>" . $card_field . $expiration_field . $security_field . $card_name_field . ' </div>';
+		return "<div class='ginput_complex{$class_suffix} ginput_container ginput_container_creditcard' id='{$field_id}'>" . $card_field . $expiration_field . $security_field . $card_name_field . ' </div>';
 
 	}
 

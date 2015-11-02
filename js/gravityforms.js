@@ -287,14 +287,16 @@ function gformCalculateTotalPrice(formId){
     var totalElement = jQuery(".ginput_total_" + formId);
     if( totalElement.length > 0 ) {
 
-        var currentTotal = totalElement.next().val();
+        var currentTotal = totalElement.next().val(),
+            formattedTotal = gformFormatMoney(price);
 
-        if( currentTotal == price ) {
-            return;
+        if (currentTotal != price) {
+            totalElement.next().val(price).change();
         }
 
-        totalElement.next().val( price ).change();
-        totalElement.html( gformFormatMoney( price ) );
+        if (formattedTotal != totalElement.first().text()) {
+            totalElement.html(formattedTotal);
+        }
 
     }
 }
@@ -1465,4 +1467,43 @@ function gformInitSpinner( formId, spinnerUrl ) {
 		}
 	});
 
+}
+
+
+
+//----------------------------------------
+//------ EVENT FUNCTIONS -----------------
+//----------------------------------------
+
+function gf_input_change( elem, formId, fieldId ) {
+    gform.doAction( 'gform_input_change', elem, formId, fieldId );
+}
+
+
+
+//----------------------------------------
+//------ HELPER FUNCTIONS ----------------
+//----------------------------------------
+
+if( ! window['rgars'] ) {
+    function rgars( array, prop ) {
+
+        var props = prop.split( '/' ),
+            value = array;
+
+        for( var i = 0; i < props.length; i++ ) {
+            value = rgar( value, props[ i ] );
+        }
+
+        return value;
+    }
+}
+
+if( ! window['rgar'] ) {
+    function rgar( array, prop ) {
+        if ( typeof array[ prop ] != 'undefined' ) {
+            return array[ prop ];
+        }
+        return '';
+    }
 }

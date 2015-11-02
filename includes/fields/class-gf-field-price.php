@@ -60,7 +60,7 @@ class GF_Field_Price extends GF_Field {
 
 		$tabindex = $this->get_tabindex();
 
-		return "<div class='ginput_container'>
+		return "<div class='ginput_container ginput_container_product_price'>
 					<input name='input_{$id}' id='{$field_id}' type='text' value='{$value}' class='{$class} ginput_amount' {$tabindex} {$logic_event} {$placeholder_attribute} {$disabled_text}/>
 				</div>";
 

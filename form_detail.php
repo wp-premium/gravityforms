@@ -1406,7 +1406,7 @@ class GFFormDetail {
 			</div>
 
 			<?php $window_title = __( 'Bulk Add / Predefined Choices', 'gravityforms' ); ?>
-			<input type='button' value='<?php echo esc_attr( $window_title ) ?>' onclick="tb_show('<?php echo esc_js( $window_title ) ?>', '#TB_inline?height=500&amp;width=600&amp;inlineId=gfield_bulk_add', '');" class="button" />
+			<input type='button' value='<?php echo esc_attr( $window_title ) ?>' onclick="tb_show('<?php echo esc_js( $window_title ) ?>', '#TB_inline?height=400&amp;width=600&amp;inlineId=gfield_bulk_add', '');" class="button" />
 
 			<div id="gfield_bulk_add" style="display:none;">
 				<div>

@@ -119,6 +119,7 @@ class GF_Field_Name extends GF_Field {
 				$middle_markup         = '';
 				$last_markup           = '';
 				$suffix_markup         = '';
+
 				if ( $is_sub_label_above ) {
 
 					$style = ( $is_admin && rgar( $prefix_input, 'isHidden' ) ) ? "style='display:none;'" : '';
@@ -209,6 +210,7 @@ class GF_Field_Name extends GF_Field {
 				}
 				$css_class = $this->get_css_class();
 
+
 				return "<div class='ginput_complex{$class_suffix} ginput_container {$css_class}' id='{$field_id}'>
                             {$prefix_markup}
                             {$first_markup}
@@ -223,7 +225,7 @@ class GF_Field_Name extends GF_Field {
 				$tabindex              = GFCommon::get_tabindex();
 				$placeholder_attribute = GFCommon::get_field_placeholder_attribute( $this );
 
-				return "<div class='ginput_container'>
+				return "<div class='ginput_container ginput_container_name'>
                                     <input name='input_{$id}' id='{$field_id}' type='text' value='{$value}' class='{$class}' {$tabindex} {$disabled_text} {$placeholder_attribute}/>
                                 </div>";
 
@@ -289,36 +291,44 @@ class GF_Field_Name extends GF_Field {
 		$suffix_input = GFFormsModel::get_input( $this, $this->id . '.8' );
 
 		$css_class = '';
+		$visible_input_count = 0;
 
 		if ( $prefix_input && ! rgar( $prefix_input, 'isHidden' ) ) {
+			$visible_input_count++;
 			$css_class .= 'has_prefix ';
 		} else {
 			$css_class .= 'no_prefix ';
 		}
 
 		if ( $first_input && ! rgar( $first_input, 'isHidden' ) ) {
+			$visible_input_count++;
 			$css_class .= 'has_first_name ';
 		} else {
 			$css_class .= 'no_first_name ';
 		}
 
 		if ( $middle_input && ! rgar( $middle_input, 'isHidden' ) ) {
+			$visible_input_count++;
 			$css_class .= 'has_middle_name ';
 		} else {
 			$css_class .= 'no_middle_name ';
 		}
 
 		if ( $last_input && ! rgar( $last_input, 'isHidden' ) ) {
+			$visible_input_count++;
 			$css_class .= 'has_last_name ';
 		} else {
 			$css_class .= 'no_last_name ';
 		}
 
 		if ( $suffix_input && ! rgar( $suffix_input, 'isHidden' ) ) {
+			$visible_input_count++;
 			$css_class .= 'has_suffix ';
 		} else {
 			$css_class .= 'no_suffix ';
 		}
+
+		$css_class .= "gf_name_has_{$visible_input_count} ginput_container_name ";
 
 		return trim( $css_class );
 	}
