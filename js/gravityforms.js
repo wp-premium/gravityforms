@@ -287,14 +287,16 @@ function gformCalculateTotalPrice(formId){
     var totalElement = jQuery(".ginput_total_" + formId);
     if( totalElement.length > 0 ) {
 
-        var currentTotal = totalElement.next().val();
+        var currentTotal = totalElement.next().val(),
+            formattedTotal = gformFormatMoney(price);
 
-        if( currentTotal == price ) {
-            return;
+        if (currentTotal != price) {
+            totalElement.next().val(price).change();
         }
 
-        totalElement.next().val( price ).change();
-        totalElement.html( gformFormatMoney( price ) );
+        if (formattedTotal != totalElement.first().text()) {
+            totalElement.html(formattedTotal);
+        }
 
     }
 }
@@ -663,64 +665,92 @@ function gformPasswordStrength(password1, password2) {
 
 }
 
+
+
 //----------------------------
 //------ LIST FIELD ----------
 //----------------------------
-var gfield_original_title = "";
-function gformAddListItem(element, max){
 
-    if(jQuery(element).hasClass("gfield_icon_disabled"))
+function gformAddListItem( addButton, max ) {
+
+    var $addButton = jQuery( addButton );
+
+    if( $addButton.hasClass( 'gfield_icon_disabled' ) ) {
         return;
+    }
 
-    var tr = jQuery(element).closest('tr');
-    var clone = tr.clone();
-    var tabindex = clone.find(":input:last").attr("tabindex");
+    var $group     = $addButton.parents( '.gfield_list_group' ),
+        $clone     = $group.clone(),
+        $container = $group.parents( '.gfield_list_container' ),
+        tabindex   = $clone.find( ':input:last' ).attr( 'tabindex' );
 
-    clone.find("input, select").attr("tabindex", tabindex).not(":checkbox, :radio").val("");
-    clone.find(":checkbox, :radio").prop("checked", false);
-    clone = gform.applyFilters( 'gform_list_item_pre_add', clone );
+    // reset all inputs to empty state
+    $clone
+        .find( 'input, select' ).attr( 'tabindex', tabindex )
+        .not( ':checkbox, :radio' ).val( '' );
+    $clone.find( ':checkbox, :radio' ).prop( 'checked', false );
 
-    tr.after(clone);
-    gformToggleIcons(tr.parent(), max);
-    gformAdjustClasses(tr.parent());
+    $clone = gform.applyFilters( 'gform_list_item_pre_add', $clone );
+
+    $group.after( $clone );
+
+    gformToggleIcons( $container, max );
+    gformAdjustClasses( $container );
+
 }
 
-function gformDeleteListItem(element, max){
-    var tr = jQuery(element).parent().parent();
-    var parent = tr.parent();
-    tr.remove();
-    gformToggleIcons(parent, max);
-    gformAdjustClasses(parent);
+function gformDeleteListItem( deleteButton, max ) {
+
+    var $deleteButton = jQuery( deleteButton ),
+        $group        = $deleteButton.parents( '.gfield_list_group' ),
+        $container    = $group.parents( '.gfield_list_container' );
+
+    $group.remove();
+
+    gformToggleIcons( $container, max );
+    gformAdjustClasses( $container );
+
 }
 
-function gformAdjustClasses(table){
-    var rows = table.children();
-    for(var i=0; i<rows.length; i++){
-        var odd_even_class = (i+1) % 2 == 0 ? "gfield_list_row_even" : "gfield_list_row_odd";
-        jQuery(rows[i]).removeClass("gfield_list_row_odd").removeClass("gfield_list_row_even").addClass(odd_even_class);
+function gformAdjustClasses( $container ) {
+
+    var $groups = $container.find( '.gfield_list_group' );
+
+    $groups.each( function( i ) {
+
+        var $group       = jQuery( this ),
+            oddEvenClass = ( i + 1 ) % 2 == 0 ? 'gfield_list_row_even' : 'gfield_list_row_odd';
+
+        $group.removeClass( 'gfield_list_row_odd gfield_list_row_even' ).addClass( oddEvenClass );
+
+    } );
+
+}
+
+function gformToggleIcons( $container, max ) {
+
+    var groupCount  = $container.find( '.gfield_list_group' ).length,
+        $addButtons = $container.find( '.add_list_item' );
+
+    $container.find( '.delete_list_item' ).css( 'visibility', groupCount == 1 ? 'hidden' : 'visible' );
+
+    if ( max > 0 && groupCount >= max ) {
+
+        // store original title in the add button
+        $addButtons.data( 'title', $container.find( '.add_list_item' ).attr( 'title' ) );
+        $addButtons.addClass( 'gfield_icon_disabled' ).attr( 'title', '' );
+
+    } else if( max > 0 ) {
+
+        $addButtons.removeClass( 'gfield_icon_disabled' );
+
+        if( $addButtons.data( 'title' ) )   {
+            $addButtons.attr( 'title', $addButtons.data( 'title' ) );
+        }
+
     }
 }
 
-function gformToggleIcons(table, max){
-    var rowCount = table.children().length;
-    if(rowCount == 1){
-        table.find(".delete_list_item").css("visibility", "hidden");
-    }
-    else{
-        table.find(".delete_list_item").css("visibility", "visible");
-    }
-
-    if(max > 0 && rowCount >= max){
-        gfield_original_title = table.find(".add_list_item:first").attr("title");
-        table.find(".add_list_item").addClass("gfield_icon_disabled").attr("title", "");
-    }
-    else{
-        var addIcons = table.find(".add_list_item");
-        addIcons.removeClass("gfield_icon_disabled");
-        if(gfield_original_title)
-            addIcons.attr("title", gfield_original_title);
-    }
-}
 
 
 //-----------------------------------
@@ -1465,4 +1495,43 @@ function gformInitSpinner( formId, spinnerUrl ) {
 		}
 	});
 
+}
+
+
+
+//----------------------------------------
+//------ EVENT FUNCTIONS -----------------
+//----------------------------------------
+
+function gf_input_change( elem, formId, fieldId ) {
+    gform.doAction( 'gform_input_change', elem, formId, fieldId );
+}
+
+
+
+//----------------------------------------
+//------ HELPER FUNCTIONS ----------------
+//----------------------------------------
+
+if( ! window['rgars'] ) {
+    function rgars( array, prop ) {
+
+        var props = prop.split( '/' ),
+            value = array;
+
+        for( var i = 0; i < props.length; i++ ) {
+            value = rgar( value, props[ i ] );
+        }
+
+        return value;
+    }
+}
+
+if( ! window['rgar'] ) {
+    function rgar( array, prop ) {
+        if ( typeof array[ prop ] != 'undefined' ) {
+            return array[ prop ];
+        }
+        return '';
+    }
 }

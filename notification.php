@@ -39,7 +39,7 @@ Class GFNotification {
 
 		$form = RGFormsModel::get_form_meta( $form_id );
 
-		$form = gf_apply_filters( 'gform_form_notification_page', $form_id, $form, $notification_id );
+		$form = gf_apply_filters( array( 'gform_form_notification_page', $form_id ), $form, $notification_id );
 
 		$notification = ! $notification_id ? array() : self::get_notification( $form, $notification_id );
 
@@ -101,7 +101,7 @@ Class GFNotification {
 			if ( rgpost( 'gform_is_default' ) ) {
 				$notification['isDefault'] = true;
 			}
-			$notification = gf_apply_filters( 'gform_pre_notification_save', $form_id, $notification, $form, $is_new_notification );
+			$notification = gf_apply_filters( array( 'gform_pre_notification_save', $form_id ), $notification, $form, $is_new_notification );
 
 			//validating input...
 			$is_valid = self::validate_notification();
@@ -552,7 +552,7 @@ Class GFNotification {
 		$ui_settings = array();
 		$form_id     = rgget( 'id' );
 		$form        = RGFormsModel::get_form_meta( $form_id );
-		$form        = gf_apply_filters( 'gform_admin_pre_render', $form_id, $form );
+		$form        = gf_apply_filters( array( 'gform_admin_pre_render', $form_id ), $form );
 		$is_valid    = empty( GFCommon::$errors );
 
 		ob_start(); ?>
@@ -574,7 +574,7 @@ Class GFNotification {
 		<?php
 		$notification_events = array( 'form_submission' => esc_html__( 'Form is submitted', 'gravityforms' ) );
 		if ( rgars( $form, 'save/enabled' ) ) {
-			$notification_events['form_saved'] = esc_html__( 'Form is saved', 'gravityforms' );
+			$notification_events['form_saved']                = esc_html__( 'Form is saved', 'gravityforms' );
 			$notification_events['form_save_email_requested'] = esc_html__( 'Save and continue email is requested', 'gravityforms' );
 		}
 		$notification_events = apply_filters( 'gform_notification_events', $notification_events, $form );
@@ -664,7 +664,7 @@ Class GFNotification {
 		<?php $ui_settings['notification_to_email'] = ob_get_contents();
 		ob_clean(); ?>
 
-		<?php $email_fields = gf_apply_filters( 'gform_email_fields_notification_admin', $form['id'], GFCommon::get_email_fields( $form ), $form ); ?>
+		<?php $email_fields = gf_apply_filters( array( 'gform_email_fields_notification_admin', $form['id'] ), GFCommon::get_email_fields( $form ), $form ); ?>
 		<tr id="gform_notification_to_field_container" class="notification_to_container <?php echo esc_attr( $send_to_class ) ?>" <?php echo $notification_to_type != 'field' ? "style='display:none';" : '' ?>>
 			<?php echo $subsetting_open; ?>
 			<th scope="row"><?php esc_html_e( 'Send to Field', 'gravityforms' ) ?></th>
@@ -928,7 +928,7 @@ Class GFNotification {
 
 		<?php
 		ob_end_clean();
-		$ui_settings = gf_apply_filters( 'gform_notification_ui_settings', $form_id, $ui_settings, $notification, $form );
+		$ui_settings = gf_apply_filters( array( 'gform_notification_ui_settings', $form_id ), $ui_settings, $notification, $form );
 
 		return $ui_settings;
 	}
@@ -1001,8 +1001,7 @@ Class GFNotification {
 
 	private static function get_first_routing_field( $form ) {
 		foreach ( $form['fields'] as $field ) {
-			$input_type = RGFormsModel::get_input_type( $field );
-			if ( in_array( $input_type, self::$supported_fields ) ) {
+			if ( in_array( $field->get_input_type(), self::get_routing_field_types() ) ) {
 				return $field->id;
 			}
 		}
@@ -1013,9 +1012,8 @@ Class GFNotification {
 	private static function get_routing_fields( $form, $selected_field_id ) {
 		$str = '';
 		foreach ( $form['fields'] as $field ) {
-			$input_type  = RGFormsModel::get_input_type( $field );
 			$field_label = RGFormsModel::get_label( $field );
-			if ( in_array( $input_type, self::get_routing_field_types() ) ) {
+			if ( in_array( $field->get_input_type(), self::get_routing_field_types() ) ) {
 				$selected = $field->id == $selected_field_id ? "selected='selected'" : '';
 				$str .= "<option value='" . $field->id . "' " . $selected . '>' . $field_label . '</option>';
 			}

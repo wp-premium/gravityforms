@@ -60,7 +60,7 @@ class GF_Field_Radio extends GF_Field {
 		$field_id      = $is_entry_detail || $is_form_editor || $form_id == 0 ? "input_$id" : 'input_' . $form_id . "_$id";
 		$disabled_text = $is_form_editor ? 'disabled="disabled"' : '';
 
-		return sprintf( "<div class='ginput_container'><ul class='gfield_radio' id='%s'>%s</ul></div>", $field_id, $this->get_radio_choices( $value, $disabled_text, $form_id ) );
+		return sprintf( "<div class='ginput_container ginput_container_radio'><ul class='gfield_radio' id='%s'>%s</ul></div>", $field_id, $this->get_radio_choices( $value, $disabled_text, $form_id ) );
 
 	}
 
@@ -134,7 +134,8 @@ class GF_Field_Radio extends GF_Field {
 
 				$choice_markup = sprintf( "<li class='gchoice_$id'><input name='input_%d' type='radio' value='%s' %s id='choice_%s' $tabindex %s $logic_event %s />%s</li>", $this->id, esc_attr( $field_value ), $checked, $id, $disabled_text, $input_focus, $label );
 
-				$choices .= gf_apply_filters( 'gform_field_choice_markup_pre_render', array(
+				$choices .= gf_apply_filters( array(
+					'gform_field_choice_markup_pre_render',
 					$this->formId,
 					$this->id
 				), $choice_markup, $choice, $this, $value );
@@ -152,7 +153,7 @@ class GF_Field_Radio extends GF_Field {
 			}
 		}
 
-		return gf_apply_filters( 'gform_field_choices', $this->formId, $choices, $this );
+		return gf_apply_filters( array( 'gform_field_choices', $this->formId ), $choices, $this );
 	}
 
 	public function get_value_default() {

@@ -43,7 +43,7 @@ class GF_Field_Checkbox extends GF_Field {
 		$field_id      = $is_entry_detail || $is_form_editor || $form_id == 0 ? "input_$id" : 'input_' . $form_id . "_$id";
 		$disabled_text = $is_form_editor ? 'disabled="disabled"' : '';
 
-		return sprintf( "<div class='ginput_container'><ul class='gfield_checkbox' id='%s'>%s</ul></div>", esc_attr( $field_id ), $this->get_checkbox_choices( $value, $disabled_text, $form_id ) );
+		return sprintf( "<div class='ginput_container ginput_container_checkbox'><ul class='gfield_checkbox' id='%s'>%s</ul></div>", esc_attr( $field_id ), $this->get_checkbox_choices( $value, $disabled_text, $form_id ) );
 	}
 
 	public function get_first_input_id( $form ) {
@@ -68,7 +68,11 @@ class GF_Field_Checkbox extends GF_Field {
 		$value = array();
 		foreach ( $this->inputs as $input ) {
 			if ( ! empty( $_POST[ 'is_submit_' . $this->formId ] ) && $get_from_post_global_var ) {
-				$value[ strval( $input['id'] ) ] = rgpost( 'input_' . str_replace( '.', '_', strval( $input['id'] ) ) );
+				$input_value = rgpost( 'input_' . str_replace( '.', '_', strval( $input['id'] ) ) );
+				if ( is_array( $input_value ) ) {
+					 $input_value = '';
+				}
+				$value[ strval( $input['id'] ) ] = $input_value;
 			} else {
 				if ( is_array( $parameter_values ) ) {
 					foreach ( $parameter_values as $item ) {
@@ -186,6 +190,11 @@ class GF_Field_Checkbox extends GF_Field {
 		if ( empty( $value ) ){
 			return '';
 		} elseif ( is_array( $value ) ){
+			foreach ( $value as &$v ) {
+				if ( ! is_string( $v ) ) {
+					$v = '';
+				}
+			}
 			return implode( ',', $value );
 		} else {
 			return $this->sanitize_entry_value( $value, $form['id'] );
@@ -237,7 +246,8 @@ class GF_Field_Checkbox extends GF_Field {
 								<label for='choice_{$id}' id='label_{$id}'>{$choice['text']}</label>
 							</li>";
 
-				$choices .= gf_apply_filters( 'gform_field_choice_markup_pre_render', array(
+				$choices .= gf_apply_filters( array(
+					'gform_field_choice_markup_pre_render',
 					$this->formId,
 					$this->id
 				), $choice_markup, $choice, $this, $value );
@@ -259,7 +269,7 @@ class GF_Field_Checkbox extends GF_Field {
 			}
 		}
 
-		return gf_apply_filters( 'gform_field_choices', $this->formId, $choices, $this );
+		return gf_apply_filters( array( 'gform_field_choices', $this->formId, $this->id ), $choices, $this );
 
 	}
 
@@ -303,13 +313,16 @@ class GF_Field_Checkbox extends GF_Field {
 
 	public function is_checkbox_checked( $field_id, $field_label, $entry ) {
 
+		$allowed_tags = wp_kses_allowed_html( 'post' );
+
 		//looping through lead detail values trying to find an item identical to the column label. Mark with a tick if found.
 		$lead_field_keys = array_keys( $entry );
 		foreach ( $lead_field_keys as $input_id ) {
 			//mark as a tick if input label (from form meta) is equal to submitted value (from lead)
 			if ( is_numeric( $input_id ) && absint( $input_id ) == absint( $field_id ) ) {
-				$sanitized_value = wp_kses( $entry[ $input_id ], wp_kses_allowed_html( 'post' ) );
-				if ( $sanitized_value == $field_label ) {
+				$sanitized_value = wp_kses( $entry[ $input_id ], $allowed_tags );
+				$sanitized_label = wp_kses( $field_label, $allowed_tags );
+				if ( $sanitized_value == $sanitized_label ) {
 					return $entry[ $input_id ];
 				} else {
 					if ( $this->enableChoiceValue || $this->enablePrice ) {

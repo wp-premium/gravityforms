@@ -266,7 +266,8 @@ class GF_Field extends stdClass implements ArrayAccess {
 			if ( is_array( $value ) ) {
 				//empty if any of the inputs are empty (for inputs with the same name)
 				foreach ( $value as $input ) {
-					if ( strlen( trim( $input ) ) <= 0 ) {
+					$input = GFCommon::trim_deep( $input );
+					if ( GFCommon::safe_strlen( $input ) <= 0 ) {
 						return true;
 					}
 				}
@@ -382,7 +383,7 @@ class GF_Field extends stdClass implements ArrayAccess {
 	}
 
 	/**
-	 * Format the entry value for when the field/input merge tag is processed.
+	 * Format the entry value for when the field/input merge tag is processed. Not called for the {all_fields} merge tag.
 	 *
 	 * @param string|array $value The field value. Depending on the location the merge tag is being used the following functions may have already been applied to the value: esc_html, nl2br, and urlencode.
 	 * @param string $input_id The field or input ID from the merge tag currently being processed.
@@ -428,7 +429,9 @@ class GF_Field extends stdClass implements ArrayAccess {
 	 * @return string
 	 */
 	public function get_value_entry_detail( $value, $currency = '', $use_text = false, $format = 'html', $media = 'screen' ) {
+
 		if ( ! is_array( $value ) && $format == 'html' ) {
+			$value = esc_html( $value );
 			$value = nl2br( $value );
 		}
 
@@ -834,20 +837,22 @@ class GF_Field extends stdClass implements ArrayAccess {
 	 */
 	public function sanitize_entry_value( $value, $form_id ) {
 
+		if ( is_array( $value ) ) {
+			return '';
+		}
+
 		//allow HTML for certain field types
 		$allow_html = $this->allow_html();
 
-		$allowable_tags = gf_apply_filters( 'gform_allowable_tags', $form_id, $allow_html, $this, $form_id );
+		$allowable_tags = gf_apply_filters( array( 'gform_allowable_tags', $form_id ), $allow_html, $this, $form_id );
 
+		// strip_tags() doesn't sanitize. It leaves inline JavaScript in attributes intact.
+		$value = wp_kses_post( $value );
 
 		if ( $allowable_tags !== true ) {
 			$value = strip_tags( $value, $allowable_tags );
-
 			return $value;
 		} else {
-			//removing script tags from value if $allowable_tags variable is not specified.
-			$value = $this->strip_script_tag( $value );
-
 			return $value;
 		}
 	}

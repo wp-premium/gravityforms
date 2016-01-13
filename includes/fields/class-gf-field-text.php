@@ -67,7 +67,7 @@ class GF_Field_Text extends GF_Field {
 
 		$input = "<input name='input_{$id}' id='{$field_id}' type='{$html_input_type}' value='{$value}' class='{$class}' {$max_length} {$tabindex} {$logic_event} {$placeholder_attribute} {$disabled_text}/>";
 
-		return sprintf( "<div class='ginput_container'>%s</div>", $input );
+		return sprintf( "<div class='ginput_container ginput_container_text'>%s</div>", $input );
 	}
 
 	public function allow_html() {

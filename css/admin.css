@@ -78,10 +78,6 @@ table.xwidefat {
 	width: 99% !important;
 }
 
-div.wrap {
-	position: relative;
-}
-
 .hr-divider {
 	background-color: #FFF;
 	height: 1px;
@@ -4339,9 +4335,11 @@ textarea#gfield_bulk_add_input {
 	height: 290px;
 }
 
+/** remove soon; temporarily commenting out for record if removal causes issues
 #TB_ajaxContent {
 	height: 400px !important;
 }
+**/
 
 div.wrap.gf_browser_ie .ginput_complex .ginput_cardinfo_right input.ginput_card_security_code {
 	top: 0;

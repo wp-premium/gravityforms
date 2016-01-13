@@ -26,7 +26,7 @@ class GFUpdate {
 		<link rel="stylesheet" href="<?php echo GFCommon::get_base_url() . "/css/admin{$min}.css" ?>" />
 
 		<div class="wrap <?php echo GFCommon::get_browser_class() ?>">
-			<h2><?php esc_html( 'Gravity Forms Updates', 'gravityforms' ) ?></h2>
+			<h2><?php esc_html_e( 'Gravity Forms Updates', 'gravityforms' ) ?></h2>
 			<?php
 
 			$version_info = GFCommon::get_version_info( false );

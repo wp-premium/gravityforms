@@ -47,7 +47,20 @@ class GF_Field_Phone extends GF_Field {
 		}
 	}
 
+	/**
+	 * Returns the field input.
+	 *
+	 * @param array $form
+	 * @param string $value
+	 * @param null|array $entry
+	 *
+	 * @return string
+	 */
 	public function get_field_input( $form, $value = '', $entry = null ) {
+
+		if ( is_array( $value ) ) {
+			$value = '';
+		}
 
 		$is_entry_detail = $this->is_entry_detail();
 		$is_form_editor  = $this->is_form_editor();
@@ -69,11 +82,25 @@ class GF_Field_Phone extends GF_Field {
 
 		$tabindex = $this->get_tabindex();
 
-		return sprintf( "<div class='ginput_container'><input name='input_%d' id='%s' type='{$html_input_type}' value='%s' class='%s' {$tabindex} {$logic_event} {$placeholder_attribute} %s/>{$instruction_div}</div>", $id, $field_id, esc_attr( $value ), esc_attr( $class ), $disabled_text );
+		return sprintf( "<div class='ginput_container ginput_container_phone'><input name='input_%d' id='%s' type='{$html_input_type}' value='%s' class='%s' {$tabindex} {$logic_event} {$placeholder_attribute} %s/>{$instruction_div}</div>", $id, $field_id, esc_attr( $value ), esc_attr( $class ), $disabled_text );
 
 	}
 
+	public function get_value_submission( $field_values, $get_from_post_global_var = true ) {
+
+		$value = parent::get_value_submission( $field_values, $get_from_post_global_var );
+		$value = $this->sanitize_entry_value( $value, $this->formId );
+
+		return $value;
+	}
+
+	public function sanitize_entry_value( $value, $form_id ) {
+		$value = is_array( $value ) ? '' : sanitize_text_field( $value );
+		return $value;
+	}
+
 	public function get_value_save_entry( $value, $form, $input_name, $lead_id, $lead ) {
+		$value = $this->sanitize_entry_value( $value, $form['id'] );
 
 		if ( $this->phoneFormat == 'standard' && preg_match( '/^\D?(\d{3})\D?\D?(\d{3})\D?(\d{4})$/', $value, $matches ) ) {
 			$value = sprintf( '(%s) %s-%s', $matches[1], $matches[2], $matches[3] );

@@ -107,7 +107,7 @@ class GFFormSettings {
 			$form = $updated_form;
 		}
 
-		$form = gf_apply_filters( 'gform_admin_pre_render', $form_id, $form );
+		$form = gf_apply_filters( array( 'gform_admin_pre_render', $form_id ), $form );
 
 		self::page_header( __( 'Form Settings', 'gravityforms' ) );
 
@@ -1050,7 +1050,7 @@ class GFFormSettings {
 	public static function confirmations_edit_page( $form_id, $confirmation_id ) {
 
 
-		$form = gf_apply_filters( 'gform_admin_pre_render', $form_id, GFFormsModel::get_form_meta( $form_id ) );
+		$form = gf_apply_filters( array( 'gform_admin_pre_render', $form_id ), GFFormsModel::get_form_meta( $form_id ) );
 
 		$duplicated_cid = rgget( 'duplicatedcid' );
 		$is_duplicate   = empty( $_POST ) && ! empty( $duplicated_cid );
@@ -1350,7 +1350,7 @@ class GFFormSettings {
 
 		<?php
 		ob_end_clean();
-		$ui_settings = gf_apply_filters( 'gform_confirmation_ui_settings', $form_id, $ui_settings, $confirmation, $form );
+		$ui_settings = gf_apply_filters( array( 'gform_confirmation_ui_settings', $form_id ), $ui_settings, $confirmation, $form );
 
 		return $ui_settings;
 	}
@@ -1510,7 +1510,7 @@ class GFFormSettings {
 			return $confirmation;
 
 		// allow user to filter confirmation before save
-		$confirmation = gf_apply_filters( 'gform_pre_confirmation_save', $form['id'], $confirmation, $form, $is_new_confirmation );
+		$confirmation = gf_apply_filters( array( 'gform_pre_confirmation_save', $form['id'] ), $confirmation, $form, $is_new_confirmation );
 
 		// trim values
 		$confirmation = GFFormsModel::trim_conditional_logic_values_from_element( $confirmation, $form );
