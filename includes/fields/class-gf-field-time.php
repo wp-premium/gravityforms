@@ -116,14 +116,14 @@ class GF_Field_Time extends GF_Field {
 		if ( $is_form_editor || $this->timeFormat != '24' ) {
 			$am_text = esc_html__( 'AM', 'gravityforms' );
 			$pm_text = esc_html__( 'PM', 'gravityforms' );
-			$ampm_field = $is_sub_label_above ? "<div class='gfield_time_ampm ginput_container' {$ampm_field_style}>
+			$ampm_field = $is_sub_label_above ? "<div class='gfield_time_ampm ginput_container ginput_container_time' {$ampm_field_style}>
                                                             <label for='{$field_id}_3'>&nbsp;</label>
                                                             <select name='input_{$id}[]' id='{$field_id}_3' $ampm_tabindex {$disabled_text}>
                                                                 <option value='am' {$am_selected}>{$am_text}</option>
                                                                 <option value='pm' {$pm_selected}>{$pm_text}</option>
                                                             </select>
                                                           </div>"
-												: "<div class='gfield_time_ampm ginput_container' {$ampm_field_style}>
+												: "<div class='gfield_time_ampm ginput_container ginput_container_time' {$ampm_field_style}>
                                                             <select name='input_{$id}[]' id='{$field_id}_3' $ampm_tabindex {$disabled_text}>
                                                                 <option value='am' {$am_selected}>{$am_text}</option>
                                                                 <option value='pm' {$pm_selected}>{$pm_text}</option>
@@ -138,11 +138,11 @@ class GF_Field_Time extends GF_Field {
 
 		if ( $is_sub_label_above ) {
 			return "<div class='clear-multi'>
-                        <div class='gfield_time_hour ginput_container' id='{$field_id}'>
+                        <div class='gfield_time_hour ginput_container ginput_container_time' id='{$field_id}'>
                             <label for='{$field_id}_1' {$sub_label_class_attribute}>{$hour_label}</label>
                             <input type='{$input_type}' maxlength='2' name='input_{$id}[]' id='{$field_id}_1' value='{$hour}' {$hour_tabindex} {$hour_html5_attributes} {$disabled_text} {$hour_placeholder_attribute}/> <i>:</i>
                         </div>
-                        <div class='gfield_time_minute ginput_container'>
+                        <div class='gfield_time_minute ginput_container ginput_container_time'>
                             <label for='{$field_id}_2' {$sub_label_class_attribute}>{$minute_label}</label>
                             <input type='{$input_type}' maxlength='2' name='input_{$id}[]' id='{$field_id}_2' value='{$minute}' {$minute_tabindex} {$minute_html5_attributes} {$disabled_text} {$minute_placeholder_attribute}/>
                         </div>
@@ -150,11 +150,11 @@ class GF_Field_Time extends GF_Field {
                     </div>";
 		} else {
 			return "<div class='clear-multi'>
-                        <div class='gfield_time_hour ginput_container' id='{$field_id}'>
+                        <div class='gfield_time_hour ginput_container ginput_container_time' id='{$field_id}'>
                             <input type='{$input_type}' maxlength='2' name='input_{$id}[]' id='{$field_id}_1' value='{$hour}' {$hour_tabindex} {$hour_html5_attributes} {$disabled_text} {$hour_placeholder_attribute}/> <i>:</i>
                             <label for='{$field_id}_1' {$sub_label_class_attribute}>{$hour_label}</label>
                         </div>
-                        <div class='gfield_time_minute ginput_container'>
+                        <div class='gfield_time_minute ginput_container ginput_container_time'>
                             <input type='{$input_type}' maxlength='2' name='input_{$id}[]' id='{$field_id}_2' value='{$minute}' {$minute_tabindex} {$minute_html5_attributes} {$disabled_text} {$minute_placeholder_attribute}/>
                             <label for='{$field_id}_2' {$sub_label_class_attribute}>{$minute_label}</label>
                         </div>

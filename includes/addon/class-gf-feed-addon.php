@@ -62,6 +62,7 @@ abstract class GFFeedAddOn extends GFAddOn {
 
 		add_filter( 'gform_notification_events', array( $this, 'notification_events' ), 10, 2 );
 		add_filter( 'gform_notes_avatar', array( $this, 'notes_avatar' ), 10, 2 );
+		add_action( 'gform_post_form_duplicated', array( $this, 'post_form_duplicated' ), 10, 2 );
 
 	}
 
@@ -188,7 +189,6 @@ abstract class GFFeedAddOn extends GFAddOn {
 			}
 
 			if ( ! empty( $active_paypal_feed ) && $this->is_delayed( $active_paypal_feed ) && $this->has_paypal_payment( $active_paypal_feed, $form, $entry ) ) {
-				$this->log_debug( 'GFFeedAddOn::maybe_process_feed(): Feed processing is delayed pending payment, not processing feed for entry #' . $entry['id'] . ' for ' . $this->_slug );
 				$is_delayed = true;
 			}
 		}
@@ -201,7 +201,7 @@ abstract class GFFeedAddOn extends GFAddOn {
 		 * array $entry The Entry Object currently being processed.
 		 * string $_slug The Add-On slug e.g. gravityformsmailchimp
 		 */
-		$is_delayed = gf_apply_filters( 'gform_is_delayed_pre_process_feed', $form['id'], $is_delayed, $form, $entry, $this->_slug );
+		$is_delayed = gf_apply_filters( array( 'gform_is_delayed_pre_process_feed', $form['id'] ), $is_delayed, $form, $entry, $this->_slug );
 
 
 		//Processing feeds
@@ -229,6 +229,7 @@ abstract class GFFeedAddOn extends GFAddOn {
 				$this->log_debug( 'GFFeedAddOn::maybe_process_feed(): Marking entry #' . $entry['id'] . ' as fulfilled for ' . $this->_slug );
 				gform_update_meta( $entry['id'], "{$this->_slug}_is_fulfilled", true );
 			} else {
+				$this->log_debug( 'GFFeedAddOn::maybe_process_feed(): Feed processing is delayed, not processing feed for entry #' . $entry['id'] . ' for ' . $this->_slug );
 				$this->delay_feed( $feed, $entry, $form );
 			}
 		}
@@ -411,6 +412,24 @@ abstract class GFFeedAddOn extends GFAddOn {
 		return $results;
 	}
 
+	public function get_active_feeds( $form_id = null ) {
+		global $wpdb;
+
+		$form_filter = is_numeric( $form_id ) ? $wpdb->prepare( 'AND form_id=%d', absint( $form_id ) ) : '';
+
+		$sql = $wpdb->prepare(
+			"SELECT * FROM {$wpdb->prefix}gf_addon_feed
+                               WHERE addon_slug=%s AND is_active=1 {$form_filter}", $this->_slug
+		);
+
+		$results = $wpdb->get_results( $sql, ARRAY_A );
+		foreach ( $results as &$result ) {
+			$result['meta'] = json_decode( $result['meta'], true );
+		}
+
+		return $results;
+	}
+
 	public function get_feeds_by_slug( $slug, $form_id = null ) {
 		global $wpdb;
 
@@ -495,6 +514,18 @@ abstract class GFFeedAddOn extends GFAddOn {
 		$value = $this->_short_title . ' Feed ' . ($counter_to_use + 1);
 		return $value;
 	}
+	
+	public function is_unique_feed_name( $name, $form_id ) {
+		$feeds = $this->get_feeds( $form_id );
+		foreach ( $feeds as $feed ) {
+			$feed_name = rgars( $feed, 'meta/feed_name' ) ? rgars( $feed, 'meta/feed_name' ) : rgars( $feed, 'meta/feedName' );
+			if ( strtolower( $feed_name ) == strtolower( $name ) ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
 
 	public function update_feed_meta( $id, $meta ) {
 		global $wpdb;
@@ -538,6 +569,65 @@ abstract class GFFeedAddOn extends GFAddOn {
 		$wpdb->delete( "{$wpdb->prefix}gf_addon_feed", $where, $format );
 	}
 
+	/**
+	 * Duplicates the feed.
+	 *
+	 * @param int|array $id The ID of the feed to be duplicated or the feed object when duplicating a form.
+	 * @param mixed $new_form_id False when using feed actions or the ID of the new form when duplicating a form.
+	 */
+	public function duplicate_feed( $id, $new_form_id = false ) {
+		
+		/* Get original feed. */
+		$original_feed = is_array( $id ) ? $id : $this->get_feed( $id );
+		
+		/* If feed doesn't exist, exit. */
+		if ( ! $original_feed || ! $this->can_duplicate_feed( $original_feed ) ) {
+			return;
+		}
+		
+		/* Get feed name key. */
+		$feed_name_key = rgars( $original_feed, 'meta/feed_name' ) ? 'feed_name' : 'feedName';
+		
+		/* Make sure the new feed name is unique. */
+		$count = 2;
+		$feed_name = rgars( $original_feed, 'meta/' . $feed_name_key ) . ' - ' . esc_html__( 'Copy 1', 'gravityforms' );
+		while ( ! $this->is_unique_feed_name( $feed_name, $original_feed['form_id'] ) ) {
+			$feed_name = rgars( $original_feed, 'meta/' . $feed_name_key ) . ' - ' . sprintf( esc_html__( 'Copy %d', 'gravityforms' ), $count );
+			$count ++;
+		}
+		
+		/* Copy the feed meta. */
+		$meta                   = $original_feed['meta'];
+		$meta[ $feed_name_key ] = $feed_name;
+
+		if ( ! $new_form_id ) {
+			$new_form_id = $original_feed['form_id'];
+		}
+
+		/* Create the new feed. */
+		$this->insert_feed( $new_form_id, $original_feed['is_active'], $meta );
+		
+	}
+
+	/**
+	 * Maybe duplicate feeds when a form is duplicated.
+	 *
+	 * @param int $form_id The ID of the original form.
+	 * @param int $new_id The ID of the duplicate form.
+	 */
+	public function post_form_duplicated( $form_id, $new_id ) {
+
+		$feeds = $this->get_feeds( $form_id );
+
+		if ( ! $feeds ) {
+			return;
+		}
+
+		foreach ( $feeds as $feed ) {
+			$this->duplicate_feed( $feed, $new_id );
+		}
+
+	}
 
 	//---------- Form Settings Pages --------------------------
 
@@ -686,7 +776,7 @@ abstract class GFFeedAddOn extends GFAddOn {
 		$no_item_callback      = array( $this, 'feed_list_no_item_message' );
 		$message_callback      = array( $this, 'feed_list_message' );
 
-		return new GFAddOnFeedsTable( $feeds, $this->_slug, $columns, $bulk_actions, $action_links, $column_value_callback, $no_item_callback, $message_callback );
+		return new GFAddOnFeedsTable( $feeds, $this->_slug, $columns, $bulk_actions, $action_links, $column_value_callback, $no_item_callback, $message_callback, $this );
 	}
 
 	public function feed_list_title() {
@@ -702,6 +792,13 @@ abstract class GFFeedAddOn extends GFAddOn {
 	protected function maybe_save_feed_settings( $feed_id, $form_id ) {
 
 		if ( ! rgpost( 'gform-settings-save' ) ) {
+			return $feed_id;
+		}
+
+		check_admin_referer( $this->_slug . '_save_settings', '_' . $this->_slug . '_save_settings_nonce' );
+
+		if ( ! $this->current_user_can_any( $this->_capabilities_form_settings ) ) {
+			GFCommon::add_error_message( esc_html__( "You don't have sufficient permissions to update the form settings.", 'gravityforms' ) );
 			return $feed_id;
 		}
 
@@ -821,7 +918,10 @@ abstract class GFFeedAddOn extends GFAddOn {
 	 * Override this function to add custom bulk actions
 	 */
 	protected function get_bulk_actions() {
-		$bulk_actions = array( 'delete' => esc_html__( 'Delete', 'gravityforms' ) );
+		$bulk_actions = array( 
+			'delete'    => esc_html__( 'Delete', 'gravityforms' ),
+			'duplicate' => esc_html__( 'Duplicate', 'gravityforms' )	
+		);
 
 		return $bulk_actions;
 	}
@@ -840,6 +940,14 @@ abstract class GFFeedAddOn extends GFAddOn {
 				}
 			}
 		}
+		if ( $action == 'duplicate' ) {
+			$feeds = rgpost( 'feed_ids' );
+			if ( is_array( $feeds ) ) {
+				foreach ( $feeds as $feed_id ) {
+					$this->duplicate_feed( $feed_id );
+				}
+			}
+		}
 	}
 
 	protected function process_single_action( $action ) {
@@ -847,14 +955,19 @@ abstract class GFFeedAddOn extends GFAddOn {
 			$feed_id = absint( rgpost( 'single_action_argument' ) );
 			$this->delete_feed( $feed_id );
 		}
+		if ( $action == 'duplicate' ) {
+			$feed_id = absint( rgpost( 'single_action_argument' ) );
+			$this->duplicate_feed( $feed_id );
+		}
 	}
 
 	protected function get_action_links() {
-		$feed_id  = '_id_';
-		$edit_url = add_query_arg( array( 'fid' => $feed_id ) );
-		$links    = array(
-			'edit'   => '<a title="' . esc_attr__( 'Edit this feed', 'gravityforms' ) . '" href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Edit', 'gravityforms' ) . '</a>',
-			'delete' => '<a title="' . esc_attr__( 'Delete this feed', 'gravityforms' ) . '" class="submitdelete" onclick="javascript: if(confirm(\'' . esc_js( __( 'WARNING: You are about to delete this item.', 'gravityforms' ) ) . esc_js( __( "'Cancel' to stop, 'OK' to delete.", 'gravityforms' ) ) . '\')){ gaddon.deleteFeed(\'' . esc_js( $feed_id ) . '\'); }" style="cursor:pointer;">' . esc_html__( 'Delete', 'gravityforms' ) . '</a>'
+		$feed_id       = '_id_';
+		$edit_url      = add_query_arg( array( 'fid' => $feed_id ) );
+		$links         = array(
+			'edit'      => '<a title="' . esc_attr__( 'Edit this feed', 'gravityforms' ) . '" href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Edit', 'gravityforms' ) . '</a>',
+			'duplicate' => '<a title="' . esc_attr__( 'Duplicate this feed', 'gravityforms' ) . '" href="#" onclick="gaddon.duplicateFeed(\'' . esc_js( $feed_id ) . '\');">' . esc_html__( 'Duplicate', 'gravityforms' ) . '</a>',
+			'delete'    => '<a title="' . esc_attr__( 'Delete this feed', 'gravityforms' ) . '" class="submitdelete" onclick="javascript: if(confirm(\'' . esc_js( __( 'WARNING: You are about to delete this item.', 'gravityforms' ) ) . esc_js( __( "'Cancel' to stop, 'OK' to delete.", 'gravityforms' ) ) . '\')){ gaddon.deleteFeed(\'' . esc_js( $feed_id ) . '\'); }" style="cursor:pointer;">' . esc_html__( 'Delete', 'gravityforms' ) . '</a>'
 		);
 
 		return $links;
@@ -900,6 +1013,17 @@ abstract class GFFeedAddOn extends GFAddOn {
 	 */
 	public function can_create_feed() {
 		return true;
+	}
+	
+	/**
+	 * Override this function to allow the feed to being duplicated.
+	 * 
+	 * @access public
+	 * @param int|array $id The ID of the feed to be duplicated or the feed object when duplicating a form.
+	 * @return boolean|true
+	 */
+	public function can_duplicate_feed( $id ) {
+		return false;
 	}
 
 	public function get_column_value( $item, $column ) {
@@ -1231,7 +1355,7 @@ abstract class GFFeedAddOn extends GFAddOn {
 		$slug = str_replace( 'gravityforms', '', $this->_slug );
 
 		/* Process any error actions. */
-		gf_do_action( "gform_{$slug}_error", array( $form['id'] ), $feed, $entry, $form );
+		gf_do_action( array( "gform_{$slug}_error", $form['id'] ), $feed, $entry, $form );
 
 	}
 
@@ -1249,12 +1373,13 @@ class GFAddOnFeedsTable extends WP_List_Table {
 	private $_columns;
 	private $_bulk_actions;
 	private $_action_links;
+	private $_addon_class;
 
 	private $_column_value_callback = array();
 	private $_no_items_callback = array();
 	private $_message_callback = array();
 
-	function __construct( $feeds, $slug, $columns = array(), $bulk_actions, $action_links, $column_value_callback, $no_items_callback, $message_callback ) {
+	function __construct( $feeds, $slug, $columns = array(), $bulk_actions, $action_links, $column_value_callback, $no_items_callback, $message_callback, $addon_class ) {
 		$this->_bulk_actions          = $bulk_actions;
 		$this->_feeds                 = $feeds;
 		$this->_slug                  = $slug;
@@ -1263,6 +1388,7 @@ class GFAddOnFeedsTable extends WP_List_Table {
 		$this->_action_links          = $action_links;
 		$this->_no_items_callback     = $no_items_callback;
 		$this->_message_callback      = $message_callback;
+		$this->_addon_class           = $addon_class;
 
 		$standard_cols = array(
 			'cb'        => esc_html__( 'Checkbox', 'gravityforms' ),
@@ -1351,7 +1477,11 @@ class GFAddOnFeedsTable extends WP_List_Table {
 		foreach ( $actions as $action => &$link ) {
 			$link = str_replace( '_id_', $item['id'], $link );
 		}
-
+		
+		if ( ! $this->_addon_class->can_duplicate_feed( $item['id'] ) ) {
+			unset( $actions['duplicate'] );
+		}
+		
 		return sprintf( '%1$s %2$s', $value, $this->row_actions( $actions ) );
 	}
 

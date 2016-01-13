@@ -672,7 +672,7 @@ class GFAPI {
 
 		$form = GFFormsModel::get_form_meta( $form_id );
 
-		$form = gf_apply_filters( 'gform_form_pre_update_entry', $form_id, $form, $entry, $entry_id );
+		$form = gf_apply_filters( array( 'gform_form_pre_update_entry', $form_id ), $form, $entry, $entry_id );
 
 		foreach ( $form['fields'] as $field ) {
 			/* @var GF_Field $field */
@@ -748,7 +748,7 @@ class GFAPI {
 		 * @param array $lead The entry object after being updated.
 		 * @param array $original_entry The entry object before being updated.
 		 */
-		gf_do_action( 'gform_post_update_entry', $form_id, $entry, $original_entry );
+		gf_do_action( array( 'gform_post_update_entry', $form_id ), $entry, $original_entry );
 
 		return true;
 	}
@@ -865,6 +865,19 @@ class GFAPI {
 				}
 			}
 		}
+
+        // Refresh the entry
+        $entry = GFAPI::get_entry( $entry['id'] );
+
+        /**
+		 * Fires after the Entry is added using the API.
+         *
+         * @since  1.9.14.26
+		 *
+		 * @param array $entry
+         * @param array $form
+		 */
+		do_action( 'gform_post_add_entry', $entry, $form );
 
 		return $entry_id;
 	}
@@ -1233,18 +1246,18 @@ class GFAPI {
 			}
 
 			if ( $event == 'form_submission' ) {
-				if ( rgar( $notification, 'type' ) == 'user' && gf_apply_filters( 'gform_disable_user_notification', $form['id'], false, $form, $entry ) ) {
+				if ( rgar( $notification, 'type' ) == 'user' && gf_apply_filters( array( 'gform_disable_user_notification', $form['id'] ), false, $form, $entry ) ) {
 					GFCommon::log_debug( "GFAPI::send_notifications(): Notification is disabled by gform_disable_user_notification hook, not including notification (#{$notification['id']} - {$notification['name']})." );
 					//skip user notification if it has been disabled by a hook
 					continue;
-				} elseif ( rgar( $notification, 'type' ) == 'admin' && gf_apply_filters( 'gform_disable_admin_notification', $form['id'], false, $form, $entry ) ) {
+				} elseif ( rgar( $notification, 'type' ) == 'admin' && gf_apply_filters( array( 'gform_disable_admin_notification', $form['id'] ), false, $form, $entry ) ) {
 					GFCommon::log_debug( "GFAPI::send_notifications(): Notification is disabled by gform_disable_admin_notification hook, not including notification (#{$notification['id']} - {$notification['name']})." );
 					//skip admin notification if it has been disabled by a hook
 					continue;
 				}
 			}
 
-			if ( gf_apply_filters( 'gform_disable_notification', $form['id'], false, $notification, $form, $entry ) ) {
+			if ( gf_apply_filters( array( 'gform_disable_notification', $form['id'] ), false, $notification, $form, $entry ) ) {
 				GFCommon::log_debug( "GFAPI::send_notifications(): Notification is disabled by gform_disable_notification hook, not including notification (#{$notification['id']} - {$notification['name']})." );
 				//skip notifications if it has been disabled by a hook
 				continue;

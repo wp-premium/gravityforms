@@ -21,6 +21,32 @@ if ( ! GFCommon::current_user_can_any( 'gravityforms_view_entries' ) ) {
 	die( __( "You don't have adequate permission to view entries.", 'gravityforms' ) );
 }
 
+add_action( 'gform_print_entry_content', 'gform_default_entry_content', 10, 3 );
+function gform_default_entry_content( $form, $entry, $entry_ids ) {
+
+	$page_break = rgget( 'page_break' ) ? 'print-page-break' : false;
+
+	// Separate each entry inside a form element so radio buttons don't get treated as a single group across multiple entries.
+	echo '<form>';
+
+	GFEntryDetail::lead_detail_grid( $form, $entry );
+
+	echo '</form>';
+
+	if ( rgget( 'notes' ) ) {
+		$notes = RGFormsModel::get_lead_notes( $entry['id'] );
+		if ( ! empty( $notes ) ) {
+			GFEntryDetail::notes_grid( $notes, false );
+		}
+	}
+
+	// output entry divider/page break
+	if ( array_search( $entry['id'], $entry_ids ) < count( $entry_ids ) - 1 ) {
+		echo '<div class="print-hr ' . $page_break . '"></div>';
+	}
+
+}
+
 $form_id = absint( rgget( 'fid' ) );
 $leads = rgget( 'lid' );
 if ( 0 == $leads ) {
@@ -56,13 +82,21 @@ if ( 0 == $leads ) {
 			'value'    => $val,
 		);
 	}
+
+	/**
+	 * Allow the entry list search criteria to be overridden.
+	 *
+	 * @since  1.9.14.30
+	 *
+	 * @param array $search_criteria An array containing the search criteria.
+	 * @param int $form_id The ID of the current form.
+	 */
+	$search_criteria = gf_apply_filters( array( 'gform_search_criteria_entry_list', $form_id ), $search_criteria, $form_id );
+
 	$lead_ids = GFFormsModel::search_lead_ids( $form_id, $search_criteria );
 } else {
 	$lead_ids = explode( ',', $leads );
 }
-
-
-$page_break = rgget( 'page_break' ) ? 'print-page-break' : false;
 
 // sort lead IDs numerically
 sort( $lead_ids );
@@ -99,10 +133,21 @@ if ( ! empty( $styles ) ) {
 	wp_print_styles( $styles );
 }
 
+/**
+ * Disable auto-print when the Print Entry view has fully loaded.
+ *
+ * @since 1.9.14.16
+ *
+ * @param bool false Auto print is enabled by default. Set to true to disable.
+ * @param array $form Current Form object.
+ *
+ * @see https://gist.github.com/spivurno/e7d1e4563986b3bc5ac4
+ */
+$auto_print = gf_apply_filters( array( 'gform_print_entry_disable_auto_print', $form['id'] ), false, $form ) ? '' : 'onload="window.print();"';
 
 ?>
 </head>
-<body onload="window.print();">
+<body <?php echo $auto_print; ?>>
 
 <div id="print_preview_hdr" style="display:none">
 	<div>
@@ -120,26 +165,21 @@ foreach ( $lead_ids as $lead_id ) {
 
 	do_action( 'gform_print_entry_header', $form, $lead );
 
-	// Separate each entry inside a form element so radio buttons don't get treated as a single group across multiple entries.
-	echo '<form>';
-
-	GFEntryDetail::lead_detail_grid( $form, $lead );
-
-	echo '</form>';
-
-	if ( rgget( 'notes' ) ) {
-		$notes = RGFormsModel::get_lead_notes( $lead['id'] );
-		if ( ! empty( $notes ) ) {
-			GFEntryDetail::notes_grid( $notes, false );
-		}
-	}
-
-	// output entry divider/page break
-	if ( array_search( $lead_id, $lead_ids ) < count( $lead_ids ) - 1 ) {
-		echo '<div class="print-hr ' . $page_break . '"></div>';
-	}
+	/**
+	 * Output content for the current entry when looping through entries on the Print Entry view.
+	 *
+	 * @since 1.9.14.16
+	 *
+	 * @param array $form Current Form object.
+	 * @param array $entry Current Entry object.
+	 * @param array $entry_ids Array of entry IDs to be printed.
+	 *
+	 * @see https://gist.github.com/spivurno/d617ce30b47d8a8bc8a8
+	 */
+	do_action( 'gform_print_entry_content', $form, $lead, $lead_ids );
 
 	do_action( 'gform_print_entry_footer', $form, $lead );
+
 }
 
 ?>

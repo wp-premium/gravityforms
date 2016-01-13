@@ -17,7 +17,7 @@ class GFEntryDetail {
 
 		$form    = RGFormsModel::get_form_meta( absint( $_GET['id'] ) );
 		$form_id = absint( $form['id'] );
-		$form    = gf_apply_filters( 'gform_admin_pre_render', $form_id, $form );
+		$form    = gf_apply_filters( array( 'gform_admin_pre_render', $form_id ), $form );
 		$lead_id = rgpost( 'entry_id' ) ? absint( rgpost( 'entry_id' ) ): absint( rgget( 'lid' ) );
 
 		$filter = rgget( 'filter' );
@@ -30,16 +30,16 @@ class GFEntryDetail {
 		$sort_field_meta = RGFormsModel::get_field( $form, $sort_field );
 		$is_numeric      = $sort_field_meta['type'] == 'number';
 
-		$star = $filter == 'star' ? 1 : null;
-		$read = $filter == 'unread' ? 0 : null;
-
 		$search_criteria['status'] = $status;
 
-		if ( $star ) {
-			$search_criteria['field_filters'][] = array( 'key' => 'is_starred', 'value' => (bool) $star );
-		}
-		if ( ! is_null( $read ) ) {
-			$search_criteria['field_filters'][] = array( 'key' => 'is_read', 'value' => (bool) $read );
+		require_once( 'entry_list.php' );
+		$filter_links = GFEntryList::get_filter_links( $form, false );
+
+		foreach ( $filter_links as $filter_link ) {
+			if ( $filter == $filter_link['id'] ) {
+				$search_criteria['field_filters'] = $filter_link['field_filters'];
+				break;
+			}
 		}
 
 		$search_field_id = rgget( 'field_id' );
@@ -67,6 +67,16 @@ class GFEntryDetail {
 				}
 			}
 		}
+
+		/**
+		 * Allow the entry list search criteria to be overridden.
+		 *
+		 * @since  1.9.14.30
+		 *
+		 * @param array $search_criteria An array containing the search criteria.
+		 * @param int $form_id The ID of the current form.
+		 */
+		$search_criteria = gf_apply_filters( array( 'gform_search_criteria_entry_list', $form_id ), $search_criteria, $form_id );
 
 		$paging = array( 'offset' => $position, 'page_size' => 1 );
 
@@ -125,7 +135,7 @@ class GFEntryDetail {
 				 * @param integer $lead['id'] The entry ID.
 				 * @param array $original_entry The entry object before being updated.
 				 */
-				gf_do_action( 'gform_after_update_entry', $form['id'], $form, $lead['id'], $original_entry );
+				gf_do_action( array( 'gform_after_update_entry', $form['id'] ), $form, $lead['id'], $original_entry );
 
 				$lead = RGFormsModel::get_lead( $lead['id'] );
 				$lead = GFFormsModel::set_entry_meta( $lead, $form );
@@ -632,6 +642,8 @@ class GFEntryDetail {
 
 				do_action( 'gform_entry_detail_content_before', $form, $lead );
 
+				$form = gf_apply_filters( array( 'gform_admin_pre_render', $form['id'] ), $form );
+
 				if ( $mode == 'view' ) {
 					self::lead_detail_grid( $form, $lead, true );
 				} else {
@@ -690,7 +702,6 @@ class GFEntryDetail {
 	}
 
 	public static function lead_detail_edit( $form, $lead ) {
-		$form    = gf_apply_filters( 'gform_admin_pre_render', $form['id'], $form );
 		$form_id = absint( $form['id'] );
 		?>
 		<div class="postbox">
@@ -704,17 +715,19 @@ class GFEntryDetail {
 					<?php
 					foreach ( $form['fields'] as $field ) {
 						$field_id = $field->id;
-						switch ( RGFormsModel::get_input_type( $field ) ) {
+						$content = $value = '';
+
+						switch ( $field->get_input_type() ) {
 							case 'section' :
-								?>
+
+								$content = '
 								<tr valign="top">
 									<td class="detail-view">
 										<div style="margin-bottom:10px; border-bottom:1px dotted #ccc;">
-											<h2 class="detail_gsection_title"><?php echo esc_html( GFCommon::get_label( $field ) ) ?></h2>
+											<h2 class="detail_gsection_title">' . esc_html( GFCommon::get_label( $field ) ) . '</h2>
 										</div>
 									</td>
-								</tr>
-								<?php
+								</tr>';
 
 								break;
 
@@ -731,11 +744,12 @@ class GFEntryDetail {
 								$content = "<tr valign='top'><td class='detail-view' id='{$td_id}'><label class='detail-label'>" . esc_html( GFCommon::get_label( $field ) ) . '</label>' .
 									GFCommon::get_field_input( $field, $value, $lead['id'], $form_id, $form ) . '</td></tr>';
 
-								$content = apply_filters( 'gform_field_content', $content, $field, $value, $lead['id'], $form['id'] );
-
-								echo $content;
 								break;
 						}
+
+						$content = apply_filters( 'gform_field_content', $content, $field, $value, $lead['id'], $form['id'] );
+
+						echo $content;
 					}
 					?>
 					</tbody>
@@ -918,16 +932,19 @@ class GFEntryDetail {
 			$field_count = sizeof( $form['fields'] );
 			$has_product_fields = false;
 			foreach ( $form['fields'] as $field ) {
-				switch ( RGFormsModel::get_input_type( $field ) ) {
+
+				$content = $value = '';
+
+				switch ( $field->get_input_type() ) {
 					case 'section' :
 						if ( ! GFCommon::is_section_empty( $field, $form, $lead ) || $display_empty_fields ) {
 							$count ++;
-							$is_last = $count >= $field_count ? true : false;
-							?>
-							<tr>
-								<td colspan="2" class="entry-view-section-break<?php echo $is_last ? ' lastrow' : '' ?>"><?php echo esc_html( GFCommon::get_label( $field ) ) ?></td>
-							</tr>
-						<?php
+							$is_last = $count >= $field_count ? ' lastrow' : '';
+
+							$content = '
+                                <tr>
+                                    <td colspan="2" class="entry-view-section-break' . $is_last . '">' . esc_html( GFCommon::get_label( $field ) ) . '</td>
+                                </tr>';
 						}
 						break;
 
@@ -937,7 +954,6 @@ class GFEntryDetail {
 					case 'page':
 						//ignore captcha, html, password, page field
 						break;
-
 
 					default :
 						//ignore product fields as they will be grouped together at the end of the grid
@@ -965,14 +981,14 @@ class GFEntryDetail {
                                 <tr>
                                     <td colspan="2" class="entry-view-field-value' . $last_row . '">' . $display_value . '</td>
                                 </tr>';
-
-							$content = apply_filters( 'gform_field_content', $content, $field, $value, $lead['id'], $form['id'] );
-
-							echo $content;
-
 						}
 						break;
 				}
+
+				$content = apply_filters( 'gform_field_content', $content, $field, $value, $lead['id'], $form['id'] );
+
+				echo $content;
+
 			}
 
 			$products = array();
@@ -981,7 +997,7 @@ class GFEntryDetail {
 				if ( ! empty( $products['products'] ) ) {
 					?>
 					<tr>
-						<td colspan="2" class="entry-view-field-name"><?php echo esc_html( gf_apply_filters( 'gform_order_label', $form_id, __( 'Order', 'gravityforms' ), $form_id ) ); ?></td>
+						<td colspan="2" class="entry-view-field-name"><?php echo esc_html( gf_apply_filters( array( 'gform_order_label', $form_id ), __( 'Order', 'gravityforms' ), $form_id ) ); ?></td>
 					</tr>
 					<tr>
 						<td colspan="2" class="entry-view-field-value lastrow">
@@ -993,10 +1009,10 @@ class GFEntryDetail {
 									<col class="entry-products-col4" />
 								</colgroup>
 								<thead>
-								<th scope="col"><?php echo gf_apply_filters( 'gform_product', $form_id, __( 'Product', 'gravityforms' ), $form_id ); ?></th>
-								<th scope="col" class="textcenter"><?php echo esc_html( gf_apply_filters( 'gform_product_qty', $form_id, __( 'Qty', 'gravityforms' ), $form_id ) ); ?></th>
-								<th scope="col"><?php echo esc_html( gf_apply_filters( 'gform_product_unitprice', $form_id, __( 'Unit Price', 'gravityforms' ), $form_id ) ); ?></th>
-								<th scope="col"><?php echo esc_html( gf_apply_filters( 'gform_product_price', $form_id, __( 'Price', 'gravityforms' ), $form_id ) ); ?></th>
+								<th scope="col"><?php echo gf_apply_filters( array( 'gform_product', $form_id ), __( 'Product', 'gravityforms' ), $form_id ); ?></th>
+								<th scope="col" class="textcenter"><?php echo esc_html( gf_apply_filters( array( 'gform_product_qty', $form_id ), __( 'Qty', 'gravityforms' ), $form_id ) ); ?></th>
+								<th scope="col"><?php echo esc_html( gf_apply_filters( array( 'gform_product_unitprice', $form_id ), __( 'Unit Price', 'gravityforms' ), $form_id ) ); ?></th>
+								<th scope="col"><?php echo esc_html( gf_apply_filters( array( 'gform_product_price', $form_id ), __( 'Price', 'gravityforms' ), $form_id ) ); ?></th>
 								</thead>
 								<tbody>
 								<?php

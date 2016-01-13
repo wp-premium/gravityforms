@@ -183,6 +183,8 @@ class GFFormList {
 
 		</style>
 
+		<?php if ( GFCommon::current_user_can_any( 'gravityforms_create_form' ) ) { ?>
+
 		<div id="gf_new_form_modal" style="display:none;">
 			<div class="gf_new_form_modal_container">
 
@@ -213,7 +215,7 @@ class GFFormList {
 			</div>
 		</div>
 
-		<?php // - end of new form modal - // ?>
+		<?php } // - end of new form modal - // ?>
 
 		<script text="text/javascript">
 			function TrashForm(form_id) {
@@ -302,8 +304,10 @@ class GFFormList {
 		<div class="wrap <?php echo sanitize_html_class( GFCommon::get_browser_class() ); ?>">
 
 		<h2>
-			<?php esc_html_e( 'Forms', 'gravityforms' ); ?>
-			<a class="add-new-h2" href="" onclick="return loadNewFormModal();"><?php esc_html_e( 'Add New', 'gravityforms' ) ?></a>
+			<?php esc_html_e( 'Forms', 'gravityforms' );
+			if ( GFCommon::current_user_can_any( 'gravityforms_create_form' ) ) {
+				echo '<a class="add-new-h2" href="" onclick="return loadNewFormModal();">' . esc_html__( 'Add New', 'gravityforms' ) . '</a>';
+			} ?>
 		</h2>
 
 		<?php if ( isset( $message ) ) { ?>

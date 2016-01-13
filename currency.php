@@ -108,6 +108,11 @@ if ( ! class_exists( 'RGCurrency' ) ) {
 			return $currencies[ $code ];
 		}
 
+		public function is_zero_decimal() {
+
+			return empty( $this->currency['decimals'] );
+		}
+
 		public static function get_currencies() {
 			$currencies = array(
 				'USD' => array( 'name' => esc_html__( 'U.S. Dollar', 'gravityforms' ), 'symbol_left' => '$', 'symbol_right' => '', 'symbol_padding' => '', 'thousand_separator' => ',', 'decimal_separator' => '.', 'decimals' => 2 ),

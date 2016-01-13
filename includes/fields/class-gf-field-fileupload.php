@@ -191,7 +191,7 @@ class GF_Field_FileUpload extends GF_Field {
 				}
 			}
 
-			$plupload_init = gf_apply_filters( 'gform_plupload_settings', $form_id, $plupload_init, $form_id, $this );
+			$plupload_init = gf_apply_filters( array( 'gform_plupload_settings', $form_id ), $plupload_init, $form_id, $this );
 
 			$drop_files_here_text = esc_html__( 'Drop files here or', 'gravityforms' );
 			$select_files_text    = esc_attr__( 'Select files', 'gravityforms' );
@@ -272,12 +272,12 @@ class GF_Field_FileUpload extends GF_Field {
 					$upload = str_replace( " class='", " class='gform_hidden ", $upload );
 				}
 
-				return "<div class='ginput_container'>" . $upload . " {$preview}</div>";
+				return "<div class='ginput_container ginput_container_fileupload'>" . $upload . " {$preview}</div>";
 			} else {
 
 				$preview = $multiple_files ? sprintf( "<div id='%s'></div>", $file_list_id ) : '';
 
-				return "<div class='ginput_container'>$upload</div>" . $preview;
+				return "<div class='ginput_container ginput_container_fileupload'>$upload</div>" . $preview;
 			}
 		}
 	}
