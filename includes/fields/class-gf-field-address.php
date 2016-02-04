@@ -118,7 +118,7 @@ class GF_Field_Address extends GF_Field {
 
 		$address_types = $this->get_address_types( $form_id );
 		$addr_type     = empty( $this->addressType ) ? 'international' : $this->addressType;
-		$address_type  = $address_types[ $addr_type ];
+		$address_type = rgar( $address_types, $addr_type );
 
 		$state_label  = empty( $address_type['state_label'] ) ? esc_html__( 'State', 'gravityforms' ) : $address_type['state_label'];
 		$zip_label    = empty( $address_type['zip_label'] ) ? esc_html__( 'Zip Code', 'gravityforms' ) : $address_type['zip_label'];

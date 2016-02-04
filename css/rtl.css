@@ -343,6 +343,12 @@ body .gform_wrapper.gf_rtl_wrapper img.ui-datepicker-trigger {
 	margin: 4px 2px 0 0;
 }
 
+html[dir="rtl"] .gform_wrapper .gfield_time_hour i,
+body.rtl .gform_wrapper .gfield_time_hour i,
+body .gform_wrapper.gf_rtl_wrapper .gfield_time_hour i {
+	float: none;
+}
+
 html[dir="rtl"] .gform_wrapper input[type="radio"],
 body.rtl .gform_wrapper input[type="radio"],
 body .gform_wrapper.gf_rtl_wrapper input[type="radio"] {

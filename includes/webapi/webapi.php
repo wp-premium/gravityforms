@@ -31,8 +31,8 @@ if ( class_exists( 'GFForms' ) ) {
 		protected $_path = 'gravityformswebapi/webapi.php';
 		protected $_full_path = __FILE__;
 		protected $_url = 'http://www.gravityforms.com';
-		protected $_title = 'Gravity Forms API';
-		protected $_short_title = 'API';
+		protected $_title = 'Gravity Forms Web API';
+		protected $_short_title = 'Web API';
 
 		private $_enabled;
 		private $_private_key;

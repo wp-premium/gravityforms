@@ -1412,7 +1412,7 @@ class GFFormSettings {
 				</ul>
 
 				<div id="gform_tab_container_1" class="gform_tab_container">
-					<div class="gform_tab_content" id="tab_<?php echo $current_tab ?>">
+					<div class="gform_tab_content" id="tab_<?php echo esc_attr( $current_tab ) ?>">
 
 	<?php
 	}

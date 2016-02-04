@@ -4,7 +4,7 @@
 Gravity Forms Front End Form Styles
 Version 1.9
 http: //www.gravityforms.com
-updated: August 21, 2015 11:52 AM
+updated: January 13, 2016 3:34 PM EST
 
 Gravity Forms is a Rocketgenius project
 copyright 2008-2015 Rocketgenius Inc.
@@ -28,6 +28,11 @@ to no.
     overflow: inherit;
     margin: 1em 0;
     max-width: 98%;
+}
+.gform_wrapper *,
+.gform_wrapper *:before,
+.gform_wrapper *:after {
+    box-sizing: border-box;
 }
 .gform_wrapper h1, .gform_wrapper h2, .gform_wrapper h3 {
     font-weight: normal;
@@ -153,12 +158,11 @@ html>body .entry ul, .gform_wrapper ul { text-indent: 0 }
     display: inline-block;
     vertical-align: top;
 }
-.gform_wrapper .ginput_complex .ginput_right { margin-left: 1.6% }
+.gform_wrapper .ginput_complex .ginput_right  { margin-left: 1.6% }
 .gform_wrapper .gfield_error .ginput_complex .ginput_left, .gform_wrapper .gfield_error .ginput_complex .ginput_right { width: 48.5% }
 .gform_wrapper .gfield_error .ginput_complex .ginput_left input[type=text], .gform_wrapper .gfield_error .ginput_complex .ginput_left input[type=url], .gform_wrapper .gfield_error .ginput_complex .ginput_left input[type=email], .gform_wrapper .gfield_error .ginput_complex .ginput_left input[type=tel], .gform_wrapper .gfield_error .ginput_complex .ginput_left input[type=number], .gform_wrapper .gfield_error .ginput_complex .ginput_left input[type=password] { width: 97.5%}
 .gform_wrapper .gfield_error .ginput_complex .ginput_right input[type=text], .gform_wrapper .gfield_error .ginput_complex .ginput_right input[type=url], .gform_wrapper .gfield_error .ginput_complex .ginput_right input[type=email], .gform_wrapper .gfield_error .ginput_complex .ginput_right input[type=tel], .gform_wrapper .gfield_error .ginput_complex .ginput_right input[type=number], .gform_wrapper .gfield_error .ginput_complex .ginput_right input[type=password] { width: 97.5% }
 .gform_wrapper .ginput_complex input[type=text], .gform_wrapper .ginput_complex input[type=url], .gform_wrapper .ginput_complex input[type=email], .gform_wrapper .ginput_complex input[type=tel], .gform_wrapper .ginput_complex input[type=number], .gform_wrapper .ginput_complex input[type=password] { width: 97.5% }
-.gform_wrapper .ginput_complex .ginput_right select, .gform_wrapper .ginput_complex select { width: 97% !important }
 .gform_wrapper .ginput_complex label, .gform_wrapper .gfield_time_hour label, .gform_wrapper .gfield_time_minute label, .gform_wrapper .gfield_time_ampm label, .gform_wrapper .gfield_date_month label, .gform_wrapper .gfield_date_day label, .gform_wrapper .gfield_date_year label, .gform_wrapper .instruction {
     display: block;
     font-size: .875em;
@@ -167,14 +171,8 @@ html>body .entry ul, .gform_wrapper ul { text-indent: 0 }
 }
 .gform_wrapper .ginput_complex label, .gform_wrapper .gfield_time_hour label, .gform_wrapper .gfield_time_minute label, .gform_wrapper .gfield_time_ampm label, .gform_wrapper .gfield_date_month label, .gform_wrapper .gfield_date_day label, .gform_wrapper .gfield_date_year label, .gform_wrapper .instruction { margin: .188em 0 .75em 0 }
 .gform_wrapper .field_sublabel_above .ginput_complex label, .gform_wrapper .field_sublabel_above .gfield_time_hour label, .gform_wrapper .field_sublabel_above .gfield_time_minute label, .gform_wrapper .field_sublabel_above .gfield_time_ampm label, .gform_wrapper .field_sublabel_above .gfield_date_month label, .gform_wrapper .field_sublabel_above .gfield_date_day label, .gform_wrapper .field_sublabel_above .gfield_date_year label, .gform_wrapper .field_sublabel_above .instruction { margin: .75em 0 .188em 0 }
-.gform_wrapper .ginput_complex span.name_prefix, .gform_wrapper .ginput_complex span.name_suffix {
-    display: block;
-    clear: right;
-    overflow: hidden;
-}
+
 .gform_wrapper .ginput_complex span.name_prefix { min-height: 2.2em }
-.gform_wrapper .ginput_complex span.name_prefix select { width: auto !important }
-.gform_wrapper .ginput_complex span.name_suffix input[type=text] { width: 48% }
 .gform_wrapper .ginput_complex.has_middle span.name_suffix input[type=text] { width: 32% }
 .gform_wrapper .ginput_complex span.name_first, .gform_wrapper .ginput_complex span.name_middle, .gform_wrapper .ginput_complex span.name_last {
     vertical-align: bottom;
@@ -187,35 +185,14 @@ html>body .entry ul, .gform_wrapper ul { text-indent: 0 }
     width: 48.5%;
     vertical-align: top;
 }
-.gform_wrapper .ginput_complex.ginput_container.has_first_name.has_last_name span.name_last { clear: right }
-.gform_wrapper .ginput_complex.ginput_container.has_first_name.has_middle_name.has_last_name { width: 99% }
-.gform_wrapper .left_label .ginput_complex.ginput_container.has_first_name.has_middle_name.has_last_name, .gform_wrapper .right_label .ginput_complex.ginput_container.has_first_name.has_middle_name.has_last_name { width: 63.25% }
-.gform_wrapper .ginput_complex.ginput_container.has_first_name.has_middle_name.has_last_name span { width: 31.9% }
-.gform_wrapper .ginput_complex.ginput_container.has_first_name.has_middle_name.has_last_name span.name_first, .gform_wrapper .ginput_complex.ginput_container.has_first_name.has_middle_name.has_last_name span.name_middle, .gform_wrapper .ginput_complex.ginput_container.has_first_name.has_middle_name.has_last_name span.name_last {
-    display: -moz-inline-stack;
-    display: inline-block;
-    vertical-align: top;
-}
-.gform_wrapper .ginput_complex.ginput_container.has_first_name.has_middle_name.has_last_name span.name_first, .gform_wrapper .ginput_complex.ginput_container.has_first_name.has_middle_name.has_last_name span.name_middle, .gform_wrapper .ginput_complex.ginput_container.has_first_name.no_middle_name.has_last_name span.name_first { margin-right: 1.3% }
-.gform_wrapper .ginput_complex.ginput_container.has_prefix span.name_prefix, .gform_wrapper .ginput_complex.ginput_container.has_prefix span.name_suffix {
-    float: none !important;
-    clear: both;
-}
-.gform_wrapper .field_sublabel_above .ginput_complex .name_prefix, .gform_wrapper .field_sublabel_above .ginput_complex span.name_suffix, .gform_wrapper .field_sublabel_above .ginput_complex span.name_first, .gform_wrapper .field_sublabel_above .ginput_complex span.name_middle, .gform_wrapper .field_sublabel_above .ginput_complex span.name_last { vertical-align: top }
-.gform_wrapper .top_label .gfield_label {
-    margin: .625em 0 .5em 0;
-    font-weight: bold;
-    display: -moz-inline-stack;
-    display: inline-block;
-    line-height: 1.3;
-    clear: both;
-}
+
 .gform_wrapper .left_label .gfield_label {
     float: left;
     margin: .75em 15px 0 0;
     width: 29%;
     font-weight: bold;
 }
+.gform_wrapper .ginput_complex .ginput_right select, .gform_wrapper .ginput_complex select { width: 100%; }
 .gform_wrapper .left_label li.field_sublabel_below .gfield_label { margin: 0 1em 0 0 }
 .gform_wrapper .right_label .gfield_label {
     float: left;
@@ -836,7 +813,7 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
     display: inline-block;
     vertical-align: middle;
     font-size: 13px;
-    
+
     -webkit-user-select: none;
     -moz-user-select: none;
     user-select: none;
@@ -1353,3 +1330,17 @@ body .gform_wrapper img.add_list_item, body .gform_wrapper img.delete_list_item 
 .gform_wrapper table.recaptchatable {
     table-layout: auto;
 }
+/* adjusting the address field alignment for some scenarios */
+.gform_wrapper .ginput_complex span.ginput_left + input.gform_hidden + span.ginput_left { margin-left: 1.6%; }
+/* fixing the name field so it aligns properly */
+div.ginput_container_name span { display: -moz-inline-stack; display: inline-block; vertical-align: top; padding-right: 16px; margin-right: -4px;}
+div.ginput_container_name span:last-child {padding-right:0;}
+div.ginput_complex.ginput_container.gf_name_has_1 span {width: 100%;}
+div.ginput_complex.ginput_container.gf_name_has_2 span {width: 50%;}
+div.ginput_complex.ginput_container.gf_name_has_3 span {width: 33.3%;}
+div.ginput_complex.ginput_container.gf_name_has_4 span {width: 25%;}
+div.ginput_complex.ginput_container.gf_name_has_5 span {width: 19.95%;}
+div.ginput_complex.ginput_container.gf_name_has_2 span:first-child,
+div.ginput_complex.ginput_container.gf_name_has_3 span:first-child,
+div.ginput_complex.ginput_container.gf_name_has_4 span:first-child,
+div.ginput_complex.ginput_container.gf_name_has_5 span:first-child {margin-left: 0!important};

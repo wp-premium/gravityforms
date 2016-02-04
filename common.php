@@ -828,10 +828,6 @@ class GFCommon {
 			}
 		}
 
-		//replacing global variables
-		//form title
-		$text = str_replace( '{form_title}', $url_encode ? urlencode( $form['title'] ) : $form['title'], $text );
-
 		$matches = array();
 		preg_match_all( "/{all_fields(:(.*?))?}/", $text, $matches, PREG_SET_ORDER );
 		foreach ( $matches as $match ) {
@@ -881,14 +877,18 @@ class GFCommon {
 			}
 		}
 
+		//replacing global variables
+		//form title
+		$text = str_replace( '{form_title}', $url_encode ? urlencode( rgar( $form, 'title' ) ) : rgar( $form, 'title' ), $text );
+
 		//form id
-		$text = str_replace( '{form_id}', $url_encode ? urlencode( $form['id'] ) : $form['id'], $text );
+		$text = str_replace( '{form_id}', $url_encode ? urlencode( rgar( $form, 'id' ) ) : rgar( $form, 'id' ), $text );
 
 		//entry id
 		$text = str_replace( '{entry_id}', $url_encode ? urlencode( rgar( $lead, 'id' ) ) : rgar( $lead, 'id' ), $text );
 
 		//entry url
-		$entry_url = get_bloginfo( 'wpurl' ) . '/wp-admin/admin.php?page=gf_entries&view=entry&id=' . $form['id'] . '&lid=' . rgar( $lead, 'id' );
+		$entry_url = get_bloginfo( 'wpurl' ) . '/wp-admin/admin.php?page=gf_entries&view=entry&id=' . rgar( $form, 'id' ) . '&lid=' . rgar( $lead, 'id' );
 		$text      = str_replace( '{entry_url}', $url_encode ? urlencode( $entry_url ) : $entry_url, $text );
 
 		//post id
@@ -963,7 +963,7 @@ class GFCommon {
 	public static function replace_variables_prepopulate( $text, $url_encode = false, $entry = false, $esc_html = false, $form = false, $nl2br = false, $format = 'html' ) {
 
 		//embed url
-		$current_page_url = RGFormsModel::get_current_page_url();
+		$current_page_url = empty( $entry ) ? RGFormsModel::get_current_page_url() : rgar( $entry, 'source_url' );
 		if ( $esc_html ) {
 			$current_page_url = esc_html( $current_page_url );
 		}
@@ -986,22 +986,24 @@ class GFCommon {
 		$ip = isset( $entry['ip'] ) ? $entry['ip'] : GFFormsModel::get_ip();
 		$text = str_replace( '{ip}', $url_encode ? urlencode( $ip ) : $ip, $text );
 
+		$is_singular = is_singular();
+
 		global $post;
 		$post_array = self::object_to_array( $post );
 		preg_match_all( "/\{embed_post:(.*?)\}/", $text, $matches, PREG_SET_ORDER );
 		foreach ( $matches as $match ) {
 			$full_tag = $match[0];
 			$property = $match[1];
-			$text     = str_replace( $full_tag, $url_encode ? urlencode( $post_array[ $property ] ) : $post_array[ $property ], $text );
+			$value    = $is_singular ? $post_array[ $property ] : '';
+			$text     = str_replace( $full_tag, $url_encode ? urlencode( $value ) : $value, $text );
 		}
 
 		//embed post custom fields
 		preg_match_all( "/\{custom_field:(.*?)\}/", $text, $matches, PREG_SET_ORDER );
 		foreach ( $matches as $match ) {
-
 			$full_tag           = $match[0];
 			$custom_field_name  = $match[1];
-			$custom_field_value = ! empty( $post_array['ID'] ) ? get_post_meta( $post_array['ID'], $custom_field_name, true ) : '';
+			$custom_field_value = $is_singular && ! empty( $post_array['ID'] ) ? get_post_meta( $post_array['ID'], $custom_field_name, true ) : '';
 			$text               = str_replace( $full_tag, $url_encode ? urlencode( $custom_field_value ) : $custom_field_value, $text );
 		}
 
@@ -1530,7 +1532,7 @@ class GFCommon {
 			$attachments = array();
 		}
 
-		self::send_email( $from, $to, $bcc, $replyTo, $subject, $message, $from_name, $message_format, $attachments, $lead );
+		self::send_email( $from, $to, $bcc, $replyTo, $subject, $message, $from_name, $message_format, $attachments, $lead, $notification );
 
 		return compact( 'to', 'from', 'bcc', 'replyTo', 'subject', 'message', 'from_name', 'message_format', 'attachments' );
 
@@ -1636,7 +1638,7 @@ class GFCommon {
 
 	}
 
-	private static function send_email( $from, $to, $bcc, $reply_to, $subject, $message, $from_name = '', $message_format = 'html', $attachments = '', $entry = false ) {
+	private static function send_email( $from, $to, $bcc, $reply_to, $subject, $message, $from_name = '', $message_format = 'html', $attachments = '', $entry = false, $notification = false ) {
 		
 		global $phpmailer;
 
@@ -1687,7 +1689,7 @@ class GFCommon {
 		$headers['Content-type'] = "Content-type: {$content_type}; charset=" . get_option( 'blog_charset' );
 
 		$abort_email = false;
-		extract( apply_filters( 'gform_pre_send_email', compact( 'to', 'subject', 'message', 'headers', 'attachments', 'abort_email' ), $message_format ) );
+		extract( apply_filters( 'gform_pre_send_email', compact( 'to', 'subject', 'message', 'headers', 'attachments', 'abort_email' ), $message_format, $notification ) );
 
 		$is_success = false;
 		if ( ! $abort_email ) {
@@ -3442,6 +3444,16 @@ class GFCommon {
 
 	public static function calculate( $field, $form, $lead ) {
 
+		$number_format = $field->numberFormat;
+
+		if ( empty( $number_format ) ) {
+			if ( ! class_exists( 'RGCurrency' ) ) {
+				require_once( GFCommon::get_base_path() . '/currency.php' );
+			}
+			$currency      = RGCurrency::get_currency( rgar( $lead, 'currency' ) );
+			$number_format = self::is_currency_decimal_dot( $currency ) ? 'decimal_dot' : 'decimal_comma';
+		}
+
 		$formula = (string) apply_filters( 'gform_calculation_formula', $field->calculationFormula, $field, $form, $lead );
 
 		// replace multiple spaces and new lines with single space
@@ -3454,14 +3466,21 @@ class GFCommon {
 			foreach ( $matches as $match ) {
 
 				list( $text, $input_id ) = $match;
-				$value   = self::get_calculation_value( $input_id, $form, $lead );
+				$value   = self::get_calculation_value( $input_id, $form, $lead, $number_format );
 				$value   = apply_filters( 'gform_merge_tag_value_pre_calculation', $value, $input_id, rgar( $match, 4 ), $field, $form, $lead );
 				$formula = str_replace( $text, $value, $formula );
 
 			}
 		}
 
-		$result = preg_match( '/^[0-9 -\/*\(\)]+$/', $formula ) ? eval( "return {$formula};" ) : false;
+		$result = false;
+
+		if( preg_match( '/^[0-9 -\/*\(\)]+$/', $formula ) ) {
+			$prev_reporting_level = error_reporting(0);
+			$result = eval( "return {$formula};" );
+			error_reporting( $prev_reporting_level );
+		}
+
         $result = apply_filters( 'gform_calculation_result', $result, $formula, $field, $form, $lead );
 
 		return $result;
@@ -3475,25 +3494,30 @@ class GFCommon {
 		return $number;
 	}
 
-	public static function get_calculation_value( $field_id, $form, $lead ) {
+	public static function get_calculation_value( $field_id, $form, $lead, $number_format = '' ) {
 
 		$filters = array( 'price', 'value', '' );
 		$value   = false;
+
+		$field            = RGFormsModel::get_field( $form, $field_id );
+		$is_pricing_field = self::has_currency_value( $field );
+
+		if ( $field->numberFormat ) {
+			$number_format = $field->numberFormat;
+		} elseif ( empty( $number_format ) ) {
+			$number_format = 'decimal_dot';
+		}
 
 		foreach ( $filters as $filter ) {
 			if ( is_numeric( $value ) ) {
 				//value found, exit loop
 				break;
 			}
-			$field = RGFormsModel::get_field( $form, $field_id );
-			$is_pricing_field = self::has_currency_value( $field );
 
 			$replaced_value = GFCommon::replace_variables( "{:{$field_id}:$filter}", $form, $lead );
 			if ( $is_pricing_field ) {
 				$value = self::to_number( $replaced_value );
-			}
-			else{
-				$number_format = rgobj( $field, 'numberFormat' );
+			} else {
 				$value = self::clean_number( $replaced_value, $number_format );
 			}
 
@@ -3507,7 +3531,7 @@ class GFCommon {
 		return $value;
 	}
 
-	public static function has_currency_value( $field ){
+	public static function has_currency_value( $field ) {
 		$has_currency = self::is_pricing_field( $field->type ) || rgobj( $field, 'numberFormat' ) == 'currency';
 		return $has_currency;
 	}
@@ -3856,8 +3880,19 @@ class GFCommon {
 
 				$field_filter['operators'] = $operators;
 
+				if ( $field->type == 'post_category' ) {
+					$field = self::add_categories_as_choices( $field, '' );
+				}
+
 				if ( isset( $field->choices ) ) {
-					$field_filter['values'] = $field->choices;
+					$choices = $field->choices;
+					if ( $field->type == 'post_category' ) {
+						foreach ( $choices as &$choice ) {
+							$choice['value'] = $choice['text'] . ':' . $choice['value'];
+						}
+					}
+
+					$field_filter['values'] = $choices;
 				}
 			}
 			$field_filters[] = $field_filter;
@@ -3889,7 +3924,7 @@ class GFCommon {
 	public static function get_entry_info_filter_columns( $get_users = true ) {
 		$account_choices = array();
 		if ( $get_users ) {
-			$args            = apply_filters( 'gform_filters_get_users', array( 'number' => 200 ) );
+			$args            = apply_filters( 'gform_filters_get_users', array( 'number' => 200, 'fields' => array( 'ID', 'user_login' ) ) );
 			$accounts        = get_users( $args );
 			$account_choices = array();
 			foreach ( $accounts as $account ) {

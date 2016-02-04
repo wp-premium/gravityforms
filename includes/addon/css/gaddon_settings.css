@@ -57,3 +57,67 @@ table.settings-field-map-table tbody td { padding: 0px 0px 8px 0px;}
 .mt-gaddon-editor ~ .wp-editor-wrap {
 	margin-right: 23px;
 }
+
+/* Visual Radio Buttons */
+.gaddon-setting-choice-visual {
+	display: inline-block;
+	margin-bottom: 5px;
+	text-align: center;
+}
+
+.gaddon-setting-choice-visual label {
+	background: #F9F9F9;
+	border: 1px solid #eee;
+	display: inline-block;
+}
+
+.gaddon-setting-choice-visual label > span {
+	display: inline-block;
+	-webkit-filter: brightness( 1.8 ) grayscale( 1 ) opacity( .5 );
+	-moz-filter: brightness( 1.8 ) grayscale( 1 ) opacity( .5 );
+	filter: brightness( 1.8 ) grayscale( 1 ) opacity( .5 );
+	height: 65px;
+	min-width: 110px;
+	padding: 5px 10px 0;
+	-webkit-transition: all 100ms ease-in;
+	-moz-transition: all 100ms ease-in;
+	transition: all 100ms ease-in;
+	vertical-align: top;
+}
+
+.gaddon-setting-choice-visual label > span > i {
+	color: #0074a2;
+	display: inline-block;
+	font-size: 2.5em;
+	height: 32px;
+	margin: 5px;
+	width: 32px;
+}
+
+.gaddon-setting-choice-visual label > span > img{
+    height: 32px;
+    margin: 5px;
+    vertical-align: middle;
+    width: 32px;
+}
+
+.gaddon-setting-choice-visual input {
+	display: none;
+}
+
+.gaddon-setting-choice-visual input:checked + label {
+	background-color: #fff;
+	border: 1px solid #ccc;
+}
+
+.gaddon-setting-choice-visual input:checked + label > span {
+	-webkit-filter: none;
+	-moz-filter: none;
+	filter: none;
+}
+
+.gaddon-setting-choice-visual input:not([disabled]):not([checked]) + label > span:hover{
+    -webkit-filter: brightness(1.2) grayscale(.5) opacity(.9);
+    -moz-filter: brightness(1.2) grayscale(.5) opacity(.9);
+    filter: brightness(1.2) grayscale(.5) opacity(.9);
+}

@@ -94,6 +94,8 @@ jQuery.fn.repeater = function( options ) {
         if( ! self._template )
             self._template = self.elem.html();
 
+        self._template = jQuery.trim( self._template );
+
     }
 
     self.addItem = function( item, index ) {
@@ -101,12 +103,12 @@ jQuery.fn.repeater = function( options ) {
         var itemMarkup = self.getItemMarkup( item, index),
             itemElem = jQuery( itemMarkup ).addClass( 'item-' + index );
 
-        self.callbacks.beforeAdd( self, itemElem, item );
+        self.callbacks.beforeAdd( self, itemElem, item, index );
 
         self.append( itemElem );
         self.populateSelects( item, index );
 
-        self.callbacks.add( self, itemElem, item );
+        self.callbacks.add( self, itemElem, item, index );
 
     }
 
