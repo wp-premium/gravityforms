@@ -124,8 +124,6 @@ class GF_Field_Phone extends GF_Field {
 			$this->phoneFormat = 'standard';
 		}
 	}
-
-
 }
 
 GF_Fields::register( new GF_Field_Phone() );

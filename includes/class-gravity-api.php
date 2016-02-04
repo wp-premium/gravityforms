@@ -8,6 +8,9 @@ if ( ! defined( 'GRAVITY_API_URL' ) ) {
 	define( 'GRAVITY_API_URL', 'https://o4zq2dvjn6.execute-api.us-east-1.amazonaws.com/prod/' );
 }
 
+if( ! class_exists( 'Gravity_Api' ) )
+{
+
 /**
  * Client-side API wrapper for interacting with the Gravity APIs.
  *
@@ -279,3 +282,5 @@ function gapi() {
 }
 
 gapi();
+
+}

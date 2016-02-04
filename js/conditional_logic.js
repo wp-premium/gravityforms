@@ -387,7 +387,7 @@ function gf_reset_to_default(targetId, defaultValue){
 			val = defaultValue[element.attr("name")];
             if( ! val ) {
                 // 'input_123_3_1' => '3.1'
-                var inputId = element.attr( 'id' ).split( '_' ).splice( -2 ).join( '.' );
+                var inputId = element.attr( 'id' ).split( '_' ).slice( 2 ).join( '.' );
                 val = defaultValue[ inputId ];
             }
 		}
