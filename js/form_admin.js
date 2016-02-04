@@ -1052,11 +1052,14 @@ var gfMergeTagsObj = function(form) {
         otherGroup.push( { tag: '{embed_post:ID}', label: this.getMergeTagLabel('{embed_post:ID}') });
         otherGroup.push( { tag: '{embed_post:post_title}', label: this.getMergeTagLabel('{embed_post:post_title}') });
         otherGroup.push( { tag: '{embed_url}', label: this.getMergeTagLabel('{embed_url}') });
-        otherGroup.push( { tag: '{entry_id}', label: this.getMergeTagLabel('{entry_id}') });
-        otherGroup.push( { tag: '{entry_url}', label: this.getMergeTagLabel('{entry_url}') });
-        otherGroup.push( { tag: '{form_id}', label: this.getMergeTagLabel('{form_id}') });
 
-        otherGroup.push( { tag: '{form_title}', label: this.getMergeTagLabel('{form_title}') });
+        // the form and entry objects are not available during replacement of pre-population merge tags
+        if (!isPrepop) {
+            otherGroup.push({tag: '{entry_id}', label: this.getMergeTagLabel('{entry_id}')});
+            otherGroup.push({tag: '{entry_url}', label: this.getMergeTagLabel('{entry_url}')});
+            otherGroup.push({tag: '{form_id}', label: this.getMergeTagLabel('{form_id}')});
+            otherGroup.push({tag: '{form_title}', label: this.getMergeTagLabel('{form_title}')});
+        }
 
         otherGroup.push( { tag: '{user_agent}', label: this.getMergeTagLabel('{user_agent}') });
         otherGroup.push( { tag: '{referer}', label: this.getMergeTagLabel('{referer}') });

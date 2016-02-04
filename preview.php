@@ -54,9 +54,9 @@ if ( is_rtl() ) {
 	wp_print_scripts();
 
 	$styles = apply_filters( 'gform_preview_styles', array(), $form );
-if ( ! empty( $styles ) ) {
-	wp_print_styles( $styles );
-}
+	if ( ! empty( $styles ) ) {
+		wp_print_styles( $styles );
+	}
 ?>
 
 </head>

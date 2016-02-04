@@ -72,7 +72,9 @@ abstract class GFFeedAddOn extends GFAddOn {
 
 		//upgrading Feed Add-On base class
 		$installed_version = get_option( 'gravityformsaddon_feed-base_version' );
-		if ( $installed_version != $this->_feed_version || ! $this->table_exists( $table_name ) ) {
+		if ( $installed_version != $this->_feed_version
+		     || ( isset( $_GET['setup'] ) && $this->is_plugin_settings() && ! $this->table_exists( $table_name ) )
+		) {
 			$this->upgrade_base( $installed_version );
 			update_option( 'gravityformsaddon_feed-base_version', $this->_feed_version );
 		}
@@ -110,7 +112,7 @@ abstract class GFFeedAddOn extends GFAddOn {
 	}
 
 	public function scripts() {
-
+	
 		$scripts = array(
 			array(
 				'handle'  => 'gform_form_admin',
@@ -920,7 +922,6 @@ abstract class GFFeedAddOn extends GFAddOn {
 	protected function get_bulk_actions() {
 		$bulk_actions = array( 
 			'delete'    => esc_html__( 'Delete', 'gravityforms' ),
-			'duplicate' => esc_html__( 'Duplicate', 'gravityforms' )	
 		);
 
 		return $bulk_actions;
@@ -1313,27 +1314,41 @@ abstract class GFFeedAddOn extends GFAddOn {
 			$feeds = $this->get_feeds_by_entry( $entry['id'] );
 
 			if ( empty( $feeds ) ) {
-				$feed = $this->get_single_submission_feed( false, $form );
+				$feed = $this->get_single_submission_feed_by_form( $form, $entry );
 			} else {
 				$feed = $this->get_feed( $feeds[0] );
 			}
 
 		} elseif ( $form ) {
 
-			$feeds = $this->get_feeds( $form['id'] );
-
-			foreach ( $feeds as $_feed ) {
-				if ( $_feed['is_active'] && $this->is_feed_condition_met( $_feed, $form, $entry ) ) {
-					$feed = $_feed;
-					break;
-				}
-			}
-
+			$feed = $this->get_single_submission_feed_by_form( $form, $entry );
 			$this->_single_submission_feed = $feed;
 
 		}
 
 		return $feed;
+	}
+
+	/**
+	 * Return the active feed to be used when processing the current entry, evaluating conditional logic if configured.
+	 *
+	 * @param array $form The current form.
+	 * @param array|false $entry The current entry.
+	 *
+	 * @return bool|array
+	 */
+	public function get_single_submission_feed_by_form( $form, $entry ) {
+
+		$feeds = $this->get_feeds( $form['id'] );
+
+		foreach ( $feeds as $_feed ) {
+			if ( $_feed['is_active'] && $this->is_feed_condition_met( $_feed, $form, $entry ) ) {
+
+				return $_feed;
+			}
+		}
+
+		return false;
 	}
 
 	//--------------- Notes ------------------

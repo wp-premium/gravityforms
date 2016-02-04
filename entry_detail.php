@@ -106,7 +106,7 @@ class GFEntryDetail {
 			$lead = GFAPI::get_entry( $lead_id );
 		}
 
-		if ( ! $lead ) {
+		if ( is_wp_error( $lead ) || ! $lead ) {
 			esc_html_e( "Oops! We couldn't find your entry. Please try again", 'gravityforms' );
 
 			return;

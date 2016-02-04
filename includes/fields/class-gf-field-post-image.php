@@ -38,7 +38,6 @@ class GF_Field_Post_Image extends GF_Field_Fileupload {
 		$id       = (int) $this->id;
 		$field_id = $is_entry_detail || $is_form_editor || $form_id == 0 ? "input_$id" : 'input_' . $form_id . "_$id";
 
-		$value        = esc_attr( $value );
 		$size         = $this->size;
 		$class_suffix = $is_entry_detail ? '_admin' : '';
 		$class        = $size . $class_suffix;
@@ -49,7 +48,7 @@ class GF_Field_Post_Image extends GF_Field_Fileupload {
 		$caption     = esc_attr( rgget( $this->id . '.4', $value ) );
 		$description = esc_attr( rgget( $this->id . '.7', $value ) );
 
-		//hidding meta fields for admin
+		//hiding meta fields for admin
 		$hidden_style      = "style='display:none;'";
 		$title_style       = ! $this->displayTitle && $is_admin ? $hidden_style : '';
 		$caption_style     = ! $this->displayCaption && $is_admin ? $hidden_style : '';
@@ -69,7 +68,7 @@ class GF_Field_Post_Image extends GF_Field_Fileupload {
 
 		$tabindex = $this->get_tabindex();
 
-		$upload = sprintf( "<span class='ginput_full$class_suffix'>{$preview}<input name='input_%d' id='%s' type='file' value='%s' class='%s' $tabindex %s/>$file_label</span>", $id, $field_id, esc_attr( $value ), esc_attr( $class . $hidden_class ), $disabled_text );
+		$upload = sprintf( "<span class='ginput_full$class_suffix'>{$preview}<input name='input_%d' id='%s' type='file' class='%s' $tabindex %s/>$file_label</span>", $id, $field_id, esc_attr( $class . $hidden_class ), $disabled_text );
 
 		$tabindex = $this->get_tabindex();
 
