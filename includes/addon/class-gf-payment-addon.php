@@ -2563,7 +2563,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 	 */
 	public function get_currency( $currency_code = '' ) {
 		if ( ! class_exists( 'RGCurrency' ) ) {
-			require_once( GFCommon::get_base_path() . 'currency.php' );
+			require_once( GFCommon::get_base_path() . '/currency.php' );
 		}
 
 		if ( empty( $currency_code ) ) {
@@ -2669,6 +2669,11 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
 		$form = GFAPI::get_form( $entry['form_id'] );
 		$feed = $this->get_payment_feed( $entry, $form );
+
+		//This addon does not have a payment feed. Abort.
+		if ( empty ( $feed ) ){
+			return;
+		}
 
 		if ( $this->cancel( $entry, $feed ) ) {
 			$this->cancel_subscription( $entry, $feed );

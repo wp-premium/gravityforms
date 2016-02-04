@@ -149,8 +149,12 @@ class GFExport {
 		$forms = json_decode( $forms_json, true );
 
 		if ( ! $forms ) {
+			GFCommon::log_debug( __METHOD__ . '(): Import Failed. Invalid form objects.' );
+
 			return 0;
 		} else if ( version_compare( $forms['version'], self::$min_import_version, '<' ) ) {
+			GFCommon::log_debug( __METHOD__ . '(): Import Failed. The JSON version is not compatible with the current Gravity Forms version.' );
+
 			return - 1;
 		} //Error. JSON version is not compatible with current Gravity Forms version
 
@@ -159,6 +163,7 @@ class GFExport {
 		$form_ids = GFAPI::add_forms( $forms );
 
 		if ( is_wp_error( $form_ids ) ) {
+			GFCommon::log_debug( __METHOD__ . '(): Import Failed => ' . print_r( $form_ids, 1 ) );
 			$form_ids = array();
 		} else {
 			foreach ( $form_ids as $key => $form_id ){
@@ -562,7 +567,7 @@ class GFExport {
 
 	}
 
-	private static function get_field_row_count( $form, $exported_field_ids, $entry_count ) {
+	public static function get_field_row_count( $form, $exported_field_ids, $entry_count ) {
 		$list_fields = GFAPI::get_fields_by_type( $form, array( 'list' ), true );
 
 		//only getting fields that have been exported
