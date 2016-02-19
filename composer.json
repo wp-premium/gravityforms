@@ -1,0 +1,11 @@
+{
+  "name": "gravityforms/gravityforms",
+  "description": "Gravity Forms",
+  "keywords": ["wordpress", "plugin", "gravity forms"],
+  "homepage": "http://www.gravityhelp.com/",
+  "license": "GPL-2.0+",
+  "type": "wordpress-plugin",
+  "require": {
+    "php": ">=5.3.2"
+    }
+}
