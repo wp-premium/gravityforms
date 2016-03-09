@@ -127,6 +127,13 @@ class GFExport {
 				break;
 
 			default:
+                /**
+                 * Fires when export pages are gathered
+                 *
+                 * Used to add additional export settings pages
+                 *
+                 * @param string $view Set when defining the action string.  Creates the name for the new page
+                 */
 				do_action( "gform_export_page_{$view}" );
 				break;
 
@@ -171,6 +178,8 @@ class GFExport {
 			}
 			/**
 			 * Fires after forms have been imported.
+             *
+             * Used to perform additional actions after import
 			 *
 			 * @param array $forms An array imported form objects.
 			 *
@@ -785,10 +794,10 @@ class GFExport {
 		/**
 		 * Fires after exporting all the entries in form
 		 *
-		 * @param array $form The Form object to get the entries from
+		 * @param array  $form       The Form object to get the entries from
 		 * @param string $start_date The start date for when the export of entries should take place
-		 * @param string $end_date The end date for when the export of entries should stop
-		 * @param array $fields The specified fields where the entries should be exported from
+		 * @param string $end_date   The end date for when the export of entries should stop
+		 * @param array  $fields     The specified fields where the entries should be exported from
 		 */
 		do_action( 'gform_post_export_entries', $form, $start_date, $end_date, $fields );
 

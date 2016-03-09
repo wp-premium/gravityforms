@@ -1016,5 +1016,4 @@ class GF_Field extends stdClass implements ArrayAccess {
 
 		return $logic;
 	}
-
 }

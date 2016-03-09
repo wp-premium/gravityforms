@@ -102,8 +102,6 @@ class GFFormsModel {
 	public static function get_forms( $is_active = null, $sort_column = 'title', $sort_dir = 'ASC', $is_trash = false ) {
 		global $wpdb;
 		$form_table_name = self::get_form_table_name();
-		$lead_table_name = self::get_lead_table_name();
-		$view_table_name = self::get_form_view_table_name();
 
 		$where_arr   = array();
 		$where_arr[] = $wpdb->prepare( 'is_trash=%d', $is_trash );
@@ -131,12 +129,10 @@ class GFFormsModel {
 		$forms = $wpdb->get_results( $sql );
 
 		//Getting entry count per form
-		$sql         = "SELECT form_id, count(id) as lead_count FROM $lead_table_name l WHERE status='active' GROUP BY form_id";
-		$entry_count = $wpdb->get_results( $sql );
+		$entry_count = self::get_entry_count_per_form();
 
 		//Getting view count per form
-		$sql        = "SELECT form_id, sum(count) as view_count FROM $view_table_name GROUP BY form_id";
-		$view_count = $wpdb->get_results( $sql );
+		$view_count = self::get_view_count_per_form();
 
 		//Adding entry counts and to form array
 		foreach ( $forms as &$form ) {
@@ -156,6 +152,37 @@ class GFFormsModel {
 		}
 
 		return $forms;
+	}
+
+	public static function get_entry_count_per_form(){
+		global $wpdb;
+		$lead_table_name = self::get_lead_table_name();
+
+		$entry_count = GFCache::get( 'get_entry_count_per_form' );
+		if ( empty( $entry_count ) ){
+			//Getting entry count per form
+			$sql         = "SELECT form_id, count(id) as lead_count FROM $lead_table_name l WHERE status='active' GROUP BY form_id";
+			$entry_count = $wpdb->get_results( $sql );
+
+			GFCache::set( 'get_entry_count_per_form', $entry_count, true, 30 );
+		}
+
+		return $entry_count;
+	}
+
+	public static function get_view_count_per_form(){
+		global $wpdb;
+		$view_table_name = self::get_form_view_table_name();
+
+		$view_count = GFCache::get( 'get_view_count_per_form' );
+		if ( empty( $view_count ) ){
+			$sql        = "SELECT form_id, sum(count) as view_count FROM $view_table_name GROUP BY form_id";
+			$view_count = $wpdb->get_results( $sql );
+
+			GFCache::set( 'get_view_count_per_form', $view_count, true, 30 );
+		}
+
+		return $view_count;
 	}
 
 	public static function get_form_db_columns() {
@@ -615,8 +642,20 @@ class GFFormsModel {
 		$form['notifications'][ $notification_id ]['isActive'] = (bool) $is_active;
 
 		if ( (bool) $is_active ) {
+            /**
+             * Fires before a notification is activated
+             *
+             * @param int   $form['notifications'][ $notification_id ] The ID of the notification that was activated
+             * @param array $form                                      The Form object
+             */
 			do_action( 'gform_pre_notification_activated', $form['notifications'][ $notification_id ], $form );
 		} else {
+            /**
+             * Fires before a notification is deactivated
+             *
+             * @param int   $form['notifications'][ $notification_id ] The ID of the notification that was deactivated
+             * @param array $form                                      The Form object
+             */
 			do_action( 'gform_pre_notification_deactivated', $form['notifications'][ $notification_id ], $form );
 		}
 
@@ -687,6 +726,15 @@ class GFFormsModel {
 					$lead['post_id']      = GFCommon::create_post( isset( $form ) ? $form : GFAPI::get_form( $lead['form_id'] ), $lead );
 				}
 
+                /**
+                 * Fired after an entry property is updated
+                 *
+                 * @param string $property_name Used within the action string.  Defines the property that fires the action.
+                 *
+                 * @param int    $lead_id        The Entry ID
+                 * @param string $property_value The new value of the property that was updated
+                 * @param string $previous_value The previous property value before the update
+                 */
 				do_action( "gform_update_{$property_name}", $lead_id, $property_value, $previous_value );
 			}
 		}
@@ -781,8 +829,8 @@ class GFFormsModel {
 		/**
 		 * Fires when you delete entries for a specific form
 		 *
-		 * @param int $form_id The form ID to specify from which form to delete entries
-		 * @param string $status Allows you to set the form entries to a deleted status
+		 * @param int    $form_id The form ID to specify from which form to delete entries
+		 * @param string $status  Allows you to set the form entries to a deleted status
 		 */
 		do_action( 'gform_delete_entries', $form_id, $status );
 
@@ -850,12 +898,22 @@ class GFFormsModel {
 		$sql = $wpdb->prepare( "DELETE FROM $form_view_table WHERE form_id=%d", $form_id );
 		$wpdb->query( $sql );
 
+        /**
+         * Fires after form views are deleted
+         *
+         * @param int $form_id The ID of the form that views were deleted from
+         */
 		do_action( 'gform_post_form_views_deleted', $form_id );
 	}
 
 	public static function delete_form( $form_id ) {
 		global $wpdb;
 
+        /**
+         * Fires before a form is deleted
+         *
+         * @param int $form_id The ID of the form being deleted
+         */
 		do_action( 'gform_before_delete_form', $form_id );
 
 		$form_meta_table = self::get_meta_table_name();
@@ -875,6 +933,11 @@ class GFFormsModel {
 		$sql = $wpdb->prepare( "DELETE FROM $form_table WHERE id=%d", $form_id );
 		$wpdb->query( $sql );
 
+        /**
+         * Fires after a form is deleted
+         *
+         * @param int $form_id The ID of the form that was deleted
+         */
 		do_action( 'gform_after_delete_form', $form_id );
 	}
 
@@ -892,7 +955,7 @@ class GFFormsModel {
 		/**
 		 * Fires after a form is trashed
 		 *
-		 * @param int $form_id The ID of a form you can can check which form was trashed
+		 * @param int $form_id The ID of the form that was trashed
 		 */
 		do_action( 'gform_post_form_trashed', $form_id );
 
@@ -911,6 +974,11 @@ class GFFormsModel {
 
 		$success = $result == false;
 
+        /**
+         * Fires after a form is restored from trash
+         *
+         * @param int $form_id The ID of the form that was restored
+         */
 		do_action( 'gform_post_form_restored', $form_id );
 
 		return $success;
@@ -954,13 +1022,18 @@ class GFFormsModel {
 
 
 		// The gform_after_duplicate_form action is deprecated since version 1.9. Please use gform_post_form_duplicated instead
-		do_action( 'gform_after_duplicate_form', $form_id, $new_id );
+
+        /**
+         * @deprecated
+         * @see gform_post_form_duplicated
+         */
+        do_action( 'gform_after_duplicate_form', $form_id, $new_id );
 
 		/**
 		 * Fires after a form is duplicated
 		 *
 		 * @param int $form_id The original form's ID
-		 * @param int $new_id The ID of the new, duplicated form
+		 * @param int $new_id  The ID of the new, duplicated form
 		 */
 		do_action( 'gform_post_form_duplicated', $form_id, $new_id );
 
@@ -1021,8 +1094,8 @@ class GFFormsModel {
 		/**
 		 * Fires after form meta has been updated for any form
 		 *
-		 * @param mixed $form_meta The Form Meta object from the database
-		 * @param int $form_id The ID of the form data was updated
+		 * @param mixed  $form_meta The Form Meta object from the database
+		 * @param int    $form_id   The ID of the form data was updated
 		 * @param string $meta_name The name of the meta updated
 		 */
 		gf_do_action( array( 'gform_post_update_form_meta', $form_id ), $form_meta, $form_id, $meta_name );
@@ -1150,6 +1223,12 @@ class GFFormsModel {
 			return;
 		}
 
+        /**
+         * Fires before a field is deleted
+         *
+         * @param int $form_id  The ID of the form that the field is being deleted from
+         * @param int $field_id The ID of the field being deleted
+         */
 		do_action( 'gform_before_delete_field', $form_id, $field_id );
 
 		$lead_table             = self::get_lead_table_name();
@@ -1258,7 +1337,7 @@ class GFFormsModel {
 		/**
 		 * Fires after a field is deleted
 		 *
-		 * @param int $form_id The form ID where the form was deleted
+		 * @param int $form_id  The form ID where the form was deleted
 		 * @param int $field_id The ID of the field that was deleted
          *
 		 */
@@ -1274,7 +1353,8 @@ class GFFormsModel {
         /**
          * Fires before a lead is deleted
          * @param $lead_id
-         * @deprecated Use gform_delete_entry instead
+         * @deprecated
+         * @see gform_delete_entry
          */
 		do_action( 'gform_delete_lead', $lead_id );
 
@@ -1324,6 +1404,16 @@ class GFFormsModel {
 
 		$wpdb->query( $sql );
 
+        /**
+         * Fires after a note has been added to an entry
+         *
+         * @param int    $wpdb->insert_id The row ID of this note in the database
+         * @param int    $lead_id         The ID of the entry that the note was added to
+         * @param int    $user_id         The ID of the current user adding the note
+         * @param string $user_name       The user name of the current user
+         * @param string $note            The content of the note being added
+         * @param string $note_type       The type of note being added.  Defaults to 'note'
+         */
 		do_action( 'gform_post_note_added', $wpdb->insert_id, $lead_id, $user_id, $user_name, $note, $note_type );
 	}
 
@@ -1337,7 +1427,7 @@ class GFFormsModel {
 		/**
 		 * Fires before a note is deleted
 		 *
-		 * @param int $note_id The Current note ID
+		 * @param int $note_id The current note ID
 		 * @param int $lead_id The current lead ID
 		 */
 		do_action( 'gform_pre_note_deleted', $note_id, $lead_id );
@@ -2082,6 +2172,14 @@ class GFFormsModel {
 				array( '%s' ) );
 		}
 
+        /**
+         * Fires after an incomplete submission is saved
+         *
+         * @param array  $submission   Contains the partially submitted entry, fields, values, and files.
+         * @param string $resume_token The unique resume token that was generated for this partial submission
+         * @param array  $form         The Form object
+         * @param array  $entry        The Entry object
+         */
 		do_action( 'gform_incomplete_submission_post_save', $submission, $resume_token, $form, $entry );
 
 		return $result ? $resume_token : $result;
@@ -2277,7 +2375,8 @@ class GFFormsModel {
 				case 'post_title' :
 				case 'post_excerpt' :
 				case 'post_content' :
-					$post_data[ $field->type ] = $value;
+					// Prevent shortcodes from being parsed.
+					$post_data[ $field->type ] = GFCommon::encode_shortcodes( $value );
 					break;
 
 				case 'post_tags' :
@@ -2834,10 +2933,10 @@ class GFFormsModel {
 		/**
 		 * Fires after a post, from a form with post fields, is created
 		 *
-		 * @param int $form['id'] The ID of the form where the new post was created
-		 * @param int $post_id The new Post ID created after submission
-		 * @param array $lead The Lead Object
-		 * @param array $form The Form Object for the form used to create the post
+		 * @param int   $form['id'] The ID of the form where the new post was created
+		 * @param int   $post_id    The new Post ID created after submission
+		 * @param array $lead       The Lead Object
+		 * @param array $form       The Form Object for the form used to create the post
 		 */
 		gf_do_action( array( 'gform_after_create_post', $form['id'] ), $post_id, $lead, $form );
 
@@ -3044,6 +3143,26 @@ class GFFormsModel {
 	public static function update_lead_field_value( $form, $lead, $field, $lead_detail_id, $input_id, $value ) {
 		global $wpdb;
 
+		/**
+		 * Filter the value before it's saved to the database.
+		 *
+		 * @since 1.5.0
+		 * @since 1.8.6 Added the $input_id parameter.
+		 * @since 1.9.14 Added form and field specific versions.
+		 *
+		 * @param string|array $value The fields input value.
+		 * @param array $lead The current entry object.
+		 * @param GF_Field|null $field The current field object or null when updating the entry and the field no longer exists.
+		 * @param array $form The current form object.
+		 * @param string $input_id The ID of the input being saved or the field ID for single input field types.
+		 */
+		$value = apply_filters( 'gform_save_field_value', $value, $lead, $field, $form, $input_id );
+		$value = apply_filters( "gform_save_field_value_{$form['id']}", $value, $lead, $field, $form, $input_id );
+
+		if ( is_object( $field ) ) {
+			$value = apply_filters( "gform_save_field_value_{$form['id']}_{$field->id}", $value, $lead, $field, $form, $input_id );
+		}
+
 		if ( is_array( $value ) ) {
 			GFCommon::log_debug( __METHOD__ . '(): bailing. value is an array.' );
 			return false;
@@ -3056,7 +3175,6 @@ class GFFormsModel {
 
 		if ( ! rgblank( $value ) ) {
 
-			$value           = gf_apply_filters( array( 'gform_save_field_value', $form['id'], $field->id ), $value, $lead, $field, $form, $input_id );
 			$truncated_value = get_option( 'gform_longtext_ready' ) ? $value : GFCommon::safe_substr( $value, 0, GFORMS_MAX_FIELD_LENGTH );
 
 			if ( $lead_detail_id > 0 ) {
@@ -3315,11 +3433,8 @@ class GFFormsModel {
 
 		$sql = $wpdb->prepare(
 			" SELECT id FROM $table_name
-                                WHERE form_id=%d
-                                AND year(date_created) = year(utc_timestamp())
-                                AND month(date_created) = month(utc_timestamp())
-                                AND day(date_created) = day(utc_timestamp())
-                                AND hour(date_created) = hour(utc_timestamp())", $form_id
+				WHERE form_id=%d
+				AND date_created BETWEEN DATE_SUB(utc_timestamp(), INTERVAL 1 DAY) AND utc_timestamp()", $form_id
 		);
 
 		$id = $wpdb->get_var( $sql, 0, 0 );

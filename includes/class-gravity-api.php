@@ -165,7 +165,6 @@ class Gravity_Api {
 
 	public function prepare_response_body( $raw_response ){
 
-
 		if ( is_wp_error( $raw_response ) ) {
 			return $raw_response;
 		}
@@ -177,9 +176,6 @@ class Gravity_Api {
 
 		if ( ! $response_body ){
 			return new WP_Error( 'invalid_response', 'Invalid response from server: ' . $raw_response['body'] );
-		}
-		else if ( ! $response_body->success ) {
-			return new WP_Error( $response_body->code, $response_body->message );
 		}
 
 		return $response_body;

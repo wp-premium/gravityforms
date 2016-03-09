@@ -30,7 +30,7 @@ class GFEntryList {
 			 *
 			 * Echoed content would appear above the page title.
 			 *
-			 * int $form_id The ID of the form the entry list is being displayed for.
+			 * @param int $form_id The ID of the form that the entry list is being displayed for.
 			 */
 			do_action( 'gform_pre_entry_list', $form_id );
 
@@ -41,7 +41,7 @@ class GFEntryList {
 			 *
 			 * Echoed content would appear after the bulk actions/paging links below the entry list table.
 			 *
-			 * int $form_id The ID of the form the entry list is being displayed for.
+			 * @param int $form_id The ID of the form that the entry list is being displayed for.
 			 */
 			do_action( 'gform_post_entry_list', $form_id );
 		}
@@ -1212,11 +1212,33 @@ class GFEntryList {
 										break;
 								}
 
+                                /**
+                                 * Fires after the entry actions are displayed.
+                                 *
+                                 * Used to add additional actions to entries
+                                 *
+                                 * @param int    $form_id      The ID of the form that the entry is associated with
+                                 * @param int    $field_id     The ID of the field
+                                 * @param string $value        The value of the field
+                                 * @param array  $lead         The Entry object
+                                 * @param string $query_string The query string used on the current page
+                                 */
 								do_action( 'gform_entries_first_column_actions', $form_id, $field_id, $value, $lead, $query_string );
 								?>
 
 							</div>
 							<?php
+                            /**
+                             * Fires at the end of the first entry column
+                             *
+                             * Used to add content to the entry list's first column
+                             *
+                             * @param int    $form_id      The ID of the current form
+                             * @param int    $field_id     The ID of the field
+                             * @param string $value        The value of the field
+                             * @param array  $lead         The Entry object
+                             * @param string $query_string The current page's query string
+                             */
 							do_action( 'gform_entries_first_column', $form_id, $field_id, $value, $lead, $query_string );
 							echo '<button type="button" class="toggle-row"><span class="screen-reader-text">' . __( 'Show more details' ) . '</span></button>';
 							?>
@@ -1228,7 +1250,19 @@ class GFEntryList {
 						?>
 						<td class="<?php echo $nowrap_class ?>" data-colname="<?php echo $columns[$field_id]['label']; ?>">
 							<?php echo apply_filters( 'gform_entries_column_filter', $value, $form_id, $field_id, $lead, $query_string ); ?>&nbsp;
-							<?php do_action( 'gform_entries_column', $form_id, $field_id, $value, $lead, $query_string ); ?>
+							<?php
+                            /**
+                             * Fired within the entries column
+                             *
+                             * Used to insert additional entry details
+                             *
+                             * @param int    $form_id      The ID of the current form
+                             * @param int    $field_id     The ID of the field
+                             * @param string $value        The value of the field
+                             * @param array  $lead         The Entry object
+                             * @param string $query_string The current page's query string
+                             */
+                            do_action( 'gform_entries_column', $form_id, $field_id, $value, $lead, $query_string ); ?>
 						</td>
 					<?php
 					}
