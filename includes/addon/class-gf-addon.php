@@ -492,7 +492,7 @@ abstract class GFAddOn {
 				'version'  => GFCommon::$version,
 				'deps'     => array( 'jquery' ),
 				'enqueue'  => array(
-					array( 'admin_page' => array( 'form_settings' ) ),
+					array( 'admin_page' => array( 'form_settings', 'plugin_settings' ) ),
 				)
 			),
 		);
@@ -612,14 +612,17 @@ abstract class GFAddOn {
 		$this->_no_conflict_styles = array_merge( $styles, $this->_no_conflict_styles );
 	}
 
-	private function _can_enqueue_script( $enqueue_conditions, $form, $is_ajax ) {
+	private function _can_enqueue_script( $enqueue_conditions, $form = array(), $is_ajax = false ) {
 		if ( empty( $enqueue_conditions ) ) {
 			return false;
 		}
-
+		
 		foreach ( $enqueue_conditions as $condition ) {
 			if ( is_callable( $condition ) ) {
-				return call_user_func( $condition, $form, $is_ajax );
+				$callback_matches = call_user_func( $condition, $form, $is_ajax );
+				if ( $callback_matches ) {
+					return true;
+				}
 			} else {
 				$query_matches      = isset( $condition['query'] ) ? $this->_request_condition_matches( $_GET, $condition['query'] ) : true;
 				$post_matches       = isset( $condition['post'] ) ? $this->_request_condition_matches( $_POST, $condition['query'] ) : true;
@@ -726,6 +729,13 @@ abstract class GFAddOn {
 
 				case 'results' :
 					if ( $this->is_results() ) {
+						return true;
+					}
+
+					break;
+
+				case 'customizer' :
+					if ( is_customize_preview() ) {
 						return true;
 					}
 
@@ -1711,9 +1721,20 @@ abstract class GFAddOn {
 		/* Loop through select choices and make sure option for custom exists */
 		$has_gf_custom = false;
 		foreach ( $select_field['choices'] as $choice ) {
+			
 			if ( rgar( $choice, 'name' ) == 'gf_custom' || rgar( $choice, 'value' ) == 'gf_custom' ) {
 				$has_gf_custom = true;
 			}
+			
+			/* If choice has choices, check inside those choices. */
+			if ( rgar( $choice, 'choices' ) ) {
+				foreach ( $choice['choices'] as $subchoice ) {
+					if ( rgar( $subchoice, 'name' ) == 'gf_custom' || rgar( $subchoice, 'value' ) == 'gf_custom' ) {
+						$has_gf_custom = true;
+					}
+				}
+			}
+			
 		}
 		if ( ! $has_gf_custom ) {
 			$select_field['choices'][] = array(

@@ -21,6 +21,13 @@ class GFFormSettings {
 				self::notification_page();
 				break;
 			default:
+                /**
+                 * Fires when the settings page view is determined
+                 *
+                 * Used to add additional pages to the form settings
+                 *
+                 * @param string $subview Used to complete the action name, allowing an additional subview to be detected
+                 */
 				do_action( "gform_form_settings_page_{$subview}" );
 		}
 
@@ -937,14 +944,30 @@ class GFFormSettings {
 
 
 				<div id="gform_custom_settings">
-					<!--form settings-->
+                    <?php
+                    /**
+                     * Fires after form settings are generated, within a custom settings div
+                     *
+                     * Used to insert custom form settings within the General settings
+                     *
+                     * @param int $form_id The ID of the form that settings are being accessed on
+                     */
+                    ?>
 					<?php do_action( 'gform_properties_settings', 100, $form_id ); ?>
 					<?php do_action( 'gform_properties_settings', 200, $form_id ); ?>
 					<?php do_action( 'gform_properties_settings', 300, $form_id ); ?>
 					<?php do_action( 'gform_properties_settings', 400, $form_id ); ?>
 					<?php do_action( 'gform_properties_settings', 500, $form_id ); ?>
 
-					<!--advanced settings-->
+                    <?php
+                    /**
+                     * Fires after form settings are generated, within a custom settings div
+                     *
+                     * Used to insert custom form settings within the Advanced settings
+                     *
+                     * @param int $form_id The ID of the form that settings are being accessed on
+                     */
+                    ?>
 					<?php do_action( 'gform_advanced_settings', 100, $form_id ); ?>
 					<?php do_action( 'gform_advanced_settings', 200, $form_id ); ?>
 					<?php do_action( 'gform_advanced_settings', 300, $form_id ); ?>
@@ -1049,10 +1072,11 @@ class GFFormSettings {
 
 	public static function confirmations_edit_page( $form_id, $confirmation_id ) {
 
+		$form_id = absint( $form_id );
 
 		$form = gf_apply_filters( array( 'gform_admin_pre_render', $form_id ), GFFormsModel::get_form_meta( $form_id ) );
 
-		$duplicated_cid = rgget( 'duplicatedcid' );
+		$duplicated_cid = sanitize_key( rgget( 'duplicatedcid' ) );
 		$is_duplicate   = empty( $_POST ) && ! empty( $duplicated_cid );
 		if ( $is_duplicate ) {
 			$confirmation_id = $duplicated_cid;
@@ -1151,13 +1175,16 @@ class GFFormSettings {
 				</table>
 
 				<?php
-				//DEPRECATED SINCE 1.7 - use gform_confirmation_ui_settings instead
+                /**
+                 * @deprecated
+                 * @see gform_confirmation_ui_settings
+                 */
 				do_action( 'gform_confirmation_settings', 100, $form_id );
 				do_action( 'gform_confirmation_settings', 200, $form_id );
 				?>
 
-				<input type="hidden" id="confirmation_id" name="confirmation_id" value="<?php echo $confirmation_id; ?>" />
-				<input type="hidden" id="form_id" name="form_id" value="<?php echo $form_id; ?>" />
+				<input type="hidden" id="confirmation_id" name="confirmation_id" value="<?php echo esc_attr( $confirmation_id ); ?>" />
+				<input type="hidden" id="form_id" name="form_id" value="<?php echo esc_attr( $form_id ); ?>" />
 				<input type="hidden" id="is_default" name="is_default" value="<?php echo rgget( 'isDefault', $confirmation ) ?>" />
 				<input type="hidden" id="conditional_logic" name="conditional_logic" value="<?php echo htmlentities( json_encode( rgget( 'conditionalLogic', $confirmation ) ) ); ?>" />
 
@@ -1570,8 +1597,8 @@ class GFFormSettings {
 		/**
 		 * Fires right before the confirmation that a form is deleted
 		 *
-		 * @param int $form['confirmations'][ $confirmation_id ] The delete confirmation object ID
-		 * @para array $form The Form object to filter through
+		 * @param int   $form['confirmations'][ $confirmation_id ] The delete confirmation object ID
+		 * @para  array $form                                      The Form object
 		 */
 		do_action( 'gform_pre_confirmation_deleted', $form['confirmations'][ $confirmation_id ], $form );
 

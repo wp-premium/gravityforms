@@ -4,10 +4,10 @@
 preview.css
 Gravity Forms Form Preview Styles
 http://www.gravityforms.com
-updated: February 5, 2015 12:15 PM
+updated: February 10, 2016 12:53 PM EST
 
 Gravity Forms is a Rocketgenius project
-copyright 2008-2015 Rocketgenius Inc.
+copyright 2008-2016 Rocketgenius Inc.
 http: //www.rocketgenius.com
 this may not be redistributed without the
 express written permission of the author.
@@ -19,10 +19,14 @@ AND ANY CHANGES MADE HERE WILL BE OVERWRITTTEN.
 ----------------------------------------------------------------
 */
 
+body * {
+	box-sizing: border-box;
+}
+
 body {
 	font-family: "lucida sans", "lucida grande", lucida , arial, sans-serif;
 	font-size: 16px;
-	padding: 0 0 1.250em 0;
+	padding: 0 0 20px 0;
 	background-color: #F1F1F1;
 }
 
@@ -30,8 +34,8 @@ div#preview_hdr {
 	margin: 0;
 	color: #FFF;
 	font-family: "Open Sans",sans-serif;
-	padding: 0.625em 1.250em 0.50em 0;
-	font-size: 1em;
+	padding: 10px 20px 8px 0;
+	font-size: 16px;
 	background-color: #0074A2;
 	display:block !important;
 }
@@ -40,12 +44,12 @@ div#preview_hdr h2 {
 	font-weight: normal;
 	padding: 0 !important;
 	margin: 0 !important;
-	font-size: 1.125em;
+	font-size: 18px;
 	white-space: nowrap !important;
 }
 
 div#preview_hdr div:first-child {
-	padding-left: 1em;
+	padding-left: 16px;
 }
 
 div#preview_hdr span.actionlinks {
@@ -55,7 +59,7 @@ div#preview_hdr span.actionlinks {
 	text-align: right;
 	margin-top: 2px;
 	font-family: "lucida sans", "lucida grande", lucida , sans-serif;
-	font-size: 1em;
+	font-size: 16px;
 	color: #FFF;
 }
 
@@ -65,7 +69,7 @@ div#preview_hdr a {
 	display: inline;
 	font-weight: normal;
 	letter-spacing: normal;
-	font-size: 0.750em;
+	font-size: 12px;
 }
 
 div#preview_hdr a:hover {
@@ -76,22 +80,28 @@ div#preview_hdr a:hover {
 div#preview_note {
 	background-color: #FFFBCC;
 	color: #424242;
-	margin: 0 0 1em 0;
-	padding: 0.875em 1.250em;
-	font-size: 0.750em;
+	margin: 0 0 16px 0;
+	padding: 14px 20px;
+	font-size: 12px;
 	font-family: "lucida sans", "lucida grande", lucida , sans-serif;
 	border-bottom: 2px solid #E6DB55;
 }
 
 div#preview_form_container {
-	padding: 1.250em 1.250em 2em 1.250em;
+	padding: 20px 20px 32px 20px;
 	background-color: #fff;
-	margin: 1.5em;
+	margin: 24px;
 }
 
 .gform_wrapper {
 	color: #000;
-	font-size: 0.813em;
+	font-size: 13px;
+}
+
+body .gform_wrapper input:not([type='radio']):not([type='checkbox']):not([type='submit']):not([type='button']),
+body .gform_wrapper textarea {
+	border: 1px solid #ccc;
+	background-color: #fff;
 }
 
 .gform_footer input.button,
@@ -99,14 +109,14 @@ div#preview_form_container {
 .gform_page_footer input.button,
 .gform_page_footer input[type=button] {
 	border: none;
-    font-size: 1em;
+    font-size: 16px;
     text-decoration: none;
     color: #FFF;
     background-color: #3498db;
     box-shadow: inset 0px 1px 0px #73b0d8, 0px 4px 0px #2980b9;
     text-shadow: 0px 1px 1px rgba(255,255,255,0.3);
     position: relative;
-    padding: 0.750em 1.50em;
+    padding: 12px 24px;
     border-radius: 4px;
     -webkit-appearance: none !important;
 }

@@ -1040,13 +1040,14 @@ if ( ! class_exists( 'GFForms' ) ) {
 		var nextId = GetNextFieldId();
 		var field = CreateField( nextId, type, index );
 
-		var mysack = new sack("<?php echo admin_url( 'admin-ajax.php' )?>?id=" + form.id);
+		var mysack = new sack("<?php echo admin_url( 'admin-ajax.php' )?>");
 		mysack.execute = 1;
 		mysack.method = 'POST';
 		mysack.setVar("action", "rg_add_field");
 		mysack.setVar("rg_add_field", "<?php echo wp_create_nonce( 'rg_add_field' ) ?>");
 		mysack.setVar("index", index);
 		mysack.setVar("field", jQuery.toJSON(field));
+		mysack.setVar('form_id', form.id);
 		mysack.onError = function () {
 			alert(<?php echo json_encode( esc_html__( 'Ajax error while adding field', 'gravityforms' ) ); ?>)
 		};
@@ -1057,11 +1058,13 @@ if ( ! class_exists( 'GFForms' ) ) {
 
 	function DuplicateField(field, sourceFieldId) {
 
-		jQuery.post(ajaxurl + "?id=" + form.id, {
-				action            : "rg_duplicate_field",
+		jQuery.post(ajaxurl, {
+				action: "rg_duplicate_field",
 				rg_duplicate_field: "<?php echo wp_create_nonce( 'rg_duplicate_field' ) ?>",
-				field             : jQuery.toJSON(field),
-				source_field_id   : sourceFieldId},
+				field: jQuery.toJSON(field),
+				source_field_id: sourceFieldId,
+				form_id: form.id
+			},
 			function (data) {
 				data = jQuery.evalJSON(data);
 				EndDuplicateField(data["field"], data["fieldString"], data["sourceFieldId"]);
@@ -1111,12 +1114,13 @@ if ( ! class_exists( 'GFForms' ) ) {
 		field["inputType"] = type;
 		SetDefaultValues(field);
 
-		var mysack = new sack("<?php echo admin_url( 'admin-ajax.php' )?>?id=" + form.id);
+		var mysack = new sack("<?php echo admin_url( 'admin-ajax.php' )?>");
 		mysack.execute = 1;
 		mysack.method = 'POST';
 		mysack.setVar("action", "rg_change_input_type");
 		mysack.setVar("rg_change_input_type", "<?php echo wp_create_nonce( 'rg_change_input_type' ) ?>");
 		mysack.setVar("field", jQuery.toJSON(field));
+		mysack.setVar('form_id', form.id);
 		mysack.onError = function () {
 			alert(<?php echo json_encode( esc_html__( 'Ajax error while changing input type', 'gravityforms' ) ); ?>)
 		};

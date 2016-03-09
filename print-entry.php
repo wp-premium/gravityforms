@@ -124,7 +124,7 @@ $min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] 
 	<title>
 		Print Preview :
 		<?php echo esc_html( $form['title'] ) ?> :
-		<?php echo count( $lead_ids ) > 1 ? esc_html__( 'Entry # ', 'gravityforms' ) . $lead_ids[0] : esc_html__( 'Bulk Print', 'gravityforms' ); ?>
+		<?php echo count( $lead_ids ) > 1 ? esc_html__( 'Entry # ', 'gravityforms' ) . absint( $lead_ids[0] ) : esc_html__( 'Bulk Print', 'gravityforms' ); ?>
 	</title>
 	<link rel='stylesheet' href='<?php echo GFCommon::get_base_url() ?>/css/print<?php echo $min; ?>.css' type='text/css' />
 <?php
