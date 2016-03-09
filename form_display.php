@@ -121,6 +121,13 @@ class GFFormDisplay {
 				$form = self::update_confirmation( $form );
 
 				//pre submission action
+                /**
+                 * Fires before form submission is handled
+                 *
+                 * Typically used to modify values before the submission is processed.
+                 *
+                 * @param array $form The Form object
+                 */
 				gf_do_action( array( 'gform_pre_submission', $form['id'] ), $form );
 
 				//pre submission filter
@@ -133,6 +140,14 @@ class GFFormDisplay {
 				if ( has_filter( 'gform_after_submission' ) || has_filter( "gform_after_submission_{$form['id']}" ) ) {
 					GFCommon::log_debug( __METHOD__ . '(): Executing functions hooked to gform_after_submission.' );
 				}
+                /**
+                 * Fires after successful form submission
+                 *
+                 * Used to perform additional actions after submission
+                 *
+                 * @param array $lead The Entry object
+                 * @param array $form The Form object
+                 */
 				gf_do_action( array( 'gform_after_submission', $form['id'] ), $lead, $form );
 
 			} elseif ( $saving_for_later ) {
@@ -173,6 +188,14 @@ class GFFormDisplay {
 
 			if ( is_array( $confirmation ) && isset( $confirmation['redirect'] ) ){
 				header( "Location: {$confirmation["redirect"]}" );
+                /**
+                 * Fires after submission, if the confirmation page includes a redirect
+                 *
+                 * Used to perform additional actions after submission
+                 *
+                 * @param array $lead The Entry object
+                 * @param array $form The Form object
+                 */
 				gf_do_action( array( 'gform_post_submission', $form['id'] ), $lead, $form );
 				exit;
 			}
@@ -195,10 +218,10 @@ class GFFormDisplay {
 		 * Fires after the form processing is completed. Form processing happens when submitting a page on a multi-page form (i.e. going to the "Next" or "Previous" page), or
 		 * when submitting a single page form.
 		 *
-		 * @param array $form The Form Object
-		 * @param int $page_number In a multi-page form, this variable contains the current page number.
-		 * @param int $source_page_number In a multi-page form, this parameters contains the number of the page that the submission came from.
-		 *                                For example, when clicking "Next" on page 1, this parameter will be set to 1. When clicking "Previous" on page 2, this parameter will be set to 2.
+		 * @param array $form               The Form Object
+		 * @param int   $page_number        In a multi-page form, this variable contains the current page number.
+		 * @param int   $source_page_number In a multi-page form, this parameters contains the number of the page that the submission came from.
+		 *                                  For example, when clicking "Next" on page 1, this parameter will be set to 1. When clicking "Previous" on page 2, this parameter will be set to 2.
 		 */
 		gf_do_action( array( 'gform_post_process', $form['id'] ), $form, $page_number, $source_page_number );
 
@@ -679,10 +702,21 @@ class GFFormDisplay {
 				if ( $is_valid && ! RGForms::get( 'is_confirmation', $submission_info ) ) {
 
 					if ( $submission_info['page_number'] == 0 ) {
-						//post submission hook
+                        /**
+                         * Fired after form submission
+                         *
+                         * @param array $lead The Entry object
+                         * @param array $form The Form object
+                         */
 						gf_do_action( array( 'gform_post_submission', $form['id'] ), $lead, $form );
 					} else {
-						//change page hook
+                        /**
+                         * Fired after the page changes on a multi-page form
+                         *
+                         * @param array $form                                  The Form object
+                         * @param int   $submission_info['source_page_number'] The page that was submitted
+                         * @param int   $submission_info['page_number']        The page that the user is being sent to
+                         */
 						gf_do_action( array( 'gform_post_paging', $form['id'] ), $form, $submission_info['source_page_number'], $submission_info['page_number'] );
 					}
 				}
@@ -1247,6 +1281,12 @@ class GFFormDisplay {
 
 		}
 
+        /**
+         * Fired after an entry is created
+         *
+         * @param array $lead The Entry object
+         * @param array $form The Form object
+         */
 		do_action( 'gform_entry_created', $lead, $form );
 		$lead = gf_apply_filters( array( 'gform_entry_post_save', $form['id'] ), $lead, $form );
 
@@ -1415,8 +1455,13 @@ class GFFormDisplay {
 				continue;
 			}
 
-			//ignore validation if field is hidden or admin only
-			if ( RGFormsModel::is_field_hidden( $form, $field, $field_values ) || $field->adminOnly ) {
+			// don't validate adminOnly fields.
+			if ( $field->adminOnly ) {
+				continue;
+			}
+
+			//ignore validation if field is hidden
+			if ( RGFormsModel::is_field_hidden( $form, $field, $field_values ) ) {
 				$field->is_field_hidden = true;
 
 				continue;
@@ -1601,7 +1646,7 @@ class GFFormDisplay {
 		 * Fires before any scripts are enqueued (form specific using the ID as well)
 		 *
 		 * @param array $form The Form Object
-		 * @param bool $ajax Whether AJAX is on or off (True or False)
+		 * @param bool  $ajax Whether AJAX is on or off (True or False)
 		 */
 		gf_do_action( array( 'gform_pre_enqueue_scripts', $form['id'] ), $form, $ajax );
 
@@ -1670,6 +1715,12 @@ class GFFormDisplay {
 			wp_enqueue_script( 'gform_placeholder' );
 		}
 
+        /**
+         * Fires after any scripts are enqueued (form specific using the ID as well)
+         *
+         * @param array $form The Form Object
+         * @param bool  $ajax Whether AJAX is on or off (True or False)
+         */
 		gf_do_action( array( 'gform_enqueue_scripts', $form['id'] ), $form, $ajax );
 
 		// enqueue jQuery every time form is displayed to allow 'gform_post_render' js hook
@@ -2084,7 +2135,15 @@ class GFFormDisplay {
 				}
 			}
 		}
-
+        /**
+         * Fires when inline Gravity Forms scripts are enqueued
+         *
+         * Used to enqueue additional inline scripts
+         *
+         * @param array  $form       The Form object
+         * @param string $field_vale The current value of the selected field
+         * @param bool   $is_ajax    Returns true if using AJAX.  Otherwise, false
+         */
 		gf_do_action( array( 'gform_register_init_scripts', $form['id'] ), $form, $field_values, $is_ajax );
 
 	}
@@ -2944,6 +3003,7 @@ class GFFormDisplay {
 		$save_email_confirmation = self::replace_save_variables( $confirmation, $form, $resume_token, $resume_email );
 
 		$save_email_confirmation = GFCommon::replace_variables( $save_email_confirmation, $form, $entry, false, true, $nl2br );
+		$save_email_confirmation = GFCommon::gform_do_shortcode( $save_email_confirmation );
 
 		$form_id = absint( $form['id'] );
 
@@ -2967,9 +3027,10 @@ class GFFormDisplay {
 	}
 
 	public static function handle_save_confirmation( $form, $resume_token, $confirmation_message, $ajax ) {
-		$resume_email = isset( $_POST['gform_resume_email'] ) ? $_POST['gform_resume_email'] : null;
+		$resume_email         = isset( $_POST['gform_resume_email'] ) ? $_POST['gform_resume_email'] : null;
 		$confirmation_message = self::replace_save_variables( $confirmation_message, $form, $resume_token, $resume_email );
-		$confirmation_message       = "<div class='form_saved_message'><span>" . $confirmation_message . '</span></div>';
+		$confirmation_message = GFCommon::gform_do_shortcode( $confirmation_message );
+		$confirmation_message = "<div class='form_saved_message'><span>" . $confirmation_message . '</span></div>';
 
 		$form_id = absint( $form['id'] );
 

@@ -834,6 +834,7 @@ var gfMergeTagsObj = function(form) {
                         terms.push( ui.item.value );
 
                         this.value = terms.join( " " );
+                        elem.trigger('input').trigger('propertychange');
                         return false;
                     }
                 });

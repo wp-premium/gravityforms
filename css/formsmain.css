@@ -4,10 +4,10 @@
 Gravity Forms Front End Form Styles
 Version 1.9
 http: //www.gravityforms.com
-updated: January 13, 2016 3:34 PM EST
+updated: February 10, 2016 2:20 PM EST
 
 Gravity Forms is a Rocketgenius project
-copyright 2008-2015 Rocketgenius Inc.
+copyright 2008-2016 Rocketgenius Inc.
 http: //www.rocketgenius.com
 this may not be redistributed without the
 express written permission of the author.
@@ -148,9 +148,7 @@ html>body .entry ul, .gform_wrapper ul { text-indent: 0 }
     overflow: hidden;
     width: 100%;
 }
-.gform_wrapper .field_name_last input {
 
-}
 .gform_wrapper .datepicker { width: 6.75em !important }
 .gform_wrapper .ginput_complex .ginput_left, .gform_wrapper .ginput_complex .ginput_right {
     width: 48.5%;
@@ -173,24 +171,27 @@ html>body .entry ul, .gform_wrapper ul { text-indent: 0 }
 .gform_wrapper .field_sublabel_above .ginput_complex label, .gform_wrapper .field_sublabel_above .gfield_time_hour label, .gform_wrapper .field_sublabel_above .gfield_time_minute label, .gform_wrapper .field_sublabel_above .gfield_time_ampm label, .gform_wrapper .field_sublabel_above .gfield_date_month label, .gform_wrapper .field_sublabel_above .gfield_date_day label, .gform_wrapper .field_sublabel_above .gfield_date_year label, .gform_wrapper .field_sublabel_above .instruction { margin: .75em 0 .188em 0 }
 
 .gform_wrapper .ginput_complex span.name_prefix { min-height: 2.2em }
-.gform_wrapper .ginput_complex.has_middle span.name_suffix input[type=text] { width: 32% }
-.gform_wrapper .ginput_complex span.name_first, .gform_wrapper .ginput_complex span.name_middle, .gform_wrapper .ginput_complex span.name_last {
+.gform_wrapper .ginput_complex span.name_first,
+.gform_wrapper .ginput_complex span.name_middle, .
+.gform_wrapper .ginput_complex span.name_last {
     vertical-align: bottom;
     min-height: 2.813em;
 }
-.gform_wrapper .ginput_complex.ginput_container.has_first_name.no_middle_name.no_last_name span, .gform_wrapper .ginput_complex.ginput_container.no_first_name.has_middle_name.no_last_name span, .gform_wrapper .ginput_complex.ginput_container.no_first_name.no_middle_name.has_last_name span { width: 99.5% }
-.gform_wrapper .ginput_complex.ginput_container.has_first_name.no_middle_name.has_last_name span, .gform_wrapper .ginput_complex.ginput_container.no_first_name.has_middle_name.has_last_name span, .gform_wrapper .ginput_complex.ginput_container.has_first_name.has_middle_name.no_last_name span {
+
+.gform_wrapper .top_label .gfield_label {
+    margin: .625em 0 .5em 0;
+    font-weight: 700;
     display: -moz-inline-stack;
     display: inline-block;
-    width: 48.5%;
-    vertical-align: top;
+    line-height: 1.3;
+    clear: both;
 }
 
 .gform_wrapper .left_label .gfield_label {
     float: left;
     margin: .75em 15px 0 0;
     width: 29%;
-    font-weight: bold;
+    font-weight: 700;
 }
 .gform_wrapper .ginput_complex .ginput_right select, .gform_wrapper .ginput_complex select { width: 100%; }
 .gform_wrapper .left_label li.field_sublabel_below .gfield_label { margin: 0 1em 0 0 }
@@ -198,7 +199,7 @@ html>body .entry ul, .gform_wrapper ul { text-indent: 0 }
     float: left;
     margin: .75em 1em 0 0;
     width: 29%;
-    font-weight: bold;
+    font-weight: 700;
     text-align: right;
 }
 .gform_wrapper .right_label li.field_sublabel_below .gfield_label { margin: 0 1em 0 0 }
@@ -1330,9 +1331,13 @@ body .gform_wrapper img.add_list_item, body .gform_wrapper img.delete_list_item 
 .gform_wrapper table.recaptchatable {
     table-layout: auto;
 }
+
 /* adjusting the address field alignment for some scenarios */
+
 .gform_wrapper .ginput_complex span.ginput_left + input.gform_hidden + span.ginput_left { margin-left: 1.6%; }
+
 /* fixing the name field so it aligns properly */
+
 div.ginput_container_name span { display: -moz-inline-stack; display: inline-block; vertical-align: top; padding-right: 16px; margin-right: -4px;}
 div.ginput_container_name span:last-child {padding-right:0;}
 div.ginput_complex.ginput_container.gf_name_has_1 span {width: 100%;}

@@ -1,4 +1,35 @@
 ------------------------------------------------------------------------------------------------------------------
+Version 1.9.17
+    - Added security enhancements.
+    - Added {admin_url} and {logout_url} merge tags.
+	- Added the GF_MIN_WP_VERSION_SUPPORT_TERMS constant and a message on the settings page when the site is not eligible for support.
+	- Added the GFEntryDetail::maybe_display_empty_fields() helper to determine if empty fields should be displayed when the lead detail grid is processed.
+
+    - Updated save and continue confirmations to support shortcodes.
+    - Updated form view count and lead count so that they are cached to improve performance.
+	- Updated Bengali translation. Credit: Md Akter Hosen.
+    - Updated entry info filters to include additional payment statuses supported by the AF.
+    - Updated Dutch translation. Credit: Eenvoud Media B.V. / Daniel Koop.
+
+    - Fixed an PHP notice related to the field specific version of the gform_save_field_value hook which could occur when using GFAPI::update_entry().
+    - Fixed an issue with the empty form validation and fields configured as admin only which do have a value.
+    - Fixed an issue with the confirmation query string when using the merge tag for a currency formatted Number field.
+    - Fixed an issue which prevented the gform_save_field_value hook running for custom field types when the input value was an array.
+	- Fixed a layout issue in the form editor for custom field settings assigned the gform_setting_left_half or gform_setting_right_half classes.
+    - Fixed field labels escaping field container in the form editor.
+    - Fixed an issue which caused merge tags added by autocomplete to be lost on form save.
+    - Fixed uppercase characters for save and continue merge tags in Danish translation.
+    - Fixed an issue with the admin-ajax url for the add field, duplicate field and change input type requests when WPML is active.
+    - Fixed issue with name field styles on certain scenarios.
+
+    - AF: Added support for select_custom settings field on the plugin settings page.
+    - AF: Added Customizer to supported admin_page types for enqueueing scripts.
+    - AF: Fixed issue where no other script enqueue rules would run if first rule was a callback.
+    - AF: Updated select_custom settings field to hide default custom option if custom option is within an optgroup.
+
+    - API: Fixed an issue with a logging statement for the Web API.
+
+------------------------------------------------------------------------------------------------------------------
 Version 1.9.16
 
     - Added logging of form import failures.
