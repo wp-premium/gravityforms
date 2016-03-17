@@ -2288,12 +2288,24 @@ class GFFormsModel {
 
 	public static function get_default_value( $field, $input_id ) {
 		if ( ! is_array( $field->choices ) ) {
-			if ( is_array( $field->inputs ) ) {
+			// if entry is saved in separate inputs get requsted input's default value ($input_id = 2.1)
+			// some fields (like Date, Time) do not save their values in separate inputs and are correctly filtered out by this condition ($input_id = 2)
+			// other fields (like Email w/ Confirm-enabled) also do not save their values in separate inputs but *should be* processed as input-specific submissions ($input_id = 2)
+			if ( is_array( $field->get_entry_inputs() ) || ( $field->get_input_type() == 'email' && is_array( $field->inputs ) ) ) {
 				$input = RGFormsModel::get_input( $field, $input_id );
-
 				return rgar( $input, 'defaultValue' );
 			} else {
-				return IS_ADMIN ? $field->defaultValue : GFCommon::replace_variables_prepopulate( $field->defaultValue );
+				$value = $field->get_value_default();
+				if( ! IS_ADMIN ) {
+					if( is_array( $value ) ) {
+						foreach( $value as &$_value ) {
+							$_value = GFCommon::replace_variables_prepopulate( $_value );
+						}
+					} else {
+						$value = GFCommon::replace_variables_prepopulate( $value );
+					}
+				}
+				return $value;
 			}
 		} else if ( $field->type == 'checkbox' ) {
 			for ( $i = 0, $count = sizeof( $field->inputs ); $i < $count; $i ++ ) {

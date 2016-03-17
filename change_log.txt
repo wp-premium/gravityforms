@@ -1,4 +1,24 @@
 ------------------------------------------------------------------------------------------------------------------
+Version 1.9.17.5
+    - Fixed an issue with gformCleanNumber() which for some currencies caused an incorrect value to be returned.
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.9.17.4
+    - Fixed a fatal error that can occur when third party plugins and themes call Gravity Forms methods that use GFCache, such as GFFormsModel::get_form_id(), before all the plugins have been loaded. So pluggable functions such as wp_hash() in wp-includes/pluggable.php are not available.
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.9.17.3
+	- Fixed an issue with conditional shortcodes where the shortcodes don't get parsed if the {all_fields} merge tag is present.
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.9.17.2
+	- Added Chinese (China) translation. Credit: Edi Michael.
+
+------------------------------------------------------------------------------------------------------------------
+Version 1.9.17.1
+    - Fixed issue where Date & Time fields did not save their default value correctly if visibliity was set to Admin Only
+
+------------------------------------------------------------------------------------------------------------------
 Version 1.9.17
     - Added security enhancements.
     - Added {admin_url} and {logout_url} merge tags.

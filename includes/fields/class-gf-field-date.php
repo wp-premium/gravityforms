@@ -504,7 +504,10 @@ class GF_Field_Date extends GF_Field {
 	}
 
 	public function get_value_save_entry( $value, $form, $input_name, $lead_id, $lead ) {
-
+		// if $value is a default value and also an array, it will be an associative array; to be safe, let's convert all array $value to numeric
+		if( is_array( $value ) ) {
+			$value = array_values( $value );
+		}
 		return GFFormsModel::prepare_date( $this->dateFormat, $value );
 	}
 
