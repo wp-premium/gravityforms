@@ -135,7 +135,7 @@ function gformCleanNumber(text, symbol_right, symbol_left, decimal_separator){
     text = text + " ";
 
     //Removing symbol in unicode format (i.e. &#4444;)
-    text = text.replace(/&.*?;/, "");
+    text = text.replace(/&.*?;/g, "");
 
     //Removing symbol from text
     text = text.replace(symbol_right, "");
