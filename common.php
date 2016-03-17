@@ -839,14 +839,12 @@ class GFCommon {
 			//all submitted fields using text
 			if ( strpos( $text, $match[0] ) !== false ) {
 				$text = str_replace( $match[0], self::get_submitted_fields( $form, $lead, $display_empty, ! $use_value, $format, $use_admin_label, 'all_fields', rgar( $match, 2 ) ), $text );
-				$text = self::encode_shortcodes( $text );
 			}
 		}
 
 		//all submitted fields including empty fields
 		if ( strpos( $text, '{all_fields_display_empty}' ) !== false ) {
 			$text = str_replace( '{all_fields_display_empty}', self::get_submitted_fields( $form, $lead, true, true, $format, false, 'all_fields_display_empty' ), $text );
-			$text = self::encode_shortcodes( $text );
 		}
 
 		//pricing fields
@@ -1119,7 +1117,7 @@ class GFCommon {
 
 				case 'section' :
 
-					if ( GFFormsModel::is_field_hidden( $form, $field, array(), $lead ) ){
+					if ( GFFormsModel::is_field_hidden( $form, $field, array(), $lead ) ) {
 						continue;
 					}
 
@@ -1179,6 +1177,8 @@ class GFCommon {
 					if ( ! $display_field ) {
 						$field_value = false;
 					}
+
+					$field_value = self::encode_shortcodes( $field_value );
 
 					$field_value = apply_filters( 'gform_merge_tag_filter', $field_value, $merge_tag, $options, $field, $raw_field_value );
 
@@ -4533,7 +4533,7 @@ class GFCache {
 
 		$data = self::get_transient( $key );
 
-		if ( false === ( $data ) ) {
+		if ( false === $data ) {
 			$found = false;
 
 			return false;
@@ -4616,6 +4616,9 @@ class GFCache {
 	}
 
 	private static function delete_transient( $key ) {
+		if ( ! function_exists( 'wp_hash' ) ) {
+			return false;
+		}
 		$key = self::$_transient_prefix . wp_hash( $key );
 		if ( is_multisite() ) {
 			$success = delete_site_transient( $key );
@@ -4627,6 +4630,9 @@ class GFCache {
 	}
 
 	private static function set_transient( $key, $data, $expiration ) {
+		if ( ! function_exists( 'wp_hash' ) ) {
+			return false;
+		}
 		$key = self::$_transient_prefix . wp_hash( $key );
 		if ( is_multisite() ) {
 			$success = set_site_transient( $key, $data, $expiration );
@@ -4638,6 +4644,9 @@ class GFCache {
 	}
 
 	private static function get_transient( $key ) {
+		if ( ! function_exists( 'wp_hash' ) ) {
+			return false;
+		}
 		$key = self::$_transient_prefix . wp_hash( $key );
 		if ( is_multisite() ) {
 			$data = get_site_transient( $key );
