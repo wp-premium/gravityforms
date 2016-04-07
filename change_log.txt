@@ -1,22 +1,27 @@
 ------------------------------------------------------------------------------------------------------------------
-Version 1.9.17.5
+Version 1.9.18
+    - Added Chinese (China) translation. Credit: Edi Michael.
+    - Added new filter: gform_list_field_parameter_delimiter
+        add_filter( 'gform_list_field_parameter_delimiter', function( $delimiter, $field, $name, $field_values ) {
+            return '||';
+        }, 10, 4 );
+
+    - Added the $field object to the parameter list of the gform_counter_script filter.
+
+    - Updated GFFormsModel::get_lead_db_columns() to public.
+    - Updated the gform_confirmation_anchor filter to include $form as the second parameter.
+    - Updated GFFormsModel::media_handle_upload() to be a public method.
+
+    - Fixed an issue with the merge tag for the Multi Select field returning the choice values when not using the :value modifier.
+    - Fixed an issue with the $field_values parameter of the gform_pre_render hook where it would change from an array to a string when processing AJAX form submissions.
     - Fixed an issue with gformCleanNumber() which for some currencies caused an incorrect value to be returned.
-
-------------------------------------------------------------------------------------------------------------------
-Version 1.9.17.4
     - Fixed a fatal error that can occur when third party plugins and themes call Gravity Forms methods that use GFCache, such as GFFormsModel::get_form_id(), before all the plugins have been loaded. So pluggable functions such as wp_hash() in wp-includes/pluggable.php are not available.
-
-------------------------------------------------------------------------------------------------------------------
-Version 1.9.17.3
 	- Fixed an issue with conditional shortcodes where the shortcodes don't get parsed if the {all_fields} merge tag is present.
+    - Fixed issue where Date & Time fields did not save their default value correctly if visibility was set to Admin Only
 
-------------------------------------------------------------------------------------------------------------------
-Version 1.9.17.2
-	- Added Chinese (China) translation. Credit: Edi Michael.
-
-------------------------------------------------------------------------------------------------------------------
-Version 1.9.17.1
-    - Fixed issue where Date & Time fields did not save their default value correctly if visibliity was set to Admin Only
+    - AF: Fixed a PHP notice which could occur if the is_authorized property was not set by the payment add-on.
+    - AF: Fixed GFAddOn::get_save_button() not retrieving last section's fields when sections are using custom array keys.
+    - AF: Fixed an issue with the payment status not being updated when a subscription payment is successful if a previous attempt failed.
 
 ------------------------------------------------------------------------------------------------------------------
 Version 1.9.17

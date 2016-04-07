@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms
 Plugin URI: http://www.gravityforms.com
 Description: Easily create web forms and manage form entries within the WordPress admin.
-Version: 1.9.17.5
+Version: 1.9.18
 Author: rocketgenius
 Author URI: http://www.rocketgenius.com
 Text Domain: gravityforms
@@ -116,7 +116,7 @@ register_deactivation_hook( __FILE__, array( 'GFForms', 'deactivation_hook' ) );
 
 class GFForms {
 
-	public static $version = '1.9.17.5';
+	public static $version = '1.9.18';
 
 	public static function loaded() {
 
@@ -1352,11 +1352,13 @@ class GFForms {
 			$tabindex = isset( $tabindex ) ? absint( $tabindex ) : 1;
 			require_once( GFCommon::get_base_path() . '/form_display.php' );
 
-			$form_id = absint( $form_id );
-			$display_title = (bool) $title;
+			$form_id             = absint( $form_id );
+			$display_title       = (bool) $title;
 			$display_description = (bool) $description;
 
-			$result = GFFormDisplay::get_form( $form_id, $display_title, $display_description, false, $_POST['gform_field_values'], true, $tabindex );
+			parse_str( $_POST['gform_field_values'], $field_values );
+
+			$result = GFFormDisplay::get_form( $form_id, $display_title, $display_description, false, $field_values, true, $tabindex );
 			die( $result );
 		}
 	}

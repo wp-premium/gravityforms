@@ -43,51 +43,7 @@ class GFExport {
 
 			$forms = RGFormsModel::get_form_meta_by_id( $selected_forms );
 
-			// clean up a bit before exporting
-			foreach ( $forms as &$form ) {
-
-				foreach ( $form['fields'] as &$field ) {
-					$inputType = RGFormsModel::get_input_type( $field );
-
-					if ( isset( $field->pageNumber ) ) {
-						unset( $field->pageNumber );
-					}
-
-					if ( $inputType != 'address' ) {
-						unset( $field->addressType );
-					}
-
-					if ( $inputType != 'date' ) {
-						unset( $field->calendarIconType );
-						unset( $field->dateType );
-					}
-
-					if ( $inputType != 'creditcard' ) {
-						unset( $field->creditCards );
-					}
-
-					if ( $field->type == $field->inputType ) {
-						unset( $field->inputType );
-					}
-
-					// convert associative array to indexed
-					if ( isset( $form['confirmations'] ) ) {
-						$form['confirmations'] = array_values( $form['confirmations'] );
-					}
-
-					if ( isset( $form['notifications'] ) ) {
-						$form['notifications'] = array_values( $form['notifications'] );
-					}
-				}
-								
-				/**
-				 * Allows you to filter and modify the Export Form
-				 *
-				 * @param array $form Assign which Gravity Form to change the export form for
-				 */
-				$form = gf_apply_filters( array( 'gform_export_form', $form['id'] ), $form );
-
-			}
+			$forms = self::prepare_forms_for_export( $forms );
 
 			$forms['version'] = GFForms::$version;
 
@@ -920,6 +876,58 @@ class GFExport {
 		ksort( $setting_tabs, SORT_NUMERIC );
 
 		return $setting_tabs;
+	}
+
+	public static function prepare_forms_for_export( $forms ) {
+		// clean up a bit before exporting
+		foreach ( $forms as &$form ) {
+
+			foreach ( $form['fields'] as &$field ) {
+				$inputType = RGFormsModel::get_input_type( $field );
+
+				if ( isset( $field->pageNumber ) ) {
+					unset( $field->pageNumber );
+				}
+
+				if ( $inputType != 'address' ) {
+					unset( $field->addressType );
+				}
+
+				if ( $inputType != 'date' ) {
+					unset( $field->calendarIconType );
+					unset( $field->dateType );
+				}
+
+				if ( $inputType != 'creditcard' ) {
+					unset( $field->creditCards );
+				}
+
+				if ( $field->type == $field->inputType ) {
+					unset( $field->inputType );
+				}
+
+				// convert associative array to indexed
+				if ( isset( $form['confirmations'] ) ) {
+					$form['confirmations'] = array_values( $form['confirmations'] );
+				}
+
+				if ( isset( $form['notifications'] ) ) {
+					$form['notifications'] = array_values( $form['notifications'] );
+				}
+			}
+
+			/**
+			 * Allows you to filter and modify the Export Form
+			 *
+			 * @param array $form Assign which Gravity Form to change the export form for
+			 */
+			$form = gf_apply_filters( array( 'gform_export_form', $form['id'] ), $form );
+
+		}
+
+		$forms['version'] = GFForms::$version;
+
+		return $forms;
 	}
 
 }

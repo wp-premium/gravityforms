@@ -802,7 +802,7 @@ class GFFormDisplay {
                 <div class='{$wrapper_css_class}{$custom_wrapper_css_class}' id='gform_wrapper_$form_id' " . $style . '>';
 
 			$default_anchor = $has_pages || $ajax ? true : false;
-			$use_anchor     = gf_apply_filters( array( 'gform_confirmation_anchor', $form_id ), $default_anchor );
+			$use_anchor     = gf_apply_filters( array( 'gform_confirmation_anchor', $form_id ), $default_anchor, $form );
 			if ( $use_anchor !== false ) {
 				$form_string .= "<a id='gf_$form_id' class='gform_anchor' ></a>";
 				$action .= "#gf_$form_id";
@@ -1348,7 +1348,7 @@ class GFFormDisplay {
 
 		if ( $form['confirmation']['type'] == 'message' ) {
 			$default_anchor = self::has_pages( $form ) ? 1 : 0;
-			$anchor         = gf_apply_filters( array( 'gform_confirmation_anchor', $form['id'] ), $default_anchor ) ? "<a id='gf_{$form['id']}' class='gform_anchor' ></a>" : '';
+			$anchor         = gf_apply_filters( array( 'gform_confirmation_anchor', $form['id'] ), $default_anchor, $form ) ? "<a id='gf_{$form['id']}' class='gform_anchor' ></a>" : '';
 			$nl2br          = rgar( $form['confirmation'], 'disableAutoformat' ) ? false : true;
 			$cssClass       = esc_attr( rgar( $form, 'cssClass' ) );
 			$confirmation   = empty( $form['confirmation']['message'] ) ? "{$anchor} " : "{$anchor}<div id='gform_confirmation_wrapper_{$form['id']}' class='gform_confirmation_wrapper {$cssClass}'><div id='gform_confirmation_message_{$form['id']}' class='gform_confirmation_message_{$form['id']} gform_confirmation_message'>" . GFCommon::replace_variables( $form['confirmation']['message'], $form, $lead, false, true, $nl2br ) . '</div></div>';
@@ -2241,17 +2241,17 @@ class GFFormDisplay {
 		$script = '';
 		foreach ( $form['fields'] as $field ) {
 			$max_length = $field->maxLength;
-			$field_id   = "input_{$form['id']}_{$field->id}";
+			$input_id   = "input_{$form['id']}_{$field->id}";
 			if ( ! empty( $max_length ) && ! $field->adminOnly ) {
 				$field_script =
-					"jQuery('#{$field_id}').textareaCount(" .
+					"jQuery('#{$input_id}').textareaCount(" .
 					"    {" .
 					"    'maxCharacterSize': {$max_length}," .
 					"    'originalStyle': 'ginput_counter'," .
 					"    'displayFormat' : '#input " . esc_js( __( 'of', 'gravityforms' ) ) . ' #max ' . esc_js( __( 'max characters', 'gravityforms' ) ) . "'" .
 					"    } );";
 
-				$script .= gf_apply_filters( array( 'gform_counter_script', $form['id'] ), $field_script, $form['id'], $field_id, $max_length );
+				$script .= gf_apply_filters( array( 'gform_counter_script', $form['id'] ), $field_script, $form['id'], $input_id, $max_length, $field );
 			}
 		}
 
@@ -2943,7 +2943,7 @@ class GFFormDisplay {
 
 		$default_anchor = $has_pages || $ajax ? true : false;
 
-		$use_anchor     = gf_apply_filters( array( 'gform_confirmation_anchor', $form_id ), $default_anchor );
+		$use_anchor     = gf_apply_filters( array( 'gform_confirmation_anchor', $form_id ), $default_anchor, $form );
 		if ( $use_anchor !== false ) {
 			$action .= "#gf_$form_id";
 		}
@@ -3011,7 +3011,7 @@ class GFFormDisplay {
 
 		$default_anchor = $has_pages || $ajax ? true : false;
 
-		$use_anchor     = gf_apply_filters( array( 'gform_confirmation_anchor', $form_id ), $default_anchor );
+		$use_anchor     = gf_apply_filters( array( 'gform_confirmation_anchor', $form_id ), $default_anchor, $form );
 
 		if ( $use_anchor !== false ) {
 			$save_email_confirmation = "<a id='gf_$form_id' class='gform_anchor' ></a>" . $save_email_confirmation;
@@ -3038,7 +3038,7 @@ class GFFormDisplay {
 
 		$default_anchor = $has_pages || $ajax ? true : false;
 
-		$use_anchor     = gf_apply_filters( array( 'gform_confirmation_anchor', $form_id ), $default_anchor );
+		$use_anchor     = gf_apply_filters( array( 'gform_confirmation_anchor', $form_id ), $default_anchor, $form );
 
 		if ( $use_anchor !== false ) {
 			$confirmation_message = "<a id='gf_{$form_id}' class='gform_anchor' ></a>" . $confirmation_message;

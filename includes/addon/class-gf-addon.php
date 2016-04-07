@@ -1290,7 +1290,8 @@ abstract class GFAddOn {
 	}
 
 	protected function get_save_button( $sections ) {
-		$fields = $sections[ count( $sections ) - 1 ]['fields'];
+		$sections = array_values( $sections );
+		$fields   = $sections[ count( $sections ) - 1 ]['fields'];
 
 		foreach ( $fields as $field ) {
 			if ( $field['type'] == 'save' )
