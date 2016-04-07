@@ -831,7 +831,7 @@ class GF_Field extends stdClass implements ArrayAccess {
 	 * Override this method to implement the appropriate sanitization specific to the field type before the value is saved.
 	 *
 	 * This base method provides a generic sanitization similar to wp_kses but values are not encoded.
-	 * Scripts are stripped out leaving allowed tags if HTMl is allowed.
+	 * Scripts are stripped out leaving tags allowed by the gform_allowable_tags filter.
 	 *
 	 * @param string $value The field value to be processed.
 	 * @param int $form_id The ID of the form currently being processed.
@@ -842,6 +842,18 @@ class GF_Field extends stdClass implements ArrayAccess {
 
 		if ( is_array( $value ) ) {
 			return '';
+		}
+
+		/**
+		 * Provisional filter - may be subject to change or removal.
+		 *
+		 * @param bool
+		 * @param int $form_id
+		 * @para GF_Field $this
+		 */
+		$sanitize = apply_filters( 'gform_sanitize_entry_value', true, $form_id, $this );
+		if ( ! $sanitize ) {
+			return $value;
 		}
 
 		//allow HTML for certain field types

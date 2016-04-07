@@ -66,7 +66,6 @@ class GF_Field_Textarea extends GF_Field {
 
 		return $format == 'html' && ! $nl2br ? nl2br( $value ) : $value;
 	}
-
 }
 
 GF_Fields::register( new GF_Field_Textarea() );
