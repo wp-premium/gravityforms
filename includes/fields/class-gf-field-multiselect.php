@@ -205,6 +205,10 @@ class GF_Field_MultiSelect extends GF_Field {
 					$item = GFCommon::format_variable_value( $cat, $url_encode, $esc_html, $format );
 				}
 			}
+		} elseif ( $modifier != 'value' ) {
+			foreach ( $items as &$item ) {
+				$item = GFCommon::selection_display( $item, $this, rgar( $entry, 'currency' ), true );
+			}
 		}
 
 		return GFCommon::implode_non_blank( ', ', $items );
