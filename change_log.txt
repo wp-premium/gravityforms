@@ -1,4 +1,16 @@
 ------------------------------------------------------------------------------------------------------------------
+Version 1.9.19
+
+    - Added support for the Customize Posts feature plugin. The Add Form button appears in the editor when editing posts in the front-end using the Customizer.
+    - Updated the setting page to prevent the Uninstall tab from being added for users without the gravityforms_uninstall or gform_full_access capabilities.
+    - Updated German translation. Credit: Dominik Horn - netzstrategen.
+    - Fixed an issue with the front-end total calculation if the quantity field value contained the comma thousand separator.
+    - Fixed a JS error which could occur when processing the option field labels if the DOM has been manipulated to include a text field within the choices container.
+    - Fixed an issue with the shortcode builder where form titles with special characters are not displayed correctly.
+    - AF: Fixed an issue with the check for updates when the check doesn't run in an admin context. e.g. WP-CLI.
+    - AF: Added 'gform_gf_field_create' filter to allow modifying or replacing the GF_Field object after it has been created. See https://www.gravityhelp.com/documentation/article/gform_gf_field_create/
+
+------------------------------------------------------------------------------------------------------------------
 Version 1.9.18
     - Added Chinese (China) translation. Credit: Edi Michael.
     - Added new filter: gform_list_field_parameter_delimiter

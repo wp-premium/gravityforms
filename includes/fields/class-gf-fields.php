@@ -72,7 +72,16 @@ class GF_Fields {
 		$class_name = get_class( $class );
 		$field      = new $class_name( $properties );
 
-		return $field;
+		/**
+		 * Filter the GF_Field object after it is created.
+		 *
+		 * @since  1.9.18.2
+		 *
+		 * @param  GF_Field $field      A GF_Field object.
+		 * @param  array    $properties An array of field properties used to generate the GF_Field object.
+		 * @see    https://www.gravityhelp.com/documentation/article/gform_gf_field_create/
+		 */
+		return apply_filters( 'gform_gf_field_create', $field, $properties );
 
 	}
 }

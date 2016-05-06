@@ -552,7 +552,10 @@ class GFSettings {
 			}
 		}
 
-		$setting_tabs[] = array( 'name' => 'uninstall', 'label' => __( 'Uninstall', 'gravityforms' ) );
+		// Prevent Uninstall tab from being added for users that don't have gravityforms_uninstall capability
+		if ( GFCommon::current_user_can_any( 'gravityforms_uninstall' ) ) {
+			$setting_tabs[] = array( 'name' => 'uninstall', 'label' => __( 'Uninstall', 'gravityforms' ) );
+		}
 
 		$setting_tabs = apply_filters( 'gform_settings_menu', $setting_tabs );
 		ksort( $setting_tabs, SORT_NUMERIC );
