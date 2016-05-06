@@ -327,16 +327,16 @@ function gformGetFieldId(element){
 
 function gformCalculateProductPrice(form_id, productFieldId){
 
-    var suffix = "_" + form_id + "_" + productFieldId;
+    var suffix = '_' + form_id + '_' + productFieldId;
 
 
     //Drop down auto-calculating labels
-    jQuery(".gfield_option" + suffix + ", .gfield_shipping_" + form_id).find("select").each(function(){
+    jQuery('.gfield_option' + suffix + ', .gfield_shipping_' + form_id).find('select').each(function(){
 
         var dropdown_field = jQuery(this);
         var selected_price = gformGetPrice(dropdown_field.val());
-        var field_id = dropdown_field.attr("id").split("_")[2];
-        dropdown_field.children("option").each(function(){
+        var field_id = dropdown_field.attr('id').split('_')[2];
+        dropdown_field.children('option').each(function(){
             var choice_element = jQuery(this);
             var label = gformGetOptionLabel(choice_element, choice_element.val(), selected_price, form_id, field_id);
             choice_element.html(label);
@@ -346,11 +346,11 @@ function gformCalculateProductPrice(form_id, productFieldId){
 
 
     //Checkboxes labels with prices
-    jQuery(".gfield_option" + suffix).find(".gfield_checkbox").find("input").each(function(){
+    jQuery('.gfield_option' + suffix).find('.gfield_checkbox').find('input:checkbox').each(function(){
         var checkbox_item = jQuery(this);
-        var id = checkbox_item.attr("id");
-        var field_id = id.split("_")[2];
-        var label_id = id.replace("choice_", "#label_");
+        var id = checkbox_item.attr('id');
+        var field_id = id.split('_')[2];
+        var label_id = id.replace('choice_', '#label_');
         var label_element = jQuery(label_id);
         var label = gformGetOptionLabel(label_element, checkbox_item.val(), 0, form_id, field_id);
         label_element.html(label);
@@ -358,22 +358,24 @@ function gformCalculateProductPrice(form_id, productFieldId){
 
 
     //Radio button auto-calculating lables
-    jQuery(".gfield_option" + suffix + ", .gfield_shipping_" + form_id).find(".gfield_radio").each(function(){
+    jQuery('.gfield_option' + suffix + ', .gfield_shipping_' + form_id).find('.gfield_radio').each(function(){
         var selected_price = 0;
         var radio_field = jQuery(this);
-        var id = radio_field.attr("id");
-        var fieldId = id.split("_")[2];
-        var selected_value = radio_field.find("input:checked").val();
+        var id = radio_field.attr('id');
+        var fieldId = id.split('_')[2];
+        var selected_value = radio_field.find('input:radio:checked').val();
 
         if(selected_value)
             selected_price = gformGetPrice(selected_value);
 
-        jQuery(this).find("input").each(function(){
+        radio_field.find('input:radio').each(function(){
             var radio_item = jQuery(this);
-            var label_id = radio_item.attr("id").replace("choice_", "#label_");
+            var label_id = radio_item.attr('id').replace('choice_', '#label_');
             var label_element = jQuery(label_id);
-            var label = gformGetOptionLabel(label_element, radio_item.val(), selected_price, form_id, fieldId);
-            label_element.html(label);
+            if ( label_element ) {
+                var label = gformGetOptionLabel(label_element, radio_item.val(), selected_price, form_id, fieldId);
+                label_element.html(label);
+            }
         });
     });
 
@@ -383,7 +385,7 @@ function gformCalculateProductPrice(form_id, productFieldId){
 	//calculating options if quantity is more than 0 (a product was selected).
 	if( quantity > 0 ) {
 
-		jQuery(".gfield_option" + suffix).find("input:checked, select").each(function(){
+		jQuery('.gfield_option' + suffix).find('input:checked, select').each(function(){
 			if(!gformIsHidden(jQuery(this)))
 				price += gformGetPrice(jQuery(this).val());
 		});
@@ -398,37 +400,45 @@ function gformCalculateProductPrice(form_id, productFieldId){
     return price;
 }
 
-function gformGetProductQuantity( formId, productFieldId ) {
+function gformGetProductQuantity(formId, productFieldId) {
 
-	//If product is not selected
-	if ( ! gformIsProductSelected( formId, productFieldId )){
-		return 0;
-	}
+    //If product is not selected
+    if (!gformIsProductSelected(formId, productFieldId)) {
+        return 0;
+    }
 
     var quantity,
-        quantityInput = jQuery( '#ginput_quantity_' + formId + '_' + productFieldId);
+        quantityInput = jQuery('#ginput_quantity_' + formId + '_' + productFieldId),
+        numberFormat;
 
-    if( quantityInput.length > 0 ) {
+    if (quantityInput.length > 0) {
 
-        quantity = ! gformIsNumber( quantityInput.val() ) ? 0 : quantityInput.val();
+        quantity = quantityInput.val();
 
     } else {
 
-        quantityElement = jQuery( '.gfield_quantity_' + formId + '_' + productFieldId);
+        quantityInput = jQuery('.gfield_quantity_' + formId + '_' + productFieldId + ' :input');
         quantity = 1;
 
-        if( quantityElement.find( 'select' ).length > 0 ) {
-            quantity = quantityElement.find( 'select' ).val();
-        } else if( quantityElement.find( 'input' ).length > 0 ) {
-            quantity = quantityElement.find( 'input' ).val();
-        }
+        if (quantityInput.length > 0) {
+            quantity = quantityInput.val();
 
-        if( ! gformIsNumber( quantity ) )
-            quantity = 0;
+            var htmlId = quantityInput.attr('id'),
+                fieldId = gf_get_input_id_by_html_id(htmlId);
+
+            numberFormat = gf_global.number_formats[formId][fieldId];
+        }
 
     }
 
-    quantity = parseFloat( quantity );
+    if (!numberFormat)
+        numberFormat = 'currency';
+
+    var decimalSeparator = gformGetDecimalSeparator(numberFormat);
+
+    quantity = gformCleanNumber(quantity, '', '', decimalSeparator);
+    if (!quantity)
+        quantity = 0;
 
     return quantity;
 }
@@ -1507,6 +1517,22 @@ function gf_input_change( elem, formId, fieldId ) {
     gform.doAction( 'gform_input_change', elem, formId, fieldId );
 }
 
+function gf_get_input_id_by_html_id(htmlId) {
+
+    var ids = gf_get_ids_by_html_id(htmlId),
+        id = ids[2];
+
+    if (ids[3]) {
+        id += '.' + ids[3];
+    }
+
+    return id;
+}
+
+function gf_get_ids_by_html_id(htmlId) {
+    var ids = htmlId ? htmlId.split('_') : false;
+    return ids;
+}
 
 
 //----------------------------------------
