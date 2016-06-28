@@ -9,113 +9,15 @@ class GFFormList {
 	public static function form_list_page() {
 		global $wpdb;
 
+		// todo: hook up bulk action confirmation js
+		// todo: apply button filter
+
+
 		if ( ! GFCommon::ensure_wp_version() ) {
 			return;
 		}
 
 		echo GFCommon::get_remote_message();
-
-		$action      = RGForms::post( 'action' );
-		$bulk_action = RGForms::post( 'bulk_action' );
-		$bulk_action = ! empty( $bulk_action ) ? $bulk_action : RGForms::post( 'bulk_action2' );
-
-		if ( $action == 'trash' ) {
-			check_admin_referer( 'gforms_update_forms', 'gforms_update_forms' );
-			$form_id = RGForms::post( 'action_argument' );
-			RGFormsModel::trash_form( $form_id );
-			$message = __( 'Form moved to the trash.', 'gravityforms' );
-		} else if ( $action == 'restore' ) {
-			check_admin_referer( 'gforms_update_forms', 'gforms_update_forms' );
-			$form_id = RGForms::post( 'action_argument' );
-			RGFormsModel::restore_form( $form_id );
-			$message = __( 'Form restored.', 'gravityforms' );
-		} else if ( $action == 'delete' ) {
-			check_admin_referer( 'gforms_update_forms', 'gforms_update_forms' );
-			$form_id = RGForms::post( 'action_argument' );
-			if ( GFCommon::current_user_can_any( 'gravityforms_delete_forms' ) ) {
-				RGFormsModel::delete_form( $form_id );
-				$message = __( 'Form deleted.', 'gravityforms' );
-			} else {
-				$message = __( "You don't have adequate permission to delete forms.", 'gravityforms' );
-			}
-		} else if ( $action == 'duplicate' ) {
-			check_admin_referer( 'gforms_update_forms', 'gforms_update_forms' );
-			$form_id = RGForms::post( 'action_argument' );
-			RGFormsModel::duplicate_form( $form_id );
-			$message = __( 'Form duplicated.', 'gravityforms' );
-		}
-
-		if ( $bulk_action ) {
-
-			check_admin_referer( 'gforms_update_forms', 'gforms_update_forms' );
-			$form_ids   = is_array( rgpost( 'form' ) ) ? rgpost( 'form' ) : array();
-			$form_count = count( $form_ids );
-
-			switch ( $bulk_action ) {
-				case 'trash':
-					GFFormsModel::trash_forms( $form_ids );
-					$message = _n( '%s form moved to the trash.', '%s forms moved to the trash.', $form_count, 'gravityforms' );
-					break;
-				case 'restore':
-					GFFormsModel::restore_forms( $form_ids );
-					$message = _n( '%s form restored.', '%s forms restored.', $form_count, 'gravityforms' );
-					break;
-				case 'delete':
-					if ( GFCommon::current_user_can_any( 'gravityforms_delete_forms' ) ) {
-						GFFormsModel::delete_forms( $form_ids );
-						$message = _n( '%s form deleted.', '%s forms deleted.', $form_count, 'gravityforms' );
-					} else {
-						$message = __( "You don't have adequate permissions to delete forms.", 'gravityforms' );
-					}
-					break;
-				case 'reset_views':
-					foreach ( $form_ids as $form_id ) {
-						GFFormsModel::delete_views( $form_id );
-					}
-					$message = _n( 'Views for %s form have been reset.', 'Views for %s forms have been reset.', $form_count, 'gravityforms' );
-					break;
-				case 'delete_entries':
-					if ( GFCommon::current_user_can_any( 'gravityforms_delete_entries' ) ) {
-						foreach ( $form_ids as $form_id ) {
-							GFFormsModel::delete_leads_by_form( $form_id );
-						}
-						$message = _n( 'Entries for %s form have been deleted.', 'Entries for %s forms have been deleted.', $form_count, 'gravityforms' );
-					} else {
-						$message = __( "You don't have adequate permission to delete entries.", 'gravityforms' );
-					}
-
-					break;
-				case 'activate':
-					foreach ( $form_ids as $form_id ) {
-						GFFormsModel::update_form_active( $form_id, 1 );
-					}
-					$message = _n( '%s form has been marked as active.', '%s forms have been marked as active.', $form_count, 'gravityforms' );
-					break;
-				case 'deactivate':
-					foreach ( $form_ids as $form_id ) {
-						GFFormsModel::update_form_active( $form_id, 0 );
-					}
-					$message = _n( '%s form has been marked as inactive.', '%s forms have been marked as inactive.', $form_count, 'gravityforms' );
-					break;
-			}
-
-			if ( isset( $message ) ) {
-				$message = sprintf( $message, $form_count );
-			}
-		}
-		$sort_column    = empty( $_GET['sort'] ) ? 'title' : $_GET['sort'];
-		$db_columns = GFFormsModel::get_form_db_columns();
-
-		if ( ! in_array( strtolower( $sort_column ), $db_columns ) ) {
-			$sort_column = 'title';
-		}
-
-		$sort_direction = empty( $_GET['dir'] ) ? 'ASC' : $_GET['dir'];
-		$active         = RGForms::get( 'active' ) == '' ? null : (bool) RGForms::get( 'active' );
-		$trash          = RGForms::get( 'trash' ) == '' ? false : (bool) RGForms::get( 'trash' );
-		$forms          = RGFormsModel::get_forms( $active, $sort_column, $sort_direction, $trash );
-
-		$form_count = RGFormsModel::get_form_count();
 
 		wp_print_styles( array( 'thickbox' ) );
 
@@ -200,15 +102,13 @@ class GFFormList {
 				</div>
 
 				<div class="submit-row">
-
 					<?php
-
 					/**
 					 * Allows for modification of the "New Form" button HTML
 					 *
 					 * @param string The HTML rendered for the "New Form" button.
 					 */
-					echo apply_filters( 'gform_new_form_button', '<input id="save_new_form" type="button" class="button button-large button-primary" value="' . esc_html__( 'Create Form', 'gravityforms' ) . '" onclick="saveNewForm();" tabindex="9002" />' ); ?>
+					echo apply_filters( 'gform_new_form_button', '<input id="save_new_form" type="button" class="button button-large button-primary" value="' . esc_html__( 'Create Form', 'gravityforms' ) . '" onclick="saveNewForm();" onkeypress="saveNewForm();" tabindex="9002" />' ); ?>
 					<div id="gf_new_form_error_message" style="display:inline-block;"></div>
 				</div>
 
@@ -219,21 +119,21 @@ class GFFormList {
 
 		<script text="text/javascript">
 			function TrashForm(form_id) {
-				jQuery("#action_argument").val(form_id);
-				jQuery("#action").val("trash");
-				jQuery("#forms_form")[0].submit();
+				jQuery("#single_action_argument").val(form_id);
+				jQuery("#single_action").val("trash");
+				jQuery("#form_list_form")[0].submit();
 			}
 
 			function RestoreForm(form_id) {
-				jQuery("#action_argument").val(form_id);
-				jQuery("#action").val("restore");
-				jQuery("#forms_form")[0].submit();
+				jQuery("#single_action_argument").val(form_id);
+				jQuery("#single_action").val("restore");
+				jQuery("#form_list_form")[0].submit();
 			}
 
 			function DeleteForm(form_id) {
-				jQuery("#action_argument").val(form_id);
-				jQuery("#action").val("delete");
-				jQuery("#forms_form")[0].submit();
+				jQuery("#single_action_argument").val(form_id);
+				jQuery("#single_action").val("delete");
+				jQuery("#form_list_form")[0].submit();
 			}
 
 			function ConfirmDeleteForm(form_id){
@@ -243,9 +143,9 @@ class GFFormList {
 			}
 
 			function DuplicateForm(form_id) {
-				jQuery("#action_argument").val(form_id);
-				jQuery("#action").val("duplicate");
-				jQuery("#forms_form")[0].submit();
+				jQuery("#single_action_argument").val(form_id);
+				jQuery("#single_action").val("duplicate");
+				jQuery("#form_list_form")[0].submit();
 			}
 
 			function ToggleActive(img, form_id) {
@@ -300,299 +200,32 @@ class GFFormList {
 			}
 		</script>
 
-		<link rel="stylesheet" href="<?php echo esc_url( GFCommon::get_base_url() ); ?>/css/admin<?php echo $min; ?>.css"/>
+		<link rel="stylesheet" href="<?php echo esc_url( GFCommon::get_base_url() ); ?>/css/admin<?php echo $min; ?>.css?ver=<?php echo GFForms::$version ?>"/>
 		<div class="wrap <?php echo sanitize_html_class( GFCommon::get_browser_class() ); ?>">
 
 		<h2>
 			<?php esc_html_e( 'Forms', 'gravityforms' );
 			if ( GFCommon::current_user_can_any( 'gravityforms_create_form' ) ) {
-				echo '<a class="add-new-h2" href="" onclick="return loadNewFormModal();">' . esc_html__( 'Add New', 'gravityforms' ) . '</a>';
+				echo '<a class="add-new-h2" href="" onclick="return loadNewFormModal();" onkeypress="return loadNewFormModal();">' . esc_html__( 'Add New', 'gravityforms' ) . '</a>';
 			} ?>
 		</h2>
 
-		<?php if ( isset( $message ) ) { ?>
-			<div class="updated below-h2" id="message"><p><?php echo esc_html( $message ); ?></p></div>
-		<?php } ?>
+		<?php GFCommon::display_dismissible_message(); ?>
 
-		<form id="forms_form" method="post">
-		<?php wp_nonce_field( 'gforms_update_forms', 'gforms_update_forms' ) ?>
-		<input type="hidden" id="action" name="action" />
-		<input type="hidden" id="action_argument" name="action_argument" />
-
-		<ul class="subsubsub">
-			<li>
-				<a class="<?php echo ( $active === null ) ? 'current' : '' ?>" href="?page=gf_edit_forms"><?php echo esc_html( _x( 'All', 'Form List', 'gravityforms' ) ); ?>
-					<span class="count">(<span id="all_count"><?php echo $form_count['total'] ?></span>)</span></a> |
-			</li>
-			<li>
-				<a class="<?php echo $active == '1' ? 'current' : '' ?>" href="?page=gf_edit_forms&active=1"><?php echo esc_html( _x( 'Active', 'Form List', 'gravityforms' ) ); ?>
-					<span class="count">(<span id="active_count"><?php echo $form_count['active'] ?></span>)</span></a> |
-			</li>
-			<li>
-				<a class="<?php echo $active == '0' ? 'current' : '' ?>" href="?page=gf_edit_forms&active=0"><?php echo esc_html( _x( 'Inactive', 'Form List', 'gravityforms' ) ); ?>
-					<span class="count">(<span id="inactive_count"><?php echo $form_count['inactive'] ?></span>)</span></a> |
-			</li>
-			<li>
-				<a class="<?php echo $active == '0' ? 'current' : '' ?>" href="?page=gf_edit_forms&trash=1"><?php esc_html_e( 'Trash', 'gravityforms' ); ?>
-					<span class="count">(<span id="trash_count"><?php echo $form_count['trash'] ?></span>)</span></a>
-			</li>
-		</ul>
-
-		<?php
-		if ( GFCommon::current_user_can_any( 'gravityforms_delete_forms' ) ) {
-			?>
-			<div class="tablenav">
-				<div class="alignleft actions" style="padding:8px 0 7px 0;">
-
-					<label class="hidden" for="bulk_action"><?php esc_html_e( 'Bulk action', 'gravityforms' ) ?></label>
-					<select name="bulk_action" id="bulk_action">
-						<option value=''> <?php esc_html_e( 'Bulk action', 'gravityforms' ) ?> </option>
-						<?php if ( $trash ): ?>
-							<option value='restore'><?php esc_html_e( 'Restore', 'gravityforms' ) ?></option>
-							<option value='delete'><?php esc_html_e( 'Delete permanently', 'gravityforms' ) ?></option>
-						<?php else : ?>
-							<option value='activate'><?php esc_html_e( 'Mark as Active', 'gravityforms' ) ?></option>
-							<option value='deactivate'><?php esc_html_e( 'Mark as Inactive', 'gravityforms' ) ?></option>
-							<option value='reset_views'><?php esc_html_e( 'Reset Views', 'gravityforms' ) ?></option>
-							<option value='delete_entries'><?php esc_html_e( 'Permanently Delete Entries', 'gravityforms' ) ?></option>
-							<option value='trash'><?php esc_html_e( 'Move to trash', 'gravityforms' ) ?></option>
-						<?php endif ?>
-					</select>
-					<?php
-					$apply_button = '<input type="submit" class="button" value="' . __( 'Apply', 'gravityforms' ) . '" onclick="return gfConfirmBulkAction(\'bulk_action\');"/>';
-
-					/**
-					 * A filter that allows for modification of the form "Apply" button
-					 *
-					 * @param string $apply_button The HTML for the "Apply" Button
-					 */
-					echo apply_filters( 'gform_form_apply_button', $apply_button );
-					?>
-
-					<br class="clear" />
-
-				</div>
-			</div>
-		<?php
-		}
-		?>
-
-		<table class="widefat fixed" cellspacing="0">
-			<thead>
-			<tr>
-				<?php
-				if ( GFCommon::current_user_can_any( 'gravityforms_delete_forms' ) ) {
-					?>
-					<th scope="col" id="cb" class="manage-column column-cb check-column" style="">
-						<input type="checkbox" name="form_bulk_check_all" onclick="jQuery('.gform_list_checkbox').attr('checked', this.checked);" />
-					</th>
-				<?php
-				}
-				$dir = $sort_column == 'is_active' && $sort_direction == 'ASC' ? 'DESC' : 'ASC';
-				$url_active = admin_url( "admin.php?page=gf_edit_forms&sort=is_active&dir=$dir&trash=$trash" );
-				?>
-				<th scope="col" id="active" class="manage-column column-cb check-column" style="width:50px;cursor:pointer;" onclick="document.location='<?php echo esc_url( $url_active ); ?>'"></th>
-				<?php
-				$dir = $sort_column == 'id' && $sort_direction == 'ASC' ? 'DESC' : 'ASC';
-				$url_id = admin_url( "admin.php?page=gf_edit_forms&sort=id&dir=$dir&trash=$trash" );
-				?>
-				<th scope="col" id="id" class="manage-column" style="width:50px;cursor:pointer;" onclick="document.location='<?php echo $url_id; ?>'"><?php esc_html_e( 'Id', 'gravityforms' ); ?></th>
-				<?php
-				$dir = $sort_column == 'title' && $sort_direction == 'ASC' ? 'DESC' : 'ASC';
-				$url_title = admin_url( "admin.php?page=gf_edit_forms&sort=title&dir=$dir&trash=$trash" );
-				?>
-				<th width="410" scope="col" id="title" class="manage-column column-title" style="cursor:pointer;" onclick="document.location='<?php echo $url_title; ?>'"><?php esc_html_e( 'Title', 'gravityforms' ); ?></th>
-				<th scope="col" id="author" class="manage-column column-author" style=""><?php esc_html_e( 'Views', 'gravityforms' ) ?></th>
-				<th scope="col" id="template" class="manage-column" style=""><?php esc_html_e( 'Entries', 'gravityforms' ) ?></th>
-				<th scope="col" id="template" class="manage-column" style=""><?php esc_html_e( 'Conversion', 'gravityforms' ) ?> <?php gform_tooltip( 'entries_conversion', 'tooltip_left' ) ?> </th>
-			</tr>
-			</thead>
-
-			<tfoot>
-			<tr>
-				<?php
-				if ( GFCommon::current_user_can_any( 'gravityforms_delete_forms' ) ) {
-					?>
-					<th scope="col" id="cb" class="manage-column column-cb check-column" style="">
-						<input type="checkbox" name="form_bulk_check_all" onclick="jQuery('.gform_list_checkbox').attr('checked', this.checked);" />
-					</th>
-				<?php
-				}
-				?>
-				<th scope="col" id="active" class="manage-column column-cb check-column"></th>
-				<th scope="col" id="id" class="manage-column" style="cursor:pointer;" onclick="document.location='<?php echo $url_id; ?>'"><?php esc_html_e( 'Id', 'gravityforms' ) ?></th>
-				<th width="410" scope="col" id="title" style="cursor:pointer;" class="manage-column column-title" onclick="document.location='<?php echo $url_title; ?>'"><?php esc_html_e( 'Title', 'gravityforms' ) ?></th>
-				<th scope="col" id="author" class="manage-column column-author" style=""><?php esc_html_e( 'Views', 'gravityforms' ) ?></th>
-				<th scope="col" id="template" class="manage-column" style=""><?php esc_html_e( 'Entries', 'gravityforms' ) ?></th>
-				<th scope="col" id="template" class="manage-column" style=""><?php esc_html_e( 'Conversion', 'gravityforms' ) ?></th>
-			</tr>
-			</tfoot>
-
-			<tbody class="list:user user-list">
+		<form id="form_list_form" method="post">
 			<?php
-			if ( sizeof( $forms ) > 0 ) {
-				$alternate_row = false;
-				foreach ( $forms as $form ) {
-					$conversion = '0%';
-					if ( $form->view_count > 0 ) {
-						$conversion = ( number_format( $form->lead_count / $form->view_count, 3 ) * 100 ) . '%';
-					}
-					$gf_form_locking = new GFFormLocking();
-					?>
-					<tr class='author-self status-inherit <?php $gf_form_locking->list_row_class( $form->id ); ?> <?php echo ( $alternate_row = ! $alternate_row ) ? 'alternate' : '' ?>' valign="top" data-id="<?php echo absint( $form->id ) ?>">
-						<?php
-						if ( GFCommon::current_user_can_any( 'gravityforms_delete_forms' ) ) {
-							?>
-							<th scope="row" class="check-column">
-								<input type="checkbox" name="form[]" value="<?php echo absint( $form->id ) ?>" class="gform_list_checkbox" /><?php $gf_form_locking->lock_indicator(); ?>
-							</th>
-						<?php
-						}
-						?>
 
-						<td>
-							<?php if ( ! $trash ) : ?>
-								<img class="gform_active_icon gf_not_ready" src="<?php echo esc_url( GFCommon::get_base_url() ); ?>/images/active<?php echo intval( $form->is_active ) ?>.png" style="cursor: pointer;" alt="<?php echo $form->is_active ? esc_attr__( 'Active', 'gravityforms' ) : esc_attr__( 'Inactive', 'gravityforms' ); ?>" title="<?php echo $form->is_active ? esc_attr__( 'Active', 'gravityforms' ) : esc_attr__( 'Inactive', 'gravityforms' ); ?>" onclick="ToggleActive(this, <?php echo absint( $form->id ); ?>); " />
-							<?php endif ?>
-						</td>
-						<td class="column-id"><?php echo absint( $form->id ); ?></td>
-						<td class="column-title">
-							<?php
-							if ( $trash ) :
-								echo esc_html( $form->title );
-							else :
-								?>
-								<strong><a class="row-title" disabled="<?php disabled( true, $trash ); ?>"
-										   href="admin.php?page=gf_edit_forms&id=<?php echo absint( $form->id ); ?>"
-										   title="<?php esc_attr_e( 'Edit', 'gravityforms' ) ?>"><?php echo esc_html( $form->title ) ?></a></strong>
-								<?php $gf_form_locking->lock_info( $form->id );
-							endif
-							?>
-							<div class="row-actions">
-								<?php
+			$table = new GF_Form_List_Table();
+			$table->process_action();
+			$table->views();
+			$table->prepare_items();
 
-								if ( $trash ) {
-									$form_actions['restore'] = array(
-										'label'        => __( 'Restore', 'gravityforms' ),
-										'title'        => __( 'Restore', 'gravityforms' ),
-										'url'          => '#',
-										'onclick'      => 'RestoreForm(' . absint( $form->id ) . ');',
-										'capabilities' => 'gravityforms_delete_forms',
-										'priority'     => 600,
-									);
-									$form_actions['delete']  = array(
-										'label'        => __( 'Delete permanently', 'gravityforms' ),
-										'title'        => __( 'Delete permanently', 'gravityforms' ),
-										'menu_class'   => 'delete',
-										'url'          => '#',
-										'onclick'      => 'ConfirmDeleteForm(' . absint( $form->id ) . ');',
-										'capabilities' => 'gravityforms_delete_forms',
-										'priority'     => 500,
-									);
-
-								} else {
-									require_once( GFCommon::get_base_path() . '/form_settings.php' );
-
-									$form_actions = GFForms::get_toolbar_menu_items( $form->id, true );
-
-									$form_actions['duplicate'] = array(
-										'label'        => __( 'Duplicate', 'gravityforms' ),
-										'title'        => __( 'Duplicate this form', 'gravityforms' ),
-										'url'         => '#',
-										'onclick'          => 'DuplicateForm(' . absint( $form->id ) . ');return false;',
-										'capabilities' => 'gravityforms_create_form',
-										'priority'     => 600,
-									);
-
-									$form_actions['trash'] = array(
-										'label'        => __( 'Trash', 'gravityforms' ),
-										'title'        => __( 'Move this form to the trash', 'gravityforms' ),
-										'url'         => '#',
-										'onclick'          => 'TrashForm(' . absint( $form->id ) . ');return false;',
-										'capabilities' => 'gravityforms_delete_forms',
-										'menu_class'   => 'trash',
-										'priority'     => 500,
-									);
-
-								}
-
-								$form_actions = apply_filters( 'gform_form_actions', $form_actions, $form->id );
-
-								echo GFForms::format_toolbar_menu_items( $form_actions, true );
-
-								?>
-
-							</div>
-						</td>
-						<td class="column-date"><strong><?php echo absint( $form->view_count ) ?></strong></td>
-						<td class="column-date">
-							<strong>
-								<?php if ( $form->lead_count > 0 && ! $trash ) { ?>
-									<a href="<?php echo esc_url( admin_url( 'admin.php?page=gf_entries&view=entries&id=' . absint( $form->id ) ) ); ?>"><?php echo absint( $form->lead_count ); ?></a>
-								<?php
-								} else {
-									echo absint( $form->lead_count );
-								} ?>
-							</strong>
-						</td>
-						<td class="column-date"><?php echo esc_html( $conversion ); ?></td>
-					</tr>
-				<?php
-				}
-			} else {
-				?>
-				<tr>
-					<td colspan="6" style="padding:20px;">
-						<?php
-						if ( $trash ){
-							esc_html_e( 'There are no forms in the trash.', 'gravityforms' );
-						} else {
-							printf( esc_html__( "You don't have any forms. Let's go %screate one%s!", 'gravityforms' ), '<a href="admin.php?page=gf_new_form">', '</a>' );
-						}
-						?>
-					</td>
-				</tr>
-			<?php
-			}
+			$table->display();
 			?>
-			</tbody>
-		</table>
-		<div class="tablenav">
-			<div class="alignleft actions" style="padding:8px 0 7px 0;">
-				<?php
-				if ( GFCommon::current_user_can_any( 'gravityforms_delete_forms' ) ) {
-					?>
-					<label class="hidden" for="bulk_action2"><?php esc_html_e( 'Bulk action', 'gravityforms' ) ?></label>
-					<select name="bulk_action2" id="bulk_action2">
-						<option value=''> <?php esc_html_e( 'Bulk action', 'gravityforms' ) ?> </option>
-						<?php if ( $trash ): ?>
-							<option value='restore'><?php esc_html_e( 'Restore', 'gravityforms' ) ?></option>
-							<option value='delete'><?php esc_html_e( 'Delete permanently', 'gravityforms' ) ?></option>
-						<?php else : ?>
-							<option value='activate'><?php esc_html_e( 'Mark as Active', 'gravityforms' ) ?></option>
-							<option value='deactivate'><?php esc_html_e( 'Mark as Inactive', 'gravityforms' ) ?></option>
-							<option value='reset_views'><?php esc_html_e( 'Reset Views', 'gravityforms' ) ?></option>
-							<option value='delete_entries'><?php esc_html_e( 'Permanently Delete Entries', 'gravityforms' ) ?></option>
-							<option value='trash'><?php esc_html_e( 'Move to trash', 'gravityforms' ) ?></option>
-						<?php endif ?>
-					</select>
-					<?php
-					$apply_button = '<input type="submit" class="button" value="' . esc_attr__( 'Apply', 'gravityforms' ) . '" onclick="return gfConfirmBulkAction(\'bulk_action2\');"/>';
-
-					/**
-					 * A filter that allows for modification of the form "Apply" button
-					 *
-					 * @param string $apply_button The HTML for the "Apply" Button
-					 */
-					echo apply_filters( 'gform_form_apply_button', $apply_button );
-				}
-				?>
-				<br class="clear" />
-			</div>
-		</div>
 		</form>
-		</div>
 	<?php
+
+
 	}
 
 	public static function save_new_form() {
@@ -639,7 +272,7 @@ class GFFormList {
 			jQuery( document ).ready( function( $ ) {
 
 				// load new form modal on New Form page
-				<?php if ( rgget( 'page' ) == 'gf_new_form' ): ?>
+				<?php if ( rgget( 'page' ) == 'gf_new_form' ) :	?>
 				loadNewFormModal();
 				<?php endif; ?>
 
@@ -656,6 +289,15 @@ class GFFormList {
 				// enable form status icons
 				gfPageLoaded = true;
 				$( '.gform_active_icon' ).removeClass( 'gf_not_ready' );
+
+				jQuery( '#current-page-selector').keyup( function( event ) {
+					if (event.keyCode == 13) {
+						var url = <?php echo json_encode( esc_url_raw( remove_query_arg( 'paged' ) ) ); ?>;
+						var page = parseInt( this.value );
+						document.location = url + '&paged=' + page;
+						event.preventDefault();
+					}
+				});
 
 			} );
 
@@ -735,5 +377,492 @@ class GFFormList {
 
 	<?php
 	}
+}
 
+if ( ! class_exists( 'WP_List_Table' ) ) {
+	require_once( ABSPATH . 'wp-admin/includes/class-wp-list-table.php' );
+}
+
+class GF_Form_List_Table extends WP_List_Table {
+
+	public $filter = '';
+
+	public $locking_info;
+
+	public function __construct( $args = array() ) {
+		parent::__construct( $args );
+		$columns               = $this->get_columns();
+		$hidden                = array();
+		$sortable              = $this->get_sortable_columns();
+		$this->_column_headers = array( $columns, $hidden, $sortable, 'title' );
+		$this->locking_info = new GFFormLocking();
+	}
+
+	function get_sortable_columns() {
+		return array(
+			'title' => array( 'title', false ),
+			'id'    => array( 'id', false ),
+			'lead_count'    => array( 'lead_count', false ),
+			'view_count'    => array( 'view_count', false ),
+			'conversion'    => array( 'conversion', false ),
+		);
+	}
+
+	function get_views() {
+		$form_count = RGFormsModel::get_form_count();
+
+		$all_class = ( $this->filter == '' ) ? 'current' : '';
+
+		$active_class = ( $this->filter == 'active' ) ? 'current' : '';
+
+		$inactive_class = ( $this->filter == 'inactive' ) ? 'current' : '';
+
+		$trash_class = ( $this->filter == 'trash' ) ? 'current' : '' ;
+
+		$views = array(
+			'all' => '<a class="' . $all_class . '" href="?page=gf_edit_forms">' . esc_html( _x( 'All', 'Form List', 'gravityforms' ) ) . ' <span class="count">(<span id="all_count">' . $form_count['total'] . '</span>)</span></a>',
+			'active' => '<a class="' . $active_class . '" href="?page=gf_edit_forms&filter=active">' . esc_html( _x( 'Active', 'Form List', 'gravityforms' ) ) . ' <span class="count">(<span id="all_count">' . $form_count['active'] . '</span>)</span></a>',
+			'inactive' => '<a class="' . $inactive_class . '" href="?page=gf_edit_forms&filter=inactive">' . esc_html( _x( 'Inactive', 'Form List', 'gravityforms' ) ) . ' <span class="count">(<span id="all_count">' . $form_count['inactive'] . '</span>)</span></a>',
+			'trash' => '<a class="' . $trash_class . '" href="?page=gf_edit_forms&filter=trash">' . esc_html( _x( 'Trash', 'Form List', 'gravityforms' ) ) . ' <span class="count">(<span id="all_count">' . $form_count['trash'] . '</span>)</span></a>',
+		);
+		return $views;
+	}
+
+	function prepare_items() {
+
+		$sort_column    = empty( $_GET['orderby'] ) ? 'title' : $_GET['orderby'];
+		$sort_columns = array_keys( $this->get_sortable_columns() );
+
+		if ( ! in_array( strtolower( $sort_column ), $sort_columns ) ) {
+			$sort_column = 'title';
+		}
+
+		$sort_direction = empty( $_GET['order'] ) ? 'ASC' : strtoupper( $_GET['order'] );
+		$sort_direction = $sort_direction == 'ASC' ? 'ASC' : 'DESC';
+		$filter = rgget( 'filter' );
+		$trash = false;
+		switch ( $filter ) {
+			case '':
+				$active = null;
+			break;
+			case 'active' :
+				$active = true;
+				break;
+			case 'inactive' :
+				$active = false;
+				break;
+			case 'trash' :
+				$active = null;
+				$trash = true;
+		}
+		$forms   = RGFormsModel::get_forms( $active, $sort_column, $sort_direction, $trash );
+
+		$per_page = $this->get_items_per_page( 'gform_forms_per_page', 20 );
+
+		$per_page = apply_filters( 'gform_page_size_form_list', $per_page );
+
+		$this->set_pagination_args( array(
+			'total_items' => count( $forms ),
+			'per_page'    => $per_page,
+		) );
+
+		if ( $trash ) {
+			$this->filter = 'trash';
+		} else {
+			$this->filter = 'active';
+		}
+
+		if ( in_array( $sort_column, array( 'view_count', 'lead_count', 'conversion' ) ) ) {
+			usort( $forms, array( $this, 'compare_' . $sort_column . '_'  . $sort_direction ) );
+		}
+
+		$offset = ( $this->get_pagenum() - 1 ) * $per_page;
+
+		$this->items = array_slice( $forms, $offset, $per_page );
+	}
+
+	function get_bulk_actions() {
+		if ( $this->filter == 'trash' ) {
+			$actions = array(
+				'restore' => esc_html__( 'Restore', 'gravityforms' ),
+				'delete' => esc_html__( 'Delete permanently', 'gravityforms' ),
+			);
+		} else {
+			$actions = array(
+				'activate' => esc_html__( 'Mark as Active', 'gravityforms' ),
+				'deactivate' => esc_html__( 'Mark as Inactive', 'gravityforms' ),
+				'reset_views' => esc_html__( 'Reset Views', 'gravityforms' ),
+				'delete_entries' => esc_html__( 'Permanently Delete Entries', 'gravityforms' ),
+				'trash' => esc_html__( 'Move to trash', 'gravityforms' ),
+			);
+		}
+		return $actions;
+	}
+
+	function get_columns() {
+
+		$columns = array(
+			'cb'         => '<input type="checkbox" />',
+			'is_active'  => '',
+			'title'      => esc_html__( 'Title', 'gravityforms' ),
+			'id'         => esc_html__( 'ID', 'gravityforms' ),
+			'lead_count' => esc_html__( 'Entries', 'gravityforms' ),
+			'view_count' => esc_html__( 'Views', 'gravityforms' ),
+			'conversion' => esc_html__( 'Conversion', 'gravityforms' ),
+		);
+
+		$columns = apply_filters( 'gform_form_list_columns', $columns );
+
+		return $columns;
+	}
+
+	function single_row_columns( $item ) {
+		list( $columns, $hidden, $sortable, $primary ) = $this->get_column_info();
+
+		foreach ( $columns as $column_name => $column_display_name ) {
+			$classes = "$column_name column-$column_name";
+			if ( $primary === $column_name ) {
+				$classes .= ' has-row-actions column-primary';
+			}
+
+			if ( in_array( $column_name, $hidden ) ) {
+				$classes .= ' hidden';
+			}
+
+			// Comments column uses HTML in the display name with screen reader text.
+			// Instead of using esc_attr(), we strip tags to get closer to a user-friendly string.
+			$data = 'data-colname="' . wp_strip_all_tags( $column_display_name ) . '"';
+
+			$attributes = "class='$classes' $data";
+
+			if ( 'cb' === $column_name ) {
+				echo '<th scope="row" class="check-column">';
+				echo $this->column_cb( $item );
+				echo '</th>';
+			} elseif ( has_action( 'gform_form_list_column_' . $column_name ) ) {
+				echo "<td $attributes>";
+				do_action( 'gform_form_list_column_' . $column_name, $item );
+				echo $this->handle_row_actions( $item, $column_name, $primary );
+				echo "</td>";				
+			} elseif ( method_exists( $this, '_column_' . $column_name ) ) {
+				echo call_user_func(
+					array( $this, '_column_' . $column_name ),
+					$item,
+					$classes,
+					$data,
+					$primary
+				);
+			} elseif ( method_exists( $this, 'column_' . $column_name ) ) {
+				echo "<td $attributes>";
+				echo call_user_func( array( $this, 'column_' . $column_name ), $item );
+				echo $this->handle_row_actions( $item, $column_name, $primary );
+				echo "</td>";
+			} else {
+				echo "<td $attributes>";
+				echo $this->column_default( $item, $column_name );
+				echo $this->handle_row_actions( $item, $column_name, $primary );
+				echo "</td>";
+			}
+		}
+	}
+
+
+	function get_primary_column_name() {
+		return 'title';
+	}
+
+	function _column_is_active( $form, $classes, $data, $primary ) {
+		echo '<th scope="row" class="manage-column column-is_active">';
+		if ( $this->filter !== 'trash' ) {
+			?>
+			<img class="gform_active_icon" src="<?php echo esc_url( GFCommon::get_base_url() ); ?>/images/active<?php echo intval( $form->is_active ) ?>.png" style="cursor: pointer;" alt="<?php echo $form->is_active ? esc_attr__( 'Active', 'gravityforms' ) : esc_attr__( 'Inactive', 'gravityforms' ); ?>" title="<?php echo $form->is_active ? esc_attr__( 'Active', 'gravityforms' ) : esc_attr__( 'Inactive', 'gravityforms' ); ?>" onclick="ToggleActive(this, <?php echo absint( $form->id ); ?>); " onkeypress="ToggleActive(this, <?php echo absint( $form->id ); ?>); " />
+			<?php
+		}
+		echo '</th>';
+	}
+
+	function column_title( $form ) {
+		echo '<strong><a href="?page=gf_edit_forms&id='. absint( $form->id ) .'">' . esc_html( $form->title ) . '</a></strong>';
+	}
+
+	function column_id( $form ) {
+		echo '<a href="?page=gf_edit_forms&id='. absint( $form->id ) .'">' .absint( $form->id ) . '</a>';
+	}
+
+	function column_view_count( $form ) {
+		echo absint( $form->view_count );
+	}
+
+	function column_lead_count( $form ) {
+		echo '<a href="?page=gf_entries&id='. absint( $form->id ) .'">' . absint( $form->lead_count ) . '</a>';
+	}
+
+	function column_conversion( $form ) {
+		$conversion = '0%';
+		if ( $form->view_count > 0 ) {
+			$conversion = ( number_format( $form->lead_count / $form->view_count, 3 ) * 100 ) . '%';
+		}
+		echo $conversion;
+	}
+
+	function column_cb( $form ) {
+		$form_id = $form->id;
+		?>
+		<label class="screen-reader-text" for="cb-select-<?php echo esc_attr( $form_id ); ?>"><?php _e( 'Select form' ); ?></label>
+		<input type="checkbox" class="gform_list_checkbox" name="form[]" value="<?php echo esc_attr( $form_id ); ?>" />
+		<?php
+		$this->locking_info->lock_indicator();
+	}
+
+	protected function handle_row_actions( $form, $column_name, $primary ) {
+
+		if ( $primary !== $column_name ) {
+			return '';
+		}
+
+		?>
+		<div class="row-actions">
+			<?php
+
+			if ( $this->filter == 'trash' ) {
+				$form_actions['restore'] = array(
+					'label'        => __( 'Restore', 'gravityforms' ),
+					'title'        => __( 'Restore', 'gravityforms' ),
+					'url'          => '#',
+					'onclick'      => 'RestoreForm(' . absint( $form->id ) . ');',
+					'onkeypress'   => 'RestoreForm(' . absint( $form->id ) . ');',
+					'capabilities' => 'gravityforms_delete_forms',
+					'priority'     => 600,
+				);
+				$form_actions['delete']  = array(
+					'label'        => __( 'Delete permanently', 'gravityforms' ),
+					'title'        => __( 'Delete permanently', 'gravityforms' ),
+					'menu_class'   => 'delete',
+					'url'          => '#',
+					'onclick'      => 'ConfirmDeleteForm(' . absint( $form->id ) . ');',
+					'onkeypress'   => 'ConfirmDeleteForm(' . absint( $form->id ) . ');',
+					'capabilities' => 'gravityforms_delete_forms',
+					'priority'     => 500,
+				);
+
+			} else {
+
+				$this->locking_info->lock_info( $form->id );
+
+				require_once( GFCommon::get_base_path() . '/form_settings.php' );
+
+				$form_actions = GFForms::get_toolbar_menu_items( $form->id, true );
+
+				$form_actions['duplicate'] = array(
+					'label'        => __( 'Duplicate', 'gravityforms' ),
+					'title'        => __( 'Duplicate this form', 'gravityforms' ),
+					'url'          => '#',
+					'onclick'      => 'DuplicateForm(' . absint( $form->id ) . ');return false;',
+					'onkeypress'   => 'DuplicateForm(' . absint( $form->id ) . ');return false;',
+					'capabilities' => 'gravityforms_create_form',
+					'priority'     => 600,
+				);
+
+				$form_actions['trash'] = array(
+					'label'        => __( 'Trash', 'gravityforms' ),
+					'title'        => __( 'Move this form to the trash', 'gravityforms' ),
+					'url'          => '#',
+					'onclick'      => 'TrashForm(' . absint( $form->id ) . ');return false;',
+					'onkeypress'   => 'TrashForm(' . absint( $form->id ) . ');return false;',
+					'capabilities' => 'gravityforms_delete_forms',
+					'menu_class'   => 'trash',
+					'priority'     => 500,
+				);
+
+			}
+
+			$form_actions = apply_filters( 'gform_form_actions', $form_actions, $form->id );
+
+			echo GFForms::format_toolbar_menu_items( $form_actions, true );
+
+			?>
+
+		</div>
+		<?php
+		return $column_name === $primary ? '<button type="button" class="toggle-row"><span class="screen-reader-text">' . __( 'Show more details' ) . '</span></button>' : '';
+	}
+
+	function no_items() {
+		if ( $this->filter == 'trash' ) {
+			esc_html_e( 'There are no forms in the trash.', 'gravityforms' );
+		} else {
+			printf( esc_html__( "You don't have any forms. Let's go %screate one%s!", 'gravityforms' ), '<a href="admin.php?page=gf_new_form">', '</a>' );
+		}
+	}
+
+	function process_action() {
+
+		$single_action = rgpost( 'single_action' );
+		$remote_action = rgget( 'action' ); //action initiated at other pages (i.e. trash command from form menu)
+
+		$bulk_action = $this->current_action();
+
+		if ( ! ( $single_action || $bulk_action || $remote_action ) ) {
+			return;
+		}
+
+		if ( $single_action ) {
+
+			check_admin_referer( 'gforms_update_forms', 'gforms_update_forms' );
+
+			$form_id = rgpost( 'single_action_argument' );
+			switch ( $single_action ) {
+				case 'trash' :
+					RGFormsModel::trash_form( $form_id );
+					$message = __( 'Form moved to the trash.', 'gravityforms' );
+					break;
+				case 'restore' :
+					RGFormsModel::restore_form( $form_id );
+					$message = __( 'Form restored.', 'gravityforms' );
+					break;
+				case 'delete' :
+					if ( GFCommon::current_user_can_any( 'gravityforms_delete_forms' ) ) {
+						RGFormsModel::delete_form( $form_id );
+						$message = __( 'Form deleted.', 'gravityforms' );
+					} else {
+						$message = __( "You don't have adequate permission to delete forms.", 'gravityforms' );
+					}
+					break;
+				case 'duplicate' :
+					RGFormsModel::duplicate_form( $form_id );
+					$message = __( 'Form duplicated.', 'gravityforms' );
+					break;
+
+			}
+		} elseif ( $remote_action ){
+
+			$form_id = rgget( 'arg' );
+			switch ( $remote_action ) {
+				case 'trash' :
+
+					check_admin_referer( "gf_delete_form_{$form_id}" );
+
+					RGFormsModel::trash_form( $form_id );
+					$message = __( 'Form moved to the trash.', 'gravityforms' );
+					break;				
+				case 'duplicate' :
+					check_ajax_referer( "gf_duplicate_form_{$form_id}" );
+					RGFormsModel::duplicate_form( $form_id );
+					$message = __( 'Form duplicated.', 'gravityforms' );
+					break;
+
+			}
+
+		} elseif ( $bulk_action ) {
+
+			check_admin_referer( 'gforms_update_forms', 'gforms_update_forms' );
+
+			$form_ids   = is_array( rgpost( 'form' ) ) ? rgpost( 'form' ) : array();
+			$form_count = count( $form_ids );
+			$message = '';
+
+			switch ( $bulk_action ) {
+				case 'trash':
+					GFFormsModel::trash_forms( $form_ids );
+					$message = _n( '%s form moved to the trash.', '%s forms moved to the trash.', $form_count, 'gravityforms' );
+					break;
+				case 'restore':
+					GFFormsModel::restore_forms( $form_ids );
+					$message = _n( '%s form restored.', '%s forms restored.', $form_count, 'gravityforms' );
+					break;
+				case 'delete':
+					if ( GFCommon::current_user_can_any( 'gravityforms_delete_forms' ) ) {
+						GFFormsModel::delete_forms( $form_ids );
+						$message = _n( '%s form deleted.', '%s forms deleted.', $form_count, 'gravityforms' );
+					} else {
+						$message = __( "You don't have adequate permissions to delete forms.", 'gravityforms' );
+					}
+					break;
+				case 'reset_views':
+					foreach ( $form_ids as $form_id ) {
+						GFFormsModel::delete_views( $form_id );
+					}
+					$message = _n( 'Views for %s form have been reset.', 'Views for %s forms have been reset.', $form_count, 'gravityforms' );
+					break;
+				case 'delete_entries':
+					if ( GFCommon::current_user_can_any( 'gravityforms_delete_entries' ) ) {
+						foreach ( $form_ids as $form_id ) {
+							GFFormsModel::delete_leads_by_form( $form_id );
+						}
+						$message = _n( 'Entries for %s form have been deleted.', 'Entries for %s forms have been deleted.', $form_count, 'gravityforms' );
+					} else {
+						$message = __( "You don't have adequate permission to delete entries.", 'gravityforms' );
+					}
+
+					break;
+				case 'activate':
+					foreach ( $form_ids as $form_id ) {
+						GFFormsModel::update_form_active( $form_id, 1 );
+					}
+					$message = _n( '%s form has been marked as active.', '%s forms have been marked as active.', $form_count, 'gravityforms' );
+					break;
+				case 'deactivate':
+					foreach ( $form_ids as $form_id ) {
+						GFFormsModel::update_form_active( $form_id, 0 );
+					}
+					$message = _n( '%s form has been marked as inactive.', '%s forms have been marked as inactive.', $form_count, 'gravityforms' );
+					break;
+			}
+
+			if ( ! empty( $message ) ) {
+
+				$message = sprintf( $message, $form_count );
+			}
+		}
+
+		if ( ! empty( $message ) ) {
+
+			echo '<div id="message" class="updated notice is-dismissible"><p>' . $message . '</p></div>';
+		};
+	}
+
+	function extra_tablenav( $which ) {
+		if ( $which !== 'top' ) {
+			return;
+		}
+		wp_nonce_field( 'gforms_update_forms', 'gforms_update_forms' );
+		?>
+		<input type="hidden" id="single_action" name="single_action" />
+		<input type="hidden" id="single_action_argument" name="single_action_argument" />
+		<?php
+	}
+
+	public function single_row( $form ) {
+		echo '<tr class="' . $this->locking_info->list_row_class( $form->id, false ) . '">';
+		$this->single_row_columns( $form );
+		echo '</tr>';
+	}
+
+	public static function compare_view_count_asc( $a, $b ) {
+	    return $a->view_count > $b->view_count;
+	}
+
+	public static function compare_view_count_desc( $a, $b ) {
+	    return $a->view_count < $b->view_count;
+	}
+
+	public static function compare_lead_count_asc( $a, $b ) {
+	    return $a->lead_count > $b->lead_count;
+	}
+
+	public static function compare_lead_count_desc( $a, $b ) {
+	    return $a->lead_count < $b->lead_count;
+	}
+
+	public static function compare_conversion_asc( $a, $b ) {
+		$a_conversion = $a->view_count > 0 ? $a->lead_count / $a->view_count : 0;
+		$b_conversion = $b->view_count > 0 ? $b->lead_count / $b->view_count : 0;
+	    return $a_conversion > $b_conversion;
+	}
+
+	public static function compare_conversion_desc( $a, $b ) {
+	    $a_conversion = $a->view_count > 0 ? $a->lead_count / $a->view_count : 0;
+		$b_conversion = $b->view_count > 0 ? $b->lead_count / $b->view_count : 0;
+	    return $a_conversion < $b_conversion;
+	}
 }

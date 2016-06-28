@@ -1,4 +1,4 @@
-// change the menu position based on the scroll positon
+// change the menu position based on the scroll position
 window.onscroll = function() {   
     
     var toolbar = jQuery( '#gf_form_toolbar' );

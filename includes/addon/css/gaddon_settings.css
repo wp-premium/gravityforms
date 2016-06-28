@@ -19,7 +19,10 @@ table.settings-field-map-table tbody td { padding: 0px 0px 8px 0px;}
 	margin-top: 10px;
 	margin-left: 165px;
 }
-.settings-field-map-table .repeater th { padding-left: 0px; }
+.settings-field-map-table .repeater th { 
+	padding-left: 0px;
+	padding-top: 0px;
+}
 
 .settings-field-map-table .custom-key-reset:hover, .gaddon-setting-select-custom-container .select-custom-reset:hover { background-position-x: -10px; }
 .settings-field-map-table .custom-key-container:hover .custom-key-reset, .gaddon-setting-select-custom-container:hover .select-custom-reset { display:block; }
@@ -120,4 +123,25 @@ table.settings-field-map-table tbody td { padding: 0px 0px 8px 0px;}
     -webkit-filter: brightness(1.2) grayscale(.5) opacity(.9);
     -moz-filter: brightness(1.2) grayscale(.5) opacity(.9);
     filter: brightness(1.2) grayscale(.5) opacity(.9);
+}
+
+/* Feed Ordering */
+.ui-sortable-helper {
+	background-color: #fff !important;
+	-webkit-box-shadow: 6px 6px 28px -9px rgba(0,0,0,0.75);
+	-moz-box-shadow: 6px 6px 28px -9px rgba(0,0,0,0.75);
+	box-shadow: 6px 6px 28px -9px rgba(0,0,0,0.75);
+	transform: rotate(1deg);
+	-moz-transform: rotate(1deg);
+	-webkit-transform: rotate(1deg);
+}
+
+.wp-list-table.feed-list-sortable .sort-column {
+	vertical-align: top;
+	width: 2.2em;
+}
+
+.wp-list-table.feed-list-sortable .feed-sort-handle {
+	cursor: move;
+	width: 2.2em;
 }

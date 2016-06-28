@@ -107,7 +107,9 @@ class GF_Field_Password extends GF_Field {
 
 		$confirm_password_label = rgar( $confirm_password_field_input, 'customLabel' ) != '' ? $confirm_password_field_input['customLabel'] : esc_html__( 'Confirm Password', 'gravityforms' );
 		$confirm_password_label = gf_apply_filters( array( 'gform_password_confirm', $form_id ), $confirm_password_label, $form_id );
-
+	
+		$required_attribute    = $this->isRequired ? 'aria-required="true"' : '';
+		$invalid_attribute     = $this->failed_validation ? 'aria-invalid="true"' : 'aria-invalid="false"';
 
 		$enter_password_placeholder_attribute   = GFCommon::get_input_placeholder_attribute( $enter_password_field_input );
 		$confirm_password_placeholder_attribute = GFCommon::get_input_placeholder_attribute( $confirm_password_field_input );
@@ -116,28 +118,32 @@ class GF_Field_Password extends GF_Field {
 			return "<div class='ginput_complex$class_suffix ginput_container ginput_container_password' id='{$field_id}_container'>
 					<span id='{$field_id}_1_container' class='ginput_left'>
 						<label for='{$field_id}' {$sub_label_class_attribute}>{$enter_password_label}</label>
-						<input type='password' name='input_{$id}' id='{$field_id}' {$onkeyup} {$onchange} value='{$password_value}' {$first_tabindex} {$enter_password_placeholder_attribute} {$disabled_text}/>
+						<input type='password' name='input_{$id}' id='{$field_id}' {$onkeyup} {$onchange} value='{$password_value}' {$first_tabindex} {$enter_password_placeholder_attribute} {$required_attribute} {$invalid_attribute} {$disabled_text}/>
 					</span>
 					<span id='{$field_id}_2_container' class='ginput_right'>
 						<label for='{$field_id}_2' {$sub_label_class_attribute}>{$confirm_password_label}</label>
-						<input type='password' name='input_{$id}_2' id='{$field_id}_2' {$onkeyup} {$onchange} value='{$confirmation_value}' {$last_tabindex} {$confirm_password_placeholder_attribute} {$disabled_text}/>
+						<input type='password' name='input_{$id}_2' id='{$field_id}_2' {$onkeyup} {$onchange} value='{$confirmation_value}' {$last_tabindex} {$confirm_password_placeholder_attribute} {$required_attribute} {$invalid_attribute} {$disabled_text}/>
 					</span>
 					<div class='gf_clear gf_clear_complex'></div>
 				</div>{$strength}";
 		} else {
 			return "<div class='ginput_complex$class_suffix ginput_container ginput_container_password' id='{$field_id}_container'>
 					<span id='{$field_id}_1_container' class='ginput_left'>
-						<input type='password' name='input_{$id}' id='{$field_id}' {$onkeyup} {$onchange} value='{$password_value}' {$first_tabindex} {$enter_password_placeholder_attribute} {$disabled_text}/>
+						<input type='password' name='input_{$id}' id='{$field_id}' {$onkeyup} {$onchange} value='{$password_value}' {$first_tabindex} {$enter_password_placeholder_attribute} {$required_attribute} {$invalid_attribute} {$disabled_text}/>
 						<label for='{$field_id}' {$sub_label_class_attribute}>{$enter_password_label}</label>
 					</span>
 					<span id='{$field_id}_2_container' class='ginput_right'>
-						<input type='password' name='input_{$id}_2' id='{$field_id}_2' {$onkeyup} {$onchange} value='{$confirmation_value}' {$last_tabindex} {$confirm_password_placeholder_attribute} {$disabled_text}/>
+						<input type='password' name='input_{$id}_2' id='{$field_id}_2' {$onkeyup} {$onchange} value='{$confirmation_value}' {$last_tabindex} {$confirm_password_placeholder_attribute} {$required_attribute} {$invalid_attribute} {$disabled_text}/>
 						<label for='{$field_id}_2' {$sub_label_class_attribute}>{$confirm_password_label}</label>
 					</span>
 					<div class='gf_clear gf_clear_complex'></div>
 				</div>{$strength}";
 		}
 
+	}
+
+	public function get_field_label_class(){
+		return 'gfield_label gfield_label_before_complex';
 	}
 
 	public function get_value_save_entry( $value, $form, $input_name, $lead_id, $lead ) {
@@ -163,8 +169,9 @@ class GF_Field_Password extends GF_Field {
 		$password_fields = GFAPI::get_fields_by_type( $form, array( 'password' ) );
 
 		foreach ( $password_fields as $password_field ) {
-			GFAPI::update_entry_field( $entry['id'], $password_field['id'], '' );
+			GFAPI::update_entry_field( $entry['id'], $password_field->id, '' );
 		}
+
 	}
 }
 

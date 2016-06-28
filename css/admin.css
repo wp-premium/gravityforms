@@ -10,7 +10,7 @@
 admin.css
 Gravity Forms Administration Styles
 http: //www.gravityforms.com
-updated: February 4, 2016 4:08 PM EST
+updated: June 19, 2016 7:07 PM GMT-5
 
 Gravity Forms is a Rocketgenius project
 copyright 2008-2016 Rocketgenius Inc.
@@ -76,6 +76,10 @@ li {
 	overflow: visible !important;
 }
 
+.wrap.gforms_edit_form > #no-fields {
+	display: none!important;
+}
+
 ul#gform_fields {
 	padding: 0;
 	margin: 0;
@@ -124,10 +128,26 @@ div.gf_delete_notice {
 }
 
 div.gforms_help_alert {
-	background-color: #FFFFE0;
-	border: 1px solid #E6DB55;
-	padding: 10px;
-	margin: 10px 0;
+	background-color: #fff;
+    border-left: 4px solid #ffba00;
+    box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.1);
+    display: inline-block;
+    font-family: "lucida sans","lucida grande",lucida,sans-serif;
+    font-size: 12px;
+    line-height: 1.6;
+    margin: 12px 24px -6px;
+    padding: 11px 15px;
+    position: relative;
+    text-align: left;
+}
+
+html[dir="rtl"] div.gforms_help_alert {
+    border-right: 4px solid #ffba00;
+    border-left: none !important;
+}
+
+div.gforms_help_alert i.fa {
+	color: #D4662C;
 }
 
 div.gforms_helpbox {
@@ -457,21 +477,67 @@ img#gfield_input_datepicker_icon {
 	font-size: .8rem;
 }
 
+th.content_center,
+td.content_center {
+	text-align: center !important;
+}
+
+tr img.gform_active_icon,
+img[src*="active"]{
+	width: 25px;
+	height: auto;
+	display: -moz-inline-stack;
+	display: inline-block;
+	margin: 3px 0 0 0;
+}
+
 /* fixing the name field so it aligns properly */
-div.ginput_container_name span { display: -moz-inline-stack; display: inline-block; vertical-align: top; padding-right: 16px; margin-right: -4px;}
-div.ginput_container_name span:last-child {padding-right:0;}
-div.ginput_complex.ginput_container.gf_name_has_1 span {width: 100%;}
-div.ginput_complex.ginput_container.gf_name_has_2 span {width: 50%;}
-div.ginput_complex.ginput_container.gf_name_has_3 span {width: 33.3%;}
-div.ginput_complex.ginput_container.gf_name_has_4 span {width: 25%;}
-div.ginput_complex.ginput_container.gf_name_has_5 span {width: 19.95%;}
+
+div.ginput_container_name span {
+	display: -moz-inline-stack;
+	display: inline-block;
+	vertical-align: top;
+	padding-right: 16px;
+	margin-right: -4px;
+}
+
+div.ginput_container_name span:last-child {
+	padding-right:0;
+}
+
+div.ginput_complex.ginput_container.gf_name_has_1 span {
+	width: 100%;
+}
+
+div.ginput_complex.ginput_container.gf_name_has_2 span {
+	width: 50%;
+}
+
+div.ginput_complex.ginput_container.gf_name_has_3 span {
+	width: 33.3%;
+}
+
+div.ginput_complex.ginput_container.gf_name_has_4 span {
+	width: 25%;
+}
+
+div.ginput_complex.ginput_container.gf_name_has_5 span {
+	width: 19.95%;
+}
+
 div.ginput_complex.ginput_container.gf_name_has_2 span:first-child,
 div.ginput_complex.ginput_container.gf_name_has_3 span:first-child,
 div.ginput_complex.ginput_container.gf_name_has_4 span:first-child,
-div.ginput_complex.ginput_container.gf_name_has_5 span:first-child {margin-left: 0!important;}
+div.ginput_complex.ginput_container.gf_name_has_5 span:first-child {
+	margin-left: 0!important;
+}
 
 /* adjusting the address field alignment for some scenarios */
-.gform_wrapper .ginput_complex span.ginput_left + input.gform_hidden + span.ginput_left { margin-left: 1.6%; padding-right:0; }
+
+.gform_wrapper .ginput_complex span.ginput_left + input.gform_hidden + span.ginput_left {
+	margin-left: 1.6%;
+	padding-right:0;
+}
 
 .top_label .gfield_label {
 	display: block;
@@ -499,7 +565,7 @@ div.ginput_complex.ginput_container.gf_name_has_5 span:first-child {margin-left:
     margin-left: 31%;
 }
 
-/* Field Label Placement Overrides */
+/* field label placement overrides */
 
 .hidden_label .gfield_label {
     visibility:hidden;
@@ -522,10 +588,10 @@ div.ginput_complex.ginput_container.gf_name_has_5 span:first-child {margin-left:
 .gfield .copy_values_option_container {
     padding-bottom: 10px;
 }
+
 .gfield .copy_values_option_container .copy_values_enabled {
     width:auto!important;
 }
-
 
 .left_label ul.gfield_checkbox,.right_label ul.gfield_checkbox,
 .left_label ul.gfield_radio,.right_label ul.gfield_radio {
@@ -631,7 +697,7 @@ h3.gf_add_fields {
 	word-break: break-all;
 }
 
-/* list fields added in v.1.6 -----------------------------------------------------------------*/
+/* list fields */
 
 .top_label .gfield_list {
 	width: 96%
@@ -705,8 +771,7 @@ table.gfield_list th {
 }
 
 
-/* radio and checkbox styling - justifies lengthy labels ------------------------------------------------------*/
-
+/* radio and checkbox styling - justifies lengthy labels */
 
 ul.gfield_checkbox, ul.gfield_radio {
 	margin: 6px 0
@@ -845,7 +910,6 @@ div.gform_admin_icons div.gform_admin_header_title {
 	display: block !important;
 	cursor: pointer;
 	color: #47759B;
-
 	filter: alpha(opacity=50);
 	opacity: 0.5;
 }
@@ -861,7 +925,6 @@ div.gform_admin_icons div.gform_admin_header_title {
 .field_selected .form_edit_icon:hover,
 .field_selected .form_delete_icon:hover {
 	color: #47759B;
-
 	filter: alpha(opacity=100);
 	opacity: 1.0;
 }
@@ -871,7 +934,6 @@ div.gform_admin_icons div.gform_admin_header_title {
 	display: none;
 	float: right;
 	margin-left: 6px;
-
 }
 
 .entries_edit_icon {
@@ -935,7 +997,7 @@ td.pad_top {
 }
 
 #form_settings {
-	padding: 0 5px 5px 5px;
+	padding-top: 2px;
 	margin-top: 10px;
 }
 
@@ -1067,7 +1129,7 @@ div#wpbody {
 }
 
 #add_fields {
-	width: 285px;
+	width: 278px;
 	padding: 0;
 	text-align: left;
 }
@@ -1241,10 +1303,10 @@ table td.gfield_category_cell {
 
 .input_active_icon {
     cursor: pointer;
-    margin:15px 5px 0 0;
+    margin: 10px 5px 0 0;
 }
 
-/* hidden value field ------------------------------------------------------*/
+/* hidden value field */
 
 #field_choices li input.field-choice-text,
 .field_input_choices li input.field-choice-text {
@@ -1273,7 +1335,7 @@ table td.gfield_category_cell {
 	display: none !important;
 }
 
-/* visible value field without price ------------------------------------------------------*/
+/* visible value field without price */
 
 .choice_with_value li input.field-choice-value {
 	width: 155px !important;
@@ -1293,7 +1355,7 @@ table td.gfield_category_cell {
 	display: inline !important;
 }
 
-/* visible value field with price ------------------------------------------------------*/
+/* visible value field with price */
 
 .choice_with_value_and_price li input.field-choice-text {
 	width: 103px !important;
@@ -1323,7 +1385,7 @@ table td.gfield_category_cell {
 	display: inline !important;
 }
 
-/* visible price and no value ------------------------------------------------------*/
+/* visible price and no value */
 
 .choice_with_price li input.field-choice-text {
 	width: 155px !important;
@@ -1343,7 +1405,7 @@ table td.gfield_category_cell {
 	display: inline !important;
 }
 
-/* columns (no price, value or default selection) ------------------------------------------------------*/
+/* columns (no price, value or default selection) */
 
 #field_columns li input.field-choice-value {
 	display: none;
@@ -1365,7 +1427,8 @@ table td.gfield_category_cell {
 	width: 312px !important;
 }
 
-/* view form styles ------------------------------------------------------*/
+/* view form styles */
+
 div.gf_payment_detail{
 	margin-bottom: 15px;
 }
@@ -1412,18 +1475,42 @@ td.entry-view-field-value ul.bulleted li {
 	list-style-type: disc;
 }
 
+div.note-meta-container {
+	white-space: nowrap;
+	font-size: 0;
+}
+
 div.note-avatar {
 	width: 48px;
 	height: 48px;
-	float: left;
-	margin-right: 6px;
+	display: inline-block;
+	vertical-align: middle;
+	margin-right: 8px;
+}
+
+.note-has-email div.note-avatar {
+	vertical-align: top;
+}
+
+div.note-meta {
+	display: inline-block;
+	vertical-align: middle;
+	white-space: normal;
+	/* hack to keep all content visible on the smallest screen sizes */
+	margin-left: 48px;
+	position: relative;
+	left: -48px;
+}
+
+span.note-divider {
+	opacity: 0.25;
 }
 
 h6.note-author {
 	font-weight: bold;
 	font-size: 1.1rem;
 	line-height: 1;
-	margin: 0;
+	margin: 0 0 2px;
 	padding: 0;
 }
 
@@ -1458,7 +1545,7 @@ div.detail-note-content.gforms_note_error{
 
 }
 
-/* edit details form styles ------------------------------------------------------*/
+/* edit details form styles */
 
 
 body.forms_page_gf_entries table.entry-details td.detail-view label.detail-label,.ginput_full_admin label {
@@ -1526,7 +1613,6 @@ body.forms_page_gf_entries h2.detail_gsection_title {
 	padding: 0 !important;
 }
 
-
 body.forms_page_gf_entries div.ginput_complex_admin span label,
 body.forms_page_gf_entries div.ginput_complex_admin span label {
 	display: block;
@@ -1534,7 +1620,7 @@ body.forms_page_gf_entries div.ginput_complex_admin span label {
 	margin: 4px 0;
 }
 
-/* notifications page styles ------------------------------------------------------*/
+/* notifications page styles */
 
 ul#form_notification_container,ul#form_autoresponder_container {
 	width: 95%
@@ -1556,7 +1642,63 @@ ul#form_autoresponder_container li label {
     width:50px;
 }
 
-/* set some widths and heights ------------------------------------------------------*/
+.gform-notification-service {
+	display: inline-block;
+	margin-bottom: 5px;
+	text-align: center;
+}
+
+.gform-notification-service input:checked + label > span {
+    -webkit-filter: none;
+    -moz-filter: none;
+    filter: none;
+}
+
+t.gform-notification-service input:checked + label {
+    background-color:white;
+    border: 1px solid #CCCCCC;
+}
+
+.gform-notification-service label > span {
+    background-repeat:no-repeat;
+    display:inline-block;
+    -webkit-transition: all 100ms ease-in;
+    -moz-transition: all 100ms ease-in;
+    transition: all 100ms ease-in;
+    -webkit-filter: brightness(1.8) grayscale(1) opacity(.5);
+    -moz-filter: brightness(1.8) grayscale(1) opacity(.5);
+    filter: brightness(1.8) grayscale(1) opacity(.5);
+}
+
+.gform-notification-service input {
+    display:none;
+}
+
+.gform-notification-service label > span {
+    padding-top:5px;
+    width:130px;
+    height:65px;
+}
+
+.gform-notification-service label > span > img {
+    width:32px;
+    height:32px;
+    margin:5px;
+    vertical-align:middle;
+}
+
+.gform-notification-service label {
+    border:1px solid #EEEEEE;
+    background-color:#F9F9F9;
+}
+
+.gform-notification-service input:not([disabled]):not([checked]) + label > span:hover {
+    -webkit-filter: brightness(1.2) grayscale(.5) opacity(.9);
+    -moz-filter: brightness(1.2) grayscale(.5) opacity(.9);
+    filter: brightness(1.2) grayscale(.5) opacity(.9);
+}
+
+/* set some widths and heights */
 
 .fieldwidth-1,input.fieldwidth-1 {
 	width: 100%;
@@ -1594,7 +1736,7 @@ ul#form_autoresponder_container li label {
     width: 165px;
 }
 
-/* bulk add panel ------------------------------------------------------*/
+/* bulk add panel */
 
 .panel-instructions {
 	border-bottom: 1px solid #DFDFDF;
@@ -1688,7 +1830,7 @@ div#bulk_custom_message {
 	position: absolute;
 }
 
-/* after update form panel ------------------------------------------------------*/
+/* after update form panel */
 
 .updated_base {
 	background-color: #FFF;
@@ -1763,13 +1905,13 @@ table.form-table td .error_base {
 	display: inline-block;
 }
 
-/* HTML block ------------------------------------------------------*/
+/* HTML block */
 
 li.gfield_html label.gfield_label {
 	height: 18px;
 }
 
-/* simple captcha fields ------------------------------------------------------*/
+/* simple captcha fields */
 
 .gfield_captcha_input_container {
 	padding-top: 3px;
@@ -1796,7 +1938,7 @@ li.gfield_html label.gfield_label {
 	margin-left: 32%;
 }
 
-/* math challenge fields ------------------------------------------------------*/
+/* math challenge fields */
 
 .math_small input {
 	width: 69px;
@@ -1819,12 +1961,11 @@ li.gfield_html label.gfield_label {
 	margin-left: 32%;
 }
 
-/* transaction table ------------------------------------------------------*/
+/* transaction table */
 
 table.entry-products {
 	border: 1px solid #DFDFDF;
 	border-right: none;
-	border-bottom: none;
 	margin: 10px 0;
 }
 
@@ -1895,7 +2036,7 @@ table.entry-products td ul.product_options li.lastitem {
 	background-image: url(../images/prodlist-last.png);
 }
 
-/* additional button styles ------------------------------------------------------*/
+/* additional button styles */
 
 input.button-primary.gfbutton,
 button.button-primary.gfbutton,
@@ -1917,7 +2058,7 @@ a.button-primary.gfbutton {
 	border-radius: 16px !important;
 }
 
-/* multi-page progress bar  ------------------------------------------------------*/
+/* multi-page progress bar  */
 
 h3.gf_progressbar_title {
 	font-size: 13px;
@@ -2005,7 +2146,7 @@ h3.gf_progressbar_title {
 	background-repeat:repeat-x
 }
 
-/* multi-page steps ------------------------------------------------------*/
+/* multi-page steps */
 
 .gform_wrapper .gf_page_steps {
 	overflow: hidden
@@ -2037,7 +2178,7 @@ h3.gf_progressbar_title {
 	opacity: 1.0
 }
 
-/* password strength ----------------------------------------------------*/
+/* password strength */
 
 .gfield_password_strength {
 	border-style: solid;
@@ -2057,19 +2198,19 @@ ul.right_label .gfield_password_strength {
 	margin-left: 32.5%;
 }
 
-/* tidy up the title area  ----------------------------------------------------*/
+/* tidy up the title area */
 
 p.search-box {
 	margin: 12px 0 0 0;
 }
 
-/* addonform settings   ----------------------------------------------------*/
+/* addonform settings */
 
 #gform-settings .column-is_active {
     width:19px;
 }
 
-/* form settings panel  ----------------------------------------------------*/
+/* form settings panel */
 
 div#gform_heading.selectable.field_selected {
 	background-image: url(../images/gf-fieldsettings-header.jpg);
@@ -2079,7 +2220,7 @@ div#gform_heading.selectable.field_selected {
 	padding-top: 8px;
 }
 
-/* upgrade and renewal styles for settings page  ----------------------------------------------------*/
+/* upgrade and renewal styles for settings page */
 
 div.gf_renew_license {
 	border: 1px solid #CFADB3;
@@ -2146,7 +2287,7 @@ a.gf_upgrade_link:hover {
   text-decoration: none;
 }
 
-/* update page status styles  ----------------------------------------------------*/
+/* update page status styles */
 
 .gf_update_current,
 .gf_update_expired,
@@ -2155,7 +2296,7 @@ a.gf_upgrade_link:hover {
 	margin-top: 20px;
 }
 
-/* alert styles ----------------------------------------------------*/
+/* alert styles */
 
 .alert_green,
 .alert_red,
@@ -2215,7 +2356,7 @@ ul#gform_fields li#no-fields div.newform_notice {
 	background-color: #FFF;
 }
 
-/* validation indicators ----------------------------------------------------*/
+/* validation indicators */
 
 span.gf_keystatus_valid_text,
 span.gf_keystatus_invalid_text {
@@ -2240,7 +2381,7 @@ span.gf_keystatus_invalid_text {
 	color: #9E0B0F;
 }
 
-/* note for truncated radio and checkbox lists ----------------------------------------------------*/
+/* note for truncated radio and checkbox lists */
 
 ul.gfield_radio li.gchoice_total,
 ul.gfield_checkbox li.gchoice_total {
@@ -2249,13 +2390,13 @@ ul.gfield_checkbox li.gchoice_total {
 	padding-top: 14px !important;
 }
 
-/* added to prevent truncating the button panels ----------------------------------------------------*/
+/* added to prevent truncating the button panels */
 
 body #wpcontent #wpbody #wpbody-content {
 	overflow: visible;
 }
 
-/* redefine the UI tabs for 1.7 ----------------------------------------------------*/
+/* redefine the UI tabs */
 
 div.ui-widget-content {
 	background-color: #FAFAFA;
@@ -2312,7 +2453,7 @@ div.ui-widget-content li.ui-state-default.ui-state-active a {
 	color: #212121;
 }
 
-/* left and right settings dialogs ----------------------------------------------------*/
+/* left and right settings dialogs */
 
 li.gform_setting_left_half {
 	width: 44%;
@@ -2340,38 +2481,45 @@ li.gform_setting_right_half input {
 	width: 95%;
 }
 
-/* form toolbar  ----------------------------------------------------*/
+/* form toolbar  */
 
 #contextual-help-link-wrap {
 	display: none;
 }
 
 #gf_form_toolbar {
-	margin: 10px 0 10px 0;
+    display: inline-block;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    margin: 12px 0 0;
+    padding: 4px 10px 0 10px;
+    width: 100%;
+    -webkit-box-shadow: 0 1px 1px rgba(0,0,0,0.04);
+    box-shadow: 0 1px 1px rgba(0,0,0,0.04);
+    border: 1px solid #e5e5e5;
+    background: #fff;
+    color: #555;
+    font-size: 13px;
 }
 
-div.wrap.gforms_edit_form #gf_form_toolbar {
-	margin: 10px 9px 10px 0;
+#gf_form_toolbar  a {
+    text-decoration: none;
 }
 
 ul#gf_form_toolbar_links {
-	min-width: 790px;
-	padding: 0 0 0 6px;
-	border: 1px solid #DFDFDF;
+    position: relative;
+    display: inline-block;
 	margin: 0;
-	-webkit-box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
-	-moz-box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
-	box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
-	background: #FFF;
 }
 
-
 ul#gf_form_toolbar_links li {
-	margin: 0;
-	padding: 10px 6px;
-	width: auto;
-	display: -moz-inline-stack;
-	display: inline-block;
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+    width: auto;
+    display: -moz-inline-stack;
+    display: inline-block;
 }
 
 ul#gf_form_toolbar_links li.gf_form_toolbar_selectform {
@@ -2386,7 +2534,6 @@ ul#gf_form_toolbar_links li.gf_form_toolbar_notifications a,
 ul#gf_form_toolbar_links li.gf_form_toolbar_entries a,
 ul#gf_form_toolbar_links li.gf_form_toolbar_preview a,
 ul#gf_form_toolbar_links li.gf_form_toolbar_results a  {
-	padding: 1px 0 0 0;
 	text-decoration: none;
 	text-shadow: 0 1px 1px #FFF;
 	line-height: 16px;
@@ -2396,20 +2543,31 @@ ul#gf_form_toolbar_links li.gf_form_toolbar_results a  {
 ul#gf_form_toolbar_links li a {
 	display: -moz-inline-stack;
 	display: inline-block;
+    margin: 0 10px;
+    padding: 15px 0;
+    font-size: 13px;
+    color:#23282d;
 }
 
-ul#gf_form_toolbar_links li a:hover,
-ul#gf_form_toolbar_links li a.gf_toolbar_active {
-	color: #333;
+ul#gf_form_toolbar_links li a.gf_toolbar_active:hover,
+ul#gf_form_toolbar_links li a:hover{
+    color: #0074A2;
 }
+
+
+ul#gf_form_toolbar_links > li > a.gf_toolbar_active {
+    border-bottom: 4px solid #666;
+    box-shadow: none;
+    color: #23282d;
+}
+
+ul#gf_form_toolbar_links li a:hover i{
+    color: #0074A2;
+}
+
 
 ul#gf_form_toolbar_links li a.gf_toolbar_active {
 	font-weight: bold;
-}
-
-ul#gf_form_toolbar_links li a:hover i,
-ul#gf_form_toolbar_links li a.gf_toolbar_active i {
-	color: #0074A2;
 }
 
 ul#gf_form_toolbar_links li a.gf_toolbar_disabled {
@@ -2508,24 +2666,12 @@ ul#gf_form_toolbar_links li.gf_form_toolbar_results a.gf_toolbar_disabled:hover 
 	background-position: 0 -220px;
 }
 
-/* form switcher  ----------------------------------------------------*/
+/* form switcher  */
 
-ul#gf_form_toolbar_links {
-	position: relative;
-}
-
-li.gf_form_switcher {
-	position: absolute;
-	right: 2px;
-	top: -4px;
-}
-
-li.gf_form_switcher label {
-	display: none;
-}
-
-li.gf_form_switcher select#form_switcher {
-	max-width: 200px;
+#form_switcher {
+    max-width: 200px;
+    font-size:13px;
+    margin-top:-4px;
 }
 
 div#add_fields div#floatMenu ul#sidebarmenu1.menu li.add_field_button_container ul li.add-buttons ol.field_type li input.button {
@@ -2552,7 +2698,7 @@ body.wp-admin div#add_fields div#floatMenu input.button.button-large.button-prim
 	float: right;
 }
 
-/* edit confirmation dialog ----------------------------------------------------*/
+/* edit confirmation dialog */
 
 div#wpbody-content div.wrap div#after_update_dialog.updated_base.gform_editor_status,
 div.gform_editor_status {
@@ -2560,7 +2706,7 @@ div.gform_editor_status {
 	padding: 10px;
 }
 
-/* new update and delete button positions for 1.6 ----------------------------------------------------*/
+/* update and delete button positions*/
 
 #floatMenu h3.gf_add_fields {
 	display: none;
@@ -2666,7 +2812,7 @@ th.manage-column.column-cb.check-column {
 	vertical-align: top;
 }
 
-/* tidy up the entry views and the new field types for 1.6 ----------------------------------------------------*/
+/* tidy up the entry views and the new field types */
 
 table.gfield_list td.gfield_list_cell {
 	padding: 6px 0;
@@ -2749,7 +2895,7 @@ div#notifications_container .inside div.message.error {
 	line-height: 1.5 !important;
 }
 
-/* credit card icons ------------------------------------------------------*/
+/* credit card icons */
 
 .gform_card_icon_container {
 	margin: 8px 0 6px 0;
@@ -2910,7 +3056,7 @@ div.gform_card_icon {
 	background-position: -180px -256px;
 }
 
-/* credit card fields ------------------------------------------------------*/
+/* credit card fields */
 
 .ginput_complex .ginput_cardinfo_left,
 .ginput_complex .ginput_cardinfo_right {
@@ -2990,14 +3136,10 @@ div.gfield_creditcard_warning_message {
 	line-height: 2.2rem;
 }
 
-/* notification paging ----------------------------------------------------*/
+/* notification paging */
 
 #notifications_advanced_settings label {
 	line-height: 18px;
-}
-
-div.gf_entry_wrap {
-	position: relative;
 }
 
 div.gf_toolset_dropdown_menu {
@@ -3026,9 +3168,13 @@ div.gf_toolset_dropdown_menu ul li.gf_toolset_dropdown_toplevel a.gf_toolset_dro
 }
 
 div.gf_entry_detail_pagination {
-	position: absolute;
-	top: 10px;
-	right: 0;
+    clear: both;
+	float: right;
+    font-size: 13px;
+}
+
+div.gf_entry_detail_pagination ul{
+    height: 15px;
 }
 
 div.gf_entry_detail_pagination ul li
@@ -3038,7 +3184,6 @@ div.gf_entry_detail_pagination ul li {
 }
 
 div.gf_entry_detail_pagination ul li {
-	height: 26px;
 	display: -moz-inline-stack;
 	display: inline-block;
 }
@@ -3074,12 +3219,11 @@ div.gf_entry_wrap #poststuff .inside .updated {
     margin: -2px -15px 0 -15px;
 }
 
-/* entry paging ----------------------------------------------------*/
+/* entry paging */
 
 a.gf_entry_prev_link.gf_entry_pagination_link.gf_entry_pagination_link_inactive,
 a.gf_entry_next_link.gf_entry_pagination_link.gf_entry_pagination_link_inactive {
  	color: #424242;
-
 	filter: alpha(opacity=20);
 	opacity: 0.2;
 }
@@ -3087,7 +3231,6 @@ a.gf_entry_next_link.gf_entry_pagination_link.gf_entry_pagination_link_inactive 
 a.gf_entry_prev_link.gf_entry_pagination_link.gf_entry_pagination_link_active,
 a.gf_entry_next_link.gf_entry_pagination_link.gf_entry_pagination_link_active {
 	color: #424242;
-
 	filter: alpha(opacity=50);
 	opacity: 0.5;
 }
@@ -3095,7 +3238,6 @@ a.gf_entry_next_link.gf_entry_pagination_link.gf_entry_pagination_link_active {
 a.gf_entry_prev_link.gf_entry_pagination_link.gf_entry_pagination_link_active:hover,
 a.gf_entry_next_link.gf_entry_pagination_link.gf_entry_pagination_link_active:hover {
 	color: #0074A2;
-
 	filter: alpha(opacity=100);
 	opacity: 1.0;
 }
@@ -3105,7 +3247,7 @@ li.gf_entry_next i {
 	display: block;
 }
 
-/* notification WYSIWYG styles ----------------------------------------------------*/
+/* notification WYSIWYG styles */
 
 html body.wp-admin div#wpwrap div#wpcontent div#wpbody div#wpbody-content div.wrap div#tab_notification div.wp-editor-wrap {
 	margin-top: 20px !important;
@@ -3184,20 +3326,25 @@ html body.wp-admin div#wpwrap div#tab_notification div#wp-form_notification_mess
 }
 
 .gf_submenu {
-	background-color: #F8F8F8;
-	border: 1px solid #dfdfdf;
-	box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+	background-color: #FFF;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
 	display: none;
 	float: none;
 	margin: 0 0 0 -1px;
 	position: absolute;
 	padding: 0;
 	z-index: 99;
+	border-top: 1px solid #dfdfdf;
+	border-bottom: 4px solid #666;
+}
+
+#gf_form_toolbar .gf_submenu {
+    top: 40px;
 }
 
 .row-actions .gf_submenu,
 .row_actions .gf_submenu {
-	margin-top: -4px;
+	margin-top: -2px;
 }
 
 .row-actions span a i {
@@ -3210,7 +3357,7 @@ html body.wp-admin div#wpwrap div#tab_notification div#wp-form_notification_mess
 
 .gf_submenu a {
 	display: block;
-	padding: 2px 10px;
+	padding: 6px 10px;
 }
 
 .gf_submenu a:hover {
@@ -3231,20 +3378,19 @@ ul#gf_form_toolbar_links .gf_submenu ul li {
 	padding: 0;
 	margin: 0;
 	border-bottom: 1px solid #eee;
-	border-top:1px solid #fff;
 }
 
 ul#gf_form_toolbar_links .gf_submenu ul li a {
 	background: transparent none;
-	padding: 2px 10px;
-	line-height: 18px;
+	padding: 6px 10px;
+	line-height: 24px;
 }
 
 ul#gf_form_toolbar_links .gf_submenu ul li:hover {
-	background-color: #EEE;
+	background-color: #F1F1F1;
 }
 
-/* Merge Tag AutoComplete ----------------------------------------------------*/
+/* merge tag autocomplete */
 
 #gform_fields li #field_settings li {
 	overflow: visible;
@@ -3342,9 +3488,6 @@ ul#gf_merge_tag_list a:hover {
     margin-right: 12px;
 }
 
-/* added for 1.7 ----------------------------------------------------*/
-
-
 #form_settings {
 	margin-top: 0;
 }
@@ -3352,7 +3495,6 @@ ul#gf_merge_tag_list a:hover {
 .gform_tab_group {
 	background-color: #FFF;
 	border: 1px solid #DEDEDE;
-	margin-right: 9px;
 	margin-top: 10px;
 	border-radius: 3px;
 	-webkit-box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
@@ -3449,7 +3591,7 @@ h4.gf_settings_subheader {
 	width:450px;
 }
 
-/* new form instructions ------------------------------------------- */
+/* new form instructions */
 
 .gf_tips {
 	font-family: 'Shadows Into Light Two', helvetica, arial, sans-serif;
@@ -3499,7 +3641,7 @@ div#gf_nofield_4_instructions span,
 div#gf_nofield_5_instructions span {
 	display: block;
 	position: absolute;
-	line-height: 1.1rem;
+	line-height: 1.1;
 	word-spacing: -0.1rem;
 	text-align: center;
 }
@@ -3856,44 +3998,34 @@ div#form_button_conditional_logic_container.gf_animate_sub_settings {
 	padding-left: 12px !important;
 }
 
-h2.gf_admin_page_title span.gf_admin_page_subtitle {
-	display: block;
-	clear: both;
-	font-size: .6rem;
-	line-height: 1.8em !important;
-}
 
-h2.gf_admin_page_title span.gf_admin_page_subtitle span.gf_admin_page_formid,
-h2.gf_admin_page_title span.gf_admin_page_subtitle span.gf_admin_page_formname {
+
+span.gf_admin_page_formid {
 	color: #FFF;
-	letter-spacing: 0.1rem;
-	padding: 1px 8px 2px 9px;
-	font-size: 11px !important;
-	font-weight: normal !important;
-	line-height: 1.8em !important;
-	-webkit-border-radius: 4px;
-	-moz-border-radius: 4px;
-	border-radius: 4px;
-	margin: 0 8px 0 0 !important;
+	background-color: #D4662C;
+	font-size: 13px;
+	line-height: 2;
+	white-space: nowrap;
+	padding: 0 8px;
 	position: relative;
-	top: -1px;
+	top: -3px;
+	text-decoration: none;
+	border: none;
+	-webkit-border-radius: 2px;
+	border-radius: 2px;
+	text-shadow: none;
+	font-weight: 600;
+	font-size: 13px;
 	display: -moz-inline-stack;
 	display: inline-block;
-}
-
-h2.gf_admin_page_title span.gf_admin_page_subtitle span.gf_admin_page_formid {
-	background-color: #D54E21;
-}
-
-h2.gf_admin_page_title span.gf_admin_page_subtitle span.gf_admin_page_formname {
-	background-color: #0074A2;
+	margin: 0 2px 0 12px;
 }
 
 #gform_notification_to_routing_container table {
 	width: 100%;
 }
 
-/* Override the default jQuery UI styles for the editor tabs  ------------------------------------------------------*/
+/* Override the default jQuery UI styles for the editor tabs  */
 
 .ui-tabs>.ui-tabs-nav>.ui-state-disabled{
     display:none;
@@ -3935,14 +4067,14 @@ div#gform_last_page_settings div#last_page_settings.ui-widget-content {
 	border: none !important;
 }
 
-/* make the checked labels bold ------------------------------------------------------*/
+/* make the checked labels bold */
 
 
 input:checked+label {
 	font-weight: 400;
 }
 
-/* better float clearing in the form builder ------------------------------------------------------*/
+/* better float clearing in the form builder */
 
 div.gf_clear {
 	clear: both !important;
@@ -3953,7 +4085,7 @@ div.gf_clear.gf_clear_complex {
 	margin-bottom: 10px;
 }
 
-/* new button styles ------------------------------------------------------*/
+/* new button styles */
 
 .gf_button.slick_button {
 	display: inline-block;
@@ -3990,7 +4122,7 @@ div.gf_clear.gf_clear_complex {
 	color: #FFF;
 }
 
-/* filter UI ----------------------------------------------------*/
+/* filter UI */
 
 .gform-remove,
 .gform-add {
@@ -4046,7 +4178,7 @@ div.gf_clear.gf_clear_complex {
     left: 0px;
 }
 
-/* entry edit ----------------------------------------------------*/
+/* entry edit */
 
 #namediv .gform_button_select_files{
     width: 100px !important;
@@ -4073,7 +4205,7 @@ tr.gf-locking.wp-locked img.gform_active_icon {
     display: none;
 }
 
-/* new pagebreak styles  ----------------------------------------------------*/
+/* pagebreak styles  */
 
 div.gf-pagebreak-container {
 	display:block;
@@ -4132,14 +4264,12 @@ li.gfield.gpage label.gfield_label {
 	margin: 0 !important;
 }
 
-/* externalizing some styles previously used inline ----*/
-
-.lead_unread a,
-.lead_unread td {
+.entry_unread a,
+.entry_unread td {
 	font-weight: bold;
 }
-.lead_spam_trash a,
-.lead_spam_trash td {
+.entry_spam_trash a,
+.entry_spam_trash td {
 	font-weight: normal;
 }
 .row-actions a {
@@ -4153,7 +4283,7 @@ li.gfield.gpage label.gfield_label {
 	width: 100px;
 }
 
-/* select columns modal window ----------------------------------------------------*/
+/* select columns modal window */
 
 body.forms_page_gf_entries div#TB_title[style] {
 	width: 630px !important;
@@ -4205,16 +4335,19 @@ a.gf_delete_field_choice:active {
 	color: #444;
 }
 
-/* form editor tweaks for 1.9  ----------------------------------------------------*/
+/* form editor tweaks */
 
 span.ginput_left input.medium,
 span.ginput_right input.medium,
-.ginput_container.ginput_single_email  input.medium {
+.ginput_container.ginput_single_email input.medium {
 	width: 95% !important;
 }
 
+ul:not(.top_label) .ginput_container.ginput_single_email {
+	margin-left: 30%;
+}
 
-/* addon framework styles ----------------------------------------------------*/
+/* addon framework styles */
 
 .gaddon-section {
     padding: 20px 0 0;
@@ -4238,9 +4371,7 @@ span.ginput_right input.medium,
     margin-right: 8px;
 }
 
-
-
-/* resize the sub-settings tables for more verbose inputs ----------------------------------------------------*/
+/* resize the sub-settings tables for more verbose inputs */
 
 table tbody tr#gform_notification_to_email_container.notification_to_container td.gf_sub_settings_cell div.gf_animate_sub_settings table th,
 table tbody tr#gform_notification_to_field_container.notification_to_container td.gf_sub_settings_cell div.gf_animate_sub_settings table tbody tr th {
@@ -4256,7 +4387,7 @@ div#gform_notification_to_routing_rules div input:first-child {
 	min-width: 50%;
 }
 
-/* Safari specific styles ----------------------------------------------------*/
+/* safari specific styles */
 
 div.wrap.gf_browser_safari div#add_fields div#floatMenu ul#sidebarmenu1.menu li.add_field_button_container ul li.add-buttons ol.field_type li input.button,
 div.wrap.gf_browser_safari div#add_fields div#floatMenu ul#sidebarmenu1.menu li.add_field_button_container ul li.add-buttons ol.field_type li input.button:hover,
@@ -4285,7 +4416,7 @@ div.wrap.gf_browser_safari .ui-tabs-panel ul li label.inline {
 	max-height: 222px
 }
 
-/* Firefox specific styles ----------------------------------------------------*/
+/* Firefox specific styles */
 
 div.wrap.gf_browser_gecko div.new-form-option a {
 	padding: 16px 16px 14px 16px;
@@ -4300,13 +4431,7 @@ div.wrap.gf_browser_gecko .ui-tabs-panel ul li label.inline {
 	margin-top: 1px !important;
 }
 
-
-div.wrap.gf_browser_gecko li.gf_form_switcher select#form_switcher {
-	max-width: 200px;
-	height: 24px;
-}
-
-/* Internet Explorer specific styles ----------------------------------------------------*/
+/* Internet Explorer specific styles */
 
 div.wrap.gf_browser_ie .menu.collapsible ol.field_type li {
 	width: 48%;
@@ -4379,7 +4504,7 @@ div.wrap.gf_browser_ie ol.field_type input.button[type="button"] {
 	width: 140px !important;
 }
 
-/* Google Chrome specific styles ----------------------------------------------------*/
+/* Google Chrome specific styles */
 
 body .gf_browser_chrome input.button-primary.gfbutton,
 body .gf_browser_chrome button.button-primary.gfbutton,
@@ -4424,3 +4549,139 @@ div.wrap.gf_browser_chrome .gfield_checkbox li input {
 .gform_installation_progress_step_pending{
     color: silver;
 }
+
+/* Form List and Entry List */
+
+#entry_list_form .column-is_starred,
+#form_list_form .column-is_active{
+    width: 40px;
+	vertical-align: top;
+	padding: 8px 10px;
+}
+
+#form_list_form .column-id,
+#form_list_form .column-conversion,
+#form_list_form .column-lead_count,
+#form_list_form .column-view_count{
+	width:10%;
+}
+
+#entry_list_form .column-column_selector{
+    width:20px;
+}
+
+/* Entry List */
+
+#entry_filters{
+    display:inline-block;
+    vertical-align: middle;
+}
+
+#entry_search_button{
+    float:right;
+}
+
+/* Entry Detail */
+
+#sidebar_middle-sortables.empty-container,
+#sidebar_top-sortables.empty-container,
+#content-sortables.empty-container{
+    border: 3px dashed #BBBBBB!important;
+    height: 250px!important;
+}
+
+#entry_search_container{
+    margin-top:12px;
+    float:right;
+}
+
+.gform-rte-preview {
+	width: 459px;
+	background-image: url( ../images/rich-text-editor.png );
+	position: relative;
+	display: none;
+	margin-bottom: 21px;
+}
+.gform-rte-preview.small { height: 110px; }
+.gform-rte-preview.medium { height: 180px; }
+.gform-rte-preview.large { height: 280px; }
+.gform-rte-preview:after{
+	content: '';
+	display: block;
+	height: 21px;
+	width: 459px;
+	background: transparent url( ../images/rich-text-editor.png ) no-repeat bottom;
+	position: absolute;
+	top: 100%;
+}
+
+.detail-view-print{
+    margin-bottom: 20px;
+}
+
+.screen-meta-toggle {
+	z-index: 2;
+}
+
+div.error {
+	padding: 20px;
+}
+
+@media screen and ( max-width: 782px ) {
+    #entry_search_container{
+        bottom: -100px;
+        float: none;
+        height: 90px;
+        position: absolute;
+        vertical-align: middle;
+    }
+    #entry_search_button{
+        float:none;
+    }
+
+    /* Form Settings */
+    .gforms_form_settings_wrap #gform_tab_container_1{
+        margin-left: 0;
+    }
+
+    .gforms_form_settings_wrap #gform_tabs{
+        display:none;
+    }
+
+    /* Plugin Settings */
+    .gforms_settings_wrap #gform_tab_container{
+        margin-left: 0;
+    }
+
+    .gforms_settings_wrap #gform_tabs{
+        float: none;
+        width:100%;
+
+        margin: 10px 10px 0 10px;
+    }
+
+    .gforms_settings_wrap #gform_tabs li.active a{
+        width:auto;
+        border-left:0;
+        border-right:0;
+        border-top:0;
+        border-bottom: 4px solid #666;
+        background-color:inherit;
+        box-shadow: none;
+        color: #23282d;
+        padding:10px!important;
+    }
+
+    .gforms_settings_wrap #gform_tabs li{
+        display:inline-block;
+        width:auto;
+        margin-bottom: 0;
+        border-right: #e1e1e1;
+    }
+
+    #gform_tab_container{
+        border-top: 1px solid #e1e1e1;
+    }
+
+}
+
