@@ -4,6 +4,11 @@ if ( ! class_exists( 'GFForms' ) ) {
 	die();
 }
 
+/**
+ * Class GFUpdate
+ *
+ * Handles Gravity Forms updates
+ */
 class GFUpdate {
 	public static function update_page() {
 		if ( ! GFCommon::current_user_can_any( 'gravityforms_view_updates' ) ) {
@@ -23,10 +28,12 @@ class GFUpdate {
 
 		?>
 
-		<link rel="stylesheet" href="<?php echo GFCommon::get_base_url() . "/css/admin{$min}.css" ?>" />
+		<link rel="stylesheet" href="<?php echo GFCommon::get_base_url() . "/css/admin{$min}.css?ver=" . GFForms::$version ?>" />
 
 		<div class="wrap <?php echo GFCommon::get_browser_class() ?>">
 			<h2><?php esc_html_e( 'Gravity Forms Updates', 'gravityforms' ) ?></h2>
+
+			<?php GFCommon::display_dismissible_message(); ?>
 			<?php
 
 			$version_info = GFCommon::get_version_info( false );

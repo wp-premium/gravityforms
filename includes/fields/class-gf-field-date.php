@@ -122,7 +122,7 @@ class GF_Field_Date extends GF_Field {
 		$class         = $size . $class_suffix;
 
 		$form_sub_label_placement  = rgar( $form, 'subLabelPlacement' );
-		$field_sub_label_placement = rgar( $this, 'subLabelPlacement' );
+		$field_sub_label_placement = $this->subLabelPlacement;
 		$is_sub_label_above        = $field_sub_label_placement == 'above' || ( empty( $field_sub_label_placement ) && $form_sub_label_placement == 'above' );
 		$sub_label_class_attribute = $field_sub_label_placement == 'hidden_label' ? "class='hidden_sub_label screen-reader-text'" : '';
 
@@ -174,7 +174,7 @@ class GF_Field_Date extends GF_Field {
                                     <input id='{$field_id}_2' name='ginput_day' type='text' {$day_placeholder_attribute} {$disabled_text} value='{$day_value}'/>
                                </div>";
 				$year_field  = "<div class='gfield_date_year ginput_date' id='gfield_input_date_year' style='display:$datefield_display'>
-                                    <label {$sub_label_class_attribute}>{$year_sub_label}</label>
+                                    <label for='{$field_id}_2' {$sub_label_class_attribute}>{$year_sub_label}</label>
                                     <input id='{$field_id}_3' type='text' name='text' {$year_placeholder_attribute} {$disabled_text} value='{$year_value}'/>
                                </div>";
 			} else {
@@ -412,6 +412,10 @@ class GF_Field_Date extends GF_Field {
 		}
 	}
 
+	public function get_field_label_class() {
+		return $this->dateType == 'datefield' ? 'gfield_label gfield_label_before_complex' : 'gfield_label';
+	}
+
 	public function get_value_default() {
 
 		$value = parent::get_value_default();
@@ -503,12 +507,27 @@ class GF_Field_Date extends GF_Field {
 		return $str;
 	}
 
+	/**
+	 * Returns the value to save in the entry.
+	 *
+	 * @param string $value
+	 * @param array $form
+	 * @param string $input_name
+	 * @param int $lead_id
+	 * @param array $lead
+	 *
+	 * @return string
+	 */
 	public function get_value_save_entry( $value, $form, $input_name, $lead_id, $lead ) {
 		// if $value is a default value and also an array, it will be an associative array; to be safe, let's convert all array $value to numeric
-		if( is_array( $value ) ) {
+		if ( is_array( $value ) ) {
 			$value = array_values( $value );
 		}
-		return GFFormsModel::prepare_date( $this->dateFormat, $value );
+
+		$value = GFFormsModel::prepare_date( $this->dateFormat, $value );
+		$value = $this->sanitize_entry_value( $value, $form['id'] );
+
+		return $value;
 	}
 
 	public function get_entry_inputs() {
@@ -518,13 +537,11 @@ class GF_Field_Date extends GF_Field {
 	public function sanitize_settings() {
 		parent::sanitize_settings();
 		$this->calendarIconType = wp_strip_all_tags( $this->calendarIconType );
-		$this->calendarIconUrl = wp_strip_all_tags( $this->calendarIconUrl );
-		if ( $this->dateFormat && ! in_array( $this->dateFormat, array( 'mdy', 'dmy', 'dmy_dash', 'dmy_dot', 'ymd_slash', 'ymd_dash', 'ymd_dot'  ) ) ) {
+		$this->calendarIconUrl  = wp_strip_all_tags( $this->calendarIconUrl );
+		if ( $this->dateFormat && ! in_array( $this->dateFormat, array(	'mdy', 'dmy', 'dmy_dash', 'dmy_dot', 'ymd_slash', 'ymd_dash', 'ymd_dot' ) ) ) {
 			$this->dateFormat = 'mdy';
 		}
-
 	}
-
 }
 
 GF_Fields::register( new GF_Field_Date() );

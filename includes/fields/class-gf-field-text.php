@@ -64,14 +64,108 @@ class GF_Field_Text extends GF_Field {
 		$tabindex              = $this->get_tabindex();
 		$disabled_text         = $is_form_editor ? 'disabled="disabled"' : '';
 		$placeholder_attribute = $this->get_field_placeholder_attribute();
+		$required_attribute    = $this->isRequired ? 'aria-required="true"' : '';
+		$invalid_attribute     = $this->failed_validation ? 'aria-invalid="true"' : 'aria-invalid="false"';
 
-		$input = "<input name='input_{$id}' id='{$field_id}' type='{$html_input_type}' value='{$value}' class='{$class}' {$max_length} {$tabindex} {$logic_event} {$placeholder_attribute} {$disabled_text}/>";
+		$input = "<input name='input_{$id}' id='{$field_id}' type='{$html_input_type}' value='{$value}' class='{$class}' {$max_length} {$tabindex} {$logic_event} {$placeholder_attribute} {$required_attribute} {$invalid_attribute} {$disabled_text}/>";
 
 		return sprintf( "<div class='ginput_container ginput_container_text'>%s</div>", $input );
 	}
 
 	public function allow_html() {
 		return in_array( $this->type, array( 'post_custom_field', 'post_tags' ) ) ? true : false;
+	}
+
+	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {
+
+		if ( $format === 'html' ) {
+			$value = $raw_value;
+			if ( $nl2br ) {
+				$value = nl2br( $value );
+			}
+
+			$form_id        = absint( $form['id'] );
+			$allowable_tags = $this->get_allowable_tags( $form_id );
+
+			if ( $allowable_tags === false ) {
+				// The value is unsafe so encode the value.
+				$return = esc_html( $value );
+			} else {
+				// The value contains HTML but the value was sanitized before saving.
+				$return = $value;
+			}
+		} else {
+			$return = $value;
+		}
+
+		return $return;
+	}
+
+	/**
+	 * Format the entry value safe for displaying on the entry list page.
+	 *
+	 * @param string $value The field value.
+	 * @param array $entry The Entry Object currently being processed.
+	 * @param string $field_id The field or input ID currently being processed.
+	 * @param array $columns The properties for the columns being displayed on the entry list page.
+	 * @param array $form The Form Object currently being processed.
+	 *
+	 * @return string
+	 */
+	public function get_value_entry_list( $value, $entry, $field_id, $columns, $form ) {
+
+		if ( is_array( $value ) ) {
+			return '';
+		}
+
+		$form_id = absint( $form['id'] );
+		$allowable_tags = $this->get_allowable_tags( $form_id );
+
+		if ( $allowable_tags === false ) {
+			// The value is unsafe so encode the value.
+			$return = esc_html( $value );
+		} else {
+			// The value contains HTML but the value was sanitized before saving.
+			$return = $value;
+		}
+
+		return $return;
+	}
+
+	/**
+	 * Format the entry value safe for displaying on the entry detail page and for the {all_fields} merge tag.
+	 *
+	 * @param string|array $value The field value.
+	 * @param string $currency The entry currency code.
+	 * @param bool|false $use_text When processing choice based fields should the choice text be returned instead of the value.
+	 * @param string $format The format requested for the location the merge is being used. Possible values: html, text or url.
+	 * @param string $media The location where the value will be displayed. Possible values: screen or email.
+	 *
+	 * @return string
+	 */
+	public function get_value_entry_detail( $value, $currency = '', $use_text = false, $format = 'html', $media = 'screen' ) {
+
+		if ( is_array( $value ) ) {
+			return '';
+		}
+
+		if ( $format === 'html' ) {
+			$value = nl2br( $value );
+
+			$allowable_tags = $this->get_allowable_tags();
+
+			if ( $allowable_tags === false ) {
+				// The value is unsafe so encode the value.
+				$return = esc_html( $value );
+			} else {
+				// The value contains HTML but the value was sanitized before saving.
+				$return = $value;
+			}
+		} else {
+			$return = $value;
+		}
+
+		return $return;
 	}
 }
 

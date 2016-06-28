@@ -255,7 +255,7 @@ if ( ! class_exists( 'GFForms' ) ) {
 			if (showInputSwitches) {
 				html += "<td></td>";
 			}
-			html += "<td><strong>Field</strong></td><td><strong>" + <?php echo json_encode( esc_html__( 'Custom Sub-Label', 'gravityforms' ) ); ?> + "</strong></td></tr>";
+			html += "<td><strong><?php esc_html_e( 'Field', 'gravityforms' );?></strong></td><td><strong>" + <?php echo json_encode( esc_html__( 'Custom Sub-Label', 'gravityforms' ) ); ?> + "</strong></td></tr>";
 			for (var i = 0; i < field["inputs"].length; i++) {
 				input = field["inputs"][i];
 				id = input.id;
@@ -440,7 +440,7 @@ if ( ! class_exists( 'GFForms' ) ) {
 				switch (field["type"]) {
 					case "page" :
 						if (i == last_page_break + 1 || i == form["fields"].length - 1)
-							error = <?php echo json_encode( esc_html__( 'Your form currently has one ore more pages without any fields in it. Blank pages are a result of Page Breaks that are positioned as the first or last field in the form or right after to each other. Please adjust your Page Breaks and try again.', 'gravityforms' ) ); ?>;
+							error = <?php echo json_encode( esc_html__( 'Your form currently has one or more pages without any fields in it. Blank pages are a result of Page Breaks that are positioned as the first or last field in the form or right after each other. Please adjust your Page Breaks and try again.', 'gravityforms' ) ); ?>;
 
 						last_page_break = i;
 						break;
@@ -666,6 +666,8 @@ if ( ! class_exists( 'GFForms' ) ) {
 				break;
 			case "date" :
 				field.inputs = GetDateFieldInputs(field);
+				field.dateType = 'datepicker';
+				field.calendarIconType = 'none';
 				if (!field.label)
 					field.label = <?php echo json_encode( esc_html__( 'Date', 'gravityforms' ) ); ?>;
 				break;
@@ -730,7 +732,7 @@ if ( ! class_exists( 'GFForms' ) ) {
 				field.inputs = null;
 				field["displayOnly"] = true;
 
-				field.label = <?php echo json_encode( esc_html__( 'Captcha', 'gravityforms' ) ); ?>;
+				field.label = <?php echo json_encode( esc_html__( 'CAPTCHA', 'gravityforms' ) ); ?>;
 
 				break;
 			case "calculation" :
@@ -961,7 +963,9 @@ if ( ! class_exists( 'GFForms' ) ) {
 			<?php
 			$publickey = get_option( 'rg_gforms_captcha_public_key' );
 			$privatekey = get_option( 'rg_gforms_captcha_private_key' );
-			if ( class_exists( 'ReallySimpleCaptcha' ) && ( empty( $publickey ) || empty( $privatekey ) ) ){
+			$site_key = get_option( 'rg_gforms_captcha_site_key' );
+			$secret_key = get_option( 'rg_gforms_captcha_secret_key' );
+			if ( class_exists( 'ReallySimpleCaptcha' ) && ( ( empty( $publickey ) || empty( $privatekey ) ) && ( empty( $site_key ) || empty( $secret_key ) ) ) ){
 				?>
 			field.captchaType = "simple_captcha";
 			<?php
@@ -1031,6 +1035,7 @@ if ( ! class_exists( 'GFForms' ) ) {
 			jQuery('#gform_adding_field_spinner').remove();
 			return;
 		}
+
 
 		if (gf_vars["currentlyAddingField"] == true)
 			return;
@@ -1113,7 +1118,6 @@ if ( ! class_exists( 'GFForms' ) ) {
 
 		field["inputType"] = type;
 		SetDefaultValues(field);
-
 		var mysack = new sack("<?php echo admin_url( 'admin-ajax.php' )?>");
 		mysack.execute = 1;
 		mysack.method = 'POST';
@@ -1150,7 +1154,7 @@ if ( ! class_exists( 'GFForms' ) ) {
 
 			str += "<li class='field-choice-row' data-input_type='" + inputType + "' data-index='" + i + "'>";
 			str += "<i class='fa fa-sort field-choice-handle'></i> ";
-			str += "<input type='" + type + "' class='gfield_choice_" + type + "' name='choice_selected' id='" + inputType + "_choice_selected_" + i + "' " + checked + " onclick=\"SetFieldChoice('" + inputType + "', " + i + ");\" /> ";
+			str += "<input type='" + type + "' class='gfield_choice_" + type + "' name='choice_selected' id='" + inputType + "_choice_selected_" + i + "' " + checked + " onclick=\"SetFieldChoice('" + inputType + "', " + i + ");\" onkeypress=\"SetFieldChoice('" + inputType + "', " + i + ");\" /> ";
 			str += "<input type='text' id='" + inputType + "_choice_text_" + i + "' value=\"" + field.choices[i].text.replace(/"/g, "&quot;") + "\" class='field-choice-input field-choice-text' />";
 			str += "<input type='text' id='" + inputType + "_choice_value_" + i + "' value=\"" + value.replace(/"/g, "&quot;") + "\" class='field-choice-input field-choice-value' />";
 			str += "<input type='text' id='" + inputType + "_choice_price_" + i + "' value=\"" + price.replace(/"/g, "&quot;") + "\" class='field-choice-input field-choice-price' />";
@@ -1160,11 +1164,11 @@ if ( ! class_exists( 'GFForms' ) ) {
 
 			str += gform.applyFilters('gform_append_field_choice_option', '', field, i);
 
-			str += "<a class='gf_insert_field_choice' onclick=\"InsertFieldChoice(" + (i + 1) + ");\"><i class='gficon-add'></i></a>";
+			str += "<a class='gf_insert_field_choice' onclick=\"InsertFieldChoice(" + (i + 1) + ");\" onkeypress=\"InsertFieldChoice(" + (i + 1) + ");\"><i class='gficon-add'></i></a>";
 
 
 			if (field.choices.length > 1)
-				str += "<a class='gf_delete_field_choice' onclick=\"DeleteFieldChoice(" + i + ");\"><i class='gficon-subtract'></i></a>";
+				str += "<a class='gf_delete_field_choice' onclick=\"DeleteFieldChoice(" + i + ");\" onkeypress=\"DeleteFieldChoice(" + i + ");\"><i class='gficon-subtract'></i></a>";
 
 			str += "</li>";
 

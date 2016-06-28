@@ -2,7 +2,7 @@
 var __gf_timeout_handle;
 
 gform.addAction( 'gform_input_change', function( elem, formId, fieldId ) {
-	var dependentFieldIds = rgars( gf_form_conditional_logic, [ formId, 'fields', fieldId ].join( '/' ) );
+	var dependentFieldIds = rgars( gf_form_conditional_logic, [ formId, 'fields', gformExtractFieldId( fieldId ) ].join( '/' ) );
 	if( dependentFieldIds ) {
 		gf_apply_rules( formId, dependentFieldIds );
 	}
@@ -74,88 +74,121 @@ function gf_get_field_action(formId, conditionalLogic){
 	return action;
 }
 
-function gf_is_match(formId, rule){
+function gf_is_match( formId, rule ) {
 
-	var isMatch = false;
-	var inputs = jQuery("#input_" + formId + "_" + rule["fieldId"] + " input");
-	var fieldValue;
-	if(inputs.length > 0){
-		//handling checkboxes/radio
+    var $               = jQuery,
+        inputId         = rule['fieldId'],
+        fieldId         = gformExtractFieldId( inputId ),
+        inputIndex      = gformExtractInputIndex( inputId ),
+        isInputSpecific = inputIndex !== false;
 
-		for(var i=0; i< inputs.length; i++){
-			fieldValue = gf_get_value(jQuery(inputs[i]).val());
+    if( isInputSpecific ) {
+        $inputs = $( '#input_{0}_{1}_{2}'.format( formId, fieldId, inputIndex ) );
+    } else {
+        $inputs = $( 'input[id^="input_{0}_{1}"], input[id^="choice_{0}_{1}"], select#input_{0}_{1}, textarea#input_{0}_{1}'.format( formId, rule.fieldId ) );
+    }
 
-			//find specific checkbox/radio item. Skip if this is not the specific item and the operator is not one that targets a range of values (i.e. greater than and less than)
-			var isRangeOperator = jQuery.inArray(rule["operator"], ["<", ">", "contains", "starts_with", "ends_with"]) >= 0;
-			if(fieldValue != rule["value"] && !isRangeOperator) {
-				continue;
-			}
-
-			//blank value if item isn't checked
-			if(!jQuery(inputs[i]).is(":checked")) {
-				fieldValue = "";
-			}
-			else if (fieldValue == "gf_other_choice"){
-				//get the value from the associated text box
-				fieldValue = jQuery("#input_" + formId + "_" + rule["fieldId"] + "_other").val();
-			}
-
-			if(gf_matches_operation(fieldValue, rule["value"], rule["operator"]))
-				isMatch = true;
-		}
-	}
-	else{
-		//handling all other fields (non-checkboxes)
-		var val = jQuery("#input_" + formId + "_" + rule["fieldId"]).val();
-
-		//transform regular value into array to support multi-select (which returns an array of selected items)
-		var values = (val instanceof Array) ? val : [val];
-
-		var matchCount = 0;
-
-		var fieldNumberFormat = window['gf_global'] && gf_global.number_formats && gf_global.number_formats[formId] && gf_global.number_formats[formId][rule["fieldId"]] ? gf_global.number_formats[formId][rule["fieldId"]] : false;
-
-		for(var i=0; i < values.length; i++){
-
-			//fields with pipes in the value will use the label for conditional logic comparison
-			var hasLabel = values[i] ? values[i].indexOf("|") >= 0 : true;
-
-			fieldValue = gf_get_value(values[i]);
-
-			var decimalSeparator = ".";
-			if( fieldNumberFormat && !hasLabel){
-
-				if( fieldNumberFormat == "currency" )
-					decimalSeparator = gformGetDecimalSeparator('currency');
-				else if( fieldNumberFormat == "decimal_comma")
-					decimalSeparator = ",";
-				else if( fieldNumberFormat == "decimal_dot")
-					decimalSeparator = ".";
-
-				//transform to a decimal dot number
-				fieldValue = gformCleanNumber( fieldValue, '', '', decimalSeparator);
-
-				//now transform to number specified by locale
-				//if(window['gf_number_format'] && window['gf_number_format'] == "decimal_comma")
-				//	fieldValue = gformFormatNumber(fieldValue, -1, ",", ".");
-
-				if( ! fieldValue )
-					fieldValue = 0;
-
-				fieldValue = fieldValue.toString();
-			}
-
-
-
-			if(gf_matches_operation(fieldValue, rule["value"], rule["operator"])){
-				matchCount++;
-			}
-		}
-		//If operator is Is Not, none of the value can match
-		isMatch = rule["operator"] == "isnot" ? matchCount == values.length : matchCount > 0;
-	}
+    var isCheckable = $.inArray( $inputs.attr( 'type' ), [ 'checkbox', 'radio' ] ) !== -1,
+        isMatch     = isCheckable ? gf_is_match_checkable( $inputs, rule, formId, fieldId ) : gf_is_match_default( $inputs.eq( 0 ), rule, formId, fieldId );
 
 	return gform.applyFilters( 'gform_is_value_match', isMatch, formId, rule );
+}
+
+function gf_is_match_checkable( $inputs, rule, formId, fieldId ) {
+
+    var isMatch = false;
+
+    $inputs.each( function() {
+
+        var $input           = jQuery( this ),
+            fieldValue       = gf_get_value( $input.val() ),
+            isRangeOperator  = jQuery.inArray( rule.operator, [ '<', '>' ] ) !== -1,
+            isStringOperator = jQuery.inArray( rule.operator, [ 'contains', 'starts_with', 'ends_with' ] ) !== -1;
+
+        // if we are looking for a specific value and this is not it, skip
+        if( fieldValue != rule.value && ! isRangeOperator && ! isStringOperator ) {
+            return; // continue
+        }
+
+        // force an empty value for unchecked items
+        if( ! $input.is( ':checked' ) ) {
+            fieldValue = '';
+        }
+        // if the 'other' choice is selected, get the value from the 'other' text input
+        else if ( fieldValue == 'gf_other_choice' ) {
+            fieldValue = $( '#input_{0}_{1}_other'.format( formId, fieldId ) ).val();
+        }
+
+        if( gf_matches_operation( fieldValue, rule.value, rule.operator ) ) {
+            isMatch = true;
+            return false; // break
+        }
+
+    } );
+
+    return isMatch;
+}
+
+function gf_is_match_default( $input, rule, formId, fieldId ) {
+
+    var val        = $input.val(),
+        values     = ( val instanceof Array ) ? val : [ val ], // transform regular value into array to support multi-select (which returns an array of selected items)
+        matchCount = 0;
+
+    for( var i = 0; i < values.length; i++ ) {
+
+        // fields with pipes in the value will use the label for conditional logic comparison
+        var hasLabel = values[i] ? values[i].indexOf( '|' ) >= 0 : true;
+
+        fieldValue = gf_get_value( values[i] );
+
+        if( gf_get_field_number_format( rule.fieldId, formId ) && ! hasLabel ) {
+            fieldValue = gf_format_number( fieldValue, gf_get_field_number_format( rule.fieldId, formId ) );
+        }
+
+        if( gf_matches_operation( fieldValue, rule.value, rule.operator ) ) {
+            matchCount++;
+        }
+
+    }
+
+    // if operator is 'isnot', none of the values can match
+    var isMatch = rule.operator == 'isnot' ? matchCount == values.length : matchCount > 0;
+
+    return isMatch;
+}
+
+function gf_get_field_number_format( fieldId, formId ) {
+    return window['gf_global'] && gf_global.number_formats && gf_global.number_formats[ formId ] && gf_global.number_formats[ formId ][ fieldId ] ? gf_global.number_formats[ formId ][ fieldId ] : false;
+}
+
+function gf_format_number( value, fieldNumberFormat ) {
+
+    decimalSeparator = '.';
+
+    if( fieldNumberFormat == 'currency' ) {
+        decimalSeparator = gformGetDecimalSeparator( 'currency' );
+    } else if( fieldNumberFormat == 'decimal_comma' ) {
+        decimalSeparator = ',';
+    } else if( fieldNumberFormat == 'decimal_dot' ) {
+        decimalSeparator = '.';
+    }
+
+    // transform to a decimal dot number
+    value = gformCleanNumber( value, '', '', decimalSeparator );
+
+    // now transform to number specified by locale
+    if( window['gf_number_format'] && window['gf_number_format'] == 'decimal_comma' ) {
+        value = gformFormatNumber( value, -1, ',', '.' );
+    }
+
+    if( ! value ) {
+        value = 0;
+    }
+
+    number = value.toString();
+
+    return number;
 }
 
 function gf_try_convert_float(text){

@@ -37,7 +37,7 @@ class GF_Field_HiddenProduct extends GF_Field {
 		$is_entry_detail = $this->is_entry_detail();
 		$is_form_editor  = $this->is_form_editor();
 
-		$id          = (int) $this->id;
+		$id = (int) $this->id;
 
 		$product_name = ! is_array( $value ) || empty( $value[ $this->id . '.1' ] ) ? esc_attr( $this->label ) : esc_attr( $value[ $this->id . '.1' ] );
 		$price        = ! is_array( $value ) || empty( $value[ $this->id . '.2' ] ) ? $this->basePrice : esc_attr( $value[ $this->id . '.2' ] );
@@ -54,7 +54,7 @@ class GF_Field_HiddenProduct extends GF_Field {
 		$price = esc_attr( $price );
 
 		$has_quantity_field = sizeof( GFCommon::get_product_fields_by_type( $form, array( 'quantity' ), $this->id ) ) > 0;
-		if ( $has_quantity_field ){
+		if ( $has_quantity_field ) {
 			$this->disableQuantity = true;
 		}
 
@@ -71,7 +71,7 @@ class GF_Field_HiddenProduct extends GF_Field {
 	public function sanitize_settings() {
 		parent::sanitize_settings();
 
-		$price_number = GFCommon::to_number( $this->basePrice );
+		$price_number    = GFCommon::to_number( $this->basePrice );
 		$this->basePrice = GFCommon::to_money( $price_number );
 	}
 

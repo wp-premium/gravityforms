@@ -71,13 +71,15 @@ class GF_Field_Website extends GF_Field {
 		$logic_event = $this->get_conditional_logic_event( 'keyup' );
 
 		$placeholder_attribute = $this->get_field_placeholder_attribute();
+		$required_attribute    = $this->isRequired ? 'aria-required="true"' : '';
+		$invalid_attribute     = $this->failed_validation ? 'aria-invalid="true"' : 'aria-invalid="false"';
 
 		$tabindex = $this->get_tabindex();
 		$value    = esc_attr( $value );
 		$class    = esc_attr( $class );
 
 		return "<div class='ginput_container ginput_container_website'>
-                    <input name='input_{$id}' id='{$field_id}' type='$html_input_type' value='{$value}' class='{$class}' {$max_length} {$tabindex} {$logic_event} {$disabled_text} {$placeholder_attribute}/>
+                    <input name='input_{$id}' id='{$field_id}' type='$html_input_type' value='{$value}' class='{$class}' {$max_length} {$tabindex} {$logic_event} {$disabled_text} {$placeholder_attribute} {$required_attribute} {$invalid_attribute}/>
                 </div>";
 	}
 
@@ -92,9 +94,8 @@ class GF_Field_Website extends GF_Field {
 			$value = '';
 		}
 
-		return $value;
+		return filter_var( $value, FILTER_VALIDATE_URL );
 	}
-
 }
 
 GF_Fields::register( new GF_Field_Website() );
