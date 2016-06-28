@@ -38,8 +38,9 @@ class GF_Field_Phone extends GF_Field {
 	}
 
 	public function validate( $value, $form ) {
-		$regex = '/^\D?(\d{3})\D?\D?(\d{3})\D?(\d{4})$/';
-		if ( $this->phoneFormat == 'standard' && $value !== '' && $value !== 0 && ! preg_match( $regex, $value ) ) {
+		$phone_format = $this->get_phone_format();
+
+		if ( rgar( $phone_format, 'regex' ) && $value !== '' && $value !== 0 && ! preg_match( $phone_format['regex'], $value ) ) {
 			$this->failed_validation = true;
 			if ( ! empty( $this->errorMessage ) ) {
 				$this->validation_message = $this->errorMessage;
@@ -74,15 +75,23 @@ class GF_Field_Phone extends GF_Field {
 		$class_suffix  = $is_entry_detail ? '_admin' : '';
 		$class         = $size . $class_suffix;
 
-		$instruction           = $this->phoneFormat == 'standard' ? esc_html__( 'Phone format:', 'gravityforms' ) . ' (###) ###-####' : '';
-		$instruction_div       = $this->failed_validation && ! empty( $instruction ) ? "<div class='instruction validation_message'>$instruction</div>" : '';
+		$instruction_div = '';
+		if ( $this->failed_validation ) {
+			$phone_format = $this->get_phone_format();
+			if ( rgar( $phone_format, 'instruction' ) ) {
+				$instruction_div = sprintf( "<div class='instruction validation_message'>%s %s</div>", esc_html__( 'Phone format:', 'gravityforms' ), $phone_format['instruction'] );
+			}
+		}
+
 		$html_input_type       = RGFormsModel::is_html5_enabled() ? 'tel' : 'text';
 		$logic_event           = $this->get_conditional_logic_event( 'keyup' );
 		$placeholder_attribute = $this->get_field_placeholder_attribute();
+		$required_attribute    = $this->isRequired ? 'aria-required="true"' : '';
+		$invalid_attribute     = $this->failed_validation ? 'aria-invalid="true"' : 'aria-invalid="false"';
 
 		$tabindex = $this->get_tabindex();
 
-		return sprintf( "<div class='ginput_container ginput_container_phone'><input name='input_%d' id='%s' type='{$html_input_type}' value='%s' class='%s' {$tabindex} {$logic_event} {$placeholder_attribute} %s/>{$instruction_div}</div>", $id, $field_id, esc_attr( $value ), esc_attr( $class ), $disabled_text );
+		return sprintf( "<div class='ginput_container ginput_container_phone'><input name='input_%d' id='%s' type='{$html_input_type}' value='%s' class='%s' {$tabindex} {$logic_event} {$placeholder_attribute} {$required_attribute} {$invalid_attribute} %s/>{$instruction_div}</div>", $id, $field_id, esc_attr( $value ), esc_attr( $class ), $disabled_text );
 
 	}
 
@@ -110,9 +119,11 @@ class GF_Field_Phone extends GF_Field {
 	}
 
 	public function get_form_inline_script_on_page_render( $form ) {
-		$script = '';
-		if ( $this->phoneFormat == 'standard' ) {
-			$script = "if(!/(android)/i.test(navigator.userAgent)){jQuery('#input_{$form['id']}_{$this->id}').mask('(999) 999-9999').bind('keypress', function(e){if(e.which == 13){jQuery(this).blur();} } );}";
+		$script       = '';
+		$phone_format = $this->get_phone_format();
+
+		if ( rgar( $phone_format, 'mask' ) ) {
+			$script = "if(!/(android)/i.test(navigator.userAgent)){jQuery('#input_{$form['id']}_{$this->id}').mask('{$phone_format['mask']}').bind('keypress', function(e){if(e.which == 13){jQuery(this).blur();} } );}";
 		}
 		return $script;
 	}
@@ -120,9 +131,60 @@ class GF_Field_Phone extends GF_Field {
 	public function sanitize_settings() {
 		parent::sanitize_settings();
 
-		if ( $this->phoneFormat && ! in_array( $this->phoneFormat, array( 'standard', 'international' ) ) ) {
+		if ( ! $this->get_phone_format() ) {
 			$this->phoneFormat = 'standard';
 		}
+	}
+
+	/**
+	 * Get an array of phone formats.
+	 * 
+	 * @param null|int $form_id The ID of the current form or null to use the value from the current fields form_id property.
+	 *
+	 * @return array
+	 */
+	public function get_phone_formats( $form_id = null ) {
+
+		if ( empty( $form_id ) ) {
+			$form_id = $this->form_id;
+		}
+		$form_id = absint( $form_id );
+
+		$phone_formats = array(
+			'standard'      => array(
+				'label'       => '(###) ###-####',
+				'mask'        => '(999) 999-9999',
+				'regex'       => '/^\D?(\d{3})\D?\D?(\d{3})\D?(\d{4})$/',
+				'instruction' => '(###) ###-####',
+			),
+			'international' => array(
+				'label'       => __( 'International', 'gravityforms' ),
+				'mask'        => false,
+				'regex'       => false,
+				'instruction' => false,
+			),
+		);
+
+		/**
+		 * Allow custom phone formats to be defined.
+		 *
+		 * @param array $phone_formats The phone formats.
+		 * @param int $form_id The ID of the current form.
+		 */
+		$phone_formats = apply_filters( 'gform_phone_formats', $phone_formats, $form_id );
+
+		return apply_filters( 'gform_phone_formats_' . $form_id, $phone_formats, $form_id );
+	}
+
+	/**
+	 * Get the properties for the fields selected phone format.
+	 * 
+	 * @return array
+	 */
+	public function get_phone_format() {
+		$phone_formats = $this->get_phone_formats();
+
+		return rgar( $phone_formats, $this->phoneFormat );
 	}
 }
 

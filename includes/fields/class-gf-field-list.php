@@ -36,6 +36,7 @@ class GF_Field_List extends GF_Field {
 		return ! $this->is_form_editor() ? sprintf( 'input_%s_%s_shim', $form['id'], $this->id ) : '';
 	}
 
+	private static $_style_block_printed = false;
 	public function get_field_input( $form, $value = '', $entry = null ) {
 
 		$form_id         = $form['id'];
@@ -58,7 +59,39 @@ class GF_Field_List extends GF_Field {
 		$shim_style  = is_rtl() ? 'position:absolute;left:999em;' : 'position:absolute;left:-999em;';
 		$label_target_shim = sprintf( '<input type=\'text\' id=\'input_%1$s_%2$s_shim\' style=\'%3$s\' onfocus=\'jQuery( "#field_%1$s_%2$s table tr td:first-child input" ).focus();\' />', $form_id, $this->id, $shim_style );
 
-		$list = "<div class='ginput_container ginput_container_list ginput_list'>" .
+		$list = '';
+		if ( ! self::$_style_block_printed ){
+			//This style block needs to be inline so that the list field keeps working even if the option to turn off CSS output is activated
+			$list .= '<style type="text/css">  body .ginput_container_list table.gfield_list tbody tr td.gfield_list_icons img.add_list_item,
+						body .ginput_container_list table.gfield_list tbody tr td.gfield_list_icons img.delete_list_item {
+							background-color: transparent !important;
+							background-position: 0 0;
+							background-size: 16px 16px !important;
+							background-repeat: no-repeat;
+							border: none !important;
+							width: 16px !important;
+							height: 16px !important;
+							vertical-align: middle !important;
+							opacity: 0.5;
+						}
+
+						body .ginput_container_list table.gfield_list tbody tr td.gfield_list_icons img.add_list_item {
+							background-image: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiPjxnIGlkPSJpY29tb29uLWlnbm9yZSI+PC9nPjxwYXRoIGQ9Ik0yNTYgNTEyYy0xNDEuMzc1IDAtMjU2LTExNC42MDktMjU2LTI1NnMxMTQuNjI1LTI1NiAyNTYtMjU2YzE0MS4zOTEgMCAyNTYgMTE0LjYwOSAyNTYgMjU2cy0xMTQuNjA5IDI1Ni0yNTYgMjU2ek0yNTYgNjRjLTEwNi4wMzEgMC0xOTIgODUuOTY5LTE5MiAxOTJzODUuOTY5IDE5MiAxOTIgMTkyYzEwNi4wNDcgMCAxOTItODUuOTY5IDE5Mi0xOTJzLTg1Ljk1My0xOTItMTkyLTE5MnpNMjg4IDM4NGgtNjR2LTk2aC05NnYtNjRoOTZ2LTk2aDY0djk2aDk2djY0aC05NnY5NnoiPjwvcGF0aD48L3N2Zz4=");
+						}
+
+						body .ginput_container_list table.gfield_list tbody tr td.gfield_list_icons img.delete_list_item {
+							background-image: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiPjxnIGlkPSJpY29tb29uLWlnbm9yZSI+PC9nPjxwYXRoIGQ9Ik0yNTYgMGMtMTQxLjM3NSAwLTI1NiAxMTQuNjI1LTI1NiAyNTYgMCAxNDEuMzkxIDExNC42MjUgMjU2IDI1NiAyNTYgMTQxLjM5MSAwIDI1Ni0xMTQuNjA5IDI1Ni0yNTYgMC0xNDEuMzc1LTExNC42MDktMjU2LTI1Ni0yNTZ6TTI1NiA0NDhjLTEwNi4wMzEgMC0xOTItODUuOTY5LTE5Mi0xOTJzODUuOTY5LTE5MiAxOTItMTkyYzEwNi4wNDcgMCAxOTIgODUuOTY5IDE5MiAxOTJzLTg1Ljk1MyAxOTItMTkyIDE5MnpNMTI4IDI4OGgyNTZ2LTY0aC0yNTZ2NjR6Ij48L3BhdGg+PC9zdmc+");
+						}
+
+						body .ginput_container_list table.gfield_list tbody tr td.gfield_list_icons img.add_list_item:hover,
+						body .ginput_container_list table.gfield_list tbody tr td.gfield_list_icons img.delete_list_item:hover {
+							opacity: 1.0;
+						}</style>';
+
+			self::$_style_block_printed = true;
+		}
+
+		$list .= "<div class='ginput_container ginput_container_list ginput_list'>" .
 			$label_target_shim .
 			"<table class='gfield_list gfield_list_container'>";
 
@@ -144,53 +177,10 @@ class GF_Field_List extends GF_Field {
 		}
 
 		$list .= '</tbody>';
-		$list .= $this->maxRows != 1 ? $this->get_svg_image_block() : '';
 		$list .= '</table></div>';
 
 		return $list;
 
-	}
-
-	public function get_svg_image_block() {
-		global $_has_image_block;
-
-		//return image block once per page load
-		if ( ! $_has_image_block ) {
-
-			$_has_image_block = true;
-			return '
-					<style type="text/css">
-
-					/* add SVG background image support for retina devices -------------------------------*/
-
-					img.add_list_item {
-						background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiPjxnIGlkPSJpY29tb29uLWlnbm9yZSI+PC9nPjxwYXRoIGQ9Ik0yNTYgNTEyYy0xNDEuMzc1IDAtMjU2LTExNC42MDktMjU2LTI1NnMxMTQuNjI1LTI1NiAyNTYtMjU2YzE0MS4zOTEgMCAyNTYgMTE0LjYwOSAyNTYgMjU2cy0xMTQuNjA5IDI1Ni0yNTYgMjU2ek0yNTYgNjRjLTEwNi4wMzEgMC0xOTIgODUuOTY5LTE5MiAxOTJzODUuOTY5IDE5MiAxOTIgMTkyYzEwNi4wNDcgMCAxOTItODUuOTY5IDE5Mi0xOTJzLTg1Ljk1My0xOTItMTkyLTE5MnpNMjg4IDM4NGgtNjR2LTk2aC05NnYtNjRoOTZ2LTk2aDY0djk2aDk2djY0aC05NnY5NnoiPjwvcGF0aD48L3N2Zz4=);
-					}
-
-					img.delete_list_item {
-						background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiPjxnIGlkPSJpY29tb29uLWlnbm9yZSI+PC9nPjxwYXRoIGQ9Ik0yNTYgMGMtMTQxLjM3NSAwLTI1NiAxMTQuNjI1LTI1NiAyNTYgMCAxNDEuMzkxIDExNC42MjUgMjU2IDI1NiAyNTYgMTQxLjM5MSAwIDI1Ni0xMTQuNjA5IDI1Ni0yNTYgMC0xNDEuMzc1LTExNC42MDktMjU2LTI1Ni0yNTZ6TTI1NiA0NDhjLTEwNi4wMzEgMC0xOTItODUuOTY5LTE5Mi0xOTJzODUuOTY5LTE5MiAxOTItMTkyYzEwNi4wNDcgMCAxOTIgODUuOTY5IDE5MiAxOTJzLTg1Ljk1MyAxOTItMTkyIDE5MnpNMTI4IDI4OGgyNTZ2LTY0aC0yNTZ2NjR6Ij48L3BhdGg+PC9zdmc+);
-					}
-
-					img.add_list_item,
-					img.delete_list_item {
-						width: 1em;
-						height: 1em;
-						background-size: 1em 1em;
-						opacity: 0.5;
-					}
-
-					img.add_list_item:hover,
-					img.add_list_item:active,
-					img.delete_list_item:hover,
-					img.delete_list_item:active {
-						opacity: 1.0;
-					}
-
-					</style>
-				';
-		}
-
-		return '';
 	}
 
 	public function get_list_input( $has_columns, $column, $value, $form_id ) {
@@ -255,6 +245,13 @@ class GF_Field_List extends GF_Field {
 			$column_index
 		), $input, $input_info, $this, rgar( $column, 'text' ), $value, $form_id );
 
+	}
+
+	public function get_field_label_class(){
+
+		$has_columns = is_array( $this->choices );
+
+		return $has_columns ? 'gfield_label gfield_label_before_complex' : 'gfield_label';
 	}
 
 	public function get_value_submission( $field_values, $get_from_post_global_var = true ) {
@@ -444,7 +441,9 @@ class GF_Field_List extends GF_Field {
 			$value = serialize( $value );
 		}
 
-		return $value;
+		$value_safe = $this->sanitize_entry_value( $value, $form['id'] );
+
+		return $value_safe;
 	}
 
 	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {

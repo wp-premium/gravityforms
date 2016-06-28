@@ -60,7 +60,7 @@ class GF_Field_Post_Image extends GF_Field_Fileupload {
 		if ( $file_info ) {
 			$hidden_class     = ' gform_hidden';
 			$file_label_style = $hidden_style;
-			$preview          = "<span class='ginput_preview'><strong>" . esc_html( $file_info['uploaded_filename'] ) . "</strong> | <a href='javascript:;' onclick='gformDeleteUploadedFile({$form_id}, {$id});'>" . __( 'delete', 'gravityforms' ) . '</a></span>';
+			$preview          = "<span class='ginput_preview'><strong>" . esc_html( $file_info['uploaded_filename'] ) . "</strong> | <a href='javascript:;' onclick='gformDeleteUploadedFile({$form_id}, {$id});' onkeypress='gformDeleteUploadedFile({$form_id}, {$id});'>" . __( 'delete', 'gravityforms' ) . '</a></span>';
 		}
 
 		//in admin, render all meta fields to allow for immediate feedback, but hide the ones not selected
@@ -86,15 +86,16 @@ class GF_Field_Post_Image extends GF_Field_Fileupload {
 	}
 
 	public function get_value_save_entry( $value, $form, $input_name, $lead_id, $lead ) {
-		$form_id           = $form['id'];
-		$url               = $this->get_single_file_value( $form_id, $input_name );
-		$image_title       = isset( $_POST["{$input_name}_1"] ) ? strip_tags( $_POST["{$input_name}_1"] ) : '';
-		$image_caption     = isset( $_POST["{$input_name}_4"] ) ? strip_tags( $_POST["{$input_name}_4"] ) : '';
-		$image_description = isset( $_POST["{$input_name}_7"] ) ? strip_tags( $_POST["{$input_name}_7"] ) : '';
+		$form_id = $form['id'];
+		$url     = $this->get_single_file_value( $form_id, $input_name );
+		$url     = filter_var( $url, FILTER_VALIDATE_URL );
+		$image_title       = isset( $_POST[ "{$input_name}_1" ] ) ? wp_strip_all_tags( $_POST[ "{$input_name}_1" ] ) : '';
+		$image_caption     = isset( $_POST[ "{$input_name}_4" ] ) ? wp_strip_all_tags( $_POST[ "{$input_name}_4" ] ) : '';
+		$image_description = isset( $_POST[ "{$input_name}_7" ] ) ? wp_strip_all_tags( $_POST[ "{$input_name}_7" ] ) : '';
 
-		$value = ! empty( $url ) ? $url . "|:|" . $image_title . "|:|" . $image_caption . "|:|" . $image_description : '';
+		$value = ! empty( $url ) ? $url . '|:|' . $image_title . '|:|' . $image_caption . '|:|' . $image_description : '';
 
-		Return $value;
+		return $value;
 	}
 
 	public function get_value_entry_list( $value, $entry, $field_id, $columns, $form ) {
@@ -108,7 +109,7 @@ class GF_Field_Post_Image extends GF_Field_Fileupload {
 	}
 
 	public function get_value_entry_detail( $value, $currency = '', $use_text = false, $format = 'html', $media = 'screen' ) {
-		$ary         = explode( "|:|", $value );
+		$ary         = explode( '|:|', $value );
 		$url         = count( $ary ) > 0 ? $ary[0] : '';
 		$title       = count( $ary ) > 1 ? $ary[1] : '';
 		$caption     = count( $ary ) > 2 ? $ary[2] : '';
@@ -140,9 +141,9 @@ class GF_Field_Post_Image extends GF_Field_Fileupload {
 
 	public function get_value_submission( $field_values, $get_from_post_global_var = true ) {
 
-		$value[$this->id . '.1'] = $this->get_input_value_submission( 'input_' . $this->id . '_1', $get_from_post_global_var );
-		$value[$this->id . '.4'] = $this->get_input_value_submission( 'input_' . $this->id . '_4', $get_from_post_global_var );
-		$value[$this->id . '.7'] = $this->get_input_value_submission( 'input_' . $this->id . '_7', $get_from_post_global_var );
+		$value[ $this->id . '.1' ] = $this->get_input_value_submission( 'input_' . $this->id . '_1', $get_from_post_global_var );
+		$value[ $this->id . '.4' ] = $this->get_input_value_submission( 'input_' . $this->id . '_4', $get_from_post_global_var );
+		$value[ $this->id . '.7' ] = $this->get_input_value_submission( 'input_' . $this->id . '_7', $get_from_post_global_var );
 
 		return $value;
 	}
@@ -163,7 +164,6 @@ class GF_Field_Post_Image extends GF_Field_Fileupload {
 				return str_replace( ' ', '%20', $url );
 		}
 	}
-
 }
 
 GF_Fields::register( new GF_Field_Post_Image() );

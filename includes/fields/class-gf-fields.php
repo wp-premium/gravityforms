@@ -47,10 +47,12 @@ class GF_Fields {
 	 * @return GF_Field
 	 */
 	public static function get( $field_type ) {
-		return self::get_instance($field_type);
+		return self::get_instance( $field_type );
 	}
 
 	/**
+	 * Return all the registered field types.
+	 *
 	 * @return GF_Field[]
 	 */
 	public static function get_all() {
@@ -58,14 +60,22 @@ class GF_Fields {
 	}
 
 	/**
-	 * @param $properties
+	 * Creates a Field object from an array of field properties.
+	 *
+	 * @param array|GF_Field $properties
 	 *
 	 * @return GF_Field | bool
 	 */
 	public static function create( $properties ) {
-		$type = isset($properties['type']) ? $properties['type'] : '';
-		$type = empty( $properties['inputType'] ) ? $type : $properties['inputType'];
-		if ( empty($type) || ! isset( self::$_fields[ $type ] ) ) {
+		if ( $properties instanceof GF_Field ) {
+			$type = $properties->type;
+			$type = empty( $properties->inputType ) ? $type : $properties->inputType;
+		} else {
+			$type = isset( $properties['type'] ) ? $properties['type'] : '';
+			$type = empty( $properties['inputType'] ) ? $type : $properties['inputType'];
+		}
+
+		if ( empty( $type ) || ! isset( self::$_fields[ $type ] ) ) {
 			return new GF_Field( $properties );
 		}
 		$class      = self::$_fields[ $type ];

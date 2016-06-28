@@ -242,6 +242,34 @@ class GF_Field_Radio extends GF_Field {
 
 		return $is_csv ? $value : GFCommon::selection_display( $value, $this, rgar( $entry, 'currency' ), $use_text );
 	}
+
+	/**
+	 * Strip scripts and some HTML tags.
+	 *
+	 * @param string $value The field value to be processed.
+	 * @param int $form_id The ID of the form currently being processed.
+	 *
+	 * @return string
+	 */
+	public function sanitize_entry_value( $value, $form_id ) {
+
+		if ( is_array( $value ) ) {
+			return '';
+		}
+
+		$allowable_tags = $this->get_allowable_tags( $form_id );
+
+		if ( $allowable_tags !== true ) {
+			$value = strip_tags( $value, $allowable_tags );
+		}
+
+		$allowed_protocols = wp_allowed_protocols();
+		$value             = wp_kses_no_null( $value, array( 'slash_zero' => 'keep' ) );
+		$value             = wp_kses_hook( $value, 'post', $allowed_protocols );
+		$value             = wp_kses_split( $value, 'post', $allowed_protocols );
+
+		return $value;
+	}
 }
 
 GF_Fields::register( new GF_Field_Radio() );

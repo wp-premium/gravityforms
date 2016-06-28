@@ -30,15 +30,17 @@ class GF_Field_Hidden extends GF_Field {
 		$is_entry_detail = $this->is_entry_detail();
 		$is_form_editor  = $this->is_form_editor();
 
-		$id          = (int) $this->id;
-		$field_id    = $is_entry_detail || $is_form_editor || $form_id == 0 ? "input_$id" : 'input_' . $form_id . "_$id";
+		$id       = (int) $this->id;
+		$field_id = $is_entry_detail || $is_form_editor || $form_id == 0 ? "input_$id" : 'input_' . $form_id . "_$id";
 
-		$disabled_text         = $is_form_editor ? 'disabled="disabled"' : '';
+		$disabled_text = $is_form_editor ? 'disabled="disabled"' : '';
 
-		$field_type      = $is_entry_detail || $is_form_editor ? 'text' : 'hidden';
-		$class_attribute = $is_entry_detail || $is_form_editor ? '' : "class='gform_hidden'";
+		$field_type         = $is_entry_detail || $is_form_editor ? 'text' : 'hidden';
+		$class_attribute    = $is_entry_detail || $is_form_editor ? '' : "class='gform_hidden'";
+		$required_attribute = $this->isRequired ? 'aria-required="true"' : '';
+		$invalid_attribute  = $this->failed_validation ? 'aria-invalid="true"' : 'aria-invalid="false"';
 
-		return sprintf( "<input name='input_%d' id='%s' type='$field_type' {$class_attribute} value='%s' %s/>", $id, $field_id, esc_attr( $value ), $disabled_text );
+		return sprintf( "<input name='input_%d' id='%s' type='$field_type' {$class_attribute} {$required_attribute} {$invalid_attribute} value='%s' %s/>", $id, $field_id, esc_attr( $value ), $disabled_text );
 	}
 
 	public function get_field_content( $value, $force_frontend_label, $form ) {

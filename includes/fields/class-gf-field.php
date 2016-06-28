@@ -7,14 +7,20 @@ if ( ! class_exists( 'GFForms' ) ) {
 /**
  * Class GF_Field
  *
- * Note to third party developers:
- * GF_Field is still in a state of flux at the moment so we don’t recommend that you start using it just yet as a base for new fields in production environments.
- * Once it’s stable we’ll provide documentation and instructions on how to use it for your own projects.
- *
+ * This class provides the base functionality for developers when creating new fields for Gravity Forms. It facilitates the following:
+ *  Adding a button for the field to the form editor
+ *  Defining the field title to be used in the form editor
+ *  Defining which settings should be present when editing the field
+ *  Registering the field as compatible with conditional logic
+ *  Outputting field scripts to the form editor and front-end
+ *  Defining the field appearance on the front-end, in the form editor and on the entry detail page
+ *  Validating the field during submission
+ *  Saving the entry value
+ *  Defining how the entry value is displayed when merge tags are processed, on the entries list and entry detail pages
+ *  Defining how the entry value should be formatted when used in csv exports and by framework based add-ons
  */
 class GF_Field extends stdClass implements ArrayAccess {
 
-	// Suppress deprecation until all the add-ons have been updated
 	const SUPPRESS_DEPRECATION_NOTICE = true;
 
 	private static $deprecation_notice_fired = false;
@@ -30,16 +36,23 @@ class GF_Field extends stdClass implements ArrayAccess {
 		}
 	}
 
-	/*
-	 * Fires the deprecation notice only once per page
+	/**
+	 * Fires the deprecation notice only once per page. Not fired during AJAX requests.
+	 *
+	 * @param string $offset The array key being accessed.
 	 */
 	private function maybe_fire_array_access_deprecation_notice( $offset ) {
+
 		if ( self::SUPPRESS_DEPRECATION_NOTICE ) {
 			return;
 		};
 
+		if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
+			return;
+		}
+
 		if ( ! self::$deprecation_notice_fired ) {
-			_deprecated_function( 'Array access to the field object is now deprecated. Further notices will be suppressed. Offset: ' . $offset, '1.9', 'the object operator e.g. $field->' . $offset );
+			_deprecated_function( "Array access to the field object is now deprecated. Further notices will be suppressed. \$field['" . $offset . "']", '2.0', 'the object operator e.g. $field->' . $offset );
 			self::$deprecation_notice_fired = true;
 		}
 	}
@@ -211,12 +224,16 @@ class GF_Field extends stdClass implements ArrayAccess {
 		$description = $this->get_description( $this->description, 'gfield_description' );
 		if ( $this->is_description_above( $form ) ) {
 			$clear         = $is_admin ? "<div class='gf_clear'></div>" : '';
-			$field_content = sprintf( "%s<label class='gfield_label' $for_attribute >%s%s</label>%s{FIELD}%s$clear", $admin_buttons, esc_html( $field_label ), $required_div, $description, $validation_message );
+			$field_content = sprintf( "%s<label class='%s' $for_attribute >%s%s</label>%s{FIELD}%s$clear", $admin_buttons, esc_attr( $this->get_field_label_class() ), esc_html( $field_label ), $required_div, $description, $validation_message );
 		} else {
-			$field_content = sprintf( "%s<label class='gfield_label' $for_attribute >%s%s</label>{FIELD}%s%s", $admin_buttons, esc_html( $field_label ), $required_div, $description, $validation_message );
+			$field_content = sprintf( "%s<label class='%s' $for_attribute >%s%s</label>{FIELD}%s%s", $admin_buttons, esc_attr( $this->get_field_label_class() ), esc_html( $field_label ), $required_div, $description, $validation_message );
 		}
 
 		return $field_content;
+	}
+
+	public function get_field_label_class(){
+		return 'gfield_label';
 	}
 
 
@@ -314,7 +331,7 @@ class GF_Field extends stdClass implements ArrayAccess {
 		if ( is_array( $inputs ) ) {
 			$value = array();
 			foreach ( $inputs as $input ) {
-				$value[ strval( $input['id'] ) ] = $this->get_input_value_submission( 'input_' . str_replace( '.', '_', strval( $input['id'] ) ), RGForms::get( 'name', $input ), $field_values, $get_from_post_global_var );;
+				$value[ strval( $input['id'] ) ] = $this->get_input_value_submission( 'input_' . str_replace( '.', '_', strval( $input['id'] ) ), RGForms::get( 'name', $input ), $field_values, $get_from_post_global_var );
 			}
 		} else {
 			$value = $this->get_input_value_submission( 'input_' . $this->id, $this->inputName, $field_values, $get_from_post_global_var );
@@ -360,30 +377,31 @@ class GF_Field extends stdClass implements ArrayAccess {
 	}
 
 	/**
-	 * Format the value before it is saved to the Entry Object.
+	 * Sanitize and format the value before it is saved to the Entry Object.
 	 *
-	 * @param array|string $value The value to be saved.
+	 * @param string $value The value to be saved.
 	 * @param array $form The Form Object currently being processed.
 	 * @param string $input_name The input name used when accessing the $_POST.
 	 * @param int $lead_id The ID of the Entry currently being processed.
 	 * @param array $lead The Entry Object currently being processed.
 	 *
-	 * @return array|string
+	 * @return array|string The safe value.
 	 */
 	public function get_value_save_entry( $value, $form, $input_name, $lead_id, $lead ) {
 
-		// only sanitize non-array based values
-		if ( ! is_array( $value ) ) {
-
-			$value = $this->sanitize_entry_value( $value, $form['id'] );
-
+		if ( is_array( $value ) ) {
+			_doing_it_wrong( __METHOD__, 'Override this method to handle array values', '2.0' );
+			return $value;
 		}
+
+		$value = $this->sanitize_entry_value( $value, $form['id'] );
 
 		return $value;
 	}
 
 	/**
 	 * Format the entry value for when the field/input merge tag is processed. Not called for the {all_fields} merge tag.
+	 * Return a value that is safe for the context specified by $format.
 	 *
 	 * @param string|array $value The field value. Depending on the location the merge tag is being used the following functions may have already been applied to the value: esc_html, nl2br, and urlencode.
 	 * @param string $input_id The field or input ID from the merge tag currently being processed.
@@ -399,11 +417,45 @@ class GF_Field extends stdClass implements ArrayAccess {
 	 * @return string
 	 */
 	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {
-		return $value;
+
+		if ( $format === 'html' ) {
+			$form_id = absint( $form['id'] );
+			$allowable_tags = $this->get_allowable_tags( $form_id );
+
+			if ( $allowable_tags === false ) {
+				// The value is unsafe so encode the value.
+				if ( is_array( $value ) ) {
+					foreach ( $value as &$v ) {
+						$v = esc_html( $v );
+					}
+					$return = $value;
+				} else {
+					$return = esc_html( $value );
+				}
+			} else {
+				// The value contains HTML but the value was sanitized before saving.
+				$return = $raw_value;
+			}
+
+			if ( $nl2br ) {
+				if ( is_array( $return ) ) {
+					foreach ( $return as &$r ) {
+						$r = nl2br( $r );
+					}
+				} else {
+					$return = nl2br( $return );
+				}
+			}
+		} else {
+			$return = $value;
+		}
+
+		return $return;
 	}
 
 	/**
 	 * Format the entry value for display on the entries list page.
+	 * Return a value that's safe to display on the page.
 	 *
 	 * @param string|array $value The field value.
 	 * @param array $entry The Entry Object currently being processed.
@@ -414,11 +466,22 @@ class GF_Field extends stdClass implements ArrayAccess {
 	 * @return string
 	 */
 	public function get_value_entry_list( $value, $entry, $field_id, $columns, $form ) {
-		return esc_html( $value );
+		$allowable_tags = $this->get_allowable_tags( $form['id'] );
+
+		if ( $allowable_tags === false ) {
+			// The value is unsafe so encode the value.
+			$return = esc_html( $value );
+		} else {
+			// The value contains HTML but the value was sanitized before saving.
+			$return = $value;
+		}
+
+		return $return;
 	}
 
 	/**
 	 * Format the entry value for display on the entry detail page and for the {all_fields} merge tag.
+	 * Return a value that's safe to display for the context of the given $format.
 	 *
 	 * @param string|array $value The field value.
 	 * @param string $currency The entry currency code.
@@ -430,12 +493,28 @@ class GF_Field extends stdClass implements ArrayAccess {
 	 */
 	public function get_value_entry_detail( $value, $currency = '', $use_text = false, $format = 'html', $media = 'screen' ) {
 
-		if ( ! is_array( $value ) && $format == 'html' ) {
-			$value = esc_html( $value );
-			$value = nl2br( $value );
+		if ( is_array( $value ) ) {
+			_doing_it_wrong( __METHOD__, 'Override this method to handle array values', '2.0' );
+			return $value;
 		}
 
-		return $value;
+		if ( $format === 'html' ) {
+			$value = nl2br( $value );
+
+			$allowable_tags = $this->get_allowable_tags();
+
+			if ( $allowable_tags === false ) {
+				// The value is unsafe so encode the value.
+				$return = esc_html( $value );
+			} else {
+				// The value contains HTML but the value was sanitized before saving.
+				$return = $value;
+			}
+		} else {
+			$return = $value;
+		}
+
+		return $return;
 	}
 
 	/**
@@ -477,7 +556,7 @@ class GF_Field extends stdClass implements ArrayAccess {
 				break;
 
 			case 'click' :
-				return "onclick='gf_apply_rules(" . $this->formId . ',' . GFCommon::json_encode( $this->conditionalLogicFields ) . ");'";
+				return "onclick='gf_apply_rules(" . $this->formId . ',' . GFCommon::json_encode( $this->conditionalLogicFields ) . ");' onkeypress='gf_apply_rules(" . $this->formId . ',' . GFCommon::json_encode( $this->conditionalLogicFields ) . ");'";
 				break;
 
 			case 'change' :
@@ -638,10 +717,11 @@ class GF_Field extends stdClass implements ArrayAccess {
 			foreach ( $field_groups as &$group ) {
 				if ( $group['name'] == $new_button['group'] ) {
 					$group['fields'][] = array(
-						'class'     => 'button',
-						'value'     => $new_button['text'],
-						'data-type' => $this->type,
-						'onclick'   => "StartAddField('{$this->type}');",
+						'class'      => 'button',
+						'value'      => $new_button['text'],
+						'data-type'  => $this->type,
+						'onclick'    => "StartAddField('{$this->type}');",
+						'onkeypress' => "StartAddField('{$this->type}');",
 					);
 					break;
 				}
@@ -666,7 +746,7 @@ class GF_Field extends stdClass implements ArrayAccess {
 			'shipping',
 			'creditcard'
 		);
-		$duplicate_field_link = ! in_array( $this->type, $duplicate_disabled ) ? "<a class='field_duplicate_icon' id='gfield_duplicate_{$this->id}' title='" . esc_attr__( 'click to duplicate this field', 'gravityforms' ) . "' href='#' onclick='StartDuplicateField(this); return false;'><i class='fa fa-files-o fa-lg'></i></a>" : '';
+		$duplicate_field_link = ! in_array( $this->type, $duplicate_disabled ) ? "<a class='field_duplicate_icon' id='gfield_duplicate_{$this->id}' title='" . esc_attr__( 'click to duplicate this field', 'gravityforms' ) . "' href='#' onclick='StartDuplicateField(this); return false;' onkeypress='StartDuplicateField(this); return false;'><i class='fa fa-files-o fa-lg'></i></a>" : '';
 
 		/**
 		 * This filter allows for modification of the form field duplicate link. This will change the link for all fields
@@ -675,7 +755,7 @@ class GF_Field extends stdClass implements ArrayAccess {
 		 */
 		$duplicate_field_link = apply_filters( 'gform_duplicate_field_link', $duplicate_field_link );
 
-		$delete_field_link = "<a class='field_delete_icon' id='gfield_delete_{$this->id}' title='" . esc_attr__( 'click to delete this field', 'gravityforms' ) . "' href='#' onclick='StartDeleteField(this); return false;'><i class='fa fa-times fa-lg'></i></a>";
+		$delete_field_link = "<a class='field_delete_icon' id='gfield_delete_{$this->id}' title='" . esc_attr__( 'click to delete this field', 'gravityforms' ) . "' href='#' onclick='StartDeleteField(this); return false;' onkeypress='StartDeleteField(this); return false;'><i class='fa fa-times fa-lg'></i></a>";
 
 		/**
 		 * This filter allows for modification of a form field delete link. This will change the link for all fields
@@ -828,10 +908,9 @@ class GF_Field extends stdClass implements ArrayAccess {
 	}
 
 	/**
-	 * Override this method to implement the appropriate sanitization specific to the field type before the value is saved.
+	 * Fields should override this method to implement the appropriate sanitization specific to the field type before the value is saved.
 	 *
-	 * This base method provides a generic sanitization similar to wp_kses but values are not encoded.
-	 * Scripts are stripped out leaving tags allowed by the gform_allowable_tags filter.
+	 * This base method will only strip HTML tags if the field or the gform_allowable_tags filter allows HTML.
 	 *
 	 * @param string $value The field value to be processed.
 	 * @param int $form_id The ID of the form currently being processed.
@@ -844,33 +923,28 @@ class GF_Field extends stdClass implements ArrayAccess {
 			return '';
 		}
 
-		/**
-		 * Provisional filter - may be subject to change or removal.
-		 *
-		 * @param bool
-		 * @param int $form_id
-		 * @para GF_Field $this
-		 */
-		$sanitize = apply_filters( 'gform_sanitize_entry_value', true, $form_id, $this );
-		if ( ! $sanitize ) {
-			return $value;
+		$allowable_tags = $this->get_allowable_tags( $form_id );
+
+		if ( $allowable_tags === true ) {
+
+			// HTML is expected. Output will not be encoded so the value will stripped of scripts and some tags and encoded.
+			$return = wp_kses_post( $value );
+
+		} elseif ( $allowable_tags === false ) {
+
+			// HTML is not expected. Output will be encoded.
+			$return = $value;
+
+		} else {
+
+			// Some HTML is expected. Output will not be encoded so the value will stripped of scripts and some tags and encoded.
+			$value = wp_kses_post( $value );
+
+			// Strip all tags except those allowed by the gform_allowable_tags filter.
+			$return = strip_tags( $value, $allowable_tags );
 		}
 
-		//allow HTML for certain field types
-		$allow_html = $this->allow_html();
-
-		$allowable_tags = gf_apply_filters( array( 'gform_allowable_tags', $form_id ), $allow_html, $this, $form_id );
-
-		if ( $allowable_tags !== true ) {
-			$value = strip_tags( $value, $allowable_tags );
-		}
-
-		$allowed_protocols = wp_allowed_protocols();
-		$value = wp_kses_no_null( $value, array( 'slash_zero' => 'keep' ) );
-		$value = wp_kses_hook( $value, 'post', $allowed_protocols );
-		$value = wp_kses_split( $value, 'post', $allowed_protocols );
-
-		return $value;
+		return $return;
 	}
 
 	/**
@@ -886,10 +960,9 @@ class GF_Field extends stdClass implements ArrayAccess {
 		$this->type   = wp_strip_all_tags( $this->type );
 		$this->formId = absint( $this->formId );
 
-		$allowed_tags      = wp_kses_allowed_html( 'post' );
-		$this->label       = wp_kses( $this->label, $allowed_tags );
-		$this->adminLabel  = wp_kses( $this->adminLabel, $allowed_tags );
-		$this->description = wp_kses( $this->description, $allowed_tags );
+		$this->label       = $this->maybe_wp_kses( $this->label );
+		$this->adminLabel  = $this->maybe_wp_kses( $this->adminLabel );
+		$this->description = $this->maybe_wp_kses( $this->description );
 
 		$this->isRequired = (bool) $this->isRequired;
 
@@ -939,29 +1012,29 @@ class GF_Field extends stdClass implements ArrayAccess {
 		$this->noDuplicates = (bool) $this->noDuplicates;
 
 		if ( $this->defaultValue ) {
-			$this->defaultValue = wp_kses( $this->defaultValue, $allowed_tags );
+			$this->defaultValue = $this->maybe_wp_kses( $this->defaultValue );
 		}
 
 		if ( is_array( $this->inputs ) ) {
 			foreach ( $this->inputs as &$input ) {
-				if ( isset ( $input['id'] ) ) {
+				if ( isset( $input['id'] ) ) {
 					$input['id'] = wp_strip_all_tags( $input['id'] );
 				}
-				if ( isset ( $input['customLabel'] ) ) {
-					$input['customLabel'] = wp_kses( $input['customLabel'], $allowed_tags );
+				if ( isset( $input['customLabel'] ) ) {
+					$input['customLabel'] = $this->maybe_wp_kses( $input['customLabel'] );
 				}
-				if ( isset ( $input['label'] ) ) {
-					$input['label'] = wp_kses( $input['label'], $allowed_tags );
+				if ( isset( $input['label'] ) ) {
+					$input['label'] = $this->maybe_wp_kses( $input['label'] );
 				}
-				if ( isset ( $input['name'] ) ) {
+				if ( isset( $input['name'] ) ) {
 					$input['name'] = wp_strip_all_tags( $input['name'] );
 				}
 
-				if ( isset ( $input['placeholder'] ) ) {
+				if ( isset( $input['placeholder'] ) ) {
 					$input['placeholder'] = sanitize_text_field( $input['placeholder'] );
 				}
 
-				if ( isset ( $input['defaultValue'] ) ) {
+				if ( isset( $input['defaultValue'] ) ) {
 					$input['defaultValue'] = wp_strip_all_tags( $input['defaultValue'] );
 				}
 			}
@@ -989,23 +1062,26 @@ class GF_Field extends stdClass implements ArrayAccess {
 			return $choices;
 		}
 
-		$allowed_tags = wp_kses_allowed_html( 'post' );
 		foreach ( $choices as &$choice ) {
-			if ( isset ( $choice['isSelected'] ) ) {
+			if ( isset( $choice['isSelected'] ) ) {
 				$choice['isSelected'] = (bool) $choice['isSelected'];
 			}
 
-			if ( isset ( $choice['price'] ) && ! empty( $choice['price'] ) ) {
+			if ( isset( $choice['price'] ) && ! empty( $choice['price'] ) ) {
 				$price_number    = GFCommon::to_number( $choice['price'] );
 				$choice['price'] = GFCommon::to_money( $price_number );
 			}
 
-			if ( isset ( $choice['text'] ) ) {
-				$choice['text'] = wp_kses( $choice['text'], $allowed_tags );
+			if ( isset( $choice['text'] ) ) {
+				$choice['text'] = $this->maybe_wp_kses( $choice['text'] );
 			}
 
-			if ( isset ( $choice['value'] ) ) {
-				$choice['value'] = wp_kses( $choice['value'], $allowed_tags );
+			if ( isset( $choice['value'] ) ) {
+				// Strip scripts but don't encode
+				$allowed_protocols = wp_allowed_protocols();
+				$choice['value']   = wp_kses_no_null( $choice['value'], array( 'slash_zero' => 'keep' ) );
+				$choice['value']   = wp_kses_hook( $choice['value'], 'post', $allowed_protocols );
+				$choice['value']   = wp_kses_split( $choice['value'], 'post', $allowed_protocols );
 			}
 		}
 
@@ -1027,5 +1103,51 @@ class GF_Field extends stdClass implements ArrayAccess {
 		$logic = GFFormsModel::sanitize_conditional_logic( $logic );
 
 		return $logic;
+	}
+
+	/**
+	 * Applies wp_kses() if the current user doesn't have the unfiltered_html capability
+	 *
+	 * @param $html
+	 * @param string $allowed_html
+	 * @param array $allowed_protocols
+	 *
+	 * @return string
+	 */
+	public function maybe_wp_kses( $html, $allowed_html = 'post', $allowed_protocols = array() ) {
+		return GFCommon::maybe_wp_kses( $html, $allowed_html, $allowed_protocols );
+	}
+
+	/**
+	 * Returns the allowed HTML tags for the field value.
+	 *
+	 * FALSE disallows HTML tags.
+	 * TRUE allows all HTML tags allowed by wp_kses_post().
+	 * A string of HTML tags allowed. e.g. '<p><a><strong><em>'
+	 *
+	 * @param null|int $form_id If not specified the form_id field property is used.
+	 *
+	 * @return mixed|void TRUE, FALSE or a string of tags.
+	 */
+	public function get_allowable_tags( $form_id = null ) {
+		if ( empty( $form_id ) ) {
+			$form_id = $this->form_id;
+		}
+		$form_id    = absint( $form_id );
+		$allow_html = $this->allow_html();
+
+		/**
+		 * Allows the list of tags allowed in the field value to be modified.
+		 * Return FALSE to disallow HTML tags.
+		 * Return TRUE to allow all HTML tags allowed by wp_kses_post().
+		 * Return a string of HTML tags allowed. e.g. '<p><a><strong><em>'
+		 *
+		 * @param bool $allow_html
+		 * @param GF_Field $this
+		 * @param int $form_id
+		 */
+		$allowable_tags = apply_filters( 'gform_allowable_tags', $allow_html, $this, $form_id );
+		$allowable_tags = apply_filters( "gform_allowable_tags_{$form_id}", $allowable_tags, $this, $form_id );
+		return $allowable_tags;
 	}
 }

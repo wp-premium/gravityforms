@@ -108,7 +108,7 @@ class GF_Field_Checkbox extends GF_Field {
 		} else {
 			$value = '';
 
-			if ( $this->is_checkbox_checked( $field_id, $columns[ $field_id ]['label'], $entry ) ) {
+			if ( ! rgblank( $this->is_checkbox_checked( $field_id, $columns[ $field_id ]['label'], $entry ) ) ) {
 				$value = "<i class='fa fa-check gf_valid'></i>";
 			}
 		}
@@ -122,7 +122,7 @@ class GF_Field_Checkbox extends GF_Field {
 			$items = '';
 
 			foreach ( $value as $key => $item ) {
-				if ( ! empty( $item ) ) {
+				if ( ! rgblank( $item ) ) {
 					switch ( $format ) {
 						case 'text' :
 							$items .= GFCommon::selection_display( $item, $this, $currency, $use_text ) . ', ';
@@ -187,13 +187,14 @@ class GF_Field_Checkbox extends GF_Field {
 
 	public function get_value_save_entry( $value, $form, $input_name, $lead_id, $lead ) {
 
-		if ( empty( $value ) ){
+		if ( rgblank( $value ) ) {
 			return '';
-		} elseif ( is_array( $value ) ){
+		} elseif ( is_array( $value ) ) {
 			foreach ( $value as &$v ) {
-				if ( ! is_string( $v ) ) {
+				if ( is_array( $v ) ) {
 					$v = '';
 				}
+				$v = $this->sanitize_entry_value( $v, $form['id'] );
 			}
 			return implode( ',', $value );
 		} else {
@@ -347,6 +348,33 @@ class GF_Field_Checkbox extends GF_Field {
 		return false;
 	}
 
+	/**
+	 * Strip scripts and some HTML tags.
+	 *
+	 * @param string $value The field value to be processed.
+	 * @param int $form_id The ID of the form currently being processed.
+	 *
+	 * @return string
+	 */
+	public function sanitize_entry_value( $value, $form_id ) {
+
+		if ( is_array( $value ) ) {
+			return '';
+		}
+
+		$allowable_tags = $this->get_allowable_tags( $form_id );
+
+		if ( $allowable_tags !== true ) {
+			$value = strip_tags( $value, $allowable_tags );
+		}
+
+		$allowed_protocols = wp_allowed_protocols();
+		$value             = wp_kses_no_null( $value, array( 'slash_zero' => 'keep' ) );
+		$value             = wp_kses_hook( $value, 'post', $allowed_protocols );
+		$value             = wp_kses_split( $value, 'post', $allowed_protocols );
+
+		return $value;
+	}
 }
 
 GF_Fields::register( new GF_Field_Checkbox() );

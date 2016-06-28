@@ -80,9 +80,9 @@ class GF_Field_CreditCard extends GF_Field {
 		if ( $get_from_post_global_var ) {
 			$value[ $this->id . '.1' ] = $this->get_input_value_submission( 'input_' . $this->id . '_1', rgar( $this->inputs[0], 'name' ), $field_values, true );
 			$value[ $this->id . '.2' ] = $this->get_input_value_submission( 'input_' . $this->id . '_2', rgar( $this->inputs[1], 'name' ), $field_values, true );
-			$value[ $this->id . '.3' ] = $this->get_input_value_submission( 'input_' . $this->id . '_3', rgar( $this->inputs[2], 'name' ), $field_values, true );
-			$value[ $this->id . '.4' ] = $this->get_input_value_submission( 'input_' . $this->id . '_4', rgar( $this->inputs[3], 'name' ), $field_values, true );
-			$value[ $this->id . '.5' ] = $this->get_input_value_submission( 'input_' . $this->id . '_5', rgar( $this->inputs[4], 'name' ), $field_values, true );
+			$value[ $this->id . '.3' ] = $this->get_input_value_submission( 'input_' . $this->id . '_3', rgar( $this->inputs[3], 'name' ), $field_values, true );
+			$value[ $this->id . '.4' ] = $this->get_input_value_submission( 'input_' . $this->id . '_4', rgar( $this->inputs[4], 'name' ), $field_values, true );
+			$value[ $this->id . '.5' ] = $this->get_input_value_submission( 'input_' . $this->id . '_5', rgar( $this->inputs[5], 'name' ), $field_values, true );
 		} else {
 			$value = $this->get_input_value_submission( 'input_' . $this->id, $this->inputName, $field_values, $get_from_post_global_var );
 		}
@@ -162,11 +162,11 @@ class GF_Field_CreditCard extends GF_Field {
 		if ( is_array( $payment_methods ) ) {
 			foreach ( $payment_methods as $payment_method ) {
 				$checked = rgpost( 'gform_payment_method' ) == $payment_method['key'] ? "checked='checked'" : '';
-				$payment_options .= "<div class='gform_payment_option gform_payment_{$payment_method['key']}'><input type='radio' name='gform_payment_method' value='{$payment_method['key']}' id='gform_payment_method_{$payment_method['key']}' onclick='gformToggleCreditCard();' {$checked}/> {$payment_method['label']}</div>";
+				$payment_options .= "<div class='gform_payment_option gform_payment_{$payment_method['key']}'><input type='radio' name='gform_payment_method' value='{$payment_method['key']}' id='gform_payment_method_{$payment_method['key']}' onclick='gformToggleCreditCard();' onkeypress='gformToggleCreditCard();' {$checked}/> {$payment_method['label']}</div>";
 			}
 		}
 		$checked           = rgpost( 'gform_payment_method' ) == 'creditcard' || rgempty( 'gform_payment_method' ) ? "checked='checked'" : '';
-		$card_radio_button = empty( $payment_options ) ? '' : "<input type='radio' name='gform_payment_method' id='gform_payment_method_creditcard' value='creditcard' onclick='gformToggleCreditCard();'   {$checked}/>";
+		$card_radio_button = empty( $payment_options ) ? '' : "<input type='radio' name='gform_payment_method' id='gform_payment_method_creditcard' value='creditcard' onclick='gformToggleCreditCard();' onkeypress='gformToggleCreditCard();' {$checked}/>";
 		$card_icons        = "{$payment_options}<div class='gform_card_icon_container gform_card_icon_{$card_style}'>{$card_radio_button}{$card_icons}</div>";
 
 		//card number fields
@@ -273,6 +273,10 @@ class GF_Field_CreditCard extends GF_Field {
 
 		return "<div class='ginput_complex{$class_suffix} ginput_container ginput_container_creditcard' id='{$field_id}'>" . $card_field . $expiration_field . $security_field . $card_name_field . ' </div>';
 
+	}
+
+	public function get_field_label_class(){
+		return 'gfield_label gfield_label_before_complex';
 	}
 
 	private function get_expiration_months( $selected_month, $placeholder ) {
@@ -382,9 +386,32 @@ class GF_Field_CreditCard extends GF_Field {
 			$value = '';
 		}
 
-		return $value;
+		return $this->sanitize_entry_value( $value, $form['id'] );
 	}
 
+	/**
+	 * GF1.8 and earlier used 5 inputs (1 input for the expiration date); GF1.9 changed to 6 inputs (the expiration month and year now separate); upgrade those fields still using the older configuration.
+	 */
+	public function maybe_upgrade_inputs() {
+		$inputs = $this->inputs;
+		if ( count( $inputs ) == 5 && $inputs[1]['id'] != $this->id . '.2_month' ) {
+
+			$new_inputs = array(
+				array(
+					'id'           => $this->id . '.2_month',
+					'label'        => esc_html__( 'Expiration Month', 'gravityforms' ),
+					'defaultLabel' => $inputs[1]['label']
+				),
+				array(
+					'id'    => $this->id . '.2_year',
+					'label' => esc_html__( 'Expiration Year', 'gravityforms' ),
+				)
+			);
+
+			array_splice( $inputs, 1, 1, $new_inputs );
+			$this->inputs = $inputs;
+		}
+	}
 }
 
 GF_Fields::register( new GF_Field_CreditCard() );
