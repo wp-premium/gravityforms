@@ -484,8 +484,8 @@ function InitializeForm(form){
     }
     TogglePostTitleTemplate(true);
 
-    jQuery("#gform_last_page_settings").bind("click keypress", function(){FieldClick(this);});
-    jQuery("#gform_pagination").bind("click keypress", function(){FieldClick(this);});
+    jQuery("#gform_last_page_settings").bind("click", function(){FieldClick(this);});
+    jQuery("#gform_pagination").bind("click", function(){FieldClick(this);});
     jQuery(".gfield").bind("click", function(){FieldClick(this);});
 
     var paginationType = form["pagination"] && form["pagination"]["type"] ? form["pagination"]["type"] : "percentage";

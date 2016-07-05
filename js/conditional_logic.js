@@ -85,7 +85,7 @@ function gf_is_match( formId, rule ) {
     if( isInputSpecific ) {
         $inputs = $( '#input_{0}_{1}_{2}'.format( formId, fieldId, inputIndex ) );
     } else {
-        $inputs = $( 'input[id^="input_{0}_{1}"], input[id^="choice_{0}_{1}"], select#input_{0}_{1}, textarea#input_{0}_{1}'.format( formId, rule.fieldId ) );
+        $inputs = $( 'input[id="input_{0}_{1}"], input[id^="input_{0}_{1}_"], input[id^="choice_{0}_{1}"], select#input_{0}_{1}, textarea#input_{0}_{1}'.format( formId, rule.fieldId ) );
     }
 
     var isCheckable = $.inArray( $inputs.attr( 'type' ), [ 'checkbox', 'radio' ] ) !== -1,

@@ -4,7 +4,7 @@
 readyclass.css
 Gravity Forms Ready Class Pre-Set Helper Styles
 http://www.gravityforms.com
-updated: June 22, 2016 12:28 PM GMT-5
+updated: June 27, 2016 2:28 PM GMT-5
 
 Gravity Forms is a Rocketgenius project
 copyright 2008-2016 Rocketgenius Inc.
@@ -105,7 +105,7 @@ to no.
     }
 
     .gform_wrapper .top_label li.gfield.gf_right_half {
-        padding-right: 16;
+        padding-right: 16px;
     }
 
     .gform_wrapper .top_label li.gfield.gf_left_half .ginput_container:not(.gfield_time_hour):not(.gfield_time_minute):not(.gfield_time_ampm),
@@ -341,7 +341,7 @@ to no.
         clear: both;
     }
 
-    /* list columns */
+    /* horizontal list columns - displayed inline */
 
     .gform_wrapper .top_label li ul.gfield_checkbox,
     .gform_wrapper .top_label li ul.gfield_radio {
@@ -350,7 +350,7 @@ to no.
 
     .gform_wrapper ul:not(.top_label) li ul.gfield_checkbox,
     .gform_wrapper ul:not(.top_label)li ul.gfield_radio {
-        width: calc(64% + 16px);
+        width: calc(70% + 16px);
     }
 
     .gform_wrapper li.gfield.gf_list_2col ul.gfield_checkbox li,
@@ -383,10 +383,11 @@ to no.
     .gform_wrapper li.gfield.gf_list_3col ul.gfield_radio li label,
     .gform_wrapper li.gfield.gf_list_4col ul.gfield_checkbox li label,
     .gform_wrapper li.gfield.gf_list_4col ul.gfield_radio li label {
-        max-width: 85%;
+        max-width: 75%;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        vertical-align: middle;
     }
 
     .gform_wrapper li.gfield.gf_list_4col ul.gfield_checkbox li,
@@ -432,6 +433,70 @@ to no.
         margin: 0 0 10px 0;
     }
 
+    /* vertical list columns - using CSS columns */
+
+    .gform_wrapper li.gf_list_2col_vertical .ginput_container_checkbox ul.gfield_checkbox,
+    .gform_wrapper li.gf_list_3col_vertical .ginput_container_checkbox ul.gfield_checkbox,
+    .gform_wrapper li.gf_list_4col_vertical .ginput_container_checkbox ul.gfield_checkbox,
+    .gform_wrapper li.gf_list_5col_vertical .ginput_container_checkbox ul.gfield_checkbox {
+        -webkit-column-gap: 16px;
+        -moz-column-gap: 16px;
+        column-gap: 16px;
+    }
+
+    .gform_wrapper ul:not(.top_label) li.gf_list_2col_vertical label.gfield_label,
+    .gform_wrapper ul:not(.top_label) li.gf_list_2col_vertical label.gfield_label,
+    .gform_wrapper ul:not(.top_label) li.gf_list_2col_vertical label.gfield_label,
+    .gform_wrapper ul:not(.top_label) li.gf_list_2col_vertical label.gfield_label {
+        margin: 0 0 10px 0;
+    }
+
+    .gform_wrapper li.gf_list_2col_vertical .ginput_container_checkbox ul.gfield_checkbox,
+    .gform_wrapper li.gf_list_2col_vertical .ginput_container_radio ul.gfield_radio {
+        width: calc(100% - 16px);
+        -webkit-column-count: 2;
+        -moz-column-count: 2;
+        column-count: 2;
+    }
+
+    .gform_wrapper li.gf_list_3col_vertical .ginput_container_checkbox ul.gfield_checkbox,
+    .gform_wrapper li.gf_list_3col_vertical .ginput_container_radio ul.gfield_radio {
+        width: calc(100% - 8px);
+        -webkit-column-count: 3;
+        -moz-column-count: 3;
+        column-count: 3;
+    }
+
+    .gform_wrapper li.gf_list_4col_vertical .ginput_container_checkbox ul.gfield_checkbox,
+    .gform_wrapper li.gf_list_4col_vertical .ginput_container_radio ul.gfield_radio {
+        width: calc(100% - 8px);
+        -webkit-column-count: 4;
+        -moz-column-count: 4;
+        column-count: 4;
+    }
+
+    .gform_wrapper li.gf_list_5col_vertical .ginput_container_checkbox ul.gfield_checkbox,
+    .gform_wrapper li.gf_list_5col_vertical .ginput_container_radio ul.gfield_radio {
+        width: calc(100% - 8px);
+        -webkit-column-count: 5;
+        -moz-column-count: 5;
+        column-count: 5;
+    }
+
+    .gform_wrapper li.gf_list_2col_vertical .ginput_container_checkbox ul.gfield_checkbox li label,
+    .gform_wrapper li.gf_list_2col_vertical .ginput_container_radio ul.gfield_radio li label,
+    .gform_wrapper li.gf_list_3col_vertical .ginput_container_checkbox ul.gfield_checkbox li label,
+    .gform_wrapper li.gf_list_3col_vertical .ginput_container_radio ul.gfield_radio li label,
+    .gform_wrapper li.gf_list_4col_vertical .ginput_container_checkbox ul.gfield_checkbox li label,
+    .gform_wrapper li.gf_list_4col_vertical .ginput_container_radio ul.gfield_radio li label,
+    .gform_wrapper li.gf_list_5col_vertical .ginput_container_checkbox ul.gfield_checkbox li label,
+    .gform_wrapper li.gf_list_5col_vertical .ginput_container_radio ul.gfield_radio li label {
+        max-width: 75%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
     .gform_wrapper li.gfield.gf_list_height_25 ul.gfield_checkbox li,
     .gform_wrapper li.gfield.gf_list_height_25 ul.gfield_radio li {
         height: 25px;
@@ -471,8 +536,8 @@ to no.
         display: inline-block;
     }
 
-    html:not("dir=rtl") .gform_wrapper li.gf_list_inline ul.gfield_checkbox li,
-    html:not("dir=rtl") .gform_wrapper li.gf_list_inline ul.gfield_radio li {
+    html:not[dir="rtl"] .gform_wrapper li.gf_list_inline ul.gfield_checkbox li,
+    html:not[dir="rtl"] .gform_wrapper li.gf_list_inline ul.gfield_radio li {
         padding-right: 16px !important;
     }
 
@@ -866,13 +931,4 @@ to no.
 
 /* end media query */
 
-}
-
-/* resets the select field elements to the default browser styling for those who prefer that */
-
-body .gform_wrapper form.gf_reset_select ul li .ginput_container select {
-    -webkit-appearance: menulist !important;
-    -moz-appearance: menulist !important;
-    appearance: menulist !important;
-    background-image: none !important;
 }

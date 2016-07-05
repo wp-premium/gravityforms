@@ -61,9 +61,10 @@ class GF_Field_List extends GF_Field {
 
 		$list = '';
 		if ( ! self::$_style_block_printed ){
-			//This style block needs to be inline so that the list field keeps working even if the option to turn off CSS output is activated
-			$list .= '<style type="text/css">  body .ginput_container_list table.gfield_list tbody tr td.gfield_list_icons img.add_list_item,
-						body .ginput_container_list table.gfield_list tbody tr td.gfield_list_icons img.delete_list_item {
+			//This style block needs to be inline so that the list field continues to work even if the option to turn off CSS output is activated
+			$list .= '<style type="text/css">
+						body .ginput_container_list table.gfield_list tbody tr td.gfield_list_icons img.add_list_item[src$="wp-content/plugins/gravityforms/images/blankspace.png"],
+						body .ginput_container_list table.gfield_list tbody tr td.gfield_list_icons img.delete_list_item[src$="wp-content/plugins/gravityforms/images/blankspace.png"] {
 							background-color: transparent !important;
 							background-position: 0 0;
 							background-size: 16px 16px !important;
@@ -75,18 +76,27 @@ class GF_Field_List extends GF_Field {
 							opacity: 0.5;
 						}
 
-						body .ginput_container_list table.gfield_list tbody tr td.gfield_list_icons img.add_list_item {
+						body .ginput_container_list table.gfield_list tbody tr td.gfield_list_icons img.add_list_item,
+						body .ginput_container_list table.gfield_list tbody tr td.gfield_list_icons img.delete_list_item {
+							width: 16px;
+							height: 16px;
+							vertical-align: middle !important;
+							opacity: 0.5;
+						}
+
+						body .ginput_container_list table.gfield_list tbody tr td.gfield_list_icons img.add_list_item[src$="wp-content/plugins/gravityforms/images/blankspace.png"] {
 							background-image: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiPjxnIGlkPSJpY29tb29uLWlnbm9yZSI+PC9nPjxwYXRoIGQ9Ik0yNTYgNTEyYy0xNDEuMzc1IDAtMjU2LTExNC42MDktMjU2LTI1NnMxMTQuNjI1LTI1NiAyNTYtMjU2YzE0MS4zOTEgMCAyNTYgMTE0LjYwOSAyNTYgMjU2cy0xMTQuNjA5IDI1Ni0yNTYgMjU2ek0yNTYgNjRjLTEwNi4wMzEgMC0xOTIgODUuOTY5LTE5MiAxOTJzODUuOTY5IDE5MiAxOTIgMTkyYzEwNi4wNDcgMCAxOTItODUuOTY5IDE5Mi0xOTJzLTg1Ljk1My0xOTItMTkyLTE5MnpNMjg4IDM4NGgtNjR2LTk2aC05NnYtNjRoOTZ2LTk2aDY0djk2aDk2djY0aC05NnY5NnoiPjwvcGF0aD48L3N2Zz4=");
 						}
 
-						body .ginput_container_list table.gfield_list tbody tr td.gfield_list_icons img.delete_list_item {
+						body .ginput_container_list table.gfield_list tbody tr td.gfield_list_icons img.delete_list_item[src$="wp-content/plugins/gravityforms/images/blankspace.png"] {
 							background-image: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiPjxnIGlkPSJpY29tb29uLWlnbm9yZSI+PC9nPjxwYXRoIGQ9Ik0yNTYgMGMtMTQxLjM3NSAwLTI1NiAxMTQuNjI1LTI1NiAyNTYgMCAxNDEuMzkxIDExNC42MjUgMjU2IDI1NiAyNTYgMTQxLjM5MSAwIDI1Ni0xMTQuNjA5IDI1Ni0yNTYgMC0xNDEuMzc1LTExNC42MDktMjU2LTI1Ni0yNTZ6TTI1NiA0NDhjLTEwNi4wMzEgMC0xOTItODUuOTY5LTE5Mi0xOTJzODUuOTY5LTE5MiAxOTItMTkyYzEwNi4wNDcgMCAxOTIgODUuOTY5IDE5MiAxOTJzLTg1Ljk1MyAxOTItMTkyIDE5MnpNMTI4IDI4OGgyNTZ2LTY0aC0yNTZ2NjR6Ij48L3BhdGg+PC9zdmc+");
 						}
 
 						body .ginput_container_list table.gfield_list tbody tr td.gfield_list_icons img.add_list_item:hover,
 						body .ginput_container_list table.gfield_list tbody tr td.gfield_list_icons img.delete_list_item:hover {
 							opacity: 1.0;
-						}</style>';
+						}
+						</style>';
 
 			self::$_style_block_printed = true;
 		}
