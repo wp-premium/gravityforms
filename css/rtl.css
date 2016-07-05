@@ -5,7 +5,7 @@
 rtl.css
 Gravity Forms RTL Language Support
 http://www.gravityforms.com
-updated: June 19, 2016 7:06 PM GMT-5
+updated: June 27, 2016 2:44 PM GMT-5
 
 Gravity Forms is a Rocketgenius project
 copyright 2013-2016 Rocketgenius Inc.
@@ -345,6 +345,10 @@ html[dir="rtl"] .gform_wrapper .gf_invisible {
     left: auto; right: -9999px;
 }
 
+html[dir="rtl"] .gform_wrapper .gf_progressbar_percentage {
+    border-radius: 4px 20px 20px 4px;
+}
+
 /* admin RTL support */
 
 html[dir="rtl"] body.wp-admin  * {
@@ -619,14 +623,14 @@ html[dir="rtl"] .gform_wrapper div.validation_error {
 
 	html[dir="rtl"] .gform_wrapper ul:not(.top_label) .ginput_container:not(.ginput_container_time),
 	html[dir="rtl"] .gform_wrapper ul:not(.top_label) .gfield_description {
-        width: 64%;
-        margin-right: 30%;
+        width: 70%;
+        margin-right: 29%;
         margin-left: 0;
 	}
 
 	html[dir="rtl"] .gform_wrapper ul:not(.top_label) .gfield_description,
 	html[dir="rtl"] .gform_wrapper .ul:not(.top_label) .instruction {
-	    margin-right: 30% !important;
+	    margin-right: 29% !important;
 	    margin-left: 0 !important;
 	}
 
@@ -661,8 +665,8 @@ html[dir="rtl"] .gform_wrapper div.validation_error {
     html[dir="rtl"] .gform_wrapper .left_label li.gfield .gfield_password_strength,
     html[dir="rtl"] .gform_wrapper .right_label li.gfield .gfield_password_strength {
 	    margin-left: 0;
-	    margin-right: 30%;
-	    width: 64%;
+	    margin-right: 29%;
+	    width: 70%;
 	    text-align: center !important;
 	}
 
@@ -715,12 +719,4 @@ body .gform_wrapper.gf_rtl_wrapper.gf_browser_gecko .left_label input[type="file
 body .gform_wrapper.gf_rtl_wrapper.gf_browser_gecko .right_label input[type="file"] {
     width: 55% !important;
     direction: rtl;
-}
-
-/* RTL tweaks for Opera */
-
-html[dir="rtl"] .gform_wrapper.gf_browser_opera input[type="checkbox"],
-body.rtl .gform_wrapper.gf_browser_opera input[type="checkbox"],
-body .gform_wrapper.gf_rtl_wrapper.gf_browser_opera input[type="checkbox"] {
-	margin-top: 6px;
 }

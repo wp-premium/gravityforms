@@ -1024,7 +1024,7 @@ class GFFormDisplay {
 
 			//show progress bar on confirmation
 			if ( $start_at_zero && $has_pages && ! $is_admin && ( $form['confirmation']['type'] == 'message' && $form['pagination']['type'] == 'percentage' ) ) {
-				$progress_confirmation = self::get_progress_bar( $form, $current_page, $confirmation_message );
+				$progress_confirmation = self::get_progress_bar( $form, 0, $confirmation_message );
 				if ( $ajax ) {
 					$progress_confirmation = apply_filters( 'gform_ajax_iframe_content', "<!DOCTYPE html><html><head><meta charset='UTF-8' /></head><body class='GF_AJAX_POSTBACK'>" . $progress_confirmation . '</body></html>' );
 				}
@@ -2740,6 +2740,7 @@ class GFFormDisplay {
 
 	public static function get_progress_bar( $form, $page, $confirmation_message = '' ) {
 
+		$form_id           = $form['id'];
 		$progress_complete = false;
 		$progress_bar      = '';
 		$page_count        = self::get_max_page_number( $form );
@@ -2771,7 +2772,7 @@ class GFFormDisplay {
 
 
 		$progress_bar .= "
-        <div id='gf_progressbar_wrapper_{$form['id']}' class='gf_progressbar_wrapper'>
+        <div id='gf_progressbar_wrapper_{$form_id}' class='gf_progressbar_wrapper'>
             <h3 class='gf_progressbar_title'>";
 		$progress_bar .= ! $progress_complete ? esc_html__( 'Step', 'gravityforms' ) . " {$current_page} " . esc_html__( 'of', 'gravityforms' ) . " {$page_count}{$page_name}" : "{$page_name}";
 		$progress_bar .= "
@@ -2793,8 +2794,8 @@ class GFFormDisplay {
 		 *
 		 * @see   https://www.gravityhelp.com/documentation/article/gform_progress_bar/
 		 */
-		$progress_bar = apply_filters( 'gform_progress_bar',               $progress_bar, $form, $confirmation_message );
-		$progress_bar = apply_filters( "gform_progress_bar_{$form['id']}", $progress_bar, $form, $confirmation_message );
+		$progress_bar = apply_filters( 'gform_progress_bar', $progress_bar, $form, $confirmation_message );
+		$progress_bar = apply_filters( "gform_progress_bar_{$form_id}", $progress_bar, $form, $confirmation_message );
 
 		return $progress_bar;
 	}

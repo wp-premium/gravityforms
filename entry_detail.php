@@ -454,7 +454,7 @@ class GFEntryDetail {
 				var sendTo = jQuery('#notification_override_email').val();
 
 				if (selectedNotifications.length <= 0) {
-					displayMessage(<?php echo json_encode( __( 'You must select at least one type of notification to resend.', 'gravityforms' ) ); ?>, 'error', '#notifications_container');
+					displayMessage(<?php echo json_encode( __( 'You must select at least one type of notification to resend.', 'gravityforms' ) ); ?>, 'error', '#notifications');
 					return;
 				}
 
@@ -470,9 +470,9 @@ class GFEntryDetail {
 					},
 					function (response) {
 						if (response) {
-							displayMessage(response, "error", "#notifications_container");
+							displayMessage(response, "error", "#notifications");
 						} else {
-							displayMessage(<?php echo json_encode( esc_html__( 'Notifications were resent successfully.', 'gravityforms' ) ); ?>, "updated", "#notifications_container" );
+							displayMessage(<?php echo json_encode( esc_html__( 'Notifications were resent successfully.', 'gravityforms' ) ); ?>, "updated", "#notifications" );
 
 							// reset UI
 							jQuery(".gform_notifications").attr( 'checked', false );
