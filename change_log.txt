@@ -1,4 +1,12 @@
 ------------------------------------------------------------------------------------------------------------------
+Version 2.0.2
+    - Fixed an issue with the notifications meta box on the entry detail page not displaying the result messages.
+    - Fixed an issue where the start and end paging fields would close in form editor upon keypress within a setting.
+    - Fixed an issue where the entry search UI doesn't appear in the entry list for users without the gravityforms_edit_forms capability.
+    - Fixed issue where non-input-specific conditional logic would fail on forms where field IDs "overlapped" (i.e. 10 & 100, 9 & 90)
+	- Fixed styling issues.
+
+------------------------------------------------------------------------------------------------------------------
 Version 2.0.1
     - Added the gform_process_template_shortcodes_pre_create_post filter. See https://www.gravityhelp.com/documentation/article/gform_process_template_shortcodes_pre_create_post/
     - Updated reCAPTCHA settings to force user to use reCAPTCHA widget to validate reCAPTCHA keys.

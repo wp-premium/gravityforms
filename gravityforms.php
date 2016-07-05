@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms
 Plugin URI: http://www.gravityforms.com
 Description: Easily create web forms and manage form entries within the WordPress admin.
-Version: 2.0.1
+Version: 2.0.2
 Author: rocketgenius
 Author URI: http://www.rocketgenius.com
 Text Domain: gravityforms
@@ -155,7 +155,7 @@ class GFForms {
 	 * @static
 	 * @var string $version The version number
 	 */
-	public static $version = '2.0.1';
+	public static $version = '2.0.2';
 
 
 	/**
@@ -214,8 +214,9 @@ class GFForms {
 		GFCommon::load_gf_text_domain( 'gravityforms' );
 
 		add_filter( 'gform_logging_supported', array( 'RGForms', 'set_logging_supported' ) );
-		add_action( 'admin_head', array( 'GFForms', 'action_admin_head' ) );
-		add_action( 'wp_head', array( 'GFForms', 'action_admin_head' ) );
+		add_action( 'admin_head', array( 'GFCommon', 'maybe_output_gf_vars' ) );
+		add_action( 'admin_head', array( 'GFForms', 'load_admin_bar_styles' ) );
+		add_action( 'wp_head', array( 'GFForms', 'load_admin_bar_styles' ) );
 
 		self::register_scripts();
 
@@ -4905,11 +4906,16 @@ SET d.value = l.value"
 	 * Outputs the styles for the Forms Toolbar menu.
 	 * Outputs gf vars if required.
 	 *
-	 * @since 2.0
+	 * @since 2.0.1.2
 	 */
-	public static function action_admin_head() {
+	public static function load_admin_bar_styles() {
 
-		if ( ! GFCommon::current_user_can_any( 'gravityforms_edit_forms' ) ) {
+		if ( ! get_option( 'gform_enable_toolbar_menu' ) ) {
+			return;
+		}
+
+		if ( ! GFCommon::current_user_can_any( array( 'gravityforms_edit_forms', 'gravityforms_create_form', 'gravityforms_preview_forms', 'gravityforms_view_entries' ) ) ) {
+			// The current user can't use anything on the menu so bail.
 			return;
 		}
 
@@ -4940,8 +4946,6 @@ SET d.value = l.value"
 			}
 		</style>
 		<?php
-
-		GFCommon::maybe_output_gf_vars();
 
 	}
 }

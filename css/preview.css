@@ -4,7 +4,7 @@
 preview.css
 Gravity Forms Form Preview Styles
 http://www.gravityforms.com
-updated: June 19, 2016 7:24 PM GMT-5
+updated: June 27, 2016 2:34 PM GMT-5
 
 Gravity Forms is a Rocketgenius project
 copyright 2008-2016 Rocketgenius Inc.
@@ -137,12 +137,6 @@ div#preview_form_container.showgrid {
 	color: #000;
 	font-size: 1em;
 	margin: 16px auto;
-}
-
-.gform_wrapper input:not([type='radio']):not([type='checkbox']):not([type='submit']):not([type='button']):not([type='image']),
-.gform_wrapper select,
-.gform_wrapper textarea {
-    background-color: #fff;
 }
 
 .gform_footer input.button,
