@@ -1513,7 +1513,14 @@ class GFFormsModel {
 		// Default field types to delete
 		$field_types = array( 'fileupload', 'post_image' );
 
-		// Allow adding more file types to delete
+		/**
+		 * Allows more files to be deleted
+		 *
+		 * @since 1.9.10
+		 *
+		 * @param array $field_types Field types which contain file uploads
+		 * @param array $form        The Form Object
+		 */
 		$field_types = gf_apply_filters( array( 'gform_field_types_delete_files', $form['id'] ), $field_types, $form );
 
 		$fields = self::get_fields_by_type( $form, $field_types );
@@ -1545,7 +1552,14 @@ class GFFormsModel {
 		// Default field types to delete
 		$field_types = array( 'fileupload', 'post_image' );
 
-		// Allow adding more file types to delete
+		/**
+		 * Allows more files to be deleted
+		 *
+		 * @since 1.9.10
+		 *
+		 * @param array $field_types Field types which contain file uploads
+		 * @param array $form        The Form Object
+		 */
 		$field_types = gf_apply_filters( array( 'gform_field_types_delete_files', $form_id ), $field_types, $form );
 
 
@@ -2653,10 +2667,12 @@ class GFFormsModel {
 					/**
 					 * Allow modification of the delimiter used to parse List field URL parameters.
 					 *
-					 * $delimiter Defaults to '|';
-					 * $field GF_Field object for the current field.
-					 * $name Name of the current dynamic population parameter.
-					 * $field_values Array of values provided for pre-population into the form.
+					 * @since 2.0.0
+					 *
+					 * @param string $delimiter    Defaults to '|';
+					 * @param array  $field        GF_Field object for the current field.
+					 * @param string $name         Name of the current dynamic population parameter.
+					 * @param array  $field_values Array of values provided for pre-population into the form.
 					 */
 					$delimiter = apply_filters( 'gform_list_field_parameter_delimiter', '|', $field, $name, $field_values );
 					$ary_rows = array_merge( $ary_rows, rgexplode( $delimiter, $row, $column_count ) );

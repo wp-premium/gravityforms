@@ -64,7 +64,7 @@ class GF_Field_FileUpload extends GF_Field {
 			/**
 			 * A filter to allow or disallow whitelisting when uploading a file
 			 *
-			 * @param bool To set upload whitelisting to true or false (default is false, which means it is enabled)
+			 * @param bool false To set upload whitelisting to true or false (default is false, which means it is enabled)
 			 */
 			$whitelisting_disabled = apply_filters( 'gform_file_upload_whitelisting_disabled', false );
 
@@ -442,11 +442,13 @@ class GF_Field_FileUpload extends GF_Field {
 
 	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {
 
+		$force_download = $modifier === 'download';
+
 		if ( $this->multipleFiles ) {
 
 			$files = empty( $raw_value ) ? array() : json_decode( $raw_value, true );
 			foreach ( $files as &$file ) {
-				$file = $this->get_download_url( $file );
+				$file = $this->get_download_url( $file, $force_download );
 				$file = str_replace( ' ', '%20', $file );
 				if ( $esc_html ) {
 					$value = esc_html( $value );
@@ -455,7 +457,7 @@ class GF_Field_FileUpload extends GF_Field {
 			$value = $format == 'html' ? join( '<br />', $files ) : join( ', ', $files );
 
 		} else {
-			$value = $this->get_download_url( $value );
+			$value = $this->get_download_url( $value, $force_download );
 			$value = str_replace( ' ', '%20', $value );
 		}
 
@@ -526,25 +528,28 @@ class GF_Field_FileUpload extends GF_Field {
 	 * @since 2.0
 	 *
 	 * @param string $file The complete file URL.
+	 * @param bool $force_download Default: false
 	 *
 	 * @return string
 	 */
-	public function get_download_url( $file ) {
+	public function get_download_url( $file, $force_download = false ) {
 		$download_url = $file;
 
-		$hide_real_download_location = true;
+		$secure_download_location = true;
 
 		/**
-		 * By default the real location of the uploaded file will be hidden and the special URL will be generated with a security token to prevent guessing of other files.
+		 * By default the real location of the uploaded file will be hidden and the download URL will be generated with a security token to prevent guessing or enumeration attacks to discover the location of other files.
 		 *
 		 * Return FALSE to display the real location.
 		 *
-		 * @param bool $hide_real_download_location
+		 * @param bool                $secure_download_location If the secure location should be used.  Defaults to true.
+		 * @param string              $file                     The URL of the file.
+		 * @param GF_Field_FileUpload $this                     The Field
 		 */
-		$hide_real_download_location = apply_filters( 'gform_hide_real_download_location', $hide_real_download_location, $this );
-		$hide_real_download_location = apply_filters( 'gform_hide_real_download_location_' . $this->formId, $hide_real_download_location, $this );
+		$secure_download_location = apply_filters( 'gform_secure_file_download_location', $secure_download_location, $file, $this );
+		$secure_download_location = apply_filters( 'gform_secure_file_download_location_' . $this->formId, $secure_download_location, $file, $this );
 
-		if ( ! $hide_real_download_location ) {
+		if ( ! $secure_download_location ) {
 			return $download_url;
 		}
 
@@ -562,6 +567,9 @@ class GF_Field_FileUpload extends GF_Field {
 				'field-id' => $this->id,
 				'hash' => GFCommon::generate_download_hash( $this->formId, $this->id, $file ),
 			);
+			if ( $force_download ) {
+				$args['dl'] = 1;
+			}
 			$download_url = add_query_arg( $args, $download_url );
 		}
 		return $download_url;

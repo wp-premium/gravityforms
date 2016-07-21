@@ -1650,7 +1650,7 @@ class GFAddOnFeedsTable extends WP_List_Table {
 			$value = call_user_func( $this->_column_value_callback, $item, $column );
 		}
 
-		// adding action links to the first column of the list
+		// Adding action links to the first column of the list
 		$columns = array_keys( $this->_columns );
 		if ( is_array( $columns ) && count( $columns ) > 0 && $columns[0] == $column ) {
 			$value = $this->add_action_links( $item, $column, $value );
@@ -1669,9 +1669,16 @@ class GFAddOnFeedsTable extends WP_List_Table {
 
 	function add_action_links( $item, $column, $value ) {
 
+		/**
+		 * Adds action links to feed items
+		 *
+		 * @param array  $this->_action_links Action links to be filtered.
+		 * @param array  $item                The feed item being filtered.
+		 * @param string $column              The column ID
+		 */
 		$actions = apply_filters( $this->_slug . '_feed_actions', $this->_action_links, $item, $column );
 
-		// replacing _id_ merge variable with actual feed id
+		// Replacing _id_ merge variable with actual feed id
 		foreach ( $actions as $action => &$link ) {
 			$link = str_replace( '_id_', $item['id'], $link );
 		}

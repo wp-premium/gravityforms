@@ -7,7 +7,7 @@ if ( ! class_exists( 'GFForms' ) ) {
 class GFFormDisplay {
 
 	public static $submission = array();
-	private static $init_scripts = array();
+	public static $init_scripts = array();
 
 	const ON_PAGE_RENDER       = 1;
 	const ON_CONDITIONAL_LOGIC = 2;
@@ -1088,8 +1088,10 @@ class GFFormDisplay {
 
 		$input_type = 'submit';
 
+		$do_submit = "jQuery(\"#gform_{$form_id}\").trigger(\"submit\",[true]);";
+
 		if ( ! empty( $target_page_number ) ) {
-			$onclick    = "onclick='jQuery(\"#gform_target_page_number_{$form_id}\").val(\"{$target_page_number}\"); {$onclick} jQuery(\"#gform_{$form_id}\").trigger(\"submit\",[true]); ' onkeypress='jQuery(\"#gform_target_page_number_{$form_id}\").val(\"{$target_page_number}\"); {$onclick} jQuery(\"#gform_{$form_id}\").trigger(\"submit\",[true]); '";
+			$onclick    = "onclick='jQuery(\"#gform_target_page_number_{$form_id}\").val(\"{$target_page_number}\"); {$onclick} {$do_submit} ' onkeypress='if( event.keyCode == 13 ){ jQuery(\"#gform_target_page_number_{$form_id}\").val(\"{$target_page_number}\"); {$onclick} {$do_submit} } '";
 			$input_type = 'button';
 		} else {
 			// prevent multiple form submissions when button is pressed multiple times
@@ -1099,9 +1101,9 @@ class GFFormDisplay {
 				$set_submitting = "window[\"gf_submitting_{$form_id}\"]=true;";
 			}
 
-			$onclick_submit = $button['type'] == 'link' ? "jQuery(\"#gform_{$form_id}\").trigger(\"submit\",[true]);" : '';
+			$onclick_submit = $button['type'] == 'link' ? $do_submit : '';
 
-			$onclick = "onclick='if(window[\"gf_submitting_{$form_id}\"]){return false;}  {$set_submitting} {$onclick} {$onclick_submit}' onkeypress='if(window[\"gf_submitting_{$form_id}\"]){return false;} {$set_submitting} {$onclick} jQuery(\"#gform_{$form_id}\").trigger(\"submit\",[true]);'";
+			$onclick = "onclick='if(window[\"gf_submitting_{$form_id}\"]){return false;}  {$set_submitting} {$onclick} {$onclick_submit}' onkeypress='if( event.keyCode == 13 ){ if(window[\"gf_submitting_{$form_id}\"]){return false;} {$set_submitting} {$onclick} {$do_submit} }'";
 		}
 
 		if ( rgar( $button, 'type' ) == 'text' || rgar( $button, 'type' ) == 'link' || empty( $button['imageUrl'] ) ) {

@@ -15,9 +15,6 @@
 			this.formId = this.getUrlParameter( 'id' );
 			this.nonce  = gaddon_feedorder_strings.nonce;
 
-			console.log( this.addon );
-			console.log( this.getUrlParameter( 'subview' ) );
-
 			/* Enable sorting if feed list is for Add-On. */
 			if ( this.addon == this.getUrlParameter( 'subview' ) && $( '.wp-list-table tbody tr' ).length > 1 ) {		
 				this.enableSorting();
