@@ -4,7 +4,7 @@
 browsers.css
 Gravity Forms Browser-Specific CSS
 http://www.gravityforms.com
-updated: June 27, 2016 2:53 PM GMT-5
+updated: June 30, 2016 2:33 PM GMT-5
 
 Gravity Forms is a Rocketgenius project
 copyright 2008-2016 Rocketgenius Inc.
@@ -151,7 +151,7 @@ to no.
 }
 
 .gform_wrapper.gf_browser_gecko .gfield_time_ampm select {
-    width: 4.5rem !important;
+    min-width: 5rem !important;
 }
 
 .gform_wrapper.gf_browser_gecko ul li:before,

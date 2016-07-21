@@ -253,7 +253,7 @@ if ( ! class_exists( 'GFForms' ) ) {
 		} else {
 			html = "<table class='field_custom_inputs_ui'><tr>";
 			if (showInputSwitches) {
-				html += "<td></td>";
+				html += "<td><strong>" + <?php echo json_encode( esc_html__( 'Show', 'gravityforms' ) ); ?>+ "</strong></td>";
 			}
 			html += "<td><strong><?php esc_html_e( 'Field', 'gravityforms' );?></strong></td><td><strong>" + <?php echo json_encode( esc_html__( 'Custom Sub-Label', 'gravityforms' ) ); ?> + "</strong></td></tr>";
 			for (var i = 0; i < field["inputs"].length; i++) {

@@ -194,6 +194,8 @@ class GFCommon {
 	    /**
 	     * A filter to allow the modification/disabling of parsing certain PHP within Gravity Forms
 	     *
+	     * @since 1.9.2
+	     *
 	     * @param mixed $rules The Rules of what to parse or not to parse
 	     */
 	    $rules = apply_filters( 'gform_upload_root_htaccess_rules', $rules );
@@ -905,13 +907,12 @@ class GFCommon {
 
 				if ( $format == 'html' ) {
 					$text = str_replace(
-						$match[0], '<table width="99%" border="0" cellpadding="1" cellspacing="0" bgcolor="#EAEAEA">
-															   <tr><td>
-																	<table width="100%" border="0" cellpadding="5" cellspacing="0" bgcolor="#FFFFFF">' .
-											$pricing_fields .
-											'</table>
-															   </tr></td>
-														 </table>',
+						$match[0],
+						'<table width="99%" border="0" cellpadding="1" cellspacing="0" bgcolor="#EAEAEA">
+							<tr><td>
+								<table width="100%" border="0" cellpadding="5" cellspacing="0" bgcolor="#FFFFFF">' . $pricing_fields . '</table>
+							</td></tr>
+						</table>',
 						$text
 					);
 				}
@@ -1320,6 +1321,36 @@ class GFCommon {
 
 			default :
 				if ( ! empty( $products['products'] ) ) {
+
+					/**
+					 * Filters the default product label.
+					 *
+					 * @var string Product  The product label string.  Defaults to 'Product'.
+					 * @var int    $form_id The ID of the form being processed.
+					 */
+					$gform_product = gf_apply_filters( array( 'gform_product', $form_id ), esc_html__( 'Product' , 'gravityforms' ), $form_id );
+					/**
+					 * Filters the default quantity label.
+					 *
+					 * @var string Qty      The quantity label string.  Defaults to 'Qty'.
+					 * @var int    $form_id The ID of the form being processed.
+					 */
+					$gform_product_qty = gf_apply_filters( array( 'gform_product_qty', $form_id ), esc_html__( 'Qty' , 'gravityforms' ), $form_id );
+					/**
+					 * Filters the default unit price label.
+					 *
+					 * @var string Unit Price The unit price label string.  Defaults to 'Unit Price'.
+					 * @var int    $form_id   The ID of the form being processed.
+					 */
+					$gform_product_unitprice = gf_apply_filters( array( 'gform_product_unitprice', $form_id ), esc_html__( 'Unit Price' , 'gravityforms' ), $form_id );
+					/**
+					 * Filters the default product price label.
+					 *
+					 * @var string Unit Price The product price label string.  Defaults to 'Price'.
+					 * @var int    $form_id   The ID of the form being processed.
+					 */
+					$gform_product_price = gf_apply_filters( array( 'gform_product_price', $form_id ), esc_html__( 'Price' , 'gravityforms' ), $form_id );
+
 					$field_data = '<tr bgcolor="#EAF2FA">
                             <td colspan="2">
                                 <font style="font-family: sans-serif; font-size:12px;"><strong>' . $order_label . '</strong></font>
@@ -1330,10 +1361,12 @@ class GFCommon {
                             <td>
                                 <table cellspacing="0" width="97%" style="border-left:1px solid #DFDFDF; border-top:1px solid #DFDFDF">
                                 <thead>
-                                    <th style="background-color:#F4F4F4; border-bottom:1px solid #DFDFDF; border-right:1px solid #DFDFDF; padding:7px; font-family: sans-serif; font-size:12px; text-align:left">' . gf_apply_filters( array( 'gform_product', $form_id ), esc_html__( 'Product' , 'gravityforms' ), $form_id ) . '</th>
-                                    <th style="background-color:#F4F4F4; border-bottom:1px solid #DFDFDF; border-right:1px solid #DFDFDF; padding:7px; width:50px; font-family: sans-serif; font-size:12px; text-align:center">' . gf_apply_filters( array( 'gform_product_qty', $form_id ), esc_html__( 'Qty' , 'gravityforms' ), $form_id ) . '</th>
-                                    <th style="background-color:#F4F4F4; border-bottom:1px solid #DFDFDF; border-right:1px solid #DFDFDF; padding:7px; width:155px; font-family: sans-serif; font-size:12px; text-align:left">' . gf_apply_filters( array( 'gform_product_unitprice', $form_id ), esc_html__( 'Unit Price' , 'gravityforms' ), $form_id ) . '</th>
-                                    <th style="background-color:#F4F4F4; border-bottom:1px solid #DFDFDF; border-right:1px solid #DFDFDF; padding:7px; width:155px; font-family: sans-serif; font-size:12px; text-align:left">' . gf_apply_filters( array( 'gform_product_price', $form_id ), esc_html__( 'Price' , 'gravityforms' ), $form_id ) . '</th>
+                                    <tr>
+	                                    <th style="background-color:#F4F4F4; border-bottom:1px solid #DFDFDF; border-right:1px solid #DFDFDF; padding:7px; font-family: sans-serif; font-size:12px; text-align:left">' . $gform_product . '</th>
+	                                    <th style="background-color:#F4F4F4; border-bottom:1px solid #DFDFDF; border-right:1px solid #DFDFDF; padding:7px; width:50px; font-family: sans-serif; font-size:12px; text-align:center">' . $gform_product_qty . '</th>
+	                                    <th style="background-color:#F4F4F4; border-bottom:1px solid #DFDFDF; border-right:1px solid #DFDFDF; padding:7px; width:155px; font-family: sans-serif; font-size:12px; text-align:left">' . $gform_product_unitprice . '</th>
+	                                    <th style="background-color:#F4F4F4; border-bottom:1px solid #DFDFDF; border-right:1px solid #DFDFDF; padding:7px; width:155px; font-family: sans-serif; font-size:12px; text-align:left">' . $gform_product_price . '</th>
+                                    </tr>
                                 </thead>
                                 <tbody>';
 
@@ -1698,7 +1731,7 @@ class GFCommon {
 
 	}
 
-	private static function send_email( $from, $to, $bcc, $reply_to, $subject, $message, $from_name = '', $message_format = 'html', $attachments = '', $entry = false, $notification = false ) {
+	public static function send_email( $from, $to, $bcc, $reply_to, $subject, $message, $from_name = '', $message_format = 'html', $attachments = '', $entry = false, $notification = false ) {
 		
 		global $phpmailer;
 
@@ -2587,10 +2620,11 @@ class GFCommon {
 	public static function form_page_title( $form ){
 		?>
 		<h1>
-			<?php echo esc_html( rgar( $form, 'title' ) ); ?>
-			<span class="gf_admin_page_formid">ID: <?php echo absint( $form['id'] ); ?></span>
+			<span id='gform_settings_page_title' class='gform_settings_page_title' onclick='GF_ShowEditTitle()'><?php echo esc_html( rgar( $form, 'title' ) ); ?></span>
 			<?php GFForms::form_switcher(); ?>
+			<span class="gf_admin_page_formid">ID: <?php echo absint( $form['id'] ); ?></span>
 		</h1>
+		<?php GFForms::edit_form_title( $form ); ?>
 	<?php
 	}
 
@@ -3264,7 +3298,7 @@ class GFCommon {
 			foreach ( $logic['rules'] as $rule ) {
 
 				if ( in_array( $rule['fieldId'], $entry_meta_keys ) ) {
-					$is_value_match = GFFormsModel::is_value_match( rgar( $lead, $rule['fieldId'] ), $rule['value'], $rule['operator'], $rule, $form );
+					$is_value_match = GFFormsModel::is_value_match( rgar( $lead, $rule['fieldId'] ), $rule['value'], $rule['operator'], null, $rule, $form );
 				} else {
 					$source_field   = GFFormsModel::get_field( $form, $rule['fieldId'] );
 					$field_value    = empty( $lead ) ? GFFormsModel::get_field_value( $source_field, array() ) : GFFormsModel::get_lead_field_value( $lead, $source_field );
@@ -3839,6 +3873,22 @@ class GFCommon {
 			update_option( 'gform_sticky_admin_messages', $sticky_messages );
 		} else {
 			self::$dismissible_messages[] = $message;
+		}
+	}
+
+	/**
+	 * Remove a dismissible message from the array of sticky dismissible messages.
+	 *
+	 * @param string $key
+	 *
+	 * @since 2.0.2.3
+	 */
+	public static function remove_dismissible_message( $key ) {
+
+		$sticky_messages = get_option( 'gform_sticky_admin_messages', array() );
+		if ( isset( $sticky_messages[ $key ] ) ) {
+			unset( $sticky_messages[ $key ] );
+			update_option( 'gform_sticky_admin_messages', $sticky_messages );
 		}
 	}
 

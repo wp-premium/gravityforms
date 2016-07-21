@@ -1764,6 +1764,19 @@ class GFFormSettings {
 		}
 		return $unsafe;
 	}
+	
+	public static function save_form_title(){
+
+		check_admin_referer( 'gf_save_title', 'gf_save_title' );
+
+		$form_title = json_decode( rgpost( 'title' ) );
+		$form_id = rgpost( 'formId' );
+
+		$form = GFAPI::get_form( $form_id );
+		$form['title'] = $form_title;
+
+		GFAPI::update_form( $form, $form_id );
+	}
 }
 
 

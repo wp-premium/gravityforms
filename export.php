@@ -643,7 +643,7 @@ class GFExport {
 
 		$time_start         = microtime( true );
 		$max_execution_time = 20; // seconds
-		$page_size = 20;
+		$page_size          = 20;
 
 		$form_id = $form['id'];
 		$fields  = $_POST['export_field'];
@@ -661,14 +661,16 @@ class GFExport {
 			$search_criteria['end_date'] = $end_date;
 		}
 
-		$sorting = array( 'key' => 'date_created', 'direction' => 'DESC', 'type' => 'info' );
+		//$sorting = array( 'key' => 'date_created', 'direction' => 'DESC', 'type' => 'info' );
+		$sorting = array( 'key' => 'id', 'direction' => 'DESC', 'type' => 'info' );
 
 		GFCommon::log_debug( "GFExport::start_export(): Start date: {$start_date}" );
 		GFCommon::log_debug( "GFExport::start_export(): End date: {$end_date}" );
 
 		$form = self::add_default_export_fields( $form );
 
-		$entry_count = GFAPI::count_entries( $form_id, $search_criteria );
+		$total_entry_count = GFAPI::count_entries( $form_id, $search_criteria );
+		$remaining_entry_count = $offset == 0 ? $total_entry_count : $total_entry_count - $offset;
 
 		// Adding BOM marker for UTF-8
 		$lines = '';
@@ -676,7 +678,7 @@ class GFExport {
 		// Set the separator
 		$separator = gf_apply_filters( array( 'gform_export_separator', $form_id ), ',', $form_id );
 
-		$field_rows = self::get_field_row_count( $form, $fields, $entry_count );
+		$field_rows = self::get_field_row_count( $form, $fields, $remaining_entry_count );
 
 		if ( $offset == 0 ) {
 
@@ -708,27 +710,34 @@ class GFExport {
 					}
 				}
 
-				GFCommon::log_debug( "GFExport::start_export(): Lines: {$lines}" );
+				//GFCommon::log_debug( "GFExport::start_export(): Lines: {$lines}" );
 			}
 			$lines = substr( $lines, 0, strlen( $lines ) - 1 ) . "\n";
 
-			if ( $entry_count == 0 ) {
+			if ( $remaining_entry_count == 0 ) {
 				self::write_file( $lines, $export_id );
 			}
 		}
 
 		// Paging through results for memory issues
-		while ( $entry_count > 0 ) {
+		while ( $remaining_entry_count > 0 ) {
 
 			$paging = array(
 				'offset'    => $offset,
 				'page_size' => $page_size,
 			);
-			$leads  = GFAPI::get_entries( $form_id, $search_criteria, $sorting, $paging );
+			$leads = GFAPI::get_entries( $form_id, $search_criteria, $sorting, $paging );
 
 			$leads = gf_apply_filters( array( 'gform_leads_before_export', $form_id ), $leads, $form, $paging );
 
+			GFCommon::log_debug("search: " . print_r($search_criteria, true));
+			GFCommon::log_debug("sort: " . print_r($sorting, true));
+			GFCommon::log_debug("paging: " . print_r($paging, true));
+
 			foreach ( $leads as $lead ) {
+				GFCommon::log_debug( $lead['id'] );
+
+
 				foreach ( $fields as $field_id ) {
 					switch ( $field_id ) {
 						case 'date_created' :
@@ -742,7 +751,7 @@ class GFExport {
 							$value = is_object( $field ) ? $field->get_value_export( $lead, $field_id, false, true ) : rgar( $lead, $field_id );
 							$value = apply_filters( 'gform_export_field_value', $value, $form_id, $field_id, $lead );
 
-							GFCommon::log_debug( "GFExport::start_export(): Value for field ID {$field_id}: {$value}" );
+							//GFCommon::log_debug( "GFExport::start_export(): Value for field ID {$field_id}: {$value}" );
 							break;
 					}
 
@@ -782,13 +791,13 @@ class GFExport {
 				}
 				$lines = substr( $lines, 0, strlen( $lines ) - 1 );
 
-				GFCommon::log_debug( "GFExport::start_export(): Lines: {$lines}" );
+				//GFCommon::log_debug( "GFExport::start_export(): Lines: {$lines}" );
 
 				$lines .= "\n";
 			}
 
 			$offset += $page_size;
-			$entry_count -= $page_size;
+			$remaining_entry_count -= $page_size;
 
 			if ( ! seems_utf8( $lines ) ) {
 				$lines = utf8_encode( $lines );
@@ -808,7 +817,7 @@ class GFExport {
 			$lines = '';
 		}
 
-		$complete = $offset >= $entry_count;
+		$complete = $remaining_entry_count <= 0;
 
 		if ( $complete ) {
 			/**
@@ -828,7 +837,7 @@ class GFExport {
 			'status' => $complete ? 'complete' : 'in_progress',
 			'offset' => $offset,
 			'exportId' => $export_id,
-			'progress' => $entry_count > 0 ? intval( $offset / $entry_count * 100 ) . '%' : '',
+			'progress' => $remaining_entry_count > 0 ? intval( 100 - ( $remaining_entry_count / $total_entry_count ) * 100 ) . '%' : '',
 		);
 
 		GFCommon::log_debug( __METHOD__ . '(): Status: ' . print_r( $status, 1 ) );
@@ -868,7 +877,6 @@ class GFExport {
 
 		return $form;
 	}
-
 
 	public static function page_header( $title = '' ) {
 
@@ -990,7 +998,6 @@ class GFExport {
 		echo json_encode( $status );
 		die();
 	}
-
 
 	/**
 	 * Appends lines to to the csv file for the given Export ID.

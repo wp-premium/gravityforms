@@ -4,7 +4,7 @@
 readyclass.css
 Gravity Forms Ready Class Pre-Set Helper Styles
 http://www.gravityforms.com
-updated: June 27, 2016 2:28 PM GMT-5
+updated: July 12, 2016 10:11 PM GMT-5
 
 Gravity Forms is a Rocketgenius project
 copyright 2008-2016 Rocketgenius Inc.
@@ -63,8 +63,7 @@ to no.
     }
 
     .gform_wrapper .top_label li.gfield.gf_inline select {
-        width: auto;
-        min-width: 98%;
+        width: 100%;
     }
 
     .gform_wrapper .top_label li.gfield.gf_inline textarea {
@@ -92,6 +91,10 @@ to no.
         white-space: nowrap !important;
     }
 
+    .gform_wrapper li.gf_inline div.ginput_container.ginput_container_date label {
+        display: block !important;
+    }
+
     .gform_wrapper .top_label li.gfield.gf_left_half,
     .gform_wrapper .top_label li.gfield.gf_right_half {
         display: -moz-inline-stack;
@@ -100,16 +103,14 @@ to no.
         width: 50%;
     }
 
-    .gform_wrapper .top_label li.gfield.gf_left_half {
-        padding-right: 16px;
-    }
-
+    .gform_wrapper .top_label li.gfield.gf_left_half,
     .gform_wrapper .top_label li.gfield.gf_right_half {
         padding-right: 16px;
+        float: none;
     }
 
-    .gform_wrapper .top_label li.gfield.gf_left_half .ginput_container:not(.gfield_time_hour):not(.gfield_time_minute):not(.gfield_time_ampm),
-    .gform_wrapper .top_label li.gfield.gf_right_half .ginput_container:not(.gfield_time_hour):not(.gfield_time_minute):not(.gfield_time_ampm) {
+    .gform_wrapper .top_label li.gfield.gf_left_half .ginput_container:not(.gfield_time_hour):not(.gfield_time_minute):not(.gfield_time_ampm):not(.ginput_container_date):not(.ginput_quantity):not(ul.gfield_radio li input):not(ul.gfield_checkbox li input):not(.datepicker),
+    .gform_wrapper .top_label li.gfield.gf_right_half .ginput_container:not(.gfield_time_hour):not(.gfield_time_minute):not(.gfield_time_ampm):not(.ginput_container_date):not(.ginput_quantity):not(ul.gfield_radio li input):not(ul.gfield_checkbox li input):not(.datepicker) {
         width: 100% !important;
         margin: 8px 0 0 0;
         padding-left: 0;
@@ -124,27 +125,27 @@ to no.
 
     .gform_wrapper .top_label li.gfield.gf_right_half:after {
         content:"";
-        display: block;
+        display: table;
         clear:both;
     }
 
     .gform_wrapper .top_label li.gfield.gfield_error.gf_left_half,
     .gform_wrapper .top_label li.gfield.gfield_error.gf_right_half {
-        width: 49.4%;
+        width: calc(50% - 8px);
     }
 
     .gform_wrapper .top_label li.gfield.gfield_error.gf_left_half {
-        margin-right: 1.2%;
+        margin-right: 16px;
     }
 
-    .gform_wrapper .top_label li.gfield.gf_left_half input.medium,
-    .gform_wrapper .top_label li.gfield.gf_left_half input.large,
-    .gform_wrapper .top_label li.gfield.gf_left_half select.medium,
-    .gform_wrapper .top_label li.gfield.gf_left_half select.large,
-    .gform_wrapper .top_label li.gfield.gf_right_half input.medium,
-    .gform_wrapper .top_label li.gfield.gf_right_half input.large,
-    .gform_wrapper .top_label li.gfield.gf_right_half select.medium,
-    .gform_wrapper .top_label li.gfield.gf_right_half select.large {
+    .gform_wrapper .top_label li.gfield.gf_left_half div:not(.ginput_container_date) input.medium,
+    .gform_wrapper .top_label li.gfield.gf_left_half div:not(.ginput_container_date) input.large,
+    .gform_wrapper .top_label li.gfield.gf_left_half div:not(.ginput_container_date) select.medium,
+    .gform_wrapper .top_label li.gfield.gf_left_half div:not(.ginput_container_date) select.large,
+    .gform_wrapper .top_label li.gfield.gf_right_half div:not(.ginput_container_date) input.medium,
+    .gform_wrapper .top_label li.gfield.gf_right_half div:not(.ginput_container_date) input.large,
+    .gform_wrapper .top_label li.gfield.gf_right_half div:not(.ginput_container_date) select.medium,
+    .gform_wrapper .top_label li.gfield.gf_right_half div:not(.ginput_container_date) select.large {
         width: 100%;
     }
 
@@ -196,6 +197,7 @@ to no.
         display: -moz-inline-stack;
         display: inline-block;
         vertical-align: top;
+        float: none;
     }
 
     .gform_wrapper .top_label li.gfield.gf_left_third:not(.gfield_time_hour):not(.gfield_time_minute):not(.gfield_time_ampm),
@@ -213,40 +215,44 @@ to no.
         margin-bottom: 8px;
     }
 
-    .gform_wrapper .top_label li.gfield.gf_left_third input:not([type='radio']):not([type='checkbox']):not(.ginput_quantity),
-    .gform_wrapper .top_label li.gfield.gf_middle_third input:not([type='radio']):not([type='checkbox']):not(.ginput_quantity),
-    .gform_wrapper .top_label li.gfield.gf_right_third input:not([type='radio']):not([type='checkbox']):not(.ginput_quantity),
-    .gform_wrapper .top_label li.gfield.gf_left_third select,
-    .gform_wrapper .top_label li.gfield.gf_middle_third select,
-    .gform_wrapper .top_label li.gfield.gf_right_third select {
+    .gform_wrapper .top_label li.gfield.gf_left_third div:not(.ginput_container_date) input.medium,
+    .gform_wrapper .top_label li.gfield.gf_left_third div:not(.ginput_container_date) input.large,
+    .gform_wrapper .top_label li.gfield.gf_left_third div:not(.ginput_container_date) select.medium,
+    .gform_wrapper .top_label li.gfield.gf_left_third div:not(.ginput_container_date) select.large,
+    .gform_wrapper .top_label li.gfield.gf_middle_third div:not(.ginput_container_date) input.medium,
+    .gform_wrapper .top_label li.gfield.gf_middle_third div:not(.ginput_container_date) input.large,
+    .gform_wrapper .top_label li.gfield.gf_middle_third div:not(.ginput_container_date) select.medium,
+    .gform_wrapper .top_label li.gfield.gf_middle_third div:not(.ginput_container_date) select.large,
+    .gform_wrapper .top_label li.gfield.gf_right_third div:not(.ginput_container_date) input.medium,
+    .gform_wrapper .top_label li.gfield.gf_right_third div:not(.ginput_container_date) input.large,
+    .gform_wrapper .top_label li.gfield.gf_right_third div:not(.ginput_container_date) select.medium,
+    .gform_wrapper .top_label li.gfield.gf_right_third div:not(.ginput_container_date) select.large {
+        width: 100%;
+    }
+
+    .gform_wrapper .top_label li.gfield.gf_left_third div:not(.ginput_container_date) input:not([type='radio']):not([type='checkbox']):not(.ginput_quantity):not(ul.gfield_radio li input):not(ul.gfield_checkbox li input),
+    .gform_wrapper .top_label li.gfield.gf_middle_third div:not(.ginput_container_date) input:not([type='radio']):not([type='checkbox']):not(.ginput_quantity):not(ul.gfield_radio li input):not(ul.gfield_checkbox li input),
+    .gform_wrapper .top_label li.gfield.gf_right_third div:not(.ginput_container_date) input:not([type='radio']):not([type='checkbox']):not(.ginput_quantity):not(ul.gfield_radio li input):not(ul.gfield_checkbox li input),
+    .gform_wrapper .top_label li.gfield.gf_left_third div:not(.ginput_container_date) select,
+    .gform_wrapper .top_label li.gfield.gf_middle_third div:not(.ginput_container_date) select,
+    .gform_wrapper .top_label li.gfield.gf_right_third div:not(.ginput_container_date) select {
         width:100% !important;
     }
 
     .gform_wrapper .top_label li.gfield.gfield_error.gf_left_third,
-    .gform_wrapper .top_label li.gfield.gfield_error.gf_middle_third,
+    .gform_wrapper .top_label li.gfield.gfield_error.gf_middle_third {
+        width: calc(33.3% - 16px) !important;
+        margin-right: 16px;
+    }
+
     .gform_wrapper .top_label li.gfield.gfield_error.gf_right_third {
-        width: 33%;
+        width: 33.4%;
     }
 
     .gform_wrapper .top_label li.gfield.gf_right_third:after {
         content:"";
-        display: block;
+        display: table;
         clear: both;
-    }
-
-    .gform_wrapper .top_label li.gfield.gf_left_third input.medium,
-    .gform_wrapper .top_label li.gfield.gf_left_third input.large,
-    .gform_wrapper .top_label li.gfield.gf_left_third select.medium,
-    .gform_wrapper .top_label li.gfield.gf_left_third select.large,
-    .gform_wrapper .top_label li.gfield.gf_middle_third input.medium,
-    .gform_wrapper .top_label li.gfield.gf_middle_third input.large,
-    .gform_wrapper .top_label li.gfield.gf_middle_third select.medium,
-    .gform_wrapper .top_label li.gfield.gf_middle_third select.large,
-    .gform_wrapper .top_label li.gfield.gf_right_third input.medium,
-    .gform_wrapper .top_label li.gfield.gf_right_third input.large,
-    .gform_wrapper .top_label li.gfield.gf_right_third select.medium,
-    .gform_wrapper .top_label li.gfield.gf_right_third select.large {
-        width: 97.5%;
     }
 
     .gform_wrapper .top_label li.gfield.gf_left_third+li.gsection,
@@ -273,6 +279,7 @@ to no.
         display: -moz-inline-stack;
         display: inline-block;
         vertical-align: top;
+        float: none;
     }
 
     .gform_wrapper .top_label li.gfield.gf_first_quarter,
@@ -282,15 +289,15 @@ to no.
         margin-bottom: 8px;
     }
 
-    .gform_wrapper .top_label li.gfield.gf_first_quarter input:not([type='radio']):not([type='checkbox']),
-    .gform_wrapper .top_label li.gfield.gf_second_quarter input:not([type='radio']):not([type='checkbox']),
-    .gform_wrapper .top_label li.gfield.gf_third_quarter input:not([type='radio']):not([type='checkbox']),
-    .gform_wrapper .top_label li.gfield.gf_fourth_quarter input:not([type='radio']):not([type='checkbox']),
-    .gform_wrapper .top_label li.gfield.gf_first_quarter select,
-    .gform_wrapper .top_label li.gfield.gf_second_quarter select,
-    .gform_wrapper .top_label li.gfield.gf_third_quarter select,
-    .gform_wrapper .top_label li.gfield.gf_fourth_quarter select {
-        width:100% !important;
+    .gform_wrapper .top_label li.gfield.gf_first_quarter div:not(.ginput_container_date) input:not([type='radio']):not([type='checkbox']),
+    .gform_wrapper .top_label li.gfield.gf_second_quarter div:not(.ginput_container_date) input:not([type='radio']):not([type='checkbox']),
+    .gform_wrapper .top_label li.gfield.gf_third_quarter div:not(.ginput_container_date) input:not([type='radio']):not([type='checkbox']),
+    .gform_wrapper .top_label li.gfield.gf_fourth_quarter div:not(.ginput_container_date) input:not([type='radio']):not([type='checkbox']),
+    .gform_wrapper .top_label li.gfield.gf_first_quarter div:not(.ginput_container_date) select,
+    .gform_wrapper .top_label li.gfield.gf_second_quarter div:not(.ginput_container_date) select,
+    .gform_wrapper .top_label li.gfield.gf_third_quarter div:not(.ginput_container_date) select,
+    .gform_wrapper .top_label li.gfield.gf_fourth_quarter div:not(.ginput_container_date) select {
+        width: 100% !important;
     }
 
     .gform_wrapper .top_label li.gfield.gfield_error.gf_first_quarter,
@@ -301,8 +308,8 @@ to no.
     }
 
     .gform_wrapper .top_label li.gfield.gf_fourth_quarter:after {
-        content:"";
-        display: block;
+        content: "";
+        display: table;
         clear: both;
     }
 
@@ -348,8 +355,8 @@ to no.
         width: calc(100% + 16px);
     }
 
-    .gform_wrapper ul:not(.top_label) li ul.gfield_checkbox,
-    .gform_wrapper ul:not(.top_label)li ul.gfield_radio {
+    .gform_wrapper ul.gform_fields:not(.top_label) li ul.gfield_checkbox,
+    .gform_wrapper ul.gform_fields:not(.top_label)li ul.gfield_radio {
         width: calc(70% + 16px);
     }
 
@@ -425,11 +432,11 @@ to no.
         overflow: hidden;
     }
 
-    .gform_wrapper ul:not(.top_label) li.gfield.gf_list_2col label.gfield_label,
-    .gform_wrapper ul:not(.top_label) li.gfield.gf_list_3col label.gfield_label,
-    .gform_wrapper ul:not(.top_label) li.gfield.gf_list_4col label.gfield_label,
-    .gform_wrapper ul:not(.top_label) li.gfield.gf_list_5col label.gfield_label,
-    .gform_wrapper ul:not(.top_label) li.gfield.gf_list_inline label.gfield_label {
+    .gform_wrapper ul.gform_fields:not(.top_label) li.gfield.gf_list_2col label.gfield_label,
+    .gform_wrapper ul.gform_fields:not(.top_label) li.gfield.gf_list_3col label.gfield_label,
+    .gform_wrapper ul.gform_fields:not(.top_label) li.gfield.gf_list_4col label.gfield_label,
+    .gform_wrapper ul.gform_fields:not(.top_label) li.gfield.gf_list_5col label.gfield_label,
+    .gform_wrapper ul.gform_fields:not(.top_label) li.gfield.gf_list_inline label.gfield_label {
         margin: 0 0 10px 0;
     }
 
@@ -444,10 +451,10 @@ to no.
         column-gap: 16px;
     }
 
-    .gform_wrapper ul:not(.top_label) li.gf_list_2col_vertical label.gfield_label,
-    .gform_wrapper ul:not(.top_label) li.gf_list_2col_vertical label.gfield_label,
-    .gform_wrapper ul:not(.top_label) li.gf_list_2col_vertical label.gfield_label,
-    .gform_wrapper ul:not(.top_label) li.gf_list_2col_vertical label.gfield_label {
+    .gform_wrapper ul.gform_fields:not(.top_label) li.gf_list_2col_vertical label.gfield_label,
+    .gform_wrapper ul.gform_fields:not(.top_label) li.gf_list_2col_vertical label.gfield_label,
+    .gform_wrapper ul.gform_fields:not(.top_label) li.gf_list_2col_vertical label.gfield_label,
+    .gform_wrapper ul.gform_fields:not(.top_label) li.gf_list_2col_vertical label.gfield_label {
         margin: 0 0 10px 0;
     }
 

@@ -85,7 +85,7 @@ function gf_is_match( formId, rule ) {
     if( isInputSpecific ) {
         $inputs = $( '#input_{0}_{1}_{2}'.format( formId, fieldId, inputIndex ) );
     } else {
-        $inputs = $( 'input[id="input_{0}_{1}"], input[id^="input_{0}_{1}_"], input[id^="choice_{0}_{1}"], select#input_{0}_{1}, textarea#input_{0}_{1}'.format( formId, rule.fieldId ) );
+        $inputs = $( 'input[id="input_{0}_{1}"], input[id^="input_{0}_{1}_"], input[id^="choice_{0}_{1}_"], select#input_{0}_{1}, textarea#input_{0}_{1}'.format( formId, rule.fieldId ) );
     }
 
     var isCheckable = $.inArray( $inputs.attr( 'type' ), [ 'checkbox', 'radio' ] ) !== -1,
@@ -146,7 +146,7 @@ function gf_is_match_default( $input, rule, formId, fieldId ) {
             fieldValue = gf_format_number( fieldValue, gf_get_field_number_format( rule.fieldId, formId ) );
         }
 
-        if( gf_matches_operation( fieldValue, rule.value, rule.operator ) ) {
+		if( gf_matches_operation( fieldValue, rule.value, rule.operator ) ) {
             matchCount++;
         }
 
@@ -177,10 +177,13 @@ function gf_format_number( value, fieldNumberFormat ) {
     // transform to a decimal dot number
     value = gformCleanNumber( value, '', '', decimalSeparator );
 
+	/**
+	 * Looking at format specified by wp locale creates issues. When performing conditional logic, all numbers will be formatted to decimal dot and then compared that way. AC
+	 */
     // now transform to number specified by locale
-    if( window['gf_number_format'] && window['gf_number_format'] == 'decimal_comma' ) {
-        value = gformFormatNumber( value, -1, ',', '.' );
-    }
+    // if( window['gf_number_format'] && window['gf_number_format'] == 'decimal_comma' ) {
+    //     value = gformFormatNumber( value, -1, ',', '.' );
+    // }
 
     if( ! value ) {
         value = 0;

@@ -2102,12 +2102,12 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 				break;
 
 			case 'monthly' :
-				$select        = "date_format(transaction.month, '%%Y') as year, date_format(transaction.month, '%%c') as month, '' as month_abbrev, '' as month_year";
-				$select_inner1 = "date_format(CONVERT_TZ(payment_date, '+00:00', '" . $tz_offset . "'), '%%Y-%%m-01') month";
-				$select_inner2 = "date_format(CONVERT_TZ(t.date_created, '+00:00', '" . $tz_offset . "'), '%%Y-%%m-01') month";
-				$group_by      = 'month';
-				$order_by      = 'year desc, month desc';
-				$join          = 'lead.month = transaction.month';
+				$select        = "date_format(transaction.inner_month, '%%Y') as year, date_format(transaction.inner_month, '%%c') as month, '' as month_abbrev, '' as month_year";
+				$select_inner1 = "date_format(CONVERT_TZ(payment_date, '+00:00', '" . $tz_offset . "'), '%%Y-%%m-01') inner_month";
+				$select_inner2 = "date_format(CONVERT_TZ(t.date_created, '+00:00', '" . $tz_offset . "'), '%%Y-%%m-01') inner_month";
+				$group_by      = 'inner_month';
+				$order_by      = 'year desc, (month+0) desc';
+				$join          = 'lead.inner_month = transaction.inner_month';
 
 				$data['chart']['hAxis']['column'] = 'month_year';
 				$data['chart']['hAxis']['label']  = esc_html__( 'Month', 'gravityforms' );
@@ -2187,25 +2187,9 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
                                 ", $form_id, $form_id
 		);
 
+		GFCommon::log_debug( "sales sql: {$sql}" );
 
 		$results = $wpdb->get_results( $sql, ARRAY_A );
-
-
-		/*
-			 *
-			 * array (
-  'date' => '2016-02-18',
-  'month' => '2',
-  'day' => '18',
-  'day_of_week' => 'Thursday',
-  'month_day' => '',
-  'orders' => '1',
-  'subscriptions' => '0',
-  'refunds' => '1',
-  'recurring_payments' => '0',
-  'revenue' => '21.00',
-)
-			 */
 
 		$display_results = array();
 		$current_period = date( $current_period_format );

@@ -1907,44 +1907,8 @@ abstract class GFAddOn {
 
 		}
 		
-		// Set default value if aliases are provided.
-		if ( rgars( $field, 'default_value/aliases' ) ) {
-			
-			// Prepare variable to store default value.
-			$default_value = null;
-			
-			// Prepare variable to store suggested field percentage.
-			$suggested_field_percent = 0;
-			
-			foreach ( $field['default_value']['aliases'] as $alias ) {
-				
-				// Prepare the string we're testing against.
-				$alias_string = $field['label'] . ' ' . $alias;
-				
-				foreach ( $field['choices'] as $choice ) {
-					
-					// If choice value is empty, skip it.
-					if ( rgblank( $choice['value'] ) ) {
-						continue;
-					}
-					
-					// Run a string comparison.
-					similar_text( $alias_string, $choice['label'], $alias_match );
-					
-					// If match percentage is higher than current percentage, set this field as suggested field.
-					if ( $alias_match > $suggested_field_percent ) {
-						$default_value           = $choice['value'];
-						$suggested_field_percent = $alias_match;
-					}
-					
-				} 
-				
-			}
-			
-			// Set default value.
-			$field['default_value'] = $default_value;
-			
-		}
+		// Set default value.
+		$field['default_value'] = $this->get_default_field_select_field( $field );
 
 		return $this->settings_select( $field, false );
 
@@ -2289,47 +2253,80 @@ abstract class GFAddOn {
 			$field['choices'] = array_merge( $field['choices'], $args['append_choices'] );
 		}
 
-		// Set default value if aliases are provided.
-		if ( rgars( $field, 'default_value/aliases' ) ) {
-			
-			// Prepare variable to store default value.
-			$default_value = null;
-			
-			// Prepare variable to store suggested field percentage.
-			$suggested_field_percent = 0;
-			
-			foreach ( $field['default_value']['aliases'] as $alias ) {
-				
-				// Prepare the string we're testing against.
-				$alias_string = $field['label'] . ' ' . $alias;
-				
-				foreach ( $field['choices'] as $choice ) {
-					
-					// If choice value is empty, skip it.
-					if ( rgblank( $choice['value'] ) ) {
-						continue;
-					}
-					
-					// Run a string comparison.
-					similar_text( $alias_string, $choice['label'], $alias_match );
-					
-					// If match percentage is higher than current percentage, set this field as suggested field.
-					if ( $alias_match > $suggested_field_percent ) {
-						$default_value           = $choice['value'];
-						$suggested_field_percent = $alias_match;
-					}
-					
-				} 
-				
-			}
-			
-			// Set default value.
-			$field['default_value'] = $default_value;
-			
-		}
+		// Set default value.
+		$field['default_value'] = $this->get_default_field_select_field( $field );
 
 		return $field;
 
+	}
+	
+	/**
+	 * Returns the field to be selected by default for field select fields based on matching labels.
+	 *
+	 * @access public
+	 * @param  array $field - Field array containing the configuration options of this field
+	 *
+	 * @return string|null
+	 */
+	public function get_default_field_select_field( $field ) {
+		
+		// If field's default value is not an array and not empty, return it.
+		if ( ! rgempty( 'default_value', $field ) && ! is_array( $field['default_value'] ) ) {
+			return $field['default_value'];
+		}
+		
+		// Set default value if auto populate is not disabled.
+		if ( rgar( $field, 'auto_mapping' ) !== false ) {
+
+			$field_label = rgar( $field, 'label' );
+
+			// Initialize array to store auto-population choices.
+			$default_value_choices = array( $field_label );
+
+			// Define global aliases to help with the common case mappings.
+			$global_aliases = array(
+				__('First Name', 'gravityforms') => array( __( 'Name (First)', 'gravityforms' ) ),
+				__('Last Name', 'gravityforms') => array( __( 'Name (Last)', 'gravityforms' ) ),
+				__('Address', 'gravityforms') => array( __( 'Address (Street Address)', 'gravityforms' ) ),
+				__('Address 2', 'gravityforms') => array( __( 'Address (Address Line 2)', 'gravityforms' ) ),
+				__('City', 'gravityforms') => array( __( 'Address (City)', 'gravityforms' ) ),
+				__('State', 'gravityforms') => array( __( 'Address (State / Province)', 'gravityforms' ) ),
+				__('Zip', 'gravityforms') => array( __( 'Address (Zip / Postal Code)', 'gravityforms' ) ),
+				__('Country', 'gravityforms') => array( __( 'Address (Country)', 'gravityforms' ) ),
+			);
+
+			// If one or more global aliases are defined for this particular field label, merge them into auto-population choices.
+			if ( isset( $global_aliases[ $field_label ] ) ){
+				$default_value_choices = array_merge( $default_value_choices, $global_aliases[ $field_label ] );
+			}
+
+			// If field aliases are defined, merge them into auto-population choices.
+			if ( rgars( $field, 'default_value/aliases' ) ) {
+				$default_value_choices = array_merge( $default_value_choices, $field['default_value']['aliases'] );
+			}
+
+			// Convert all auto-population choices to lowercase.
+			$default_value_choices = array_map( 'strtolower', $default_value_choices );
+			
+			// Loop through fields.
+			foreach ( $field['choices'] as $choice ) {
+				
+				// If choice value is empty, skip it.
+				if ( rgblank( $choice['value'] ) ) {
+					continue;
+				}
+
+				// If lowercase field label matches a default value choice, set it to the default value.
+				if ( in_array( strtolower( $choice['label'] ), $default_value_choices ) ) {
+					return $choice['value'];
+				}
+				
+			}
+			
+		}
+		
+		return null;	
+		
 	}
 
 	/**
@@ -3762,6 +3759,11 @@ abstract class GFAddOn {
 		}
 
 		$this->app_tab_page_header( $tabs, $current_tab, $current_tab, '' );
+		/**
+		 * Fires when an addon page and tab is accessed.
+		 *
+		 * Typically used to render settings tab content.
+		 */
 		$action_hook = 'gform_addon_app_' . $page . '_' . str_replace( ' ', '_', $current_tab );
 		do_action( $action_hook );
 		$this->app_tab_page_footer();
@@ -3994,10 +3996,17 @@ abstract class GFAddOn {
 	 */
 	public function get_app_settings_tabs() {
 
-		//build left side options, always have app Settings first and Uninstall last, put add-ons in the middle
+		// Build left side options, always have app Settings first and Uninstall last, put add-ons in the middle
 
 		$setting_tabs = array( array( 'name' => 'settings', 'label' => esc_html__( 'Settings', 'gravityforms' ), 'callback' => array( $this, 'app_settings_tab' ) ) );
 
+		/**
+		 * Filters the tabs within the settings menu.
+		 *
+		 * This filter is appended by the page slug.  Ex: gform_addon_app_settings_menu_SLUG
+		 *
+		 * @param array $setting_tabs Contains the information on the settings tabs.
+		 */
 		$setting_tabs = apply_filters( 'gform_addon_app_settings_menu_' . $this->_slug, $setting_tabs );
 
 		if ( $this->current_user_can_any( $this->_capabilities_uninstall ) ) {

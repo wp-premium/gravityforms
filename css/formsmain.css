@@ -4,7 +4,7 @@
 Gravity Forms Front End Form Styles
 Version 2.0
 http: //www.gravityforms.com
-updated: June 27, 2016 3:20 PM GMT-5
+updated: July 12, 2016 10:10 PM GMT-5
 
 Gravity Forms is a Rocketgenius project
 copyright 2008-2016 Rocketgenius Inc.
@@ -26,7 +26,7 @@ to no.
 */
 
 
-/* show mobile styles first */
+/* mobile styles first */
 
 .gform_wrapper {
     overflow: inherit;
@@ -171,7 +171,7 @@ html>body .entry ul,
     display: inline-block;
 }
 
-.gform_wrapper ul:not(.top_label) .ginput_container_time span {
+.gform_wrapper ul.gform_fields:not(.top_label) .ginput_container_time span {
     float: left;
 }
 
@@ -312,10 +312,10 @@ html>body .entry ul,
     margin: 9px 0 1px 1px;
 }
 
-.gform_wrapper ul:not(.top_label) .field_sublabel_above .ginput_container.ginput_container_name label,
-.gform_wrapper ul:not(.top_label) .field_sublabel_above .ginput_container.ginput_container_email label,
-.gform_wrapper ul:not(.top_label) .field_sublabel_above .ginput_container.ginput_container_password label,
-.gform_wrapper ul:not(.top_label) .field_sublabel_above .ginput_container.ginput_container_time label {
+.gform_wrapper ul.gform_fields:not(.top_label) .field_sublabel_above .ginput_container.ginput_container_name label,
+.gform_wrapper ul.gform_fields:not(.top_label) .field_sublabel_above .ginput_container.ginput_container_email label,
+.gform_wrapper ul.gform_fields:not(.top_label) .field_sublabel_above .ginput_container.ginput_container_password label,
+.gform_wrapper ul.gform_fields:not(.top_label) .field_sublabel_above .ginput_container.ginput_container_time label {
     margin-top: 0;
 }
 
@@ -354,16 +354,16 @@ body .gform_wrapper ul li.field_description_below div.ginput_container_checkbox 
 
 .gfield.right_label,
 .gfield.left_label {
-    padding-top: 10px
+    padding-top: 10px;
 }
 
 .gform_wrapper li.hidden_label input {
-    margin-top: 12px
+    margin-top: 12px;
 }
 
 .gform_wrapper .field_sublabel_hidden_label .ginput_complex.ginput_container input[type=text],
 .gform_wrapper .field_sublabel_hidden_label .ginput_complex.ginput_container select {
-    margin-bottom: 12px
+    margin-bottom: 12px;
 }
 
 .gform_wrapper label.screen-reader-text, .gform_wrapper label.hidden_sub_label {
@@ -381,11 +381,14 @@ body .gform_wrapper ul li.field_description_below div.ginput_container_checkbox 
 .gform_wrapper input.large,
 .gform_wrapper select.large,
 .gform_wrapper input.large,
-.gform_wrapper select.large { width: 100% }
+.gform_wrapper select.large {
+    width: 100%
+}
+
 .gform_wrapper input.datepicker_with_icon.small,
 .gform_wrapper input.datepicker_with_icon.medium,
 .gform_wrapper input.datepicker_with_icon.large {
-    width: 90%;
+    width: calc(100% - 24px);
 }
 
 .gform_wrapper .gfield_error input.small,
@@ -402,7 +405,7 @@ body .gform_wrapper ul li.field_description_below div.ginput_container_checkbox 
 .gform_wrapper .gfield_error input.datepicker_with_icon.small,
 .gform_wrapper .gfield_error input.datepicker_with_icon.medium,
 .gform_wrapper .gfield_error input.datepicker_with_icon.large {
-    width: 85%;
+    width: calc(100% - 32px);
 }
 
 .gform_wrapper textarea.small {
@@ -634,8 +637,7 @@ li.gfield + li.gfield.gfield_creditcard_warning {
 }
 
 .gform_wrapper li.gfield.gfield_error.gfield_contains_required {
-    margin-top: 12px;
-    margin-bottom: 12px !important;
+    padding-right: 0;
 }
 
 .gform_wrapper li.gfield.gfield_error.gfield_contains_required div.gfield_time_minute.ginput_container,
@@ -735,8 +737,7 @@ div.gf_page_steps+div.validation_error {
 }
 
 .gform_wrapper li.gfield_error input:not([type='radio']):not([type='checkbox']):not([type='submit']):not([type='button']):not([type='image']):not([type='file']),
-.gform_wrapper li.gfield_error textarea,
-.gform_wrapper li.gfield_error select {
+.gform_wrapper li.gfield_error textarea {
     border: 1px solid #790000;
 }
 
@@ -757,7 +758,7 @@ div.gf_page_steps+div.validation_error {
 .gform_wrapper .gform_footer input[type=submit],
 .gform_wrapper .gform_page_footer input[type=submit] {
     font-size: 16px;
-    width: 99.5%;
+    width: 100%;
     margin: 0 0 16px 0;
 }
 
@@ -1118,6 +1119,8 @@ body .gform_wrapper ul.gform_fields li.gfield.gform_validation_container {
 .gform_wrapper .gf_progressbar_percentage.percentbar_0 span {
     color: #959595;
     text-shadow: none;
+    float: none !important;
+    margin-left: 12px;
 }
 
 .gform_wrapper .percentbar_blue {
@@ -1259,6 +1262,7 @@ body .gform_wrapper ul.gform_fields li.gfield.gform_validation_container {
     border-spacing: 0;
     border-collapse: collapse;
 }
+
 /* fix for twentyfifteen theme table layout issue */
 
 .gform_wrapper table.gfield_list {
@@ -1279,7 +1283,8 @@ body .gform_wrapper ul.gform_fields li.gfield.gform_validation_container {
     color: #790000;
 }
 
-.gform_wrapper table.gfield_list thead, .gform_wrapper table.gfield_list tr {
+.gform_wrapper table.gfield_list thead,
+.gform_wrapper table.gfield_list tr {
     padding: 0;
     margin: 0;
 }
@@ -1289,11 +1294,12 @@ body .gform_wrapper ul.gform_fields li.gfield.gform_validation_container {
     padding: 4px 0 4px 0;
 }
 
-.gform_wrapper ul:not(.top_label) table.gfield_list th {
+.gform_wrapper ul.gform_fields:not(.top_label) table.gfield_list th {
     padding: 0 0 4px 0;
 }
 
-.gform_wrapper table.gfield_list th + th, .gform_wrapper table.gfield_list td + td {
+.gform_wrapper table.gfield_list th + th,
+.gform_wrapper table.gfield_list td + td {
     padding: 0 0 0 16px;
 }
 
@@ -1313,8 +1319,7 @@ body .gform_wrapper ul.gform_fields li.gfield.gform_validation_container {
     opacity: .6;
 }
 
-.gform_wrapper table.gfield_list tr td.gfield_list_icons,
-.gform_wrapper table.gfield_list tr td:last-child {
+.gform_wrapper table.gfield_list tr td.gfield_list_icons {
     width: 48px !important;
     padding: 0 0 0 4px  !important;
     box-sizing: border-box;
@@ -1342,16 +1347,19 @@ body .gform_wrapper ul.gform_fields li.gfield.gform_validation_container {
     user-select: none;
 }
 
+.gform_wrapper .chosen-container,
+.gform_wrapper .chosen-container * {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
 .gform_wrapper .chosen-container.chosen-container-multi .chosen-choices {
     min-height: 28px !important;
 }
 
 .gform_wrapper .ginput_container.ginput_container_multiselect .chosen-container.chosen-container-multi ul.chosen-choices li.search-field input.default {
     height: 24px;
-}
-
-.gform_wrapper .chosen-container.chosen-container-multi .chosen-choices li input.default {
-    color: red;
 }
 
 .gform_wrapper .chosen-container .chosen-drop {
@@ -1369,8 +1377,12 @@ body .gform_wrapper ul.gform_fields li.gfield.gform_validation_container {
     box-shadow: 0 4px 5px rgba(0, 0, 0, .15);
 }
 
-.gform_wrapper .chosen-container.chosen-with-drop .chosen-drop { left: 0 }
-.gform_wrapper .chosen-container a { cursor: pointer }
+.gform_wrapper .chosen-container.chosen-with-drop .chosen-drop {
+    left: 0;
+}
+.gform_wrapper .chosen-container a {
+    cursor: pointer;
+}
 .gform_wrapper .chosen-container-single .chosen-single {
     position: relative;
     display: block;
@@ -1393,7 +1405,10 @@ body .gform_wrapper ul.gform_fields li.gfield.gform_validation_container {
     line-height: 24px;
 }
 
-.gform_wrapper .chosen-container-single .chosen-default { color: #999 }
+.gform_wrapper .chosen-container-single .chosen-default {
+    color: #999;
+}
+
 .gform_wrapper .chosen-container-single .chosen-single span {
     display: block;
     overflow: hidden;
@@ -1402,7 +1417,10 @@ body .gform_wrapper ul.gform_fields li.gfield.gform_validation_container {
     white-space: nowrap;
 }
 
-.gform_wrapper .chosen-container-single .chosen-single-with-deselect span { margin-right: 38px }
+.gform_wrapper .chosen-container-single .chosen-single-with-deselect span {
+    margin-right: 38px;
+}
+
 .gform_wrapper .chosen-container-single .chosen-single abbr {
     position: absolute;
     top: 6px;
@@ -1414,8 +1432,14 @@ body .gform_wrapper ul.gform_fields li.gfield.gform_validation_container {
     font-size: 1px;
 }
 
-.gform_wrapper .chosen-container-single .chosen-single abbr:hover { background-position: -42px -10px }
-.gform_wrapper .chosen-container-single.chosen-disabled .chosen-single abbr:hover { background-position: -42px -10px }
+.gform_wrapper .chosen-container-single .chosen-single abbr:hover {
+    background-position: -42px -10px;
+}
+
+.gform_wrapper .chosen-container-single.chosen-disabled .chosen-single abbr:hover {
+    background-position: -42px -10px;
+}
+
 .gform_wrapper .chosen-container-single .chosen-single div {
     position: absolute;
     top: 0;
@@ -1519,7 +1543,10 @@ body .gform_wrapper ul.gform_fields li.gfield.gform_validation_container {
     cursor: default;
 }
 
-.gform_wrapper .chosen-container .chosen-results li.group-option { padding-left: 15px }
+.gform_wrapper .chosen-container .chosen-results li.group-option {
+    padding-left: 15px;
+}
+
 .gform_wrapper .chosen-container .chosen-results li em {
     font-style: normal;
     text-decoration: underline;
@@ -1577,7 +1604,7 @@ body .gform_wrapper ul.gform_fields li.gfield.gform_validation_container {
 
 .gform_wrapper .chosen-container-multi .chosen-choices li.search-choice {
     position: relative;
-    margin: 3px 0 3px 5px;
+    margin: 5px 0 5px 5px !important;
     padding: 3px 20px 3px 5px;
     border: 1px solid #AAA;
     border-radius: 3px;
@@ -2130,7 +2157,7 @@ body .gform_wrapper img.delete_list_item {
 
 /* adjusting the captcha margin for left or right label settings */
 
-.gform_wrapper ul:not(.top_label) div.ginput_container_captcha {
+.gform_wrapper ul.gform_fields:not(.top_label) div.ginput_container_captcha {
     margin-left: 29%;
 }
 
@@ -2227,6 +2254,16 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
     margin: 0 0 16px 18px;
 }
 
+.gform_wrapper span.gf_clear_span {
+    display: block;
+    height: 1px;
+    overflow: hidden;
+    width: 100%;
+    float: none;
+    clear: both;
+    margin-top: -1px;
+}
+
 @media only screen and (max-width: 641px)  {
 
     /* make the inputs a little larger for mobile devices */
@@ -2254,8 +2291,23 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
         top: 10px;
     }
 
-    .gform_wrapper .chosen-container.chosen-container-multi[style] {
+    .gform_wrapper div.chosen-container.chosen-container-multi[style] {
         width: 100% !important;
+    }
+
+    .gform_wrapper .chosen-container.chosen-container-multi ul.chosen-choices li.search-choice,
+    .gform_wrapper .chosen-container.chosen-container-multi ul.chosen-choices li.search-field {
+        width: calc(100% - 10px);
+        line-height: 2;
+        float: none;
+    }
+
+    .gform_wrapper .chosen-container.chosen-container-multi ul.chosen-choices li.search-choice span {
+        margin-bottom: 0;
+    }
+
+    .gform_wrapper .chosen-container-multi .chosen-choices li.search-choice .search-choice-close {
+        top: calc(50% - 6px);
     }
 
     .gform_wrapper .ginput_container span {
@@ -2288,40 +2340,42 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
     }
 
     .gform_wrapper table.gfield_list tr {
-      margin-bottom: 10px;
-      display: block;
-      background: #fff;
-      position:relative;
-      border: 1px solid #CCC;
-      border-top: 2px solid #CCC;
-      border-bottom: 4px solid #CCC;
+        margin-bottom: 10px;
+        display: block;
+        background: #fff;
+        position:relative;
+        border: 1px solid #CCC;
+        border-top: 2px solid #CCC;
+        border-bottom: 4px solid #CCC;
     }
 
     .gform_wrapper table.gfield_list td {
-      display: block;
-      margin-left: 8px;
-      margin-right: 8px;
+        display: block;
+        margin-left: 8px;
+        margin-right: 8px;
     }
 
-    .gform_wrapper table.gfield_list td:last-child {
-      border-bottom: 0;
-      margin: 16px 0 0 0 !important;
+    .gform_wrapper table.gfield_list td.gfield_list_icons {
+        border-bottom: 0;
+        margin: 16px 0 0 0 !important;
+    }
+
+    .gform_wrapper ul.gform_fields.form_sublabel_above table.gfield_list td:before,
+    .gform_wrapper ul.gform_fields.form_sublabel_below table.gfield_list td:after {
+        content: attr(data-label);
+        font-size: 14px;
+        letter-spacing: 0.5pt;
+        white-space: nowrap;
+        display: block;
+        clear: both;
     }
 
     .gform_wrapper ul.gform_fields.form_sublabel_above table.gfield_list td:before {
-      content: attr(data-label);
-      font-size: 14px;
-      letter-spacing: 0.5pt;
-      white-space: nowrap;
-      margin: 8px 0 3px 3px;
-      display: block;
-      clear: both;
+        margin: 8px 0 3px 8px;
     }
 
     .gform_wrapper ul.gform_fields.form_sublabel_below table.gfield_list td:after {
-      content: attr(data-label);
-      line-height: 1.6;
-      display: block !important;
+      margin: 3px 0 8px 8px;
     }
 
     .gform_wrapper table.gfield_list th + th,
@@ -2335,11 +2389,14 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
     }
 
     .gform_wrapper table.gfield_list tr.gfield_list_row_odd:first-child {
-         padding-top: 0;
+         padding-top: 12px;
     }
 
-    .gform_wrapper table.gfield_list tr td.gfield_list_icons,
-    .gform_wrapper table.gfield_list tr td:last-child {
+    .gform_wrapper table.gfield_list tr {
+         padding-top: 12px;
+    }
+
+    .gform_wrapper table.gfield_list tr td.gfield_list_icons {
         width: 100% !important;
         padding: 0 4px 4px 4px !important;
         background-color: #EEE;
@@ -2376,7 +2433,7 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
         margin: 28px 16px 28px 0;
     }
 
-    .gform_wrapper ul:not(.top_label) .gfield_label {
+    .gform_wrapper ul.gform_fields:not(.top_label) .gfield_label {
         float: left;
         width: 29%;
         padding-right: 16px;
@@ -2410,20 +2467,20 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
         margin-left: 29%;
     }
 
-    .gform_wrapper ul:not(.top_label) .gsection .gsection_description {
+    .gform_wrapper ul.gform_fields:not(.top_label) .gsection .gsection_description {
         margin-left: 0;
         padding-top: 4px;
         padding-left: 0;
         line-height: 1.5;
     }
 
-    .gform_wrapper form ul:not(.top_label) li.gfield_html_formatted {
+    .gform_wrapper form ul.gform_fields:not(.top_label) li.gfield_html_formatted {
         margin-left: 29% !important;
         width: 70%;
     }
 
-    .gform_wrapper ul:not(.top_label) ul.gfield_checkbox,
-    .gform_wrapper ul:not(.top_label) ul.gfield_radio {
+    .gform_wrapper ul.gform_fields:not(.top_label) ul.gfield_checkbox,
+    .gform_wrapper ul.gform_fields:not(.top_label) ul.gfield_radio {
         overflow: hidden;
     }
 
@@ -2463,7 +2520,7 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
         width: 70%;
     }
 
-    .gform_wrapper ul:not(.top_label) .ginput_list {
+    .gform_wrapper ul.gform_fields:not(.top_label) .ginput_list {
         width: 70%;
         margin-left: 29% !important;
     }
@@ -2501,9 +2558,17 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
         width: 49.5%;
     }
 
-    .gform_wrapper .top_label input.large, .gform_wrapper .top_label select.large,
-    .gform_wrapper .hidden_label input.large, .gform_wrapper .hidden_label select.large {
+    .gform_wrapper .top_label input.large,
+    .gform_wrapper .top_label select.large,
+    .gform_wrapper .hidden_label input.large,
+    .gform_wrapper .hidden_label select.large {
         width: 100%;
+    }
+
+    .gform_wrapper .top_label input.small.datepicker,
+    .gform_wrapper .top_label input.medium.datepicker,
+    .gform_wrapper .top_label input.large.datepicker {
+        width: auto;
     }
 
     .gform_wrapper textarea.small {
@@ -2658,19 +2723,21 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
         width: calc(100% + 14px);
     }
 
-    ul:not(.top_label) div.ginput_complex.ginput_container.gf_name_has_1,
-    ul:not(.top_label) div.ginput_complex.ginput_container.gf_name_has_2,
-    ul:not(.top_label) div.ginput_complex.ginput_container.gf_name_has_3 {
+    /* a little better specificty to avoid problems with forms in widgets */
+
+    ul.gform_fields:not(.top_label) div.ginput_complex.ginput_container.gf_name_has_1,
+    ul.gform_fields:not(.top_label) div.ginput_complex.ginput_container.gf_name_has_2,
+    ul.gform_fields:not(.top_label) div.ginput_complex.ginput_container.gf_name_has_3 {
         width: calc(70% + 15px);
         margin-left: 29%;
     }
 
-    ul:not(.top_label) div.ginput_complex.ginput_container.gf_name_has_4 {
+    ul.gform_fields:not(.top_label) div.ginput_complex.ginput_container.gf_name_has_4 {
         width: calc(70% + 13px);
         margin-left: 29%;
     }
 
-    ul:not(.top_label) div.ginput_complex.ginput_container.gf_name_has_5 {
+    ul.gform_fields:not(.top_label) div.ginput_complex.ginput_container.gf_name_has_5 {
         width: calc(70% + 14px);
         margin-left: 29%;
     }
@@ -2704,23 +2771,23 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
 
     /* tweak the sizes for validation and left/right label layouts */
 
-    .gform_wrapper ul:not(.top_label) li.gfield.gfield_error div.ginput_complex.ginput_container.gf_name_has_1 span {
+    .gform_wrapper ul.gform_fields:not(.top_label) li.gfield.gfield_error div.ginput_complex.ginput_container.gf_name_has_1 span {
         width: 99.75% !important;
     }
 
-    .gform_wrapper ul:not(.top_label) li.gfield.gfield_error div.ginput_complex.ginput_container.gf_name_has_2 span {
+    .gform_wrapper ul.gform_fields:not(.top_label) li.gfield.gfield_error div.ginput_complex.ginput_container.gf_name_has_2 span {
         width: 49.75% !important;
     }
 
-    .gform_wrapper ul:not(.top_label) li.gfield.gfield_error div.ginput_complex.ginput_container.gf_name_has_3 span {
+    .gform_wrapper ul.gform_fields:not(.top_label) li.gfield.gfield_error div.ginput_complex.ginput_container.gf_name_has_3 span {
         width: 33% !important;
     }
 
-    .gform_wrapper ul:not(.top_label) li.gfield.gfield_error div.ginput_complex.ginput_container.gf_name_has_4 span {
+    .gform_wrapper ul.gform_fields:not(.top_label) li.gfield.gfield_error div.ginput_complex.ginput_container.gf_name_has_4 span {
         width: 24.75% !important;
     }
 
-    .gform_wrapper ul:not(.top_label) li.gfield.gfield_error div.ginput_complex.ginput_container.gf_name_has_5 span {
+    .gform_wrapper ul.gform_fields:not(.top_label) li.gfield.gfield_error div.ginput_complex.ginput_container.gf_name_has_5 span {
         width: 19.75% !important;
     }
 
@@ -2735,7 +2802,7 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
         width: calc(100% + 15px);
     }
 
-    .gform_wrapper ul:not(.top_label) .ginput_complex.ginput_container.ginput_container_email {
+    .gform_wrapper ul.gform_fields:not(.top_label) .ginput_complex.ginput_container.ginput_container_email {
         width: calc(70% + 16px);
         margin-left: 29%;
     }
@@ -2760,18 +2827,18 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
         margin-right: 0;
     }
 
-    html:not[dir="rtl"] .gform_wrapper ul:not(.top_label) .ginput_container:not(.ginput_container_time),
-    html:not[dir="rtl"] .gform_wrapper ul:not(.top_label) .clear-multi,
-    html:not[dir="rtl"] .gform_wrapper ul:not(.top_label) .gfield_description {
+    html:not[dir="rtl"] .gform_wrapper ul.gform_fields:not(.top_label) .ginput_container:not(.ginput_container_time),
+    html:not[dir="rtl"] .gform_wrapper ul.gform_fields:not(.top_label) .clear-multi,
+    html:not[dir="rtl"] .gform_wrapper ul.gform_fields:not(.top_label) .gfield_description {
         width: 70%;
         margin-left: 29% !important;
     }
 
     .gform_wrapper .gf_progressbar {
-        width: calc(100% - 16pxg1163);
+        width: calc(100% - 16px);
     }
 
-    .gform_wrapper ul:not(.top_label) .gform_fileupload_multifile .gform_drop_area {
+    .gform_wrapper ul.gform_fields:not(.top_label) .gform_fileupload_multifile .gform_drop_area {
         margin-left: 29%;
         width: 70%
     }
@@ -2783,10 +2850,8 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
 
     /* force the captcha field over for right and left label layouts */
 
-    .gform_wrapper ul:not(.top_label) .ginput_container.ginput_recaptcha {
+    .gform_wrapper ul.gform_fields:not(.top_label) .ginput_container.ginput_recaptcha {
         margin-left: 29% !important;
     }
-
-
 
 }
