@@ -116,7 +116,7 @@ class GF_Installation_Wizard_Step_Background_Updates extends GF_Installation_Wiz
 
 	function install(){
 
-		update_option( 'gform_enable_background_updates', ! $this->background_updates == 'disabled' );
+		update_option( 'gform_enable_background_updates', $this->background_updates != 'disabled' );
 
 	}
 

@@ -951,25 +951,37 @@ Class GFNotification {
 		<?php $ui_settings['notification_from'] = ob_get_contents();
 		ob_clean(); ?>
 
-		<tr valign="top">
+		<?php
+		$reply_to_value      = rgar( $notification, 'replyTo' );
+		$is_invalid_reply_to = ! $is_valid && $reply_to_value && ! self::is_valid_notification_email( $reply_to_value );
+		$class               = $is_invalid_reply_to ? "class='gfield_error'" : '';
+		?>
+		<tr valign="top" <?php echo $class ?>>
 			<th scope="row">
 				<label for="gform_notification_reply_to">
-					<?php
-					$is_invalid_reply_to = ! $is_valid && ! self::is_valid_notification_email( rgar( $notification, 'replyTo' ) );
-					$class           = $is_invalid_reply_to ? ' gfield_error' : '';
-					?>
 					<?php esc_html_e( 'Reply To', 'gravityforms' ); ?>
 					<?php gform_tooltip( 'notification_reply_to' ) ?>
 				</label>
 			</th>
 			<td>
-				<input type="text" name="gform_notification_reply_to" id="gform_notification_reply_to" class="merge-tag-support mt-hide_all_fields fieldwidth-2<?php echo $class ?>" value="<?php echo esc_attr( rgget( 'replyTo', $notification ) ) ?>" />
+				<input type="text" name="gform_notification_reply_to" id="gform_notification_reply_to" class="merge-tag-support mt-hide_all_fields fieldwidth-2" value="<?php echo esc_attr( $reply_to_value ) ?>" />
+				<?php
+				if ( $is_invalid_reply_to ) {
+					?>
+					<br><span class="validation_message"><?php esc_html_e( 'Please enter a valid email address or merge tag in the Reply To field.', 'gravityforms' ) ?></span><?php
+				}
+				?>
 			</td>
 		</tr> <!-- / reply to -->
 		<?php $ui_settings['notification_reply_to'] = ob_get_contents();
 		ob_clean(); ?>
 
-		<tr valign="top">
+		<?php
+		$bcc_value      = rgar( $notification, 'bcc' );
+		$is_invalid_bcc = ! $is_valid && $bcc_value && ! self::is_valid_notification_email( $bcc_value );
+		$class          = $is_invalid_bcc ? "class='gfield_error'" : '';
+		?>
+		<tr valign="top" <?php echo $class ?>>
 			<th scope="row">
 				<label for="gform_notification_bcc">
 					<?php esc_html_e( 'BCC', 'gravityforms' ); ?>
@@ -977,11 +989,13 @@ Class GFNotification {
 				</label>
 			</th>
 			<td>
+				<input type="text" name="gform_notification_bcc" id="gform_notification_bcc" value="<?php echo esc_attr( $bcc_value ) ?>" class="merge-tag-support mt-hide_all_fields fieldwidth-2" />
 				<?php
-				$is_invalid_bcc = ! $is_valid && ! self::is_valid_notification_email( rgar( $notification, 'bcc' ) );
-				$class           = $is_invalid_bcc ? ' gfield_error' : '';
+				if ( $is_invalid_bcc ) {
+					?>
+					<br><span class="validation_message"><?php esc_html_e( 'Please enter a valid email address or merge tag in the BCC field.', 'gravityforms' ) ?></span><?php
+				}
 				?>
-				<input type="text" name="gform_notification_bcc" id="gform_notification_bcc" value="<?php echo esc_attr( rgget( 'bcc', $notification ) ) ?>" class="merge-tag-support mt-hide_all_fields fieldwidth-2<?php echo $class ?>" />
 			</td>
 		</tr> <!-- / bcc -->
 		<?php $ui_settings['notification_bcc'] = ob_get_contents();
@@ -1166,13 +1180,11 @@ Class GFNotification {
 		$bcc = rgpost( 'gform_notification_bcc' );
 		if ( ! empty( $bcc ) && ! self::is_valid_notification_email( $bcc ) ) {
 			$is_valid = false;
-			GFCommon::add_error_message( esc_html__( 'Please enter a valid email address or merge tag in the BCC field.', 'gravityforms' ) );
 		}
 
 		$reply_to = rgpost( 'gform_notification_reply_to' );
 		if ( ! empty( $reply_to ) && ! self::is_valid_notification_email( $reply_to ) ) {
 			$is_valid = false;
-			GFCommon::add_error_message( esc_html__( 'Please enter a valid email address or merge tag in the Reply To field.', 'gravityforms' ) );
 		}
 
 		return $is_valid;

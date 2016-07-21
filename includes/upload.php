@@ -111,6 +111,11 @@ class GFAsyncUpload {
 			}
 		}
 
+		/**
+		 * Allows the disabling of file upload whitelisting
+		 *
+		 * @param bool false Set to 'true' to disable whitelisting.  Defaults to 'false'.
+		 */
 		$whitelisting_disabled = apply_filters( 'gform_file_upload_whitelisting_disabled', false );
 
 		if ( empty( $allowed_extensions ) && ! $whitelisting_disabled ) {

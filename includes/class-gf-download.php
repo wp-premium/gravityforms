@@ -71,11 +71,13 @@ class GF_Download {
 
 			$content_type = self::get_content_type( $file_path );
 
+			$content_disposition = rgget( 'dl' ) ? 'attachment' : 'inline';
+
 			nocache_headers();
 			header( 'Robots: none' );
 			header( 'Content-Type: ' . $content_type );
 			header( 'Content-Description: File Transfer' );
-			header( 'Content-Disposition: attachment; filename="' . basename( $file ) . '"' );
+			header( 'Content-Disposition: ' . $content_disposition . '; filename="' . basename( $file ) . '"' );
 			header( 'Content-Transfer-Encoding: binary' );
 			self::readfile_chunked( $file_path );
 			die();

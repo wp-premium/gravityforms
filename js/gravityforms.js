@@ -1158,7 +1158,11 @@ var gform = {
 		if ( undefined == tag ) {
 			tag = action + '_' + hooks.length;
 		}
-		gform.hooks[hookType][action].push( { tag:tag, callable:callable, priority:priority } );
+        if( priority == undefined ){
+            priority = 10;
+        }
+
+        gform.hooks[hookType][action].push( { tag:tag, callable:callable, priority:priority } );
 	},
 	doHook: function( hookType, action, args ) {
 

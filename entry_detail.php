@@ -521,7 +521,8 @@ class GFEntryDetail {
 
 			<div class="wrap gf_entry_wrap">
 				<h2 class="gf_admin_page_title">
-					<span><?php echo esc_html( rgar( $form, 'title' ) ); ?></span>
+					<span id='gform_settings_page_title' class='gform_settings_page_title' onclick='GF_ShowEditTitle()'><?php echo esc_html( rgar( $form, 'title' ) ); ?></span>
+					<?php GFForms::form_switcher(); ?>
 					<?php if ( isset( $_GET['pos'] ) ) { ?>
 						<div class="gf_entry_detail_pagination">
 							<ul>
@@ -535,13 +536,14 @@ class GFEntryDetail {
 					<?php } ?>
 
 					<span class="gf_admin_page_subtitle">
-				<span class="gf_admin_page_formid">ID: <?php echo absint( $form['id'] ); ?></span>
-			</span>
+						<span class="gf_admin_page_formid">ID: <?php echo absint( $form['id'] ); ?></span>
+					</span>
 
 					<?php
 					$gf_entry_locking = new GFEntryLocking();
 					$gf_entry_locking->lock_info( $lead_id ); ?>
 				</h2>
+				<?php GFForms::edit_form_title( $form ); ?>
 
 				<?php GFCommon::display_dismissible_message(); ?>
 
