@@ -1514,6 +1514,11 @@ if ( class_exists( 'GFForms' ) ) {
 		public function get_results( $form_id ) {
 			$this->log_debug( __METHOD__ . '(): Running.' );
 
+			/**
+			 * Filters the capability required to get form results via the web API.
+			 *
+			 * @since 1.9.2
+			 */
 			$capability = apply_filters( 'gform_web_api_capability_get_results', 'gravityforms_view_entries' );
 			$this->authorize( $capability );
 

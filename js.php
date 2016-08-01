@@ -623,6 +623,7 @@ if ( ! class_exists( 'GFForms' ) ) {
 
 				if (!field.label)
 					field.label = <?php echo json_encode( esc_html__( 'Address', 'gravityforms' ) ); ?>;
+				field.addressType = <?php echo json_encode( GF_Fields::get( 'address' )->get_default_address_type( rgget( 'id' ) ) ) ?>;
 				field.inputs = [new Input(field.id + 0.1, <?php echo json_encode( gf_apply_filters( array( 'gform_address_street', rgget( 'id' ) ), esc_html__( 'Street Address', 'gravityforms' ), rgget( 'id' ) ) ); ?>), new Input(field.id + 0.2, <?php echo json_encode( gf_apply_filters( array( 'gform_address_street2', rgget( 'id' ) ), esc_html__( 'Address Line 2', 'gravityforms' ), rgget( 'id' ) ) ); ?>), new Input(field.id + 0.3, <?php echo json_encode( gf_apply_filters( array( 'gform_address_city', rgget( 'id' ) ), esc_html__( 'City', 'gravityforms' ), rgget( 'id' ) ) ); ?>),
 					new Input(field.id + 0.4, <?php echo json_encode( gf_apply_filters( array( 'gform_address_state', rgget( 'id' ) ), __( 'State / Province', 'gravityforms' ), rgget( 'id' ) ) ); ?>), new Input(field.id + 0.5, <?php echo json_encode( gf_apply_filters( array( 'gform_address_zip', rgget( 'id' ) ), esc_html__( 'ZIP / Postal Code', 'gravityforms' ), rgget( 'id' ) ) ); ?>), new Input(field.id + 0.6, <?php echo json_encode( gf_apply_filters( array( 'gform_address_country', rgget( 'id' ) ), esc_html__( 'Country', 'gravityforms' ), rgget( 'id' ) ) ); ?>)];
 				break;

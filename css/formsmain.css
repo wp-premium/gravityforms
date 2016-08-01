@@ -2141,6 +2141,7 @@ body .gform_wrapper img.add_list_item,
 body .gform_wrapper img.delete_list_item {
     display: -moz-inline-stack;
     display: inline-block;
+    margin-top: -2px;
 }
 
 .gform_wrapper ul li.gfield.field_sublabel_above.field_description_below + li.gfield {

@@ -24,10 +24,12 @@ class GF_Download {
 			}
 
 			$hash = rgget( 'hash' );
-
+			GFCommon::log_debug( "start file download process. file: {$file}, hash: {$hash}" );
 		    if ( self::validate_download( $form_id, $field_id, $file, $hash ) ) {
+				GFCommon::log_debug('dowload validated. start delivery');
 			    self::deliver( $form_id, $file );
 		    } else {
+				GFCommon::log_debug('download validation failed. abort.');
 			    self::die_401();
 		    }
 		}
@@ -67,8 +69,10 @@ class GF_Download {
 
 		$file_path = trailingslashit( $path ) . $file;
 
-		if ( file_exists( $file_path ) ) {
+		GFCommon::log_debug( "delivering file: {$file_path}" );
 
+		if ( file_exists( $file_path ) ) {
+			GFCommon::log_debug( "file exists - starting delivery" );
 			$content_type = self::get_content_type( $file_path );
 
 			$content_disposition = rgget( 'dl' ) ? 'attachment' : 'inline';
@@ -82,6 +86,7 @@ class GF_Download {
 			self::readfile_chunked( $file_path );
 			die();
 		} else {
+			GFCommon::log_debug( "file does not exist. abort with 404" );
 			self::die_404();
 		}
 	}

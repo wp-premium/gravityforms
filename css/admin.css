@@ -792,8 +792,9 @@ table.gfield_list th {
 	opacity: 0.6
 }
 
-.gform_wrapper table.gfield_list td.gfield_list_icons {
-	min-width: 45px !important
+body .gform_wrapper table.gfield_list.gfield_list_container tbody tr.gfield_list_row_odd.gfield_list_group td.gfield_list_icons {
+	min-width: 45px !important;
+	vertical-align: middle !important;
 }
 
 
@@ -2756,16 +2757,18 @@ ul#gf_form_toolbar_links li.gf_form_toolbar_results a.gf_toolbar_disabled:hover 
 	margin-bottom:2px;
 	font-weight: bold;
 }
-#gform_settings_page_title{
-	cursor:pointer;
-}
 
 #gform_settings_page_title {
 	padding: 5px 10px 5px 10px;
 	webkit-border-radius: 2px;
 	border-radius: 2px;
 }
-#gform_settings_page_title:hover {
+
+.gform_settings_page_title_editable{
+	cursor:pointer;
+}
+
+.gform_settings_page_title_editable:hover {
 	background-color: #e5e5e5 ;
 	webkit-border-radius: 2px;
 	border-radius: 2px;

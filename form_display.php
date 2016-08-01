@@ -2992,6 +2992,16 @@ class GFFormDisplay {
 		$resume_token = sanitize_key( $resume_token );
 		$form_id = intval( $form['id'] );
 
+		/**
+		 * Filters the 'Save and Continue' URL to be used with a partial entry submission.
+		 *
+		 * @since 1.9
+		 *
+		 * @param string $resume_url   The URL to be used to resume the partial entry.
+		 * @param array  $form         The Form Object.
+		 * @param string $resume_token The token that is used within the URL.
+		 * @param string $email        The email address associated with the partial entry.
+		 */
 		$resume_url  = apply_filters( 'gform_save_and_continue_resume_url', add_query_arg( array( 'gf_token' => $resume_token ), GFFormsModel::get_current_page_url() ), $form, $resume_token, $email );
 		$resume_url  = esc_url( $resume_url );
 		$resume_link = "<a href=\"{$resume_url}\" class='resume_form_link'>{$resume_url}</a>";

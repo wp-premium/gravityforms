@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms
 Plugin URI: http://www.gravityforms.com
 Description: Easily create web forms and manage form entries within the WordPress admin.
-Version: 2.0.3
+Version: 2.0.4
 Author: rocketgenius
 Author URI: http://www.rocketgenius.com
 Text Domain: gravityforms
@@ -155,7 +155,7 @@ class GFForms {
 	 * @static
 	 * @var string $version The version number
 	 */
-	public static $version = '2.0.3';
+	public static $version = '2.0.4';
 
 
 	/**
@@ -3756,6 +3756,12 @@ SET d.value = l.value"
 	 * @static
 	 */
 	public static function edit_form_title( $form ){
+
+		//Only allow users with form edit permissions to edit forms
+		if( ! GFCommon::current_user_can_any( 'gravityforms_edit_forms' ) ){
+			return;
+		}
+
 		?>
 
 		<div id="edit-title-container" class="add_field_button_container" >
@@ -5307,12 +5313,16 @@ if ( ! function_exists( 'rgar' ) ) {
 	 * you want to return a specific value if the property is not set.
 	 *
 	 * @param array  $array   Array from which the property's value should be retrieved.
-	 * @param string $prop    Name of the property to be retreived.
+	 * @param string $prop    Name of the property to be retrieved.
 	 * @param string $default Optional. Value that should be returned if the property is not set or empty. Defaults to null.
 	 *
 	 * @return null|string|mixed The value
 	 */
 	function rgar( $array, $prop, $default = null ) {
+
+		if ( ! is_array( $array ) && ! ( is_object( $array ) && $array instanceof ArrayAccess ) ) {
+			return $default;
+		}
 
 		if ( isset( $array[ $prop ] ) ) {
 			$value = $array[ $prop ];
@@ -5332,14 +5342,20 @@ if ( ! function_exists( 'rgars' ) ) {
 	 *
 	 * @param array  $array The array to search in
 	 * @param string $name  The name of the property to find.
+	 * @param string $default Optional. Value that should be returned if the property is not set or empty. Defaults to null.
 	 *
 	 * @return null|string|mixed The value
 	 */
-	function rgars( $array, $name ) {
+	function rgars( $array, $name, $default = null ) {
+
+		if ( ! is_array( $array ) && ! ( is_object( $array ) && $array instanceof ArrayAccess ) ) {
+			return $default;
+		}
+
 		$names = explode( '/', $name );
 		$val   = $array;
 		foreach ( $names as $current_name ) {
-			$val = rgar( $val, $current_name );
+			$val = rgar( $val, $current_name, $default );
 		}
 
 		return $val;
@@ -5472,6 +5488,9 @@ if ( ! function_exists( 'gf_do_action' ) ) {
 	 *
 	 * Allows additional actions based on form and field ID to be defined easily.
 	 *
+	 * @since 1.9.14.20 Modifiers should no longer be passed as a separate parameter.
+	 * @since 1.9.12
+	 *
 	 * @param string $action The action
 	 */
 	function gf_do_action( $action ) {
@@ -5479,23 +5498,23 @@ if ( ! function_exists( 'gf_do_action' ) ) {
 		$args = func_get_args();
 
 		if( is_array( $action ) ) {
-			// func parameters are: $action, $value
+			// Func parameters are: $action, $value
 			$modifiers = array_splice( $action, 1, count( $action ) );
 			$action    = $action[0];
 			$args      = array_slice( $args, 1 );
 		} else {
 			//_deprecated_argument( 'gf_do_action', '1.9.14.20', "Modifiers should no longer be passed as a separate parameter. Combine the action name and modifier(s) into an array and pass that array as the first parameter of the function. Example: gf_do_action( array( 'action_name', 'mod1', 'mod2' ), \$arg1, \$arg2 );" );
-			// func parameters are: $action, $modifier, $value
+			// Func parameters are: $action, $modifier, $value
 			$modifiers = ! is_array( $args[1] ) ? array( $args[1] ) : $args[1];
 			$args      = array_slice( $args, 2 );
 		}
 
-		// add an empty modifier so the base filter will be applied as well
+		// Add an empty modifier so the base filter will be applied as well
 		array_unshift( $modifiers, '' );
 
 		$args = array_pad( $args, 10, null );
 
-		// apply modified versions of filter
+		// Apply modified versions of filter
 		foreach ( $modifiers as $modifier ) {
 			$modifier = empty( $modifier ) ? '' : sprintf( '_%s', $modifier );
 			$action  .= $modifier;

@@ -121,7 +121,7 @@ class GF_Field_Address extends GF_Field {
 		$zip_placeholder_attribute     = GFCommon::get_input_placeholder_attribute( $address_zip_field_input );
 
 		$address_types = $this->get_address_types( $form_id );
-		$addr_type     = empty( $this->addressType ) ? 'international' : $this->addressType;
+		$addr_type     = empty( $this->addressType ) ? $this->get_default_address_type( $form_id ) : $this->addressType;
 		$address_type  = rgar( $address_types, $addr_type );
 
 		$state_label  = empty( $address_type['state_label'] ) ? esc_html__( 'State', 'gravityforms' ) : $address_type['state_label'];
@@ -423,6 +423,26 @@ class GF_Field_Address extends GF_Field {
 		return gf_apply_filters( array( 'gform_address_types', $form_id ), $addressTypes, $form_id );
 	}
 
+	/**
+	 * Retrieve the default address type for this field.
+	 *
+	 * @param int $form_id The current form ID.
+	 *
+	 * @return string
+	 */
+	public function get_default_address_type( $form_id ) {
+		$default_address_type = 'international';
+
+		/**
+		 * Allow the default address type to be overridden.
+		 *
+		 * @param string $default_address_type The default address type of international.
+		 */
+		$default_address_type = apply_filters( 'gform_default_address_type', $default_address_type, $form_id );
+
+		return apply_filters( 'gform_default_address_type_' . $form_id, $default_address_type, $form_id );
+	}
+
 	public function get_state_field( $id, $field_id, $state_value, $disabled_text, $form_id ) {
 
 		$is_entry_detail = $this->is_entry_detail();
@@ -436,12 +456,12 @@ class GF_Field_Address extends GF_Field {
 			$state_value = $this->defaultState;
 
 			//for backwards compatibility (canadian address type used to store the default state into the defaultProvince property)
-			if ( $this->addressType == 'canadian' && ! empty($this->defaultProvince) ) {
+			if ( $this->addressType == 'canadian' && ! empty( $this->defaultProvince ) ) {
 				$state_value = $this->defaultProvince;
 			}
 		}
 
-		$address_type        = empty($this->addressType) ? 'international' : $this->addressType;
+		$address_type        = empty( $this->addressType ) ? $this->get_default_address_type( $form_id ) : $this->addressType;
 		$address_types       = $this->get_address_types( $form_id );
 		$has_state_drop_down = isset( $address_types[ $address_type ]['states'] ) && is_array( $address_types[ $address_type ]['states'] );
 
@@ -941,6 +961,13 @@ class GF_Field_Address extends GF_Field {
 			}
 
 			//adding map link
+			/**
+			 * Disables the Google Maps link from displaying in the address field.
+			 *
+			 * @since 1.9
+			 *
+			 * @param bool false Determines if the map link should be disabled. Set to true to disable. Defaults to false.
+			 */
 			$map_link_disabled = apply_filters( 'gform_disable_address_map_link', false );
 			if ( ! empty( $address ) && $format == 'html' && ! $map_link_disabled ) {
 				$address_qs = str_replace( $line_break, ' ', $address ); //replacing <br/> and \n with spaces
