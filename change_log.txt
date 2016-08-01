@@ -1,4 +1,23 @@
 ------------------------------------------------------------------------------------------------------------------
+Version 2.0.4
+    - Added support for the "urlencode" modifier on the field merge tag e.g. {File:5:urlencode}.
+    - Added support for using the fileupload field "download" modifier with the {all_fields} merge tag.
+	- Added gform_export_max_execution_time filter to allow the max execution time for exports to be changed.
+    - Added the gform_default_address_type filter for overriding the default address type for new fields.
+    - Updated rgar() and rgars() to support object with ArrayAccess.
+	- Updated inline form title editor so that only users with form edit permissions can change form title.
+	- Fixed a conflict between the Partials Entries Add-On and the Payment Add-Ons that would cause payments to be captured before the submit button was clicked.
+    - Fixed an issue preventing the completion of the installation wizard on some sites.
+	- Fixed issue with calculation rounding.
+	- Fixed issue where inputs-specific conditional logic was not correctly evaluated on submission.
+    - Fixed fatal error which could occur on the entry list page.
+    - Fixed a fatal error which could occur in some situations when cleaning currency formatted values.
+	- Fixed an issue with entry export for some installations that use alternative stream wrappers for writing to the uploads folder e.g. S3.
+	- Fixed issue with conditional logic on different number formats.
+    - Fixed an issue with the Address field in the form editor.
+    - Fixed {all_fields} merge tag converting field label characters to HTML entities when using the text format.
+
+------------------------------------------------------------------------------------------------------------------
 Version 2.0.3
 	- Added support for [embed] shortcode for HTML fields.
 	- Added form switcher to entry detail view.

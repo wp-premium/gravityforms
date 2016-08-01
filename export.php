@@ -642,7 +642,18 @@ class GFExport {
 	public static function start_export( $form, $offset = 0, $export_id = '' ) {
 
 		$time_start         = microtime( true );
-		$max_execution_time = 20; // seconds
+
+		/***
+		 * Allows the export max execution time to be changed.
+		 *
+		 * When the max execution time is reached, the export routine stop briefly and submit another AJAX request to continue exporting entries from the point it stopped.
+		 *
+		 * @since 2.0.3.10
+		 *
+		 * @param int   20    The amount of time, in seconds, that each request should run for.  Defaults to 20 seconds.
+		 * @param array $form The Form Object
+		 */
+		$max_execution_time = apply_filters( 'gform_export_max_execution_time', 20, $form ); // seconds
 		$page_size          = 20;
 
 		$form_id = $form['id'];
@@ -664,12 +675,9 @@ class GFExport {
 		//$sorting = array( 'key' => 'date_created', 'direction' => 'DESC', 'type' => 'info' );
 		$sorting = array( 'key' => 'id', 'direction' => 'DESC', 'type' => 'info' );
 
-		GFCommon::log_debug( "GFExport::start_export(): Start date: {$start_date}" );
-		GFCommon::log_debug( "GFExport::start_export(): End date: {$end_date}" );
-
 		$form = self::add_default_export_fields( $form );
 
-		$total_entry_count = GFAPI::count_entries( $form_id, $search_criteria );
+		$total_entry_count     = GFAPI::count_entries( $form_id, $search_criteria );
 		$remaining_entry_count = $offset == 0 ? $total_entry_count : $total_entry_count - $offset;
 
 		// Adding BOM marker for UTF-8
@@ -730,13 +738,12 @@ class GFExport {
 
 			$leads = gf_apply_filters( array( 'gform_leads_before_export', $form_id ), $leads, $form, $paging );
 
-			GFCommon::log_debug("search: " . print_r($search_criteria, true));
-			GFCommon::log_debug("sort: " . print_r($sorting, true));
-			GFCommon::log_debug("paging: " . print_r($paging, true));
+			GFCommon::log_debug( __METHOD__ . '(): search criteria: ' . print_r( $search_criteria, true ) );
+			GFCommon::log_debug( __METHOD__ . '(): sorting: ' . print_r( $sorting, true ) );
+			GFCommon::log_debug( __METHOD__ . '(): paging: ' . print_r( $paging, true ) );
 
 			foreach ( $leads as $lead ) {
-				GFCommon::log_debug( $lead['id'] );
-
+				GFCommon::log_debug( __METHOD__ . '(): Processing entry #' . $lead['id'] );
 
 				foreach ( $fields as $field_id ) {
 					switch ( $field_id ) {
@@ -834,8 +841,8 @@ class GFExport {
 		$offset = $complete ? 0 : $offset;
 
 		$status = array(
-			'status' => $complete ? 'complete' : 'in_progress',
-			'offset' => $offset,
+			'status'   => $complete ? 'complete' : 'in_progress',
+			'offset'   => $offset,
 			'exportId' => $export_id,
 			'progress' => $remaining_entry_count > 0 ? intval( 100 - ( $remaining_entry_count / $total_entry_count ) * 100 ) . '%' : '',
 		);
@@ -1024,7 +1031,13 @@ class GFExport {
 
 		$file = $export_folder . sanitize_file_name( 'export-' . $export_id .'.csv' );
 
-		file_put_contents( $file, $lines, FILE_APPEND | LOCK_EX );
+		GFCommon::log_debug( __METHOD__ . '(): Writing to file.' );
+		$result = file_put_contents( $file, $lines, FILE_APPEND );
+		if ( $result === false ) {
+			GFCommon::log_error( __METHOD__ . '(): An issue occurred whilst writing to the file.' );
+		} else {
+			GFCommon::log_debug( __METHOD__ . '(): Number of bytes written to the file: ' . print_r( $result, 1 ) );
+		}
 
 	}
 

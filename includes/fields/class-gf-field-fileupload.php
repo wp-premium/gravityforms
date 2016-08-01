@@ -417,13 +417,14 @@ class GF_Field_FileUpload extends GF_Field {
 	public function get_value_entry_detail( $value, $currency = '', $use_text = false, $format = 'html', $media = 'screen' ) {
 		$output = '';
 		if ( ! empty( $value ) ) {
-			$output_arr = array();
-			$file_paths = $this->multipleFiles ? json_decode( $value ) : array( $value );
+			$output_arr     = array();
+			$file_paths     = $this->multipleFiles ? json_decode( $value ) : array( $value );
+			$force_download = in_array( 'download', $this->get_modifiers() );
 
 			if ( is_array( $file_paths ) ) {
 				foreach ( $file_paths as $file_path ) {
 					$info = pathinfo( $file_path );
-					$file_path = $this->get_download_url( $file_path );
+					$file_path = $this->get_download_url( $file_path, $force_download );
 					if ( GFCommon::is_ssl() && strpos( $file_path, 'http:' ) !== false ) {
 						$file_path = str_replace( 'http:', 'https:', $file_path );
 					}
@@ -442,7 +443,7 @@ class GF_Field_FileUpload extends GF_Field {
 
 	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {
 
-		$force_download = $modifier === 'download';
+		$force_download = in_array( 'download', $this->get_modifiers() );
 
 		if ( $this->multipleFiles ) {
 

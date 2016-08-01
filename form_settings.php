@@ -1607,8 +1607,10 @@ class GFFormSettings {
 		/**
 		 * Fires right before the confirmation that a form is deleted
 		 *
+		 * @since 1.9
+		 *
 		 * @param int   $form['confirmations'][ $confirmation_id ] The delete confirmation object ID
-		 * @para  array $form                                      The Form object
+		 * @param array $form                                      The Form object
 		 */
 		do_action( 'gform_pre_confirmation_deleted', $form['confirmations'][ $confirmation_id ], $form );
 

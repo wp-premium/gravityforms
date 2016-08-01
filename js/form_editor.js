@@ -1219,7 +1219,7 @@ function UpdateAddressFields(){
 
     if(hide_country){
         jQuery('.field_selected #input_' + field.id + '_6_container').hide();
-        jQuery('.field_selected .field_custom_input_row_input_' + field.id + '_6').hide();
+        jQuery('.field_custom_input_row_input_' + field.id + '_6').hide();
     } else {
         //selects default country and displays drop down
         jQuery(".field_selected #input_" + field.id + "_6").val(jQuery("#field_address_default_country_" + addressType).val());

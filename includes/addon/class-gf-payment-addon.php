@@ -215,7 +215,9 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 			$failed_honeypot = ! rgempty( "input_{$honeypot_id}" );
 		}
 
-		if ( ! $validation_result['is_valid'] || ! $is_last_page || $failed_honeypot ) {
+		$is_heartbeat	 = rgpost('action') == 'heartbeat'; // Validation called by partial entries feature via the heartbeat API.
+
+		if ( ! $validation_result['is_valid'] || ! $is_last_page || $failed_honeypot || $is_heartbeat) {
 			return $validation_result;
 		}
 

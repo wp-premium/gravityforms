@@ -46,6 +46,7 @@ function Currency(currency){
             number = parseFloat(number.substr(1));
 			negative = '-';
         }
+
         money = this.numberFormat(number, this.currency["decimals"], this.currency["decimal_separator"], this.currency["thousand_separator"]);
 
 		if ( money == '0.00' ){
@@ -74,11 +75,17 @@ function Currency(currency){
         };
 
         if(decimals == '0') {
+
+            n = n + 0.0000000001; // getting around floating point arithmetic issue when rounding. ( i.e. 4.005 is represented as 4.004999999999 and gets rounded to 4.00 instead of 4.01 )
+
             s = ('' + Math.round(n)).split('.');
         } else
         if(decimals == -1) {
             s = ('' + n).split('.');
         } else {
+
+            n = n + 0.0000000001; // getting around floating point arithmetic issue when rounding. ( i.e. 4.005 is represented as 4.004999999999 and gets rounded to 4.00 instead of 4.01 )
+
             // Fix for IE parseFloat(0.55).toFixed(0) = 0;
             s = toFixedFix(n, prec).split('.');
         }
