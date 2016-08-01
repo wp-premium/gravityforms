@@ -27,6 +27,11 @@ class GF_Field extends stdClass implements ArrayAccess {
 
 	private $_is_entry_detail = null;
 
+	/**
+	 * @var array $_modifiers An array of modifiers specified on the field or all_fields merge tag being processed.
+	 */
+	private $_modifiers = array();
+
 	public function __construct( $data = array() ) {
 		if ( empty( $data ) ) {
 			return;
@@ -434,7 +439,11 @@ class GF_Field extends stdClass implements ArrayAccess {
 				}
 			} else {
 				// The value contains HTML but the value was sanitized before saving.
-				$return = $raw_value;
+				if ( is_array( $raw_value ) ) {
+					$return = rgar( $raw_value, $input_id );
+				} else {
+					$return = $raw_value;
+				}
 			}
 
 			if ( $nl2br ) {
@@ -682,6 +691,26 @@ class GF_Field extends stdClass implements ArrayAccess {
 
 
 	// # OTHER HELPERS --------------------------------------------------------------------------------------------------
+
+	/**
+	 * Store the modifiers so they can be accessed in get_value_entry_detail() when preparing the content for the {all_fields} output.
+	 *
+	 * @param array $modifiers An array of modifiers to be stored.
+	 */
+	public function set_modifiers( $modifiers ) {
+
+		$this->_modifiers = $modifiers;
+	}
+
+	/**
+	 * Retrieve the merge tag modifiers.
+	 *
+	 * @return array
+	 */
+	public function get_modifiers() {
+
+		return $this->_modifiers;
+	}
 
 	/**
 	 * Retrieves the field input type.

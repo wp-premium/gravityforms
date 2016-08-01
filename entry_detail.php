@@ -511,7 +511,9 @@ class GFEntryDetail {
 			}
 
 		</script>
-
+		<?php
+		$editable_class = GFCommon::current_user_can_any( 'gravityforms_edit_forms' ) ? ' gform_settings_page_title_editable' : '';
+		?>
 		<form method="post" id="entry_form" enctype='multipart/form-data'>
 			<?php wp_nonce_field( 'gforms_save_entry', 'gforms_save_entry' ) ?>
 			<input type="hidden" name="action" id="action" value="" />
@@ -521,7 +523,7 @@ class GFEntryDetail {
 
 			<div class="wrap gf_entry_wrap">
 				<h2 class="gf_admin_page_title">
-					<span id='gform_settings_page_title' class='gform_settings_page_title' onclick='GF_ShowEditTitle()'><?php echo esc_html( rgar( $form, 'title' ) ); ?></span>
+					<span id='gform_settings_page_title' class='gform_settings_page_title<?php echo $editable_class?>' onclick='GF_ShowEditTitle()'><?php echo esc_html( rgar( $form, 'title' ) ); ?></span>
 					<?php GFForms::form_switcher(); ?>
 					<?php if ( isset( $_GET['pos'] ) ) { ?>
 						<div class="gf_entry_detail_pagination">
@@ -868,6 +870,15 @@ class GFEntryDetail {
 				<th id="details">
 					<?php
 					$title = sprintf( '%s : %s %s', esc_html( $form['title'] ), esc_html__( 'Entry # ', 'gravityforms' ), absint( $lead['id'] ) );
+					/**
+					 * Filters the title displayed on the entry detail page.
+					 *
+					 * @since 1.9
+					 *
+					 * @param string $title The title used.
+					 * @param array  $form  The Form Object.
+					 * @param array  $entry The Entry Object.
+					 */
 					echo apply_filters( 'gform_entry_detail_title', $title, $form, $lead );
 					?>
 				</th>

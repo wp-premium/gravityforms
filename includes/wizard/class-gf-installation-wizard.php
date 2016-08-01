@@ -211,13 +211,13 @@ class GF_Installation_Wizard {
 		return $this->get_step( $next_step_name );
 	}
 
-	public function complete_installation(){
+	public function complete_installation() {
 		foreach ( array_keys( $this->_step_class_names ) as $step_name ) {
 			$step = $this->get_step( $step_name );
 			$step->install();
 			$step->flush_values();
 		}
-		delete_option( 'gform_pending_installation' );
+		update_option( 'gform_pending_installation', false );
 	}
 
 
