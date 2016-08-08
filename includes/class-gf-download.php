@@ -15,8 +15,8 @@ class GF_Download {
 	public static function maybe_process() {
 		if ( isset( $_GET['gf-download'] ) ) {
 
-			$file = $_GET['gf-download'];
-			$form_id = rgget( 'form-id' );
+			$file     = $_GET['gf-download'];
+			$form_id  = rgget( 'form-id' );
 			$field_id = rgget( 'field-id' );
 
 			if ( empty( $file ) || empty( $form_id ) ) {
@@ -24,14 +24,14 @@ class GF_Download {
 			}
 
 			$hash = rgget( 'hash' );
-			GFCommon::log_debug( "start file download process. file: {$file}, hash: {$hash}" );
-		    if ( self::validate_download( $form_id, $field_id, $file, $hash ) ) {
-				GFCommon::log_debug('dowload validated. start delivery');
-			    self::deliver( $form_id, $file );
-		    } else {
-				GFCommon::log_debug('download validation failed. abort.');
-			    self::die_401();
-		    }
+			GFCommon::log_debug( __METHOD__ . "(): Starting file download process. file: {$file}, hash: {$hash}." );
+			if ( self::validate_download( $form_id, $field_id, $file, $hash ) ) {
+				GFCommon::log_debug( __METHOD__ . '(): Download validated. Proceeding.' );
+				self::deliver( $form_id, $file );
+			} else {
+				GFCommon::log_debug( __METHOD__ . '(): Download validation failed. Aborting with 401.' );
+				self::die_401();
+			}
 		}
 	}
 
@@ -46,14 +46,12 @@ class GF_Download {
 	 * @return bool
 	 */
 	private static function validate_download( $form_id, $field_id, $file, $hash ) {
-
 		if ( empty( $hash ) ) {
 			return false;
 		}
 
 		$hash_check = GFCommon::generate_download_hash( $form_id, $field_id, $file );
-
-		$valid = hash_equals( $hash, $hash_check );
+		$valid      = hash_equals( $hash, $hash_check );
 
 		return $valid;
 	}
@@ -65,16 +63,15 @@ class GF_Download {
 	 * @param $file
 	 */
 	private static function deliver( $form_id, $file ) {
-		$path = GFFormsModel::get_upload_path( $form_id );
-
+		$path      = GFFormsModel::get_upload_path( $form_id );
 		$file_path = trailingslashit( $path ) . $file;
 
-		GFCommon::log_debug( "delivering file: {$file_path}" );
+		GFCommon::log_debug( __METHOD__ . "(): Checking if file exists: {$file_path}." );
 
 		if ( file_exists( $file_path ) ) {
-			GFCommon::log_debug( "file exists - starting delivery" );
-			$content_type = self::get_content_type( $file_path );
+			GFCommon::log_debug( __METHOD__ . '(): File exists. Starting delivery.' );
 
+			$content_type        = self::get_content_type( $file_path );
 			$content_disposition = rgget( 'dl' ) ? 'attachment' : 'inline';
 
 			nocache_headers();
@@ -86,7 +83,7 @@ class GF_Download {
 			self::readfile_chunked( $file_path );
 			die();
 		} else {
-			GFCommon::log_debug( "file does not exist. abort with 404" );
+			GFCommon::log_debug( __METHOD__ . '(): File does not exist. Aborting with 404.' );
 			self::die_404();
 		}
 	}
@@ -101,6 +98,7 @@ class GF_Download {
 	private static function get_content_type( $file_path ) {
 		$info = wp_check_filetype( $file_path );
 		$type = rgar( $info, 'type' );
+
 		return $type;
 	}
 
@@ -121,7 +119,7 @@ class GF_Download {
 		$handle    = @fopen( $file, 'r' );
 
 		if ( $size = @filesize( $file ) ) {
-			header("Content-Length: " . $size );
+			header( 'Content-Length: ' . $size );
 		}
 
 		if ( false === $handle ) {

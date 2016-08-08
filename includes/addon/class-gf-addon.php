@@ -2661,7 +2661,7 @@ abstract class GFAddOn {
 			array(
 				'default_value', 'label', 'choices', 'feedback_callback', 'checked', 'checkbox_label', 'value', 'type',
 				'validation_callback', 'required', 'hidden', 'tooltip', 'dependency', 'messages', 'name', 'args', 'exclude_field_types',
-				'field_type', 'after_input', 'input_type', 'icon'
+				'field_type', 'after_input', 'input_type', 'icon', 'save_callback',
 			), $field
 		);
 
