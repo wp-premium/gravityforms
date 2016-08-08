@@ -1,4 +1,16 @@
 ------------------------------------------------------------------------------------------------------------------
+Version 2.0.5
+    - Added debug statements for troubleshooting uploads.
+	- Fixed an issue with the upgrade process for some database configurations.
+    - Fixed an issue with the location of the js gf_get_field_number_format function.
+    - Fixed an issue in the form editor when using Firefox which prevented the field from opening for editing when clicking on a field input.
+    - Fixed an issue where an upgrade error admin notice is displayed unnecessarily when the database upgrade is complete but there are no entries to migrate.
+    - Fixed issue with conditional logic dependent on any Pricing field.
+    - Fixed an issue with the capability required to access the import forms tab.
+
+    - AF: Fixed PHP notice when using a save callback on a plugin or feed settings field.
+
+------------------------------------------------------------------------------------------------------------------
 Version 2.0.4
     - Added support for the "urlencode" modifier on the field merge tag e.g. {File:5:urlencode}.
     - Added support for using the fileupload field "download" modifier with the {all_fields} merge tag.

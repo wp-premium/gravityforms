@@ -32,9 +32,9 @@ class GF_Field_FileUpload extends GF_Field {
 
 	public function validate( $value, $form ) {
 		$input_name = 'input_' . $this->id;
+		GFCommon::log_debug( __METHOD__ . '(): Validating field ' . $input_name );
 
 		$allowed_extensions = ! empty( $this->allowedExtensions ) ? GFCommon::clean_extensions( explode( ',', strtolower( $this->allowedExtensions ) ) ) : array();
-
 		if ( $this->multipleFiles ) {
 			$file_names = isset( GFFormsModel::$uploaded_files[ $form['id'] ][ $input_name ] ) ? GFFormsModel::$uploaded_files[ $form['id'] ][ $input_name ] : array();
 		} else {
@@ -47,9 +47,11 @@ class GF_Field_FileUpload extends GF_Field {
 					switch ( $_FILES[ $input_name ]['error'] ) {
 						case UPLOAD_ERR_INI_SIZE :
 						case UPLOAD_ERR_FORM_SIZE :
+							GFCommon::log_debug( __METHOD__ . '(): File ' . $_FILES[ $input_name ]['name'] . ' exceeds size limit. Maximum file size: ' . $max_upload_size_in_mb . 'MB' );
 							$fileupload_validation_message = sprintf( esc_html__( 'File exceeds size limit. Maximum file size: %dMB', 'gravityforms' ), $max_upload_size_in_mb );
 							break;
 						default :
+							GFCommon::log_debug( __METHOD__ . '(): The following error occurred while uploading - ' . $_FILES[ $input_name ]['error'] );
 							$fileupload_validation_message = sprintf( esc_html__( 'There was an error while uploading the file. Error code: %d', 'gravityforms' ), $_FILES[ $input_name ]['error'] );
 					}
 					$this->validation_message = empty( $this->errorMessage ) ? $fileupload_validation_message : $this->errorMessage;
@@ -57,6 +59,7 @@ class GF_Field_FileUpload extends GF_Field {
 				}
 			} elseif ( $_FILES[ $input_name ]['size'] > 0 && $_FILES[ $input_name ]['size'] > $max_upload_size_in_bytes ) {
 				$this->failed_validation = true;
+				GFCommon::log_debug( __METHOD__ . '(): File ' . $_FILES[ $input_name ]['name'] . ' exceeds size limit. Maximum file size: ' . $max_upload_size_in_mb . 'MB' );
 				$this->validation_message = sprintf( esc_html__( 'File exceeds size limit. Maximum file size: %dMB', 'gravityforms' ), $max_upload_size_in_mb );
 				return;
 			}
@@ -72,6 +75,7 @@ class GF_Field_FileUpload extends GF_Field {
 				$check_result = GFCommon::check_type_and_ext( $_FILES[ $input_name ] );
 				if ( is_wp_error( $check_result ) ) {
 					$this->failed_validation = true;
+					GFCommon::log_debug( __METHOD__ . '(): The uploaded file type is not allowed.' );
 					$this->validation_message = esc_html__( 'The uploaded file type is not allowed.', 'gravityforms' );
 					return;
 				}
@@ -81,20 +85,24 @@ class GF_Field_FileUpload extends GF_Field {
 		}
 
 		foreach ( $file_names as $file_name ) {
+			GFCommon::log_debug( __METHOD__ . '(): Validating file upload for ' . $file_name['uploaded_filename'] );
 			$info = pathinfo( rgar( $file_name, 'uploaded_filename' ) );
 
 			if ( empty( $allowed_extensions ) ) {
 				if ( GFCommon::file_name_has_disallowed_extension( rgar( $file_name, 'uploaded_filename' ) ) ) {
+					GFCommon::log_debug( __METHOD__ . '(): The file has a disallowed extension, failing validation.' );
 					$this->failed_validation  = true;
 					$this->validation_message = empty( $this->errorMessage ) ? esc_html__( 'The uploaded file type is not allowed.', 'gravityforms' ) : $this->errorMessage;
 				}
 			} else {
 				if ( ! empty( $info['basename'] ) && ! GFCommon::match_file_extension( rgar( $file_name, 'uploaded_filename' ), $allowed_extensions ) ) {
+					GFCommon::log_debug( __METHOD__ . '(): The file is of a type that cannot be uploaded, failing validation.' );
 					$this->failed_validation  = true;
 					$this->validation_message = empty( $this->errorMessage ) ? sprintf( esc_html__( 'The uploaded file type is not allowed. Must be one of the following: %s', 'gravityforms' ), strtolower( $this->allowedExtensions ) ) : $this->errorMessage;
 				}
 			}
 		}
+		GFCommon::log_debug( __METHOD__ . '(): Validation complete.' );
 	}
 
 	public function get_first_input_id( $form ) {
@@ -356,8 +364,10 @@ class GF_Field_FileUpload extends GF_Field {
 			$temp_filepath = GFFormsModel::get_upload_path( $form_id ) . '/tmp/' . $file_info['temp_filename'];
 
 			if ( $file_info && file_exists( $temp_filepath ) ) {
+				GFCommon::log_debug( __METHOD__ . '(): File already uploaded to tmp folder, moving.' );
 				$_gf_uploaded_files[ $input_name ] = $this->move_temp_file( $form_id, $file_info );
 			} else if ( ! empty( $_FILES[ $input_name ]['name'] ) ) {
+				GFCommon::log_debug( __METHOD__ . '(): calling upload_file' );
 				$_gf_uploaded_files[ $input_name ] = $this->upload_file( $form_id, $_FILES[ $input_name ] );
 			} else {
 				GFCommon::log_debug( __METHOD__ . '(): No file uploaded. Exiting.' );
@@ -376,14 +386,15 @@ class GF_Field_FileUpload extends GF_Field {
 
 			return 'FAILED (Upload folder could not be created.)';
 		}
+		GFCommon::log_debug( __METHOD__ . '(): Upload folder is ' . print_r( $target, true ) );
 
 		if ( move_uploaded_file( $file['tmp_name'], $target['path'] ) ) {
-			GFCommon::log_debug( __METHOD__ . '(): File successfully moved.' );
+			GFCommon::log_debug( __METHOD__ . '(): File ' . $file['tmp_name'] . ' successfully moved to ' . $target['path'] . '.' );
 			$this->set_permissions( $target['path'] );
 
 			return $target['url'];
 		} else {
-			GFCommon::log_debug( __METHOD__ . '(): FAILED (Temporary file could not be copied.)' );
+			GFCommon::log_debug( __METHOD__ . '(): FAILED (Temporary file ' . $file['tmp_name'] . ' could not be copied to ' . $target['path'] . '.)' );
 
 			return 'FAILED (Temporary file could not be copied.)';
 		}

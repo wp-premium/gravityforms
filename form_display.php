@@ -296,6 +296,7 @@ class GFFormDisplay {
 	private static function upload_files( $form, $files ) {
 
 		$form_upload_path = GFFormsModel::get_upload_path( $form['id'] );
+		GFCommon::log_debug( "GFFormDisplay::upload_files(): Upload path {$form_upload_path}" );
 
 		//Creating temp folder if it does not exist
 		$target_path = $form_upload_path . '/tmp/';
@@ -311,8 +312,18 @@ class GFFormDisplay {
 				continue;
 			}
 
-			if ( $field->failed_validation || empty( $_FILES[ $input_name ]['name'] ) ) {
+			/*if ( $field->failed_validation || empty( $_FILES[ $input_name ]['name'] ) ) {
 				GFCommon::log_debug( "GFFormDisplay::upload_files(): Skipping field: {$field->label}({$field->id} - {$field->type})." );
+				continue;
+			}*/
+
+			if ( $field->failed_validation ) {
+				GFCommon::log_debug( "GFFormDisplay::upload_files(): Skipping field because it failed validation: {$field->label}({$field->id} - {$field->type})." );
+				continue;
+			}
+
+			if ( empty( $_FILES[ $input_name ]['name'] ) ) {
+				GFCommon::log_debug( "GFFormDisplay::upload_files(): Skipping field because " . $_FILES[ $input_name ]['name'] . " could not be found: {$field->label}({$field->id} - {$field->type})." );
 				continue;
 			}
 
@@ -2382,28 +2393,34 @@ class GFFormDisplay {
 		foreach ( $form['fields'] as $field ) {
 
 			// default format is false, fields with no format will inherit the format of the formula field when calculated
-			$format = false;
+			// price format is specified for product fields, value format is specified number fields; used in conditional
+			// logic to determine if field or rule value should be formatted
+			$price_format = false;
+			$value_format = false;
 
 			switch ( GFFormsModel::get_input_type( $field ) ) {
 				case 'number':
-					$format = $field->numberFormat ? $field->numberFormat : 'decimal_dot';
+					$value_format = $field->numberFormat ? $field->numberFormat : 'decimal_dot';
 					break;
 				case 'singleproduct':
 				case 'calculation':
 				case 'price':
 				case 'hiddenproduct':
 				case 'singleshipping':
-					$format = $currency['decimal_separator'] == ',' ? 'decimal_comma' : 'decimal_dot';
+					$price_format = $currency['decimal_separator'] == ',' ? 'decimal_comma' : 'decimal_dot';
 					break;
 				default:
 
 					// we check above for all single-input product types, for all other products, assume decimal format
 					if ( in_array( $field->type, array( 'product', 'option', 'shipping' ) ) ) {
-						$format = 'decimal_dot';
+						$price_format = 'decimal_dot';
 					}
 			}
 
-			$number_formats[ $field->id ] = $format;
+			$number_formats[ $field->id ] = array(
+				'price' => $price_format,
+				'value' => $value_format
+			);
 
 		}
 

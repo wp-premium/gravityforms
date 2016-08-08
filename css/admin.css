@@ -4540,6 +4540,15 @@ ul:not(.top_label) .ginput_container.ginput_single_email {
 	margin-left: 30%;
 }
 
+.gforms_edit_form input:disabled,
+.gforms_edit_form input.disabled,
+.gforms_edit_form select:disabled,
+.gforms_edit_form select.disabled,
+.gforms_edit_form textarea:disabled,
+.gforms_edit_form textarea.disabled {
+	pointer-events: none;
+}
+
 /* addon framework styles */
 
 .gaddon-section {

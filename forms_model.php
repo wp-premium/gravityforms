@@ -3073,6 +3073,7 @@ class GFFormsModel {
 		$form_unique_id = self::get_form_unique_id( $form_id );
 		$pathinfo       = pathinfo( $uploaded_filename );
 
+		GFCommon::log_debug( 'Uploaded filename is ' . $uploaded_filename . ' and temporary filename is ' . $form_unique_id . '_' . $input_name . '.' . $pathinfo['extension'] );
 		return array( 'uploaded_filename' => $uploaded_filename, 'temp_filename' => "{$form_unique_id}_{$input_name}.{$pathinfo['extension']}" );
 
 	}
