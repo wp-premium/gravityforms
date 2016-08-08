@@ -80,7 +80,8 @@ function gf_is_match( formId, rule ) {
 		inputId         = rule['fieldId'],
 		fieldId         = gformExtractFieldId( inputId ),
 		inputIndex      = gformExtractInputIndex( inputId ),
-		isInputSpecific = inputIndex !== false;
+		isInputSpecific = inputIndex !== false,
+		$inputs;
 
 	if( isInputSpecific ) {
 		$inputs = $( '#input_{0}_{1}_{2}'.format( formId, fieldId, inputIndex ) );
@@ -138,17 +139,16 @@ function gf_is_match_default( $input, rule, formId, fieldId ) {
 	for( var i = 0; i < values.length; i++ ) {
 
 		// fields with pipes in the value will use the label for conditional logic comparison
-		var hasLabel = values[i] ? values[i].indexOf( '|' ) >= 0 : true;
+		var hasLabel   = values[i] ? values[i].indexOf( '|' ) >= 0 : true,
+			fieldValue = gf_get_value( values[i] );
 
-		fieldValue = gf_get_value( values[i] );
-
-		var fieldNumberFormat = gf_get_field_number_format( rule.fieldId, formId );
+		var fieldNumberFormat = gf_get_field_number_format( rule.fieldId, formId, 'value' );
 		if( fieldNumberFormat && ! hasLabel ) {
 			fieldValue = gf_format_number( fieldValue, fieldNumberFormat );
 		}
 
 		var ruleValue = rule.value;
-		if ( fieldNumberFormat ){
+		if ( fieldNumberFormat ) {
 			ruleValue = gf_format_number( ruleValue, fieldNumberFormat );
 		}
 
@@ -156,17 +156,12 @@ function gf_is_match_default( $input, rule, formId, fieldId ) {
 			matchCount++;
 		}
 
-
 	}
 
 	// if operator is 'isnot', none of the values can match
 	var isMatch = rule.operator == 'isnot' ? matchCount == values.length : matchCount > 0;
 
 	return isMatch;
-}
-
-function gf_get_field_number_format( fieldId, formId ) {
-	return window['gf_global'] && gf_global.number_formats && gf_global.number_formats[ formId ] && gf_global.number_formats[ formId ][ fieldId ] ? gf_global.number_formats[ formId ][ fieldId ] : false;
 }
 
 function gf_format_number( value, fieldNumberFormat ) {

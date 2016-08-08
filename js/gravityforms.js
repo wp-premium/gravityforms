@@ -433,7 +433,7 @@ function gformGetProductQuantity(formId, productFieldId) {
             var htmlId = quantityInput.attr('id'),
                 fieldId = gf_get_input_id_by_html_id(htmlId);
 
-            numberFormat = gf_global.number_formats[formId][fieldId];
+            numberFormat = gf_get_field_number_format( fieldId, formId, 'value' );
         }
 
     }
@@ -1063,9 +1063,9 @@ var GFCalc = function(formId, formulaFields){
 
             }
 
-            var numberFormat = gf_global.number_formats[formId][fieldId];
+            var numberFormat = gf_get_field_number_format( fieldId, formId );
             if( ! numberFormat )
-                numberFormat = gf_global.number_formats[formId][formulaField.field_id];
+                numberFormat = gf_get_field_number_format( formulaField.field_id, formId );
 
             var decimalSeparator = gformGetDecimalSeparator(numberFormat);
 
@@ -1130,6 +1130,24 @@ function getMatchGroups(expr, patt) {
     }
 
     return matches;
+}
+
+function gf_get_field_number_format(fieldId, formId, context) {
+
+    var fieldNumberFormats = rgars(window, 'gf_global/number_formats/{0}/{1}'.format(formId, fieldId)),
+        format = false;
+
+    if (fieldNumberFormats === '') {
+        return format;
+    }
+
+    if (typeof context == 'undefined') {
+        format = fieldNumberFormats.price !== false ? fieldNumberFormats.price : fieldNumberFormats.value;
+    } else {
+        format = fieldNumberFormats[context];
+    }
+
+    return format;
 }
 
 

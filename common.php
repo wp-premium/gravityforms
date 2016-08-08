@@ -3,6 +3,11 @@ if ( ! class_exists( 'GFForms' ) ) {
 	die();
 }
 
+/**
+ * Class GFCommon
+ *
+ * Includes common methods accessed throughout Gravity Forms and add-ons.
+ */
 class GFCommon {
 
 	// deprecated; set to GFForms::$version in GFForms::init() for backwards compat
@@ -13,7 +18,7 @@ class GFCommon {
 	public static $messages = array();
 
 	/**
-	 * An array of dimissible messages to display on the page.
+	 * An array of dismissible messages to display on the page.
 	 *
 	 * @var array $dismissible_messages
 	 */

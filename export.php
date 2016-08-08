@@ -964,7 +964,7 @@ class GFExport {
 		if ( GFCommon::current_user_can_any( 'gravityforms_edit_forms' ) ) {
 			$setting_tabs['20'] = array( 'name' => 'export_form', 'label' => __( 'Export Forms', 'gravityforms' ) );
 
-			if ( GFCommon::current_user_can_any( 'gravityforms_create_forms' ) ) {
+			if ( GFCommon::current_user_can_any( 'gravityforms_create_form' ) ) {
 				$setting_tabs['30'] = array( 'name' => 'import_form', 'label' => __( 'Import Forms', 'gravityforms' ) );
 			}
 		}
