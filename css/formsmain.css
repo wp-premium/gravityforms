@@ -4,7 +4,7 @@
 Gravity Forms Front End Form Styles
 Version 2.0
 http: //www.gravityforms.com
-updated: July 12, 2016 10:10 PM GMT-5
+updated: August 26, 2016 11:53 AM GMT-5
 
 Gravity Forms is a Rocketgenius project
 copyright 2008-2016 Rocketgenius Inc.
@@ -80,6 +80,11 @@ to no.
 
 .gform_wrapper .ginput_container_multiselect select {
     background-image: none !important;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: 1px solid inherit;
+    outline: none;
 }
 
 .gform_wrapper ul.gform_fields {
@@ -211,7 +216,8 @@ html>body .entry ul,
 }
 
 .gform_wrapper .gfield_time_ampm select {
-    width: 4rem !important;
+    min-width: calc(2rem + 25px);
+    width: calc(3rem + 25px);
 }
 
 .gform_wrapper .gfield_time_hour input,
@@ -220,6 +226,14 @@ html>body .entry ul,
 .gform_wrapper .gfield_date_day input,
 .gform_wrapper .gfield_date_year input {
     width: 70% !important;
+}
+
+.gform_wrapper .gfield_time_hour input[type="number"],
+.gform_wrapper .gfield_time_minute input[type="number"],
+.gform_wrapper .gfield_date_month input[type="number"],
+.gform_wrapper .gfield_date_day input[type="number"],
+.gform_wrapper .gfield_date_year input[type="number"] {
+    width: calc(60% + 16px) !important;
 }
 
 .gform_wrapper .gfield_date_month,
@@ -449,11 +463,11 @@ body .gform_wrapper ul li.field_description_below div.ginput_container_checkbox 
     font-weight: 400;
     display: block;
     width: calc(100% - 16px);
-    margin-bottom: 32px;
+    margin-bottom: 16px;
 }
 
 .gform_wrapper .gsection {
-    border-bottom: 5px double #CCC;
+    border-bottom: 1px solid #CCC;
     padding: 0 16px 8px 0;
     margin: 28px 0 28px 0;
     clear: both;
@@ -1040,7 +1054,7 @@ body .gform_wrapper ul.gform_fields li.gfield.gform_validation_container {
 
 .gform_wrapper .gf_progressbar_wrapper {
     clear: both;
-    width: 99%;
+    width: 100%;
     margin: 0 0 16px 0;
     padding: 0 0 16px 0;
 }
@@ -2265,6 +2279,14 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
     margin-top: -1px;
 }
 
+.gf_icon_color {
+    width: 16px;
+    height: 16px;
+    background-image: url(../images/color.svg);
+    background-repeat;
+    background-size: 16px 16px;
+}
+
 @media only screen and (max-width: 641px)  {
 
     /* make the inputs a little larger for mobile devices */
@@ -2311,7 +2333,7 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
         top: calc(50% - 6px);
     }
 
-    .gform_wrapper .ginput_container span {
+    .gform_wrapper .ginput_container span:not(.ginput_price) {
         margin-bottom: 8px;
         display: block;
     }
@@ -2423,6 +2445,10 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
 /* media queries - portrait mode tablet or desktop styles */
 
 @media only screen and (min-width: 641px) {
+
+    .gform_wrapper .gform_body {
+        width: calc(100% + 16px);
+    }
 
     .gform_wrapper .gfield_checkbox li,
     .gform_wrapper .gfield_radio li {

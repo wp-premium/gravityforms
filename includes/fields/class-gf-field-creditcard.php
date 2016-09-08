@@ -393,17 +393,19 @@ class GF_Field_CreditCard extends GF_Field {
 	 * GF1.8 and earlier used 5 inputs (1 input for the expiration date); GF1.9 changed to 6 inputs (the expiration month and year now separate); upgrade those fields still using the older configuration.
 	 */
 	public function maybe_upgrade_inputs() {
-		$inputs = $this->inputs;
-		if ( count( $inputs ) == 5 && $inputs[1]['id'] != $this->id . '.2_month' ) {
+		$inputs    = $this->inputs;
+		$exp_input = $inputs[1];
+		$exp_id    = $this->id . '.2';
 
+		if ( count( $inputs ) == 5 && $exp_input['id'] == $exp_id ) {
 			$new_inputs = array(
 				array(
-					'id'           => $this->id . '.2_month',
+					'id'           => $exp_id . '_month',
 					'label'        => esc_html__( 'Expiration Month', 'gravityforms' ),
-					'defaultLabel' => $inputs[1]['label']
+					'defaultLabel' => $exp_input['label']
 				),
 				array(
-					'id'    => $this->id . '.2_year',
+					'id'    => $exp_id . '_year',
 					'label' => esc_html__( 'Expiration Year', 'gravityforms' ),
 				)
 			);

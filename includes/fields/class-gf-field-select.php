@@ -64,7 +64,8 @@ class GF_Field_Select extends GF_Field {
 	}
 
 	public function get_value_entry_list( $value, $entry, $field_id, $columns, $form ) {
-		return GFCommon::selection_display( $value, $this, $entry['currency'] );
+		$return = esc_html( $value );
+		return GFCommon::selection_display( $return, $this, $entry['currency'] );
 	}
 
 	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {
@@ -118,6 +119,21 @@ class GF_Field_Select extends GF_Field {
 		$value = rgar( $entry, $input_id );
 
 		return $is_csv ? $value : GFCommon::selection_display( $value, $this, rgar( $entry, 'currency' ), $use_text );
+	}
+
+	/**
+	 * Strips all tags from the input value.
+	 *
+	 * @param string $value The field value to be processed.
+	 * @param int $form_id The ID of the form currently being processed.
+	 *
+	 * @return string
+	 */
+	public function sanitize_entry_value( $value, $form_id ) {
+
+		$value = wp_strip_all_tags( $value );
+
+		return $value;
 	}
 }
 

@@ -4081,7 +4081,7 @@ class GFCommon {
 
 		for ( $i = 0; $i < count( $all_fields ); $i ++ ) {
 			$input_type = GFFormsmodel::get_input_type( $all_fields[ $i ] );
-			if ( in_array( $input_type, $exclude_types ) ) {
+			if ( in_array( $input_type, $exclude_types ) || $all_fields[ $i ]->displayOnly ) {
 				unset( $fields[ $i ] );
 			}
 		}
@@ -4128,7 +4128,7 @@ class GFCommon {
 					$sub_filters[]                 = $sub_filter;
 				}
 				$field_filter['filters'] = $sub_filters;
-			} elseif ( ( $input_type == 'name' && $field->nameFormat !== '' && $field->nameFormat !== 'simple') || $input_type == 'address' ) {
+			} elseif ( ( $input_type == 'name' && $field->nameFormat !== '' && $field->nameFormat !== 'simple' ) || $input_type == 'address' ) {
 				// standard two input name field
 				$field_filter['key']   = $key;
 				$field_filter['group'] = true;
@@ -4136,9 +4136,13 @@ class GFCommon {
 				$sub_filters           = array();
 				$inputs                = $field->inputs;
 				foreach ( $inputs as $input ) {
+					if ( rgar( $input, 'isHidden' ) ) {
+						continue;
+					}
+
 					$sub_filter                    = array();
 					$sub_filter['key']             = rgar( $input, 'id' );
-					$sub_filter['text']            = rgar( $input, 'label' );
+					$sub_filter['text']            = rgar( $input, 'customLabel', rgar( $input, 'label' ) );
 					$sub_filter['preventMultiple'] = false;
 					$sub_filter['operators']       = $operators;
 					$sub_filters[]                 = $sub_filter;
@@ -4169,6 +4173,13 @@ class GFCommon {
 					if ( $field->type == 'post_category' ) {
 						foreach ( $choices as &$choice ) {
 							$choice['value'] = $choice['text'] . ':' . $choice['value'];
+						}
+					}
+
+					if ( $field->enablePrice ) {
+						foreach ( $choices as &$choice ) {
+							$price = rgempty( 'price', $choice ) ? 0 : GFCommon::to_number( rgar( $choice, 'price' ) );
+							$choice['value'] .= '|' . $price;
 						}
 					}
 
@@ -4513,32 +4524,33 @@ class GFCommon {
 
 	}
 
-	public static function encrypt( $text, $key = null, $mcrypt_cipher_name = MCRYPT_RIJNDAEL_256 ) {
-		$use_mcrypt = apply_filters('gform_use_mcrypt', function_exists( 'mcrypt_encrypt' ) );
+	public static function encrypt( $text, $key = null, $mcrypt_cipher_name = false ) {
+		$use_mcrypt = apply_filters( 'gform_use_mcrypt', function_exists( 'mcrypt_encrypt' ) );
 
-		if ( $use_mcrypt ){
-			$iv_size         = mcrypt_get_iv_size( $mcrypt_cipher_name, MCRYPT_MODE_ECB );
-			$key             = ! is_null( $key ) ? $key : substr( md5( wp_salt( 'nonce' ) ), 0, $iv_size );
+		if ( $use_mcrypt ) {
+			$mcrypt_cipher_name = $mcrypt_cipher_name === false ? MCRYPT_RIJNDAEL_256 : $mcrypt_cipher_name;
+			$iv_size            = mcrypt_get_iv_size( $mcrypt_cipher_name, MCRYPT_MODE_ECB );
+			$key                = ! is_null( $key ) ? $key : substr( md5( wp_salt( 'nonce' ) ), 0, $iv_size );
+
 			$encrypted_value = trim( base64_encode( mcrypt_encrypt( $mcrypt_cipher_name, $key, $text, MCRYPT_MODE_ECB, mcrypt_create_iv( $iv_size, MCRYPT_RAND ) ) ) );
-		}
-		else{
+		} else {
 			$encrypted_value = EncryptDB::encrypt( $text, wp_salt( 'nonce' ) );
 			//$encrypted_value = base64_encode( $wpdb->get_var( $wpdb->prepare('SELECT AES_ENCRYPT(%s, %s) AS data', $text, wp_salt( 'nonce' ) ) ) );
 		}
+
 		return $encrypted_value;
 	}
 
-	public static function decrypt( $text ) {
+	public static function decrypt( $text, $key = null, $mcrypt_cipher_name = false ) {
+		$use_mcrypt = apply_filters( 'gform_use_mcrypt', function_exists( 'mcrypt_decrypt' ) );
 
-		$use_mcrypt = apply_filters('gform_use_mcrypt', function_exists( 'mcrypt_decrypt' ) );
+		if ( $use_mcrypt ) {
+			$mcrypt_cipher_name = $mcrypt_cipher_name === false ? MCRYPT_RIJNDAEL_256 : $mcrypt_cipher_name;
+			$iv_size            = mcrypt_get_iv_size( $mcrypt_cipher_name, MCRYPT_MODE_ECB );
+			$key                = ! is_null( $key ) ? $key : substr( md5( wp_salt( 'nonce' ) ), 0, $iv_size );
 
-		if ( $use_mcrypt ){
-			$iv_size = mcrypt_get_iv_size( MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB );
-			$key = substr( md5( wp_salt( 'nonce' ) ), 0, $iv_size );
-
-			$decrypted_value = trim( mcrypt_decrypt( MCRYPT_RIJNDAEL_256, $key, base64_decode( $text ), MCRYPT_MODE_ECB, mcrypt_create_iv( $iv_size, MCRYPT_RAND ) ) );
-		}
-		else{
+			$decrypted_value = trim( mcrypt_decrypt( $mcrypt_cipher_name, $key, base64_decode( $text ), MCRYPT_MODE_ECB, mcrypt_create_iv( $iv_size, MCRYPT_RAND ) ) );
+		} else {
 			$decrypted_value = EncryptDB::decrypt( $text, wp_salt( 'nonce' ) );
 		}
 
@@ -4627,14 +4639,23 @@ class GFCommon {
 		) ) ? $value : $min;
 	}
 
-	public static function load_gf_text_domain( $domain ){
-		// Initializing translations. Translation files in the WP_LANG_DIR folder have a higher priority.
-		global $l10n;
-		$locale = apply_filters( 'plugin_locale', get_locale(), 'gravityforms' );
-		if ( ! isset( $l10n[$domain] ) ){
-			load_textdomain( 'gravityforms', WP_LANG_DIR . '/gravityforms/gravityforms-' . $locale . '.mo' );
-			load_textdomain( 'gravityforms', WP_LANG_DIR . '/plugins/gravityforms-' . $locale . '.mo' );
-			load_plugin_textdomain( 'gravityforms', false, plugin_basename( self::get_base_path() ) . '/languages' );
+	/**
+	 * Initializing translations.
+	 *
+	 * Translation files in the WP_LANG_DIR folder have a higher priority.
+	 *
+	 * @param string $domain The plugin text domain. Default is gravityforms.
+	 * @param string $basename The plugin basename. plugin_basename() will be used to get the Gravity Forms basename when not provided.
+	 */
+	public static function load_gf_text_domain( $domain = 'gravityforms', $basename = '' ) {
+		$locale = apply_filters( 'plugin_locale', get_locale(), $domain );
+		if ( $locale != 'en_US' && ! is_textdomain_loaded( $domain ) ) {
+			if ( empty( $basename ) ) {
+				$basename = plugin_basename( self::get_base_path() );
+			}
+
+			load_textdomain( $domain, sprintf( '%s/gravityforms/%s-%s.mo', WP_LANG_DIR, $domain, $locale ) );
+			load_plugin_textdomain( $domain, false, $basename . '/languages' );
 		}
 	}
 

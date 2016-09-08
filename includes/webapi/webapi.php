@@ -61,13 +61,14 @@ if ( class_exists( 'GFForms' ) ) {
 
 		public function init_admin() {
 			parent::init_admin();
-			// update the cache meta
+			// update the results cache meta
 			add_action( 'gform_after_update_entry', array( $this, 'entry_updated' ), 10, 2 );
 			add_action( 'gform_update_status', array( $this, 'update_entry_status' ), 10, 2 );
 			add_action( 'gform_after_save_form', array( $this, 'after_save_form' ), 10, 2 );
 		}
 
 		public function init_frontend() {
+			parent::init_frontend();
 			$settings           = $this->get_plugin_settings();
 			$this->_enabled     = rgar( $settings, 'enabled' );
 			$this->_public_key  = rgar( $settings, 'public_key' );
@@ -77,7 +78,12 @@ if ( class_exists( 'GFForms' ) ) {
 				return;
 			}
 
-			add_filter( 'option_rewrite_rules', array( $this, 'rewrite_rules' ) );
+			add_rewrite_rule( GFWEBAPI_SLUG . '/(.*)', 'index.php?' . GFWEBAPI_ROUTE_VAR . '=$matches[1]', $after = 'top' );
+
+			if ( ! get_option( 'gravityforms_rewrite_rules_flushed' ) ) {
+				flush_rewrite_rules();
+				update_option( 'gravityforms_rewrite_rules_flushed', true );
+			}
 
 			add_filter( 'query_vars', array( $this, 'query_vars' ) );
 
@@ -85,6 +91,10 @@ if ( class_exists( 'GFForms' ) ) {
 
 			// update the cache
 			add_action( 'gform_entry_created', array( $this, 'entry_created' ), 10, 2 );
+		}
+
+		public function load_text_domain() {
+			GFCommon::load_gf_text_domain();
 		}
 
 		// Scripts
@@ -352,20 +362,6 @@ if ( class_exists( 'GFForms' ) ) {
 
 		public function set_logging_supported( $plugins ) {
 			return parent::set_logging_supported( $plugins );
-		}
-
-		public function rewrite_rules( $rules ) {
-
-			$gfapi_rules[ GFWEBAPI_SLUG . '/(.*)' ] = 'index.php?' . GFWEBAPI_ROUTE_VAR . '=$matches[1]';
-
-			if ( is_array( $rules ) ) {
-				// the array operator instead of array_merge avoids tampering with the keys in the original array
-				$rules = $gfapi_rules + $rules;
-			} else {
-				$rules = $gfapi_rules;
-			}
-
-			return $rules;
 		}
 
 		public function query_vars( $query_vars ) {

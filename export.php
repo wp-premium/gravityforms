@@ -8,31 +8,11 @@ class GFExport {
 
 	private static $min_import_version = '1.3.12.3';
 
+	/**
+	 * Process the forms export request.
+	 */
 	public static function maybe_export() {
-		if ( isset( $_POST['export_lead'] ) ) {
-			check_admin_referer( 'rg_start_export', 'rg_start_export_nonce' );
-			//see if any fields chosen
-			if ( empty( $_POST['export_field'] ) ) {
-				GFCommon::add_error_message( __( 'Please select the fields to be exported', 'gravityforms' ) );
-
-				return;
-			}
-			$form_id = $_POST['export_form'];
-			$form    = RGFormsModel::get_form_meta( $form_id );
-
-			$filename = sanitize_title_with_dashes( $form['title'] ) . '-' . gmdate( 'Y-m-d', GFCommon::get_local_timestamp( time() ) ) . '.csv';
-			$charset  = get_option( 'blog_charset' );
-			header( 'Content-Description: File Transfer' );
-			header( "Content-Disposition: attachment; filename=$filename" );
-			header( 'Content-Type: text/csv; charset=' . $charset, true );
-			$buffer_length = ob_get_length(); //length or false if no buffer
-			if ( $buffer_length > 1 ) {
-				ob_clean();
-			}
-			self::start_export( $form );
-
-			die();
-		} else if ( isset( $_POST['export_forms'] ) ) {
+		if ( isset( $_POST['export_forms'] ) ) {
 			check_admin_referer( 'gf_export_forms', 'gf_export_forms_nonce' );
 			$selected_forms = rgpost( 'gf_form_id' );
 			if ( empty( $selected_forms ) ) {
@@ -626,11 +606,20 @@ class GFExport {
 		return $row_counts;
 	}
 
+	/**
+	 * @deprecated No longer used.
+	 */
 	public static function get_gmt_timestamp( $local_timestamp ) {
+		_deprecated_function( 'GFExport::get_gmt_timestamp', '2.0.7', 'GFCommon::get_gmt_timestamp' );
+
 		return $local_timestamp - ( get_option( 'gmt_offset' ) * 3600 );
 	}
 
+	/**
+	 * @deprecated No longer used.
+	 */
 	public static function get_gmt_date( $local_date ) {
+		_deprecated_function( 'GFExport::get_gmt_date', '2.0.7' );
 
 		$local_timestamp = strtotime( $local_date );
 		$gmt_timestamp   = self::get_gmt_timestamp( $local_timestamp );
@@ -641,7 +630,7 @@ class GFExport {
 
 	public static function start_export( $form, $offset = 0, $export_id = '' ) {
 
-		$time_start         = microtime( true );
+		$time_start = microtime( true );
 
 		/***
 		 * Allows the export max execution time to be changed.
@@ -659,8 +648,8 @@ class GFExport {
 		$form_id = $form['id'];
 		$fields  = $_POST['export_field'];
 
-		$start_date = empty( $_POST['export_date_start'] ) ? '' : self::get_gmt_date( $_POST['export_date_start'] . ' 00:00:00' );
-		$end_date   = empty( $_POST['export_date_end'] ) ? '' : self::get_gmt_date( $_POST['export_date_end'] . ' 23:59:59' );
+		$start_date = rgpost( 'export_date_start' );
+		$end_date   = rgpost( 'export_date_end' );
 
 		$search_criteria['status']        = 'active';
 		$search_criteria['field_filters'] = GFCommon::get_field_filters_from_post( $form );
@@ -689,6 +678,7 @@ class GFExport {
 		$field_rows = self::get_field_row_count( $form, $fields, $remaining_entry_count );
 
 		if ( $offset == 0 ) {
+			GFCommon::log_debug( __METHOD__ . '(): Processing request for form #' . $form_id );
 
 			//Adding BOM marker for UTF-8
 			$lines = chr( 239 ) . chr( 187 ) . chr( 191 );
@@ -725,6 +715,9 @@ class GFExport {
 			if ( $remaining_entry_count == 0 ) {
 				self::write_file( $lines, $export_id );
 			}
+
+			GFCommon::log_debug( __METHOD__ . '(): search criteria: ' . print_r( $search_criteria, true ) );
+			GFCommon::log_debug( __METHOD__ . '(): sorting: ' . print_r( $sorting, true ) );
 		}
 
 		// Paging through results for memory issues
@@ -734,13 +727,12 @@ class GFExport {
 				'offset'    => $offset,
 				'page_size' => $page_size,
 			);
+
+			GFCommon::log_debug( __METHOD__ . '(): paging: ' . print_r( $paging, true ) );
+
 			$leads = GFAPI::get_entries( $form_id, $search_criteria, $sorting, $paging );
 
 			$leads = gf_apply_filters( array( 'gform_leads_before_export', $form_id ), $leads, $form, $paging );
-
-			GFCommon::log_debug( __METHOD__ . '(): search criteria: ' . print_r( $search_criteria, true ) );
-			GFCommon::log_debug( __METHOD__ . '(): sorting: ' . print_r( $sorting, true ) );
-			GFCommon::log_debug( __METHOD__ . '(): paging: ' . print_r( $paging, true ) );
 
 			foreach ( $leads as $lead ) {
 				GFCommon::log_debug( __METHOD__ . '(): Processing entry #' . $lead['id'] );
@@ -1104,7 +1096,10 @@ deny from all';
 		}
 
 		$filename = sanitize_title_with_dashes( $form['title'] ) . '-' . gmdate( 'Y-m-d', GFCommon::get_local_timestamp( time() ) ) . '.csv';
-		$charset  = get_option( 'blog_charset' );
+
+		GFCommon::log_debug( __METHOD__ . '(): Starting download of file: ' . $filename );
+
+		$charset = get_option( 'blog_charset' );
 		header( 'Content-Description: File Transfer' );
 		header( "Content-Disposition: attachment; filename=$filename" );
 		header( 'Content-Type: text/csv; charset=' . $charset, true );
@@ -1113,15 +1108,18 @@ deny from all';
 			ob_clean();
 		}
 
-		$export_id = rgget( 'export-id' );
-
-		$export_id = sanitize_key( $export_id );
-
 		$export_folder = RGFormsModel::get_upload_root() . 'export/';
-		$file = $export_folder . 'export-' . $export_id . '.csv';
+		$export_id     = rgget( 'export-id' );
+		$file          = $export_folder . sanitize_file_name( 'export-' . $export_id . '.csv' );
+		$result        = readfile( $file );
 
-		readfile( $file );
-		@unlink( $file );
+		if ( $result === false ) {
+			GFCommon::log_error( __METHOD__ . '(): An issue occurred whilst reading the file.' );
+		} else {
+			@unlink( $file );
+			GFCommon::log_debug( __METHOD__ . '(): Number of bytes read from the file: ' . print_r( $result, 1 ) );
+		}
+
 		exit;
 	}
 
