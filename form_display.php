@@ -24,7 +24,7 @@ class GFFormDisplay {
 		 * @param array $form The Form Object
 		 */
 		$filtered_form = gf_apply_filters( array( 'gform_pre_process', $form['id'] ), $form );
-		if( $filtered_form !== null ) {
+		if ( $filtered_form !== null ) {
 			$form = $filtered_form;
 		}
 
@@ -66,7 +66,6 @@ class GFFormDisplay {
 
 		$is_valid = true;
 
-
 		$failed_validation_page = $page_number;
 
 		//don't validate when going to previous page or saving for later
@@ -77,11 +76,12 @@ class GFFormDisplay {
 		$log_is_valid = $is_valid ? 'Yes' : 'No';
 		GFCommon::log_debug( "GFFormDisplay::process_form(): After validation. Is submission valid? {$log_is_valid}." );
 
-		//Upload files to temp folder when saving for later, going to the next page or when submitting the form and it failed validation
-		if ( $saving_for_later || $target_page >= $page_number || ( $target_page == 0 && ! $is_valid ) ) {
-			if ( ! empty( $_FILES ) ) {
+		// Upload files to temp folder when going to the next page or when submitting the form and it failed validation
+		if ( $target_page > $page_number || $target_page == 0 ) {
+			if ( ! empty( $_FILES ) && ! $saving_for_later ) {
+				// When saving, ignore files with single file upload fields as they have not been validated.
 				GFCommon::log_debug( 'GFFormDisplay::process_form(): Uploading files...' );
-				//Uploading files to temporary folder
+				// Uploading files to temporary folder.
 				$files = self::upload_files( $form, $files );
 
 				RGFormsModel::$uploaded_files[ $form_id ] = $files;
@@ -325,6 +325,39 @@ class GFFormDisplay {
 			if ( empty( $_FILES[ $input_name ]['name'] ) ) {
 				GFCommon::log_debug( "GFFormDisplay::upload_files(): Skipping field because " . $_FILES[ $input_name ]['name'] . " could not be found: {$field->label}({$field->id} - {$field->type})." );
 				continue;
+			}
+
+			$file_name = $_FILES[ $input_name ]['name'];
+			if ( GFCommon::file_name_has_disallowed_extension( $file_name ) ) {
+				GFCommon::log_debug( __METHOD__ . "(): Illegal file extension: {$file_name}" );
+				continue;
+			}
+
+			$allowed_extensions = ! empty( $field->allowedExtensions ) ? GFCommon::clean_extensions( explode( ',', strtolower( $field->allowedExtensions ) ) ) : array();
+
+			if ( ! empty( $allowed_extensions ) ) {
+				if ( ! GFCommon::match_file_extension( $file_name, $allowed_extensions ) ) {
+					GFCommon::log_debug( __METHOD__ . "(): The uploaded file type is not allowed: {$file_name}" );
+					continue;
+				}
+			}
+
+			/**
+			 * Allows the disabling of file upload whitelisting
+			 *
+			 * @param bool false Set to 'true' to disable whitelisting.  Defaults to 'false'.
+			 */
+			$whitelisting_disabled = apply_filters( 'gform_file_upload_whitelisting_disabled', false );
+
+			if ( empty( $allowed_extensions ) && ! $whitelisting_disabled ) {
+				// Whitelist the file type
+
+				$valid_file_name = GFCommon::check_type_and_ext( $_FILES[ $input_name ], $file_name );
+
+				if ( is_wp_error( $valid_file_name ) ) {
+					GFCommon::log_debug( __METHOD__ . "(): The uploaded file type is not allowed: {$file_name}" );
+					continue;
+				}
 			}
 
 			$file_info = RGFormsModel::get_temp_filename( $form['id'], $input_name );

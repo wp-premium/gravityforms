@@ -192,11 +192,7 @@ abstract class GFAddOn {
 	 */
 	public function init() {
 
-		// Initializing translations. Translation files in the WP_LANG_DIR folder have a higher priority.
-		$locale = apply_filters( 'plugin_locale', get_locale(), $this->_slug );
-		load_textdomain( $this->_slug, WP_LANG_DIR . '/gravityforms/' . $this->_slug . '-' . $locale . '.mo' );
-		load_textdomain( $this->_slug, WP_LANG_DIR . '/plugins/' . $this->_slug . '-' . $locale . '.mo' );
-		load_plugin_textdomain( $this->_slug, false, plugin_basename( dirname( $this->_full_path ) ) . '/languages' );
+		$this->load_text_domain();
 
 		add_filter( 'gform_logging_supported', array( $this, 'set_logging_supported' ) );
 
@@ -5252,6 +5248,15 @@ abstract class GFAddOn {
 	 */
 	public function get_slug() {
 		return $this->_slug;
+	}
+
+	/**
+	 * Initializing translations.
+	 *
+	 * @since 2.0.7
+	 */
+	public function load_text_domain() {
+		GFCommon::load_gf_text_domain( $this->_slug, plugin_basename( dirname( $this->_full_path ) ) );
 	}
 
 }

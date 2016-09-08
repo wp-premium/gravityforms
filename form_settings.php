@@ -131,7 +131,7 @@ class GFFormSettings {
 
 				HandleUnsavedChanges('#gform_form_settings');
 
-				jQuery('.datepicker').datepicker({showOn: 'both', changeMonth: true, changeYear: true, buttonImage: "<?php echo GFCommon::get_base_url() ?>/images/calendar.png", buttonImageOnly: true});
+				jQuery('.datepicker').datepicker({showOn: 'both', changeMonth: true, changeYear: true, buttonImage: "<?php echo GFCommon::get_base_url() ?>/images/calendar.png", buttonImageOnly: true, dateFormat: 'mm/dd/yy'});
 
 				ToggleConditionalLogic(true, 'form_button');
 

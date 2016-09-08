@@ -29,7 +29,7 @@ if ( ! class_exists( 'GFWidget' ) ) {
 		function __construct() {
 
 			//load text domains
-			GFCommon::load_gf_text_domain( 'gravityforms' );
+			GFCommon::load_gf_text_domain();
 
 			$description = esc_html__( 'Gravity Forms Widget', 'gravityforms' );
 

@@ -17,7 +17,7 @@ function print_tooltip_scripts() {
 	wp_enqueue_style( 'gform_font_awesome', GFCommon::get_base_url() . "/css/font-awesome{$min}.css", null, GFCommon::$version );
 
 	wp_print_scripts( 'gform_tooltip_init' );
-	wp_print_styles( 'gform_tooltip', 'gform_font_awesome' );
+	wp_print_styles( array( 'gform_tooltip', 'gform_font_awesome' ) );
 
 }
 
@@ -37,7 +37,7 @@ $__gf_tooltips = array(
 	'form_animation'                              => '<h6>' . __( 'Enable Animation', 'gravityforms' ) . '</h6>' . __( 'Check this option to enable a sliding animation when displaying/hiding conditional logic fields.', 'gravityforms' ),
 	'form_title'                                  => '<h6>' . __( 'Form Title', 'gravityforms' ) . '</h6>' . __( 'Enter the title of your form.', 'gravityforms' ),
 	'form_description'                            => '<h6>' . __( 'Form Description', 'gravityforms' ) . '</h6>' . __( 'Enter a description for your form. This may be used for user instructions.', 'gravityforms' ),
-	'form_label_placement'                        => '<h6>' . __( 'Form Label Placement', 'gravityforms' ) . '</h6>' . __( 'Select the default label placement.  Labels can be top aligned above a field, left aligned to the left of a field, or right aligned to the right of a field. This setting can be overridden in the appearance settings for each field.', 'gravityforms' ),
+	'form_label_placement'                        => '<h6>' . __( 'Form Label Placement', 'gravityforms' ) . '</h6>' . __( 'Select the default label placement.  Labels can be top aligned above a field, left aligned to the left of a field, or right aligned to the right of a field. This is a global label placement setting', 'gravityforms' ),
 	'form_description_placement'                  => '<h6>' . __( 'Description Placement', 'gravityforms' ) . '</h6>' . __( 'Select the default description placement.  Descriptions can be placed above the field inputs or below the field inputs. This setting can be overridden in the appearance settings for each field.', 'gravityforms' ),
 	'form_sub_label_placement'                    => '<h6>' . __( 'Sub-Label Placement', 'gravityforms' ) . '</h6>' . __( 'Select the default sub-label placement.  Sub-labels can be placed above the field inputs or below the field inputs. This setting can be overridden in the appearance settings for each field.', 'gravityforms' ),
 	'form_button_text'                            => '<h6>' . __( 'Form Button Text', 'gravityforms' ) . '</h6>' . __( 'Enter the text you would like to appear on the form submit button.', 'gravityforms' ),
@@ -92,7 +92,7 @@ $__gf_tooltips = array(
 	'form_field_label_placement'                  => '<h6>' . __( 'Label Visibility', 'gravityforms' ) . '</h6>' . __( 'Select the label visibility for this field.  Labels can either inherit the form setting or be hidden.', 'gravityforms' ),
 	'form_field_description_placement'            => '<h6>' . __( 'Description Placement', 'gravityforms' ) . '</h6>' . __( 'Select the description placement.  Descriptions can be placed above the field inputs or below the field inputs.', 'gravityforms' ),
 	'form_field_sub_label_placement'              => '<h6>' . __( 'Sub-Label Placement', 'gravityforms' ) . '</h6>' . __( 'Select the sub-label placement.  Sub-labels can be placed above the field inputs or below the field inputs.', 'gravityforms' ),
-	'form_field_size'                             => '<h6>' . __( 'Field Size', 'gravityforms' ) . '</h6>' . __( 'Select a form field size from the available options. This will set the width of the field.', 'gravityforms' ),
+	'form_field_size'                             => '<h6>' . __( 'Field Size', 'gravityforms' ) . '</h6>' . __( 'Select a form field size from the available options. This will set the width of the field. Please note: if using a paragraph field, the size applies only to the height of the field.', 'gravityforms' ),
 	'form_field_name_fields'                      => '<h6>' . __( 'Name Fields', 'gravityforms' ) . '</h6>' . __( "Select the fields you'd like to use in this Name field and customize the Sub-Labels by entering new ones.", 'gravityforms' ),
 	'form_field_name_prefix_choices'              => '<h6>' . __( 'Name Prefix Choices', 'gravityforms' ) . '</h6>' . __( 'Add Choices to this field. You can mark a choice as selected by default by using the radio buttons on the left.', 'gravityforms' ),
 	'form_field_address_fields'                   => '<h6>' . __( 'Address Fields', 'gravityforms' ) . '</h6>' . __( "Select the fields you'd like to use in this Address Field and customize the Sub-Labels by entering new ones.", 'gravityforms' ),
