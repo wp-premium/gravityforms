@@ -272,7 +272,7 @@ class GFFormList {
 			jQuery( document ).ready( function( $ ) {
 
 				// load new form modal on New Form page
-				<?php if ( rgget( 'page' ) == 'gf_new_form' ) :	?>
+				<?php if ( rgget( 'page' ) == 'gf_new_form' && ! rgget( 'paged' ) ) :	?>
 				loadNewFormModal();
 				<?php endif; ?>
 

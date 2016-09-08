@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms
 Plugin URI: http://www.gravityforms.com
 Description: Easily create web forms and manage form entries within the WordPress admin.
-Version: 2.0.5
+Version: 2.0.7
 Author: rocketgenius
 Author URI: http://www.rocketgenius.com
 Text Domain: gravityforms
@@ -96,7 +96,7 @@ define( 'GF_SUPPORTED_WP_VERSION', version_compare( get_bloginfo( 'version' ), G
  * Defines the minimum version of WordPress that will be officially supported
  * @var string GF_MIN_WP_VERSION_SUPPORT_TERMS The version number
  */
-define( 'GF_MIN_WP_VERSION_SUPPORT_TERMS', '4.4' );
+define( 'GF_MIN_WP_VERSION_SUPPORT_TERMS', '4.5' );
 
 if ( ! defined( 'GRAVITY_MANAGER_URL' ) ) {
 	define( 'GRAVITY_MANAGER_URL', 'https://www.gravityhelp.com/wp-content/plugins/gravitymanager' );
@@ -139,6 +139,7 @@ if ( is_admin() && ( RGForms::is_gravity_page() || RGForms::is_gravity_ajax_acti
 
 add_action( 'plugins_loaded', array( 'GFForms', 'loaded' ) );
 
+register_activation_hook( __FILE__, array( 'GFForms', 'activation_hook' ) );
 register_deactivation_hook( __FILE__, array( 'GFForms', 'deactivation_hook' ) );
 
 /**
@@ -155,8 +156,7 @@ class GFForms {
 	 * @static
 	 * @var string $version The version number
 	 */
-	public static $version = '2.0.5';
-
+	public static $version = '2.0.7';
 
 	/**
 	 * Runs after Gravity Forms is loaded.
@@ -211,7 +211,7 @@ class GFForms {
 		GF_Download::maybe_process();
 
 		//load text domains
-		GFCommon::load_gf_text_domain( 'gravityforms' );
+		GFCommon::load_gf_text_domain();
 
 		add_filter( 'gform_logging_supported', array( 'RGForms', 'set_logging_supported' ) );
 		add_action( 'admin_head', array( 'GFCommon', 'maybe_output_gf_vars' ) );
@@ -404,13 +404,24 @@ class GFForms {
 	}
 
 	/**
-	 * Flushes cache on Gravity Forms deactivation
+	 * Performs Gravity Forms deactivation tasks.
 	 * @access public
 	 * @static
 	 * @see GFCache
 	 */
 	public static function deactivation_hook() {
 		GFCache::flush( true );
+		delete_option( 'gravityforms_rewrite_rules_flushed' );
+		flush_rewrite_rules();
+	}
+
+	/**
+	 * Performs Gravity Forms activation tasks.
+	 * @access public
+	 * @static
+	 */
+	public static function activation_hook() {
+		update_option( 'gravityforms_rewrite_rules_flushed', false );
 	}
 
 	/**
@@ -574,6 +585,8 @@ class GFForms {
 			}
 
 			update_option( 'rg_form_version', GFCommon::$version );
+
+			update_option( 'gravityforms_rewrite_rules_flushed', false );
 
 			GFCommon::log_debug( "GFForms::setup(): Blog {$blog_id} - End of setup." );
 		}
@@ -1711,7 +1724,7 @@ SET d.value = l.value"
 
 		//Gravity Forms pages
 		$current_page = trim( strtolower( self::get( 'page' ) ) );
-		$gf_pages     = array( 'gf_edit_forms', 'gf_new_form', 'gf_entries', 'gf_settings', 'gf_export', 'gf_help' );
+		$gf_pages     = array( 'gf_edit_forms', 'gf_new_form', 'gf_entries', 'gf_settings', 'gf_export', 'gf_addons', 'gf_help' );
 
 		return in_array( $current_page, $gf_pages );
 	}
@@ -3810,6 +3823,7 @@ SET d.value = l.value"
 							var title = jQuery( '#edit-title-input' ).val();
 							jQuery( '#gform_settings_page_title' ).text( title );
 							jQuery( '#form_title_input').val( title );
+							<?php echo GFCommon::is_form_editor() ? 'form.title = title;' : ''; ?>
 						}
 
 						GF_CloseEditTitle();

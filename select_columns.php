@@ -219,6 +219,10 @@ class GFSelectColumns {
 
 					if ( is_array( $inputs ) ) {
 						foreach ( $inputs as $input ) {
+							if ( rgar( $input, 'isHidden' ) ) {
+								continue;
+							}
+
 							if ( ! in_array( $input['id'], $field_ids ) && ! ( $field->type == 'creditcard' && in_array( $input['id'], array( floatval( "{$field->id}.2" ), floatval( "{$field->id}.3" ), floatval( "{$field->id}.5" ) ) ) ) ) {
 								?>
 								<li id="<?php echo esc_attr( $input['id'] ); ?>"><?php echo esc_html( GFCommon::get_label( $field, $input['id'] ) ); ?></li>

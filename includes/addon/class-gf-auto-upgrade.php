@@ -29,7 +29,7 @@ class GFAutoUpgrade {
 
 	public function init() {
 		if ( is_admin() ) {
-			load_plugin_textdomain( $this->_slug, false, $this->_slug . '/languages' );
+			GFCommon::load_gf_text_domain();
 			add_action( 'install_plugins_pre_plugin-information', array( $this, 'display_changelog' ) );
 			add_action( 'gform_after_check_update', array( $this, 'flush_version_info' ) );
 			add_action( 'gform_updates', array( $this, 'display_updates' ) );
