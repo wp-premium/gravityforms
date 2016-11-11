@@ -356,9 +356,10 @@ function GetRuleValues(objectType, ruleIndex, selectedFieldId, selectedValue, in
         //loading categories via AJAX
         jQuery.post( ajaxurl, {
             action:       'gf_get_address_rule_values_select',
-            address_type: field.addressType,
+            address_type: field.addressType ? field.addressType : gf_vars.defaultAddressType,
             value:        selectedValue,
-            id:           dropdownId
+            id:           dropdownId,
+            form_id:      field.formId
         }, function( selectMarkup ) {
             if( selectMarkup ) {
                 $select = jQuery( selectMarkup.trim() );
@@ -399,18 +400,17 @@ function IsAddressSelect( inputId, field ) {
         return false;
     }
 
-    switch( field.addressType ) {
-        case '':
-        case 'international':
-            selectInputId = field.id + '.6';
-            break;
-        case 'us':
-        case 'canadian':
-            selectInputId = field.id + '.4';
-            break;
+    var addressType = field.addressType ? field.addressType : gf_vars.defaultAddressType;
+
+    if( ! gf_vars.addressTypes[ addressType ] ) {
+        return false;
     }
 
-    return inputId == selectInputId;
+    var addressTypeObj = gf_vars.addressTypes[ addressType ],
+        isCountryInput = inputId == field.id + '.6',
+        isStateInput   = inputId == field.id + '.4';
+
+    return ( isCountryInput && addressType == 'international' ) || ( isStateInput && typeof addressTypeObj.states == 'object' );
 }
 
 function GetFirstRuleField(){

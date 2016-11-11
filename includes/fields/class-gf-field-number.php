@@ -197,7 +197,36 @@ class GF_Field_Number extends GF_Field {
 		return GFCommon::format_number( $value, $this->numberFormat, $currency, $include_thousands_sep );
 	}
 
+	/**
+	 * Gets merge tag values.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @uses GFCommon::format_number()
+	 *
+	 * @param array|string $value      The value of the input.
+	 * @param string       $input_id   The input ID to use.
+	 * @param array        $entry      The Entry Object.
+	 * @param array        $form       The Form Object
+	 * @param string       $modifier   The modifier passed.
+	 * @param array|string $raw_value  The raw value of the input.
+	 * @param bool         $url_encode If the result should be URL encoded.
+	 * @param bool         $esc_html   If the HTML should be escaped.
+	 * @param string       $format     The format that the value should be.
+	 * @param bool         $nl2br      If the nl2br function should be used.
+	 *
+	 * @return string The processed merge tag.
+	 */
 	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {
+		/**
+		 * Filters is the thousands separator should be used when displaying the a number field result.
+		 *
+		 * @since Unknown
+		 *
+		 * @param bool   $modifier != 'value' If the modifier passed in the merge tag is not 'value', false. Otherwise, true.
+		 * @param object GF_Field_Number      An instance of this class.
+		 */
 		$include_thousands_sep = apply_filters( 'gform_include_thousands_sep_pre_format_number', $modifier != 'value', $this );
 		$formatted_value       = GFCommon::format_number( $value, $this->numberFormat, rgar( $entry, 'currency' ), $include_thousands_sep );
 

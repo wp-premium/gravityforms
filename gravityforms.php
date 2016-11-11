@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms
 Plugin URI: http://www.gravityforms.com
 Description: Easily create web forms and manage form entries within the WordPress admin.
-Version: 2.0.7
+Version: 2.1.0.1
 Author: rocketgenius
 Author URI: http://www.rocketgenius.com
 Text Domain: gravityforms
@@ -29,80 +29,134 @@ along with this program.  If not, see http://www.gnu.org/licenses.
 //------------------------------------------------------------------------------------------------------------------
 //---------- Gravity Forms License Key -----------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------
-//If you hardcode a Gravity Forms License Key here, it will automatically populate on activation.
+// If you hardcode a Gravity Forms License Key here, it will automatically populate on activation.
 $gf_license_key = '';
 
 //-- OR ---//
 
-//You can also add the Gravity Forms license key to your wp-config.php file to automatically populate on activation
-//Add the code in the comment below to your wp-config.php to do so:
-//define('GF_LICENSE_KEY','YOUR_KEY_GOES_HERE');
+// You can also add the Gravity Forms license key to your wp-config.php file to automatically populate on activation
+// Add the code in the comment below to your wp-config.php to do so:
+// define('GF_LICENSE_KEY','YOUR_KEY_GOES_HERE');
 //------------------------------------------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------------------------------------------
 //---------- reCAPTCHA Keys -----------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------
-//If you hardcode your reCAPTCHA Keys here, it will automatically populate on activation.
+// If you hardcode your reCAPTCHA Keys here, it will automatically populate on activation.
 $gf_recaptcha_private_key = '';
 $gf_recaptcha_public_key = '';
 
 //-- OR ---//
 
-//You can  also add the reCAPTCHA keys to your wp-config.php file to automatically populate on activation
-//Add the two lines of code in the comment below to your wp-config.php to do so:
-//define('GF_RECAPTCHA_SITE_KEY','YOUR_SITE_KEY_GOES_HERE');
-//define('GF_RECAPTCHA_SECRET_KEY','YOUR_SECRET_KEY_GOES_HERE');
+// You can  also add the reCAPTCHA keys to your wp-config.php file to automatically populate on activation
+// Add the two lines of code in the comment below to your wp-config.php to do so:
+// define('GF_RECAPTCHA_SITE_KEY','YOUR_SITE_KEY_GOES_HERE');
+// define('GF_RECAPTCHA_SECRET_KEY','YOUR_SECRET_KEY_GOES_HERE');
 //------------------------------------------------------------------------------------------------------------------
 
 if ( ! defined( 'ABSPATH' ) ) {
 	die();
 }
 
-/**
- * Defines the current page.
- * @var string RG_CURRENT_PAGE The current page
- */
 if ( ! defined( 'RG_CURRENT_PAGE' ) ) {
+	/**
+	 * Defines the current page.
+	 *
+	 * @since Unknown
+	 *
+	 * @used-by GFForms::init()
+	 * @used-by GFCommon::ensure_wp_version()
+	 *
+	 * @var string RG_CURRENT_PAGE The current page.
+	 */
 	define( 'RG_CURRENT_PAGE', basename( $_SERVER['PHP_SELF'] ) );
 }
 
-/**
- * Checks if an admin page is being viewed
- * @var boolean IS_ADMIN True if admin page.  False otherwise.
- */
 if ( ! defined( 'IS_ADMIN' ) ) {
+	/**
+	 * Checks if an admin page is being viewed.
+	 *
+	 * @since Unknown
+	 *
+	 * @used-by GFForms::init()
+	 * @used-by GFFormsModel::get_default_value()
+	 * @used-by GFFormsModel::get_label()
+	 *
+	 * @var boolean IS_ADMIN True if admin page. False otherwise.
+	 */
 	define( 'IS_ADMIN', is_admin() );
 }
 
 /**
  * Defines the current view within Gravity Forms.
+ *
  * Defined from URL parameters.
+ *
+ * @since Unknown
+ *
+ * @used-by GFCommon::get_select_choices()
+ * @used-by GFCommon::get_field_input()
+ * @used-by GFFormsModel::save_input()
+ * @used-by GF_Field_Address::get_state_field()
+ * @used-by GF_Field_Checkbox::get_checkbox_choices()
+ * @used-by GF_Field_Name::get_field_input()
+ * @used-by GF_Field_Number::get_field_input()
+ * @used-by GF_Field_Radio::get_radio_choices()
+ * @uses    GFForms::get()
  *
  * @var string|boolean RG_CURRENT_VIEW The view if available.  False otherwise.
  */
 define( 'RG_CURRENT_VIEW', RGForms::get( 'view' ) );
+
 /**
  * Defines the minimum version of WordPress required for Gravity Forms.
+ *
+ * @since Unknown
+ *
+ * @used-by GFCommon::ensure_wp_version()
+ * @used-by GF_SUPPORTED_WP_VERSION
+ * @used-by GFSettings::gravityforms_settings_page()
+ *
  * @var string GF_MIN_WP_VERSION Minimum version number.
  */
 define( 'GF_MIN_WP_VERSION', '3.7' );
+
 /**
- * Checks if the current WordPress version is supported
- * @see GF_MIN_WP_VERSION
+ * Checks if the current WordPress version is supported.
+ *
+ * @since Unknown
+ *
+ * @used-by GFForms::init()
+ * @used-by GFCommon::ensure_wp_version()
+ * @uses    GF_MIN_WP_VERSION
+ *
  * @var boolean GF_SUPPORTED_VERSION True if supported.  False otherwise.
  */
 define( 'GF_SUPPORTED_WP_VERSION', version_compare( get_bloginfo( 'version' ), GF_MIN_WP_VERSION, '>=' ) );
+
 /**
- * Defines the minimum version of WordPress that will be officially supported
+ * Defines the minimum version of WordPress that will be officially supported.
+ *
  * @var string GF_MIN_WP_VERSION_SUPPORT_TERMS The version number
  */
 define( 'GF_MIN_WP_VERSION_SUPPORT_TERMS', '4.5' );
 
+
 if ( ! defined( 'GRAVITY_MANAGER_URL' ) ) {
+	/**
+	 * Defines the Gravity Manager URL.
+	 *
+	 * @var string GRAVITY_MANAGER_URL The full URL to the Gravity Manager.
+	 */
 	define( 'GRAVITY_MANAGER_URL', 'https://www.gravityhelp.com/wp-content/plugins/gravitymanager' );
 }
 
 if ( ! defined( 'GRAVITY_MANAGER_PROXY_URL' ) ) {
+	/**
+	 * Defines the Gravity Manager proxy URL.
+	 *
+	 * @var string GRAVITY_MANAGER_PROXY_URL The full URL to the Gravity Manager proxy.
+	 */
 	define( 'GRAVITY_MANAGER_PROXY_URL', 'http://proxy.gravityplugins.com' );
 }
 
@@ -139,7 +193,6 @@ if ( is_admin() && ( RGForms::is_gravity_page() || RGForms::is_gravity_ajax_acti
 
 add_action( 'plugins_loaded', array( 'GFForms', 'loaded' ) );
 
-register_activation_hook( __FILE__, array( 'GFForms', 'activation_hook' ) );
 register_deactivation_hook( __FILE__, array( 'GFForms', 'deactivation_hook' ) );
 
 /**
@@ -150,29 +203,33 @@ register_deactivation_hook( __FILE__, array( 'GFForms', 'deactivation_hook' ) );
 class GFForms {
 
 	/**
-	 * Defines this version of Gravity Forms
+	 * Defines this version of Gravity Forms.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @var string $version The version number
+	 *
+	 * @var string $version The version number.
 	 */
-	public static $version = '2.0.7';
+	public static $version = '2.1.0.1';
 
 	/**
 	 * Runs after Gravity Forms is loaded.
 	 *
 	 * Initializes add-ons.
 	 *
-	 * @see GFAddOn
+	 * @since  Unknown
 	 * @access public
-	 * @static
+	 *
+	 * @uses GFAddOn::init_addons()
+	 *
+	 * @return void
 	 */
 	public static function loaded() {
 
 		/**
 		 * Fires when Gravity Forms has loaded.
 		 *
-		 * When developing Add-Ons, use this hook to initialize any functionality that depends on Gravity Forms functionality
+		 * When developing Add-Ons, use this hook to initialize any functionality that depends on Gravity Forms functionality.
 		 */
 		do_action( 'gform_loaded' );
 
@@ -183,22 +240,24 @@ class GFForms {
 	}
 
 	/**
-	 * Determines if the 3rd party Members plugin is active
+	 * Determines if the 3rd party Members plugin is active.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
-	 * @return boolean
+	 * @return boolean True if the Members plugin is active. False otherwise.
 	 */
 	public static function has_members_plugin() {
 		return function_exists( 'members_get_capabilities' );
 	}
 
 	/**
-	 * Initializes Gravity Forms
+	 * Initializes Gravity Forms.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
+	 *
+	 * @return void
 	 */
 	public static function init() {
 
@@ -211,7 +270,7 @@ class GFForms {
 		GF_Download::maybe_process();
 
 		//load text domains
-		GFCommon::load_gf_text_domain();
+		GFCommon::load_gf_text_domain( 'gravityforms' );
 
 		add_filter( 'gform_logging_supported', array( 'RGForms', 'set_logging_supported' ) );
 		add_action( 'admin_head', array( 'GFCommon', 'maybe_output_gf_vars' ) );
@@ -234,7 +293,13 @@ class GFForms {
 
 			global $current_user;
 
-			// Members plugin integration. Adding Gravity Forms roles to the checkbox list
+			//Site registration hooks
+			//add_action( 'add_option_rg_gforms_key', 	array( 'GFSettings', 'action_add_option_rg_gforms_key' ), 	10, 2 );
+			//add_action( 'update_option_rg_gforms_key', 	array( 'GFSettings', 'action_update_option_rg_gforms_key' ),10, 2 );
+			//add_action( 'delete_option_rg_gforms_key', 	array( 'GFSettings', 'action_delete_option_rg_gforms_key' ),10, 2 );
+
+
+			//Members plugin integration. Adding Gravity Forms roles to the checkbox list
 			if ( self::has_members_plugin() ) {
 				add_filter( 'members_get_capabilities', array( 'RGForms', 'members_get_capabilities' ) );
 			}
@@ -379,6 +444,8 @@ class GFForms {
 
 		// Add the "Add Form" button to the editor. The customizer doesn't run in the admin context.
 		if ( GFForms::page_supports_add_form_button() ) {
+			require_once( GFCommon::get_base_path() . '/tooltips.php' );
+
 			// Adding "embed form" button to the editor
 			add_action( 'media_buttons', array( 'GFForms', 'add_form_button' ), 20 );
 			// Adding the modal
@@ -387,10 +454,12 @@ class GFForms {
 	}
 
 	/**
-	 * Ensures that Gravity Forms is loaded first
+	 * Ensures that Gravity Forms is loaded first.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
+	 *
+	 * @return void
 	 */
 	public static function load_first() {
 		$plugin_path    = basename( dirname( __FILE__ ) ) . '/gravityforms.php';
@@ -405,34 +474,28 @@ class GFForms {
 
 	/**
 	 * Performs Gravity Forms deactivation tasks.
+	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFCache
+	 *
+	 * @uses GFCache::flush()
+	 *
+	 * @return void
 	 */
 	public static function deactivation_hook() {
 		GFCache::flush( true );
-		delete_option( 'gravityforms_rewrite_rules_flushed' );
 		flush_rewrite_rules();
-	}
-
-	/**
-	 * Performs Gravity Forms activation tasks.
-	 * @access public
-	 * @static
-	 */
-	public static function activation_hook() {
-		update_option( 'gravityforms_rewrite_rules_flushed', false );
 	}
 
 	/**
 	 * Add Gravity Forms to the plugins that support logging.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
-	 * @param array $plugins Existing plugins that support logging
+	 * @param array $plugins Existing plugins that support logging.
 	 *
-	 * @return array $plugins Supported plugins
+	 * @return array $plugins Supported plugins.
 	 */
 	public static function set_logging_supported( $plugins ) {
 		$plugins['gravityforms'] = 'Gravity Forms Core';
@@ -443,9 +506,15 @@ class GFForms {
 	/**
 	 * Determines if a form should be processed, and passes it off to processing.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFFormDisplay
+	 *
+	 * @uses GFFormsModel::get_form()
+	 * @uses GFCommon::get_base_path()
+	 * @uses GFFormDisplay::process_form()
+	 * @uses GFFormDisplay::process_send_resume_link()
+	 *
+	 * @return void
 	 */
 	public static function maybe_process_form() {
 
@@ -467,9 +536,13 @@ class GFForms {
 	/**
 	 * Processes pages that are not loaded directly within WordPress
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFCommon
+	 *
+	 * @uses GFCommon::get_upload_page_slug()
+	 * @uses GFCommon::get_base_path()
+	 *
+	 * @return void
 	 */
 	public static function process_exterior_pages() {
 		if ( rgempty( 'gf_page', $_GET ) ) {
@@ -491,7 +564,7 @@ class GFForms {
 			exit();
 		}
 
-		//ensure users are logged in
+		// Ensure users are logged in
 		if ( ! is_user_logged_in() ) {
 			auth_redirect();
 		}
@@ -513,16 +586,16 @@ class GFForms {
 	}
 
 	/**
-	 * Checks for Gravity Forms updates
+	 * Checks for Gravity Forms updates.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFAutoUpgrade
-	 * @see GFCommon
 	 *
-	 * @param object $update_plugins_option The GFAutoUpgrade object
+	 * @uses GFCommon::check_update()
 	 *
-	 * @return object The GFAutoUpgrade object
+	 * @param object $update_plugins_option The GFAutoUpgrade object.
+	 *
+	 * @return object The GFAutoUpgrade object.
 	 */
 	public static function check_update( $update_plugins_option ) {
 		if ( ! class_exists( 'GFCommon' ) ) {
@@ -535,8 +608,8 @@ class GFForms {
 	/**
 	 * Creates or updates database tables. Will only run when version changes.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
 	 * @param bool $force_setup If setup should be forced.  Defaults to false.
 	 */
@@ -586,8 +659,6 @@ class GFForms {
 
 			update_option( 'rg_form_version', GFCommon::$version );
 
-			update_option( 'gravityforms_rewrite_rules_flushed', false );
-
 			GFCommon::log_debug( "GFForms::setup(): Blog {$blog_id} - End of setup." );
 		}
 	}
@@ -595,8 +666,11 @@ class GFForms {
 	/**
 	 * Sets up the database for Gravity Forms
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
+	 * @global $wpdb
+	 *
+	 * @return void
 	 */
 	public static function setup_database() {
 		global $wpdb;
@@ -610,7 +684,7 @@ class GFForms {
 			$charset_collate .= " COLLATE $wpdb->collate";
 		}
 
-		//Fixes issue with dbDelta lower-casing table names, which cause problems on case sensitive DB servers.
+		// Fixes issue with dbDelta lower-casing table names, which cause problems on case sensitive DB servers.
 		add_filter( 'dbdelta_create_queries', array( 'RGForms', 'dbdelta_fix_case' ) );
 
 		/*
@@ -895,19 +969,18 @@ HAVING count(*) > 1;");
 	 *
 	 * Based on the WordPress check_column() function.
 	 *
-	 * @since 2.0.2.6
-	 *
-	 * @static
-	 *
+	 * @since  2.0.2.6
+	 * @access public
 	 * @global wpdb $wpdb WordPress database abstraction object.
 	 *
-	 * @param string $table_name Table name
-	 * @param string $col_name   Column name
-	 * @param string $col_type   Column type
+	 * @param string $table_name Table name.
+	 * @param string $col_name   Column name.
+	 * @param string $col_type   Column type.
 	 * @param bool   $is_null    Optional. Check is null.
 	 * @param mixed  $key        Optional. Key info.
 	 * @param mixed  $default    Optional. Default value.
 	 * @param mixed  $extra      Optional. Extra value.
+	 *
 	 * @return bool True, if matches. False, if not matching.
 	 */
 	private static function check_column( $table_name, $col_name, $col_type, $is_null = null, $key = null, $default = null, $extra = null ) {
@@ -949,10 +1022,13 @@ HAVING count(*) > 1;");
 	/**
 	 * Upgrades the lead detail table.
 	 *
+	 * @since  Unknown
 	 * @access private
-	 * @static
+	 * @global $wpdb
 	 *
 	 * @param string $previous_version The currently installed version before the upgrade to this version.
+	 *
+	 * @return void
 	 */
 	private static function maybe_upgrade_lead_detail_table( $previous_version ) {
 		global $wpdb;
@@ -977,10 +1053,12 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Adds index and htaccess files to the upload root for security
+	 * Adds index and htaccess files to the upload root for security.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
+	 *
+	 * @return void
 	 */
 	public static function add_security_files() {
 		GFCommon::log_debug( __METHOD__ . '(): Start adding security files' );
@@ -997,12 +1075,16 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Self-heals suspicious files
+	 * Self-heals suspicious files.
 	 *
+	 * @since  Unknown
 	 * @access private
-	 * @static
-	 * @see GFForms::heal_wp_upload_dir
-	 * @see GFForms::rename_suspicious_files_recursive
+	 *
+	 * @uses GFForms::heal_wp_upload_dir()
+	 * @uses GFFormsModel::get_upload_root()
+	 * @uses GFForms::rename_suspicious_files_recursive()
+	 *
+	 * @return void
 	 */
 	private static function do_self_healing() {
 
@@ -1022,10 +1104,10 @@ SET d.value = l.value"
 	/**
 	 * Renames files with a .bak extension if they have a file extension that is not allowed in the Gravity Forms uploads folder.
 	 *
-	 * Called from GFForms::do_self_healing
-	 *
+	 * @since  Unknown
 	 * @access private
-	 * @static
+	 *
+	 * @used-by GFForms::do_self_healing()
 	 *
 	 * @param string $dir The path to process.
 	 */
@@ -1038,7 +1120,7 @@ SET d.value = l.value"
 			return;
 		}
 
-		// ignores all errors
+		// Ignores all errors
 		set_error_handler( create_function( '', 'return 0;' ), E_ALL );
 
 		while ( false !== ( $file = readdir( $dir_handle ) ) ) {
@@ -1052,7 +1134,7 @@ SET d.value = l.value"
 			}
 		}
 
-		// restores error handler
+		// Restores error handler
 		restore_error_handler();
 
 		closedir( $dir_handle );
@@ -1061,12 +1143,12 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Renames suspicious content within the wp_upload directory
+	 * Renames suspicious content within the wp_upload directory.
 	 *
-	 * Called from GFForms::do_self_healing
-	 *
+	 * @since  Unknown
 	 * @access private
-	 * @static
+	 *
+	 * @used-by GFForms::do_self_healing()
 	 */
 	private static function heal_wp_upload_dir() {
 		$wp_upload_dir = wp_upload_dir();
@@ -1093,12 +1175,13 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Fixes leading and trailing spaces within Gravity Forms tables
+	 * Fixes leading and trailing spaces within Gravity Forms tables.
 	 *
+	 * @since  Unknown
 	 * @access private
-	 * @static
+	 * @global $wpdb
 	 *
-	 * @return array $results Content that was processed through the function
+	 * @return array $results Content that was processed through the function.
 	 */
 	private static function fix_leading_and_trailing_spaces() {
 
@@ -1140,11 +1223,14 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Determines if forms should be imported
+	 * Determines if forms should be imported.
 	 *
+	 * @since  Unknown
 	 * @access private
-	 * @static
-	 * @see GFExport::import_file
+	 *
+	 * @uses GF_IMPORT_FILE
+	 * @uses GFCommon::get_base_path()
+	 * @uses GFExport::import_file()
 	 */
 	private static function maybe_import_forms() {
 		if ( defined( 'GF_IMPORT_FILE' ) && ! get_option( 'gf_imported_file' ) ) {
@@ -1158,11 +1244,16 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Imports theme-specific forms, if needed
+	 * Imports theme-specific forms, if needed.
 	 *
+	 * @since  Unknown
 	 * @access private
-	 * @static
-	 * @see GFExport::import_file
+	 *
+	 * @uses GF_THEME_IMPORT_FILE
+	 * @uses GFExport::import_file()
+	 * @uses GFCommon::get_base_path()
+	 *
+	 * @return void
 	 */
 	private static function maybe_import_theme_forms() {
 
@@ -1191,10 +1282,14 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Imports Gravity Forms license keys, and reCAPTCHA keys from global variables
+	 * Imports Gravity Forms license keys, and reCAPTCHA keys from global variables.
 	 *
+	 * @since  Unknown
 	 * @access private
-	 * @static
+	 * @global $gf_license_key
+	 *
+	 * @uses GF_RECAPTCHA_PRIVATE_KEY
+	 * @uses GF_RECAPTCHA_PUBLIC_KEY
 	 */
 	private static function maybe_populate_keys() {
 
@@ -1206,7 +1301,7 @@ SET d.value = l.value"
 			GFCommon::get_version_info( false );
 		}
 
-		//auto-setting recaptcha keys based on value configured via the constant or global variable
+		// Auto-setting recaptcha keys based on value configured via the constant or global variable
 		global $gf_recaptcha_public_key, $gf_recaptcha_private_key;
 		$private_key = defined( 'GF_RECAPTCHA_PRIVATE_KEY' ) && empty( $gf_recaptcha_private_key ) ? GF_RECAPTCHA_PRIVATE_KEY : $gf_recaptcha_private_key;
 		if ( ! empty( $private_key ) ) {
@@ -1221,12 +1316,13 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Gets the value of an option from the wp_options table
+	 * Gets the value of an option from the wp_options table.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
+	 * @global $wpdb
 	 *
-	 * @param string $option_name The option to find
+	 * @param string $option_name The option to find.
 	 *
 	 * @return string The option value, if found.
 	 */
@@ -1239,10 +1335,11 @@ SET d.value = l.value"
 	/**
 	 * Changes form_id values from default value "0" to the correct value.
 	 *
-	 * Needed when upgrading users from 1.6.11
+	 * Needed when upgrading users from 1.6.11.
 	 *
+	 * @since  Unknown
 	 * @access private
-	 * @static
+	 * @global $wpdb
 	 */
 	private static function fix_lead_meta_form_id_values() {
 		global $wpdb;
@@ -1260,12 +1357,12 @@ SET d.value = l.value"
 	/**
 	 * Fixes case for database queries.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
-	 * @param array $cqueries Queries to be fixed
+	 * @param array $cqueries Queries to be fixed.
 	 *
-	 * @return array $queries Queries after processing
+	 * @return array $queries Queries after processing.
 	 */
 	public static function dbdelta_fix_case( $cqueries ) {
 		foreach ( $cqueries as $table => $qry ) {
@@ -1287,9 +1384,11 @@ SET d.value = l.value"
 	/**
 	 * Defines styles needed for "no conflict mode"
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFForms::no_conflict_mode
+	 * @global $wp_styles
+	 *
+	 * @uses GFForms::no_conflict_mode()
 	 */
 	public static function no_conflict_mode_style() {
 		if ( ! get_option( 'gform_enable_noconflict' ) ) {
@@ -1299,7 +1398,7 @@ SET d.value = l.value"
 		global $wp_styles;
 		$wp_required_styles = array( 'admin-bar', 'colors', 'ie', 'wp-admin', 'editor-style' );
 		$gf_required_styles = array(
-			'common'                     => array(),
+			'common'                     => array( 'gform_tooltip', 'gform_font_awesome' ),
 			'gf_edit_forms'              => array( 'thickbox', 'editor-buttons', 'wp-jquery-ui-dialog', 'media-views', 'buttons', 'wp-pointer' ),
 			'gf_edit_forms_notification' => array( 'thickbox', 'editor-buttons', 'wp-jquery-ui-dialog', 'media-views', 'buttons' ),
 			'gf_new_form'                => array( 'thickbox' ),
@@ -1314,11 +1413,13 @@ SET d.value = l.value"
 
 
 	/**
-	 * Defines scripts needed for "no conflict mode"
+	 * Defines scripts needed for "no conflict mode".
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFForms::no_conflict_mode
+	 * @global $wp_scripts
+	 *
+	 * @uses GFForms::no_conflict_mode()
 	 */
 	public static function no_conflict_mode_script() {
 		if ( ! get_option( 'gform_enable_noconflict' ) ) {
@@ -1343,18 +1444,18 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Runs "no conflict mode"
+	 * Runs "no conflict mode".
 	 *
-	 * Called from GFForms::no_conflict_mode_style
-	 * Called from GFForms::no_conflict_mode_script
-	 *
+	 * @since  Unknown
 	 * @access private
-	 * @static
 	 *
-	 * @param object $wp_objects          WP_Scripts object
-	 * @param array  $wp_required_objects Scripts required by WordPress Core
-	 * @param array  $gf_required_objects Scripts required by Gravity Forms
-	 * @param string $type                Determines if scripts or styles are being run through the function
+	 * @used-by GFForms::no_conflict_mode_style()
+	 * @used-by GFForms::no_conflict_mode_script()
+	 *
+	 * @param object $wp_objects          WP_Scripts object.
+	 * @param array  $wp_required_objects Scripts required by WordPress Core.
+	 * @param array  $gf_required_objects Scripts required by Gravity Forms.
+	 * @param string $type                Determines if scripts or styles are being run through the function.
 	 */
 	private static function no_conflict_mode( &$wp_objects, $wp_required_objects, $gf_required_objects, $type = 'scripts' ) {
 
@@ -1405,17 +1506,17 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Adds script dependencies needed
+	 * Adds script dependencies needed.
 	 *
-	 * Called from GFForms::no_conflict_mode
-	 *
+	 * @since  Unknown
 	 * @access private
-	 * @static
 	 *
-	 * @param array $registered Registered scripts
-	 * @param array $scripts    Required scripts
+	 * @used-by GFForms::no_conflict_mode()
 	 *
-	 * @return array $scripts Scripts including dependencies
+	 * @param array $registered Registered scripts.
+	 * @param array $scripts    Required scripts.
+	 *
+	 * @return array $scripts Scripts including dependencies.
 	 */
 	private static function add_script_dependencies( $registered, $scripts ) {
 
@@ -1437,12 +1538,12 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Integration with ManageWP
+	 * Integration with ManageWP.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
-	 * @param array $premium_update ManageWP update array
+	 * @param array $premium_update ManageWP update array.
 	 *
 	 * @return array $premium_update
 	 */
@@ -1465,14 +1566,14 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Integration with ManageWP
+	 * Integration with ManageWP.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
-	 * @param array $premium_update ManageWP update array
+	 * @param array $premium_update ManageWP update array.
 	 *
-	 * @return array $premium_update
+	 * @return array $premium_update.
 	 */
 	public static function premium_update( $premium_update ) {
 
@@ -1494,13 +1595,16 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Drops a table index
+	 * Drops a table index.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
+	 * @global $wpdb
 	 *
-	 * @param string $table The table that the index will be dropped from
-	 * @param string $index The index to be dropped
+	 * @param string $table The table that the index will be dropped from.
+	 * @param string $index The index to be dropped.
+	 *
+	 * @return void
 	 */
 	public static function drop_index( $table, $index ) {
 		global $wpdb;
@@ -1524,11 +1628,11 @@ SET d.value = l.value"
 	/**
 	 * Validates that Gravity Forms is doing the database upgrade, and has permissions to do so.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
-	 * @param null   $do_upgrade Not used
-	 * @param string $hook_extra The plugin triggering the upgrade
+	 * @param null   $do_upgrade Not used.
+	 * @param string $hook_extra The plugin triggering the upgrade.
 	 *
 	 * @return bool|WP_Error True if successful.  Otherwise WP_Error object.
 	 */
@@ -1542,12 +1646,13 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Checks if Gravity Forms has permissions to make changes to the database
+	 * Checks if Gravity Forms has permissions to make changes to the database.
 	 *
-	 * Called from GFForms::validate_upgrade
-	 *
+	 * @since  Unknown
 	 * @access private
-	 * @static
+	 * @global $wpdb
+	 *
+	 * @used-by GFForms::validate_upgrade()
 	 *
 	 * @param string $error Error, if there was a problem somewhere.
 	 *
@@ -1586,10 +1691,11 @@ SET d.value = l.value"
 
 	//Changes checkbox entry values from "!" to the current choice text. Needed when upgrading users from 1.0
 	/**
-	 * Fixes checkbox values in the database
+	 * Fixes checkbox values in the database.
 	 *
+	 * @since  Unknown
 	 * @access private
-	 * @static
+	 * @global $wpdb
 	 */
 	private static function fix_checkbox_value() {
 		global $wpdb;
@@ -1609,18 +1715,16 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Determines if a user has a particular capability
+	 * Determines if a user has a particular capability.
 	 *
-	 * Called from the user_has_cap filter.
-	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
-	 * @param array $all_caps All capabilities
-	 * @param array $cap      Required capability.  Stored in the [0] key
-	 * @param array $args     Not used
+	 * @param array $all_caps All capabilities.
+	 * @param array $cap      Required capability.  Stored in the [0] key.
+	 * @param array $args     Not used.
 	 *
-	 * @return array $all_caps All capabilities
+	 * @return array $all_caps All capabilities.
 	 */
 	public static function user_has_cap( $all_caps, $cap, $args ) {
 		$gf_caps    = GFCommon::all_caps();
@@ -1654,16 +1758,14 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Provides the Members plugin with Gravity Forms lists of capabilities
+	 * Provides the Members plugin with Gravity Forms lists of capabilities.
 	 *
-	 * Called from the members_get_capabilities filter
-	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
-	 * @param array $caps All capabilities
+	 * @param array $caps All capabilities.
 	 *
-	 * @return array
+	 * @return array $caps The capabilities list.
 	 */
 	public static function members_get_capabilities( $caps ) {
 		return array_merge( $caps, GFCommon::all_caps() );
@@ -1672,11 +1774,13 @@ SET d.value = l.value"
 	/**
 	 * Tests if the upload folder is writable and displays an error message if not.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
+	 *
+	 * @return void
 	 */
 	public static function check_upload_folder() {
-		//check if upload folder is writable
+		// Check if upload folder is writable
 		$folder = RGFormsModel::get_upload_root();
 		if ( empty( $folder ) ) {
 			echo "<div class='error'>Upload folder is not writable. Export and file upload features will not be functional.</div>";
@@ -1686,10 +1790,10 @@ SET d.value = l.value"
 	/**
 	 * Checks if a Gravity Forms AJAX action is being performed.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
-	 * @return bool
+	 * @return bool True if performing a Gravity Forms AJAX request. False, otherwise.
 	 */
 	public static function is_gravity_ajax_action() {
 		//Gravity Forms AJAX requests
@@ -1707,24 +1811,24 @@ SET d.value = l.value"
 			return true;
 		}
 
-		//not a gravity forms ajax request.
+		// Not a Gravity Forms ajax request.
 		return false;
 	}
 
-	//Returns true if the current page is one of Gravity Forms pages. Returns false if not
+	// Returns true if the current page is one of Gravity Forms pages. Returns false if not
 	/**
 	 * Determines if the current page is part of Gravity Forms.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
 	 * @return bool
 	 */
 	public static function is_gravity_page() {
 
-		//Gravity Forms pages
+		// Gravity Forms pages
 		$current_page = trim( strtolower( self::get( 'page' ) ) );
-		$gf_pages     = array( 'gf_edit_forms', 'gf_new_form', 'gf_entries', 'gf_settings', 'gf_export', 'gf_addons', 'gf_help' );
+		$gf_pages     = array( 'gf_edit_forms', 'gf_new_form', 'gf_entries', 'gf_settings', 'gf_export', 'gf_help' );
 
 		return in_array( $current_page, $gf_pages );
 	}
@@ -1739,9 +1843,10 @@ SET d.value = l.value"
 	 *  e.g. When an update for Gravity Forms is available an icon will be added to the the menu title.
 	 *  The HTML for the icon will be stripped entirely by sanitize_title() because the number 1 is encoded.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
+	 * @return void
 	 */
 	public static function create_menu() {
 
@@ -1796,16 +1901,16 @@ SET d.value = l.value"
 	/**
 	 * Gets the admin icon for the Forms menu item
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
-	 * @param bool|string $color The hex color if changing the color of the icon.  Defualts to false.
+	 * @param bool|string $color The hex color if changing the color of the icon.  Defaults to false.
 	 *
 	 * @return string Base64 encoded icon string.
 	 */
 	public static function get_admin_icon_b64( $color = false ) {
 
-		// replace the hex color (default was #999999) to %s; it will be replaced by the passed $color
+		// Replace the hex color (default was #999999) to %s; it will be replaced by the passed $color
 
 		if ( $color ) {
 			$svg_xml = '<?xml version="1.0" encoding="utf-8"?>' . self::get_admin_icon_svg( $color );
@@ -1822,7 +1927,10 @@ SET d.value = l.value"
 	/**
 	 * Returns the admin icon in SVG format.
 	 *
-	 * @param string $color The hex color if changing the color of the icon.  Defualts to #999999.
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @param string $color The hex color if changing the color of the icon.  Defaults to #999999.
 	 *
 	 * @return string
 	 */
@@ -1834,10 +1942,10 @@ SET d.value = l.value"
 	/**
 	 * Returns the parent menu item.
 	 *
-	 * It needs to be the same as the first sub-menu (otherwise WP will duplicate the main menu as a sub-menu)
+	 * It needs to be the same as the first sub-menu (otherwise WP will duplicate the main menu as a sub-menu).
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
 	 * @param array $addon_menus Contains the add-on menu items.
 	 *
@@ -1876,8 +1984,8 @@ SET d.value = l.value"
 	/**
 	 * Modifies the page title when on Gravity Forms settings pages.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
 	 * @param string $admin_title The current admin title
 	 * @param string $title       Not used.
@@ -1912,12 +2020,12 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Parses Gravity Forms shortcode attributes and displays the form
+	 * Parses Gravity Forms shortcode attributes and displays the form.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
-	 * @param array $attributes The shortcode attributes
+	 * @param array $attributes The shortcode attributes.
 	 * @param null  $content    Defines the content of the shortcode.  Defaults to null.
 	 *
 	 * @return mixed|string|void
@@ -1976,6 +2084,8 @@ SET d.value = l.value"
 		/**
 		 * Filters the shortcode.
 		 *
+		 * @since Unknown
+		 *
 		 * @param string $shortcode_string The full shortcode string.
 		 * @param array  $attributes       The attributes within the shortcode.
 		 * @param string $content          The content of the shortcode, if available.
@@ -1986,30 +2096,30 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Includes the add-on framework
+	 * Includes the add-on framework.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 */
 	public static function include_addon_framework() {
 		require_once( GFCommon::get_base_path() . '/includes/addon/class-gf-addon.php' );
 	}
 
 	/**
-	 * Includes the feed class for the add-on framework
+	 * Includes the feed class for the add-on framework.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 */
 	public static function include_feed_addon_framework() {
 		require_once( GFCommon::get_base_path() . '/includes/addon/class-gf-feed-addon.php' );
 	}
 
 	/**
-	 * Includes the payment class for te add-on framework
+	 * Includes the payment class for te add-on framework.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 */
 	public static function include_payment_addon_framework() {
 		require_once( GFCommon::get_base_path() . '/includes/addon/class-gf-payment-addon.php' );
@@ -2018,8 +2128,8 @@ SET d.value = l.value"
 	/**
 	 * Includes the Gravity API
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 */
 	public static function include_gravity_api(){
 		require_once( GFCommon::get_base_path() . '/includes/class-gravity-api.php' );
@@ -2029,12 +2139,12 @@ SET d.value = l.value"
 	//----------- AJAX --------------------------------
 
 	/**
-	 * Parses AJAX requests
+	 * Parses AJAX requests.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
-	 * @param null $wp Not used
+	 * @param null $wp Not used.
 	 */
 	public static function ajax_parse_request( $wp ) {
 
@@ -2060,8 +2170,8 @@ SET d.value = l.value"
 	/**
 	 * Determines if the "Add Form" button should be added to the page.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
 	 * @return boolean $display_add_form_button True if the page is supported.  False otherwise.
 	 */
@@ -2076,8 +2186,8 @@ SET d.value = l.value"
 	/**
 	 * Creates the "Add Form" button.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 */
 	public static function add_form_button() {
 
@@ -2111,10 +2221,10 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Displays the popup to insert a form to a post/page
+	 * Displays the popup to insert a form to a post/page.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 */
 	public static function add_mce_popup() {
 		?>
@@ -2158,10 +2268,13 @@ SET d.value = l.value"
 	//------------------------------------------------------
 
 	/**
-	 * Creates the Settings link within the Plugins page
+	 * Creates the Settings link within the Plugins page.
 	 *
-	 * @param array $links Links associated with the plugin
-	 * @param string $file The plugin filename
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @param array $links Links associated with the plugin.
+	 * @param string $file The plugin filename.
 	 *
 	 * @return array $links Links associated with the plugin, after the Settings link is added.
 	 */
@@ -2175,14 +2288,13 @@ SET d.value = l.value"
 		return $links;
 	}
 
-	//Displays message on Plugin's page
 	/**
-	 * Displays messages for the Gravity Forms listing on the Plugins page
+	 * Displays messages for the Gravity Forms listing on the Plugins page.
 	 *
 	 * Displays if the key is invalid or an update is available.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
 	 * @param string $plugin_name The plugin filename.  Immediately overwritten.
 	 */
@@ -2203,8 +2315,8 @@ SET d.value = l.value"
 	/**
 	 * Displays current version details on Plugins page
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 */
 	public static function display_changelog() {
 		if ( $_REQUEST['plugin'] != 'gravityforms' ) {
@@ -2220,8 +2332,8 @@ SET d.value = l.value"
 	/**
 	 * Gets the changelog for the newest version
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
 	 * @return string $page_text The changelog. Error message if there's an issue.
 	 */
@@ -2257,26 +2369,26 @@ SET d.value = l.value"
 	//-------------- DASHBOARD PAGE -------------------------
 
 	/**
-	 * Registers the dashboard widget
+	 * Registers the dashboard widget.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 */
 	public static function dashboard_setup() {
 		/**
 		 * Changes the dashboard widget title
 		 *
-		 * @param string $dashboard_title The dashboard widget title
+		 * @param string $dashboard_title The dashboard widget title.
 		 */
 		$dashboard_title = apply_filters( 'gform_dashboard_title', __( 'Forms', 'gravityforms' ) );
 		wp_add_dashboard_widget( 'rg_forms_dashboard', $dashboard_title, array( 'RGForms', 'dashboard' ) );
 	}
 
 	/**
-	 * Displays the dashboard UI
+	 * Displays the dashboard UI.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 */
 	public static function dashboard() {
 		$forms = RGFormsModel::get_form_summary();
@@ -2340,10 +2452,10 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Displays the update message on the dashboard
+	 * Displays the update message on the dashboard.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 */
 	public static function dashboard_update_message() {
 		$version_info = GFCommon::get_version_info();
@@ -2374,10 +2486,10 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Dismisses the dashboard update message
+	 * Dismisses the dashboard update message.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 */
 	public static function dashboard_dismiss_upgrade() {
 		$ary = get_option( 'gf_dismissed_upgrades' );
@@ -2394,48 +2506,49 @@ SET d.value = l.value"
 	//--------------- ALL OTHER PAGES ----------------------
 
 	/**
-	 * Registers Gravity Forms scripts
+	 * Registers Gravity Forms scripts.
 	 *
 	 * If SCRIPT_DEBUG constant is set, uses the un-minified version.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 */
 	public static function register_scripts() {
 
 		$base_url = GFCommon::get_base_url();
 		$version  = GFForms::$version;
+		$min      = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] ) ? '' : '.min';
 
-		$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] ) ? '' : '.min';
-
-		wp_register_script( 'gform_chosen', $base_url . '/js/chosen.jquery.min.js', array( 'jquery' ), $version );
+		wp_register_script( 'gform_chosen',            $base_url . '/js/chosen.jquery.min.js', array( 'jquery' ), $version );
 		wp_register_script( 'gform_conditional_logic', $base_url . "/js/conditional_logic{$min}.js", array( 'jquery', 'gform_gravityforms' ), $version );
-		wp_register_script( 'gform_datepicker_init', $base_url . "/js/datepicker{$min}.js", array( 'jquery', 'jquery-ui-datepicker', 'gform_gravityforms' ), $version, true );
-		wp_register_script( 'gform_floatmenu', $base_url . "/js/floatmenu_init{$min}.js", array( 'jquery' ), $version );
-		wp_register_script( 'gform_form_admin', $base_url . "/js/form_admin{$min}.js", array( 'jquery', 'jquery-ui-autocomplete', 'gform_placeholder' ), $version );
-		wp_register_script( 'gform_form_editor', $base_url . "/js/form_editor{$min}.js", array( 'jquery', 'gform_json', 'gform_placeholder' ), $version );
-		wp_register_script( 'gform_forms', $base_url . "/js/forms{$min}.js", array( 'jquery' ), $version );
-		wp_register_script( 'gform_gravityforms', $base_url . "/js/gravityforms{$min}.js", array( 'jquery', 'gform_json' ), $version );
-		wp_register_script( 'gform_json', $base_url . '/js/jquery.json.js', array( 'jquery' ), $version, true );
-		wp_register_script( 'gform_masked_input', $base_url . '/js/jquery.maskedinput.min.js', array( 'jquery' ), $version );
-		wp_register_script( 'gform_menu', $base_url . "/js/menu{$min}.js", array( 'jquery' ), $version );
-		wp_register_script( 'gform_placeholder', $base_url . '/js/placeholders.jquery.min.js', array( 'jquery' ), $version );
-		wp_register_script( 'gform_tooltip_init', $base_url . "/js/tooltip_init{$min}.js", array( 'jquery-ui-tooltip' ), $version );
-		wp_register_script( 'gform_textarea_counter', $base_url . '/js/jquery.textareaCounter.plugin.js', array( 'jquery' ), $version );
-		wp_register_script( 'gform_field_filter', $base_url . "/js/gf_field_filter{$min}.js", array( 'jquery', 'gform_datepicker_init' ), $version );
-		wp_register_script( 'gform_shortcode_ui', $base_url . "/js/shortcode-ui{$min}.js", array( 'jquery', 'wp-backbone' ), $version, true );
+		wp_register_script( 'gform_datepicker_init',   $base_url . "/js/datepicker{$min}.js", array( 'jquery', 'jquery-ui-datepicker', 'gform_gravityforms' ), $version, true );
+		wp_register_script( 'gform_floatmenu',         $base_url . "/js/floatmenu_init{$min}.js", array( 'jquery' ), $version );
+		wp_register_script( 'gform_form_admin',        $base_url . "/js/form_admin{$min}.js", array( 'jquery', 'jquery-ui-autocomplete', 'gform_placeholder' ), $version );
+		wp_register_script( 'gform_form_editor',       $base_url . "/js/form_editor{$min}.js", array( 'jquery', 'gform_json', 'gform_placeholder' ), $version );
+		wp_register_script( 'gform_forms',             $base_url . "/js/forms{$min}.js", array( 'jquery' ), $version );
+		wp_register_script( 'gform_gravityforms',      $base_url . "/js/gravityforms{$min}.js", array( 'jquery', 'gform_json' ), $version );
+		wp_register_script( 'gform_json',              $base_url . "/js/jquery.json{$min}.js", array( 'jquery' ), $version, true );
+		wp_register_script( 'gform_masked_input',      $base_url . '/js/jquery.maskedinput.min.js', array( 'jquery' ), $version );
+		wp_register_script( 'gform_menu',              $base_url . "/js/menu{$min}.js", array( 'jquery' ), $version );
+		wp_register_script( 'gform_placeholder',       $base_url . '/js/placeholders.jquery.min.js', array( 'jquery' ), $version );
+		wp_register_script( 'gform_tooltip_init',      $base_url . "/js/tooltip_init{$min}.js", array( 'jquery-ui-tooltip' ), $version );
+		wp_register_script( 'gform_textarea_counter',  $base_url . "/js/jquery.textareaCounter.plugin{$min}.js", array( 'jquery' ), $version );
+		wp_register_script( 'gform_field_filter',      $base_url . "/js/gf_field_filter{$min}.js", array( 'jquery', 'gform_datepicker_init' ), $version );
+		wp_register_script( 'gform_shortcode_ui',      $base_url . "/js/shortcode-ui{$min}.js", array( 'jquery', 'wp-backbone' ), $version, true );
 
 		wp_register_style( 'gform_shortcode_ui', $base_url . "/css/shortcode-ui{$min}.css", array(), $version );
+		wp_register_style( 'gform_font_awesome', $base_url . "/css/font-awesome{$min}.css", null, $version );
+		wp_register_style( 'gform_tooltip',      $base_url . "/css/tooltip{$min}.css", array( 'gform_font_awesome' ), $version );
 
 	}
 
 	/**
-	 * Enqueues registered Gravity Forms scripts
+	 * Enqueues registered Gravity Forms scripts.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
-	 * @param null $hook Not used
+	 * @param null $hook Not used.
 	 */
 	public static function enqueue_admin_scripts( $hook ) {
 
@@ -2581,7 +2694,6 @@ SET d.value = l.value"
 		}
 
 		if ( self::page_supports_add_form_button() ) {
-			require_once( GFCommon::get_base_path() . '/tooltips.php' );
 			wp_enqueue_script( 'gform_shortcode_ui' );
 			wp_enqueue_style( 'gform_shortcode_ui' );
 			wp_localize_script( 'gform_shortcode_ui', 'gfShortcodeUIData', array(
@@ -2617,12 +2729,12 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Gets current page name
+	 * Gets current page name.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
-	 * @return bool|string Page name or false
+	 * @return bool|string Page name or false.
 	 *   Page names:
 	 *
 	 *   new_form
@@ -2717,13 +2829,13 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Gets the form
+	 * Gets the form.
 	 *
-	 * Passes data off to GFFormDisplay::get_form
-	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFFormDisplay::get_form
+	 *
+	 * @uses GFFormDisplay::get_form()
+	 * @uses GFCommon::get_base_path()
 	 */
 	public static function get_form( $form_id, $display_title = true, $display_description = true, $force_display = false, $field_values = null, $ajax = false, $tabindex = 1 ) {
 		require_once( GFCommon::get_base_path() . '/form_display.php' );
@@ -2732,12 +2844,12 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Runs when the Forms menu item is clicked
+	 * Runs when the Forms menu item is clicked.
 	 *
 	 * Checks to see if the installation wizard should be displayed instead.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 */
 	public static function new_form() {
 
@@ -2751,11 +2863,10 @@ SET d.value = l.value"
 	/**
 	 * Enqueues scripts
 	 *
-	 * Passes everything off to GFFormDisplay::enqueue_scripts
-	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFFormDisplay::enqueue_scripts
+	 *
+	 * @uses GFFormDisplay::enqueue_scripts()
 	 */
 	public static function enqueue_scripts() {
 		require_once( GFCommon::get_base_path() . '/form_display.php' );
@@ -2763,13 +2874,12 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Prints form scripts
+	 * Prints form scripts.
 	 *
-	 * Passes everything off to GFFormDisplay::print_form_scripts
-	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFFormDisplay::print_form_scripts
+	 *
+	 * @uses GFFormDisplay::print_form_scripts()
 	 */
 	public static function print_form_scripts( $form, $ajax ) {
 		require_once( GFCommon::get_base_path() . '/form_display.php' );
@@ -2781,9 +2891,10 @@ SET d.value = l.value"
 	 *
 	 * Passes everything off to GFFormDetail::forms_page
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFFormDetail::forms_page
+	 *
+	 * @uses GFFormDetail::forms_page()
 	 */
 	public static function forms_page( $form_id ) {
 		require_once( GFCommon::get_base_path() . '/form_detail.php' );
@@ -2795,9 +2906,10 @@ SET d.value = l.value"
 	 *
 	 * Checks to see if the installation wizard should be displayed.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFSettings::settings_page
+	 *
+	 * @uses GFSettings::settings_page()
 	 */
 	public static function settings_page() {
 
@@ -2812,11 +2924,10 @@ SET d.value = l.value"
 	/**
 	 * Adds pages to the Gravity Forms Settings page
 	 *
-	 * Passes eveything off to GFSettings::add_settings_page
-	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFSettings::add_settings_page
+	 *
+	 * @used-by GFSettings::add_settings_page()
 	 */
 	public static function add_settings_page( $name, $handle = '', $icon_path = '' ) {
 		require_once( GFCommon::get_base_path() . '/settings.php' );
@@ -2826,11 +2937,10 @@ SET d.value = l.value"
 	/**
 	 * Displays the help page
 	 *
-	 * Passes everything off to GFHelp::help_page
-	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFHelp::help_page
+	 *
+	 * @uses GFHelp::help_page()
 	 */
 	public static function help_page() {
 		require_once( GFCommon::get_base_path() . '/help.php' );
@@ -2840,11 +2950,11 @@ SET d.value = l.value"
 	/**
 	 * Displays the Gravity Forms Export page
 	 *
-	 * Checks if the installation wizard should be run before passing off to GFExport::export_page
-	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFExport::export_page
+	 *
+	 * @uses GFForms::maybe_display_installation_wizard()
+	 * @uses GFExport::export_page()
 	 */
 	public static function export_page() {
 
@@ -2859,12 +2969,11 @@ SET d.value = l.value"
 	/**
 	 * Target for the wp_ajax_gf_process_export ajax action requested from the export entries page.
 	 *
-	 * Passes everything off to GFExport::ajax_process_export
-	 *
-	 * @since 2.0.0
+	 * @since  2.0.0
 	 * @access public
-	 * @static
-	 * @see GFExport::ajax_process_export
+	 *
+	 * @uses GFCommon::get_base_path()
+	 * @uses GFExport::ajax_process_export()
 	 */
 	public static function ajax_process_export() {
 
@@ -2875,12 +2984,11 @@ SET d.value = l.value"
 	/**
 	 * Target for the wp_ajax_gf_download_export ajax action requested from the export entries page.
 	 *
-	 * Passes eveything off to GFExport::ajax_download_export
-	 *
-	 * @since 2.0.0
+	 * @since  2.0.0
 	 * @access public
-	 * @static
-	 * @see GFExport::ajax_download_export
+	 *
+	 * @uses GFCommon::get_base_path()
+	 * @uses GFExport::ajax_download_export()
 	 */
 	public static function ajax_download_export() {
 
@@ -2891,12 +2999,10 @@ SET d.value = l.value"
 	/**
 	 * Target for the wp_ajax_gf_dismiss_message ajax action requested from the Gravity Forms admin pages.
 	 *
-	 * Gets the key and passes off to GFCommon::dismiss_message
-	 *
-	 * @since 2.0.0
+	 * @since  2.0.0
 	 * @access public
-	 * @static
-	 * @see GFCommon::dismiss_message
+	 *
+	 * @uses GFCommon::dismiss_message()
 	 */
 	public static function ajax_dismiss_message() {
 
@@ -2914,9 +3020,11 @@ SET d.value = l.value"
 	 *
 	 * Passes off to GFUpdate::update_page
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFUpdate::update_page
+	 *
+	 * @uses GFCommon::get_base_path()
+	 * @uses GFUpdate::update_page()
 	 */
 	public static function update_page() {
 		require_once( GFCommon::get_base_path() . '/update.php' );
@@ -2927,6 +3035,9 @@ SET d.value = l.value"
 	 * Runs the add-ons page
 	 *
 	 * If the display wizard needs to be displayed, do that instead.
+	 *
+	 * @since  Unknown
+	 * @access public
 	 */
 	public static function addons_page() {
 
@@ -2963,12 +3074,12 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Gets all add-on information
+	 * Gets all add-on information.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
-	 * @param string $api    The API URL
+	 * @param string $api    The API URL.
 	 * @param string $action The action needed.  Determines the view.
 	 * @param object $args   Additional arguments sent to the API
 	 *
@@ -2998,10 +3109,10 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Creates nonces for add-on installation pages
+	 * Creates nonces for add-on installation pages.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
 	 * @return array|bool $nonces The nonces if the API response is fine.  Otherwise, false.
 	 */
@@ -3023,13 +3134,12 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Begins exports
+	 * Begins exports.
 	 *
-	 * Passes off to GFExport::start_export
-	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFExport::start_export
+	 *
+	 * @uses GFExport::start_export()
 	 */
 	public static function start_export() {
 		require_once( GFCommon::get_base_path() . '/export.php' );
@@ -3037,13 +3147,12 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Gets the post categories
+	 * Gets the post categories.
 	 *
-	 * Passes off to GFFormDetail::get_post_category_values
-	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFFormDetail::get_post_category_values
+	 *
+	 * @uses GFFormDetail::get_post_category_values()
 	 */
 	public static function get_post_category_values() {
 		require_once( GFCommon::get_base_path() . '/form_detail.php' );
@@ -3051,37 +3160,33 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Gets and displays the rules for an address field, depending on the address type
+	 * Gets and displays the rules for an address field, depending on the address type.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 */
 	public static function get_address_rule_values_select() {
 
 		$address_type  = rgpost( 'address_type' );
 		$value         = rgpost( 'value' );
 		$id            = rgpost( 'id' );
+		$form_id       = rgpost( 'form_id' );
+
 		$address_field = new GF_Field_Address();
+		$address_types = $address_field->get_address_types( $form_id );
 		$markup        = '';
 
+		$type_obj = $address_type && isset( $address_types[ $address_type ] ) ? $address_types[ $address_type ] : 'international';
+
 		switch( $address_type ) {
-			case '':
 			case 'international':
 				$items = $address_field->get_countries();
 				break;
-			case 'us':
-				$items = $address_field->get_us_states();
-				break;
-			case 'canadian':
-				$items = $address_field->get_canadian_provinces();
-				break;
+			default:
+				$items = $type_obj['states'];
 		}
 
-		foreach( $items as $item ) {
-			$markup .= sprintf( '<option value="%1$s" %2$s>%1$s</option>', $item, selected( $value, $item, false ) );
-		}
-
-		$markup = sprintf( '<select id="%1$s" name="%1$s" class="gfield_rule_select gfield_rule_value_dropdown">%2$s</select>', $id, $markup );
+		$markup = sprintf( '<select id="%1$s" name="%1$s" class="gfield_rule_select gfield_rule_value_dropdown">%2$s</select>', $id, $address_field->get_state_dropdown( $items, $value ) );
 
 		echo $markup;
 
@@ -3090,13 +3195,12 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Gets post categories for display in Notifications
+	 * Gets post categories for display in Notifications.
 	 *
-	 * Passes off to GFNotification::get_post_category_values
-	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFNotification::get_post_category_values
+	 *
+	 * @uses GFNotification::get_post_category_values()
 	 */
 	public static function get_notification_post_category_values() {
 		require_once( GFCommon::get_base_path() . '/notification.php' );
@@ -3107,12 +3211,13 @@ SET d.value = l.value"
 	 * Fires off the entries page.
 	 *
 	 * Checks if the installation wizard is needed.  If so, does that instead.
-	 * Passes everything off to GFEntryDetail::lead_detail_page or GFEntryList::all_entries_page depending on current view
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFEntryDetail::lead_detail_page
-	 * @see GFEntryList::all_entries_page
+	 *
+	 * @uses GFForms::maybe_display_installation_wizard()
+	 * @uses GFEntryDetail::lead_detail_page()
+	 * @uses GFEntryList::all_entries_page()
 	 */
 	public static function all_leads_page() {
 
@@ -3135,6 +3240,8 @@ SET d.value = l.value"
 			/**
 			 * Fires when viewing entries of a certain form
 			 *
+			 * @since Unknown
+			 *
 			 * @param string $view    The current view/entry type
 			 * @param string $form_id The current form ID
 			 * @param string $lead_id The current entry ID
@@ -3145,13 +3252,12 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Gets the Form List page
+	 * Gets the Form List page.
 	 *
-	 * Passes off to GFFormList::form_list_page
-	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFFormList::form_list_page
+	 *
+	 * @uses GFFormList::form_list_page()
 	 */
 	public static function form_list_page() {
 		require_once( GFCommon::get_base_path() . '/form_list.php' );
@@ -3163,13 +3269,17 @@ SET d.value = l.value"
 	 *
 	 * If needed, displays the installation wizard instead.
 	 *
-	 * @acces public
-	 * @static
-	 * @see GFEntryList::leads_page
-	 * @see GFEntryDetail::lead_detail_page
-	 * @see GFFormSettings::form_settings_page
-	 * @see GFForms::forms_page
-	 * @see GFForms::form_list_page
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @uses GFForms::maybe_display_installation_wizard()
+	 * @uses GFCommon::ensure_wp_version()
+	 * @uses GFForms::get()
+	 * @uses GFEntryList::leads_page()
+	 * @uses GFEntryDetail::lead_detail_page()
+	 * @uses GFFormSettings::form_settings_page()
+	 * @uses GFForms::forms_page()
+	 * @uses GFForms::form_list_page()
 	 */
 	public static function forms() {
 		if ( ! GFCommon::ensure_wp_version() ) {
@@ -3206,6 +3316,8 @@ SET d.value = l.value"
 		/**
 		 * Fires an action based on the form view
 		 *
+		 * @since Unknown
+		 *
 		 * @param string $view The current view
 		 * @param string $id   The form ID
 		 */
@@ -3214,13 +3326,13 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Obtains $_GET values or values from an array
+	 * Obtains $_GET values or values from an array.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
-	 * @param string $name The ID of a specific value.
-	 * @param array $array An optional array to search through.  Defaults to null.
+	 * @param string $name  The ID of a specific value.
+	 * @param array  $array An optional array to search through.  Defaults to null.
 	 *
 	 * @return string The value.  Empty if not found.
 	 */
@@ -3237,10 +3349,10 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Obtains $_POST values
+	 * Obtains $_POST values.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
 	 * @param string $name            The ID of the value to obtain
 	 * @param bool   $do_stripslashes If stripslashes_deep should be run on the result.  Defaults to true.
@@ -3259,9 +3371,10 @@ SET d.value = l.value"
 	/**
 	 * Resends failed notifications
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFCommon::send_notification
+	 *
+	 * @uses GFCommon::send_notification()
 	 */
 	public static function resend_notifications() {
 
@@ -3311,6 +3424,8 @@ SET d.value = l.value"
 		/**
 		 * Filters the notifications to be re-sent
 		 *
+		 * @since Unknown
+		 *
 		 * @param array $form_meta The Form Object
 		 * @param array $leads     The entry IDs
 		 */
@@ -3356,12 +3471,12 @@ SET d.value = l.value"
 	//----------- AJAX CALLS --------------------------
 
 	/**
-	 * Gets the CAPTCHA image for the form editor and displays it
+	 * Gets the CAPTCHA image for the form editor and displays it.
 	 *
-	 * Called via AJAX
+	 * Called via AJAX.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 */
 	public static function captcha_image() {
 		$field_properties = array( 'type' => 'captcha', 'simpleCaptchaSize' => $_GET['size'], 'simpleCaptchaFontColor' => $_GET['fg'], 'simpleCaptchaBackgroundColor' => $_GET['bg'] );
@@ -3383,14 +3498,14 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Updates the form status (active/inactive)
+	 * Updates the form status (active/inactive).
 	 *
-	 * Called via AJAX
-	 * Passes data to RGFormsModel::update_form_active
+	 * Called via AJAX.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see RGFormsModel::update_form_active
+	 *
+	 * @uses GFFormsModel::update_form_active()
 	 */
 	public static function update_form_active() {
 		check_ajax_referer( 'rg_update_form_active', 'rg_update_form_active' );
@@ -3398,14 +3513,14 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Updates the notification status (active/inactive)
+	 * Updates the notification status (active/inactive).
 	 *
-	 * Called via AJAX
-	 * Passes data to RGFormsModel::update_notification_active
+	 * Called via AJAX.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see RGFormsModel::update_notification_active
+	 *
+	 * @uses GFFormsModel::update_notification_active()
 	 */
 	public static function update_notification_active() {
 		check_ajax_referer( 'rg_update_notification_active', 'rg_update_notification_active' );
@@ -3413,14 +3528,14 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Updates the confirmation status (active/inactive)
+	 * Updates the confirmation status (active/inactive).
 	 *
-	 * Called via AJAX
-	 * Passes data to RGFormsModel::update_confirmation_active
+	 * Called via AJAX.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see RGFormsModel::update_confirmation_active
+	 *
+	 * @since GFFormsModel::update_confirmation_active()
 	 */
 	public static function update_confirmation_active() {
 		check_ajax_referer( 'rg_update_confirmation_active', 'rg_update_confirmation_active' );
@@ -3428,14 +3543,14 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Updates the entry properties
+	 * Updates the entry properties.
 	 *
-	 * Called via AJAX
-	 * Passes data to RGFormsModel::update_lead_property
+	 * Called via AJAX.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see RGFormsModel::update_lead_property
+	 *
+	 * @uses GFFormsModel::update_lead_property()
 	 */
 	public static function update_lead_property() {
 		check_ajax_referer( 'rg_update_lead_property', 'rg_update_lead_property' );
@@ -3443,15 +3558,15 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Updates the entry status
+	 * Updates the entry status.
 	 *
-	 * Called via AJAX
-	 * Passes data off to either RGFormsModel::update_lead_property or RGFormsModel::delete_lead
+	 * Called via AJAX.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see RGFormsModel::update_lead_property
-	 * @see RGFormsModel::delete_lead
+	 *
+	 * @uses GFFormsModel::update_lead_property()
+	 * @uses GFFormsModel::delete_lead()
 	 */
 	public static function update_lead_status() {
 		check_ajax_referer( 'gf_delete_entry' );
@@ -3496,32 +3611,32 @@ SET d.value = l.value"
 		$x->send();
 	}
 
-	//settings
+	// Settings
 	/**
-	 * Runs the license upgrade
+	 * Runs the license upgrade.
 	 *
-	 * Called via AJAX
-	 * Passes data off to GFSettings::upgrade_license
+	 * Called via AJAX.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFSettings::upgrade_license
+	 *
+	 * @uses GFSettings::upgrade_license()
 	 */
 	public static function upgrade_license() {
 		require_once( GFCommon::get_base_path() . '/settings.php' );
 		GFSettings::upgrade_license();
 	}
 
-	//form detail
+	// Form detail
 	/**
-	 * Saves the form in the form editor
+	 * Saves the form in the form editor.
 	 *
-	 * Called via AJAX
-	 * Passes data off to GFFormDetail::save_form
+	 * Called via AJAX.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFFormDetail::save_form
+	 *
+	 * @uses GFFormDetail::save_form()
 	 */
 	public static function save_form() {
 		require_once( GFCommon::get_base_path() . '/form_detail.php' );
@@ -3529,14 +3644,14 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Adds fields in the form editor
+	 * Adds fields in the form editor.
 	 *
-	 * Called via AJAX
-	 * Passes data off to GFFormDetail::add_field
+	 * Called via AJAX.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFFormDetail::add_field
+	 *
+	 * @uses GFFormDetail::add_field()
 	 */
 	public static function add_field() {
 		require_once( GFCommon::get_base_path() . '/form_detail.php' );
@@ -3544,14 +3659,14 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Duplicates fields in the form editor
+	 * Duplicates fields in the form editor.
 	 *
-	 * Called via AJAX
-	 * Passes data off to GFFormDetail::duplicate_field
+	 * Called via AJAX.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFFormDetail::duplicate_field
+	 *
+	 * @uses GFFormDetail::duplicate_field()
 	 */
 	public static function duplicate_field() {
 		require_once( GFCommon::get_base_path() . '/form_detail.php' );
@@ -3559,14 +3674,14 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Deletes fields in the form editor
+	 * Deletes fields in the form editor.
 	 *
-	 * Called via AJAX
-	 * Passes data off to GFFormDetail::delete_field
+	 * Called via AJAX.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFFormDetail::delete_field
+	 *
+	 * @uses \GFFormDetail::delete_field()
 	 */
 	public static function delete_field() {
 		require_once( GFCommon::get_base_path() . '/form_detail.php' );
@@ -3574,14 +3689,14 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Changes the input type in the form editor
+	 * Changes the input type in the form editor.
 	 *
-	 * Called via AJAX
-	 * Passes data of to GFFormDetail::change_input_type
+	 * Called via AJAX.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFFormDetail::change_input_type
+	 *
+	 * @uses GFFormDetail::change_input_type()
 	 */
 	public static function change_input_type() {
 		require_once( GFCommon::get_base_path() . '/form_detail.php' );
@@ -3589,14 +3704,14 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Refreshes the field preview
+	 * Refreshes the field preview.
 	 *
-	 * Called via AJAX
-	 * Passes data off to GFFormDetail::refresh_field_preview
+	 * Called via AJAX.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFFormDetail::refresh_field_preview
+	 *
+	 * @uses \GFFormDetail::refresh_field_preview
 	 */
 	public static function refresh_field_preview() {
 		require_once( GFCommon::get_base_path() . '/form_detail.php' );
@@ -3604,14 +3719,14 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Deletes custom choices from radio/checkbox/select/etc fields
+	 * Deletes custom choices from radio/checkbox/select/etc fields.
 	 *
-	 * Called via AJAX
-	 * Passes data off to GFFormDetail::delete_custom_choice
+	 * Called via AJAX.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFFormDetail::delete_custom_choice
+	 *
+	 * @uses GFFormDetail::delete_custom_choice()
 	 */
 	public static function delete_custom_choice() {
 		require_once( GFCommon::get_base_path() . '/form_detail.php' );
@@ -3619,30 +3734,29 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Saves custom choices from radio/checkbox/select/etc fields
+	 * Saves custom choices from radio/checkbox/select/etc fields.
 	 *
-	 * Called via AJAX
-	 * Passes data off to GFFormDetail::save_custom_choices
+	 * Called via AJAX.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFFormDetail::save_custom_choice
+	 *
+	 * @uses GFFormDetail::save_custom_choice()
 	 */
 	public static function save_custom_choice() {
 		require_once( GFCommon::get_base_path() . '/form_detail.php' );
 		GFFormDetail::save_custom_choice();
 	}
 
-	//entry detail
 	/**
-	 * Deletes a file from the enry detail view
+	 * Deletes a file from the entry detail view.
 	 *
-	 * Called via AJAX
-	 * Passes data off to RGFormsModel::delete_file
+	 * Called via AJAX.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see RGFormsModel::delete_file
+	 *
+	 * @uses GFFormsModel::delete_file()
 	 */
 	public static function delete_file() {
 		check_ajax_referer( 'rg_delete_file', 'rg_delete_file' );
@@ -3654,15 +3768,15 @@ SET d.value = l.value"
 		die( "EndDeleteFile($field_id, $file_index);" );
 	}
 
-	//export
 	/**
-	 * Gets the form export data
+	 * Gets the form export data.
 	 *
-	 * Called via AJAX
+	 * Called via AJAX.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFExport::add_default_export_fields
+	 *
+	 * @uses GFFormsModel::get_form_meta()
 	 */
 	public static function select_export_form() {
 		check_ajax_referer( 'rg_select_export_form', 'rg_select_export_form' );
@@ -3671,6 +3785,8 @@ SET d.value = l.value"
 
 		/**
 		 * Filters through the Form Export Page
+		 *
+		 * @since Unknown
 		 *
 		 * @param int $form The Form Object of the form to export
 		 */
@@ -3700,16 +3816,15 @@ SET d.value = l.value"
 		die( "EndSelectExportForm($field_json, $filter_settings_json);" );
 	}
 
-	// form settings
 	/**
-	 * Saves a form confirmation
+	 * Saves a form confirmation.
 	 *
-	 * Called via AJAX
-	 * Passes data off to GFFormSettings::save_confirmation
+	 * Called via AJAX.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFFormSettings::save_confirmation
+	 *
+	 * @uses GFFormSettings::save_confirmation()
 	 */
 //	public static function save_confirmation() {
 //		require_once( GFCommon::get_base_path() . '/form_settings.php' );
@@ -3717,57 +3832,58 @@ SET d.value = l.value"
 //	}
 
 	/**
-	 * Saves the form title
+	 * Saves the form title.
 	 *
-	 * Called via AJAX
-	 * Passes data off to GFFormSettings::save_form_title
+	 * Called via AJAX.
 	 *
+	 * @since  2.0.2.5
 	 * @access public
-	 * @static
-	 * @see GFFormSettings::save_form_title
+	 *
+	 * @uses GFFormSettings::save_form_title()
 	 */
 	public static function save_form_title() {
 		require_once( GFCommon::get_base_path() . '/form_settings.php' );
 		GFFormSettings::save_form_title();
 	}
 
-
 	/**
-	 * Deletes a form confirmation
+	 * Deletes a form confirmation.
 	 *
-	 * Called via AJAX
-	 * Passes data off to GFFormSettings::delete_confirmation
+	 * Called via AJAX.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFFormSettings::delete_confirmation
+	 *
+	 * @uses GFFormSettings::delete_confirmation()
 	 */
 	public static function delete_confirmation() {
 		require_once( GFCommon::get_base_path() . '/form_settings.php' );
 		GFFormSettings::delete_confirmation();
 	}
 
-	// form list
+	// Form list
 	/**
-	 * Saves a new form
+	 * Saves a new form.
 	 *
-	 * Called via AJAX
-	 * Passes data off to GFFormList::save_new_form
+	 * Called via AJAX.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFFormList::save_new_form
+	 *
+	 * @uses GFFormList::save_new_form()
 	 */
 	public static function save_new_form() {
 		require_once( GFCommon::get_base_path() . '/form_list.php' );
 		GFFormList::save_new_form();
 	}
 
-
 	/**
-	 * Displays the edit title popup
+	 * Displays the edit title popup.
+	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
+	 *
+	 * @param array $form The Form Object.
 	 */
 	public static function edit_form_title( $form ){
 
@@ -3797,7 +3913,8 @@ SET d.value = l.value"
 		
 		<script type="text/javascript">
 			function GF_ShowEditTitle(){
-				jQuery( '#edit-title-container' ).css( 'visibility', 'visible' );
+				jQuery( '#edit-title-container' ).css( 'visibility', 'visible' )
+					.find( '#edit-title-input' ).focus();
 			}
 
 			function GF_CloseEditTitle(){
@@ -3860,10 +3977,10 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Displays the form switcher dropdown
+	 * Displays the form switcher dropdown.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 */
 	public static function form_switcher() {
 
@@ -3880,7 +3997,7 @@ SET d.value = l.value"
 			}
 		}
 
-		//Enqueuing chosen script
+		// Enqueuing chosen script
 		wp_enqueue_script( 'gform_chosen', false, array('jquery'), GFCommon::$version, true );
 
 		$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] ) ? '' : '.min';
@@ -4037,12 +4154,14 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Displays the top toolbar withing Gravity Forms pages
+	 * Displays the top toolbar withing Gravity Forms pages.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFForms::get_toolbar_menu_items
-	 * @see GFForms::format_toolbar_menu_items
+	 *
+	 * @uses GFFormsModel::get_forms()
+	 * @uses GFForms::get_toolbar_menu_items()
+	 * @uses GFForms::format_toolbar_menu_items()
 	 */
 	public static function top_toolbar() {
 
@@ -4064,14 +4183,13 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Formats the menu items for display in the Gravity Forms toolbar
+	 * Formats the menu items for display in the Gravity Forms toolbar.
 	 *
-	 * Called from GFForms::top_toolbar
-	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFForms::top_toolbar
-	 * @see GFForms::toolbar_sub_menu_items
+	 *
+	 * @used-by GFForms::top_toolbar()
+	 * @uses    GFForms::toolbar_sub_menu_items()
 	 *
 	 * @param array $menu_items Contains the menu items to be displayed
 	 * @param bool  $compact    If true, uses the compact labels.  Defaults to false.
@@ -4135,6 +4253,8 @@ SET d.value = l.value"
 							/**
 							 * A filter to allow the modification of the HTML link to delete a form
 							 *
+							 * @since Unknown
+							 *
 							 * @param string $link The HTML "Delete Form" Link
 							 */
 							$link = apply_filters( 'gform_form_delete_link', $link );
@@ -4160,19 +4280,18 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Gets the menu items to be displayed within the toolbar
+	 * Gets the menu items to be displayed within the toolbar.
 	 *
-	 * Called from GFForms::top_toolbar
-	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFForms::toolbar_class
-	 * @see GFForms::top_toolbar
 	 *
-	 * @param string $form_id The form ID
+	 * @used-by GFForms::top_toolbar()
+	 * @uses    GFForms::toolbar_class()
+	 *
+	 * @param string $form_id The form ID.
 	 * @param bool   $compact True if the compact label should be used.  Defaults to false.
 	 *
-	 * @return array $menu_items The menu items to be displayed
+	 * @return array $menu_items The menu items to be displayed.
 	 */
 	public static function get_toolbar_menu_items( $form_id, $compact = false ) {
 		$menu_items = array();
@@ -4181,7 +4300,7 @@ SET d.value = l.value"
 
 		$form_id = absint( $form_id );
 
-		//---- Form Editor ----
+		// ---- Form Editor ----
 		$edit_capabilities = array( 'gravityforms_edit_forms' );
 
 		$menu_items['edit'] = array(
@@ -4196,7 +4315,7 @@ SET d.value = l.value"
 			'priority'     => 1000,
 		);
 
-		//---- Form Settings ----
+		// ---- Form Settings ----
 
 		$sub_menu_items = self::get_form_settings_sub_menu_items( $form_id );
 
@@ -4213,7 +4332,7 @@ SET d.value = l.value"
 		);
 
 
-		//---- Entries ----
+		// ---- Entries ----
 
 		$entries_capabilities = array( 'gravityforms_view_entries', 'gravityforms_edit_entries', 'gravityforms_delete_entries' );
 
@@ -4228,7 +4347,7 @@ SET d.value = l.value"
 			'priority'     => 800,
 		);
 
-		//---- Preview ----
+		// ---- Preview ----
 
 		$preview_capabilities = array( 'gravityforms_edit_forms', 'gravityforms_create_form', 'gravityforms_preview_forms' );
 
@@ -4245,7 +4364,7 @@ SET d.value = l.value"
 		);
 
 		/*
-		//---- Duplicate ----
+		// ---- Duplicate ----
 
 		$duplicate_capabilities = array( 'gravityforms_edit_forms', 'gravityforms_create_form' );
 
@@ -4280,15 +4399,15 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Builds the sub-menu items within the Gravity Forms toolbar
+	 * Builds the sub-menu items within the Gravity Forms toolbar.
 	 *
-	 * Called from GFForms::format_toolbar_menu_items
-	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
+	 *
+	 * @used-by GFForms::format_toolbar_menu_items()
 	 *
 	 * @param array $menu_items The menu items to be built
-	 * @param bool $compact     True if the compact label should be used.  False otherwise.
+	 * @param bool  $compact    True if the compact label should be used.  False otherwise.
 	 *
 	 * @return string $sub_menu_items_string The menu item HTML
 	 */
@@ -4318,18 +4437,17 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Gets the form settings sub-menu items
+	 * Gets the form settings sub-menu items.
 	 *
-	 * Called from GFForms::get_toolbar_menu_items
-	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFFormSettings::get_tabs
-	 * @see GFForms::get_toolbar_menu_items
 	 *
-	 * @param string $form_id The form ID
+	 * @used-by GFForms::get_toolbar_menu_items()
+	 * @uses    GFFormSettings::get_tabs()
 	 *
-	 * @return array $sub_menu_items The sub-menu items
+	 * @param string $form_id The form ID.
+	 *
+	 * @return array $sub_menu_items The sub-menu items.
 	 */
 	public static function get_form_settings_sub_menu_items( $form_id ) {
 		require_once( GFCommon::get_base_path() . '/form_settings.php' );
@@ -4355,17 +4473,16 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Gets the CSS class to be used for the toolbar
+	 * Gets the CSS class to be used for the toolbar.
 	 *
-	 * Called from GFForms::get_toolbar_menu_items
-	 *
+	 * @since  Unknown
 	 * @access private
-	 * @static
-	 * @see GFForms::get_toolbar_menu_items
 	 *
-	 * @param string $item The Gravity Forms view (current page)
+	 * @used-by GFForms::get_toolbar_menu_items()
 	 *
-	 * @return string The class name.  Empty string if the view isn't found
+	 * @param string $item The Gravity Forms view (current page).
+	 *
+	 * @return string The class name.  Empty string if the view isn't found.
 	 */
 	private static function toolbar_class( $item ) {
 
@@ -4414,13 +4531,11 @@ SET d.value = l.value"
 	/**
 	 * Modifies the top WordPress toolbar to add Gravity Forms menu items.
 	 *
-	 * Called from the wp_before_admin_bar_render action.
-	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 * @global $wp_admin_bar
-	 * @see Action: wp_before_admin_bar_render
 	 *
+	 * @used-by GFForms::init()
 	 */
 	public static function admin_bar() {
 		/**
@@ -4566,17 +4681,16 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Determines if automatic updating should be processed
+	 * Determines if automatic updating should be processed.
 	 *
-	 * Called from the auto_update_$type filter
-	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see Filter: auto_update_$type
-	 * @see GFForms::is_auto_update_disabled
 	 *
-	 * @param bool $update Whether or not to update
-	 * @param object $item The update offer object
+	 * @used-by WP_Automatic_Updater::should_update()
+	 * @uses    GFForms::is_auto_update_disabled()
+	 *
+	 * @param bool   $update Whether or not to update.
+	 * @param object $item   The update offer object.
 	 *
 	 * @return bool True if update should be processed.  False otherwise.
 	 */
@@ -4613,13 +4727,16 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Checks if automatic updates are disabled
+	 * Checks if automatic updates are disabled.
 	 *
-	 * Called from GFForms::maybe_auto_update
-	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFForms::maybe_auto_update
+	 *
+	 * @used-by GFForms::maybe_auto_update()
+	 * @used    DISALLOW_FILE_MODS
+	 * @used    WP_INSTALLING
+	 * @used    AUTOMATIC_UPDATER_DISABLED
+	 * @used    GFORM_DISABLE_AUTO_UPDATE
 	 *
 	 * @return bool True if auto update is disabled.  False otherwise.
 	 */
@@ -4641,6 +4758,8 @@ SET d.value = l.value"
 
 		/**
 		 * Overrides the WordPress AUTOMATIC_UPDATER_DISABLED constant.
+		 *
+		 * @since Unknown
 		 *
 		 * @param bool $wp_updates_disabled True if disables.  False otherwise.
 		 */
@@ -4689,13 +4808,13 @@ SET d.value = l.value"
 	 */
 
 	/**
-	 * Output a shortcode
+	 * Output a shortcode.
 	 *
-	 * Called via AJAX
-	 * Used for displaying the shortcode in the TinyMCE editor
+	 * Called via AJAX.
+	 * Used for displaying the shortcode in the TinyMCE editor.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 * @global $post
 	 */
 	public static function handle_ajax_do_shortcode() {
@@ -4738,14 +4857,15 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Displays the shortcode editor
+	 * Displays the shortcode editor.
 	 *
-	 * Called by the print_media_templates action
-	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see Action: print_media_templates
-	 * @see GFForms::get_view
+	 *
+	 * @used-by GFForms::init()
+	 * @used    GFForms::get_view()
+	 *
+	 * @return void
 	 */
 	public static function action_print_media_templates() {
 
@@ -4753,15 +4873,14 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Gets the view and loads the appropriate template
+	 * Gets the view and loads the appropriate template.
 	 *
-	 * Called from GFForms::action_print_media_templates
-	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFForms::action_print_media_templates
 	 *
-	 * @param string $template The template to be loaded
+	 * @used-by GFForms::action_print_media_templates()
+	 *
+	 * @param string $template The template to be loaded.
 	 *
 	 * @return mixed The contents of the template file.
 	 */
@@ -4784,17 +4903,18 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Modifies the TinyMCE editor styling
+	 * Modifies the TinyMCE editor styling.
 	 *
 	 * Called from the tiny_mce_before_init filter
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see Filter: tiny_mce_before_init
 	 *
-	 * @param array $init Init data passed from the tiny_mce_before_init filter
+	 * @used-by Filter: tiny_mce_before_init
 	 *
-	 * @return array $init Data after filtering
+	 * @param array $init Init data passed from the tiny_mce_before_init filter.
+	 *
+	 * @return array $init Data after filtering.
 	 */
 	public static function modify_tiny_mce_4( $init ) {
 
@@ -4828,12 +4948,12 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Gets the available shortcode attributes
+	 * Gets the available shortcode attributes.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
-	 * @return array $shortcodes Shortcode attributes
+	 * @return array $shortcodes Shortcode attributes.
 	 */
 	public static function get_shortcodes() {
 
@@ -4888,6 +5008,8 @@ SET d.value = l.value"
 		/**
 		 * Filters through the shortcode builder actions (ajax, tabindex, form title) for adding a new form to a post, page, etc.
 		 *
+		 * @since Unknown
+		 *
 		 * @param array() Array of additional shortcode builder actions.  Empty by default.
 		 */
 		$add_on_actions = apply_filters( 'gform_shortcode_builder_actions', array() );
@@ -4937,14 +5059,15 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Enqueues scripts needed to display the form
+	 * Enqueues scripts needed to display the form.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFFormDisplay::enqueue_form_scripts
-	 * @see GFAddOn::get_registered_addons
 	 *
-	 * @param string $form_id The displayed form ID
+	 * @used GFFormDisplay::enqueue_form_scripts()
+	 * @used GFAddOn::get_registered_addons()
+	 *
+	 * @param string $form_id The displayed form ID.
 	 * @param bool   $is_ajax True if form uses AJAX.  False otherwise.
 	 */
 	public static function enqueue_form_scripts( $form_id, $is_ajax = false ) {
@@ -4959,10 +5082,10 @@ SET d.value = l.value"
 	}
 
 	/**
-	 * Displays the installation wizard on single site installations and on multisite
+	 * Displays the installation wizard on single site installations and on multisite.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
 	 * @return bool Was the installation wizard displayed?
 	 */
@@ -4985,16 +5108,14 @@ SET d.value = l.value"
 	/**
 	 * Sets the screen options for the entry list.
 	 *
-	 * Called from the set-screen-option filter.
-	 *
-	 * @since 2.0
+	 * @since  2.0
 	 * @access public
-	 * @static
-	 * @see Filter: set-screen-option
 	 *
-	 * @param bool|int $status Screen option value.  Not used.  Defaults to false.
-	 * @param string   $option The option to check
-	 * @param int      $value  The number of rows to display per page
+	 * @used-by Filter: set-screen-option
+	 *
+	 * @param bool|int $status Screen option value. Not used. Defaults to false.
+	 * @param string   $option The option to check.
+	 * @param int      $value  The number of rows to display per page.
 	 *
 	 * @return array $return The filtered data
 	 */
@@ -5014,13 +5135,11 @@ SET d.value = l.value"
 	/**
 	 * Returns the markup for the screen options for the entry list.
 	 *
-	 * Called by the screen_settings filter
-	 *
-	 * @since 2.0
+	 * @since  2.0
 	 * @access public
-	 * @static
-	 * @see Filter: screen_settings
-	 * @see GFEntryList::get_screen_options_markup
+	 *
+	 * @used-by Filter: screen_settings
+	 * @used    GFEntryList::get_screen_options_markup()
 	 *
 	 * @param string $status The current screen settings
 	 * @param object $args   WP_Screen object
@@ -5042,10 +5161,10 @@ SET d.value = l.value"
 	/**
 	 * Loads the screen options for the entry detail page.
 	 *
-	 * @since 2.0
+	 * @since  2.0
 	 * @access public
-	 * @static
-	 * @see GFEntryDetail::add_meta_boxes
+	 *
+	 * @used GFEntryDetail::add_meta_boxes()
 	 */
 	public static function load_screen_options() {
 		$screen = get_current_screen();
@@ -5082,12 +5201,13 @@ SET d.value = l.value"
 	 *
 	 * @since 2.0.0
 	 * @access public
-	 * @static
-	 * @see GFForms::add_security_files
-	 * @see GFForms::delete_old_export_files
-	 * @see GFForms::delete_old_log_files
-	 * @see GFForms::do_self_healing
-	 * @see GFForms::delete_orphaned_entries
+	 *
+	 * @used-by Action: gravityforms_cron
+	 * @used    GFForms::add_security_files()
+	 * @used    GFForms::delete_old_export_files()
+	 * @used    GFForms::delete_old_log_files()
+	 * @used    GFForms::do_self_healing()
+	 * @used    GFForms::delete_orphaned_entries()
 	 */
 	public static function cron() {
 
@@ -5109,9 +5229,8 @@ SET d.value = l.value"
 	/**
 	 * Deletes all entry export files from the server that haven't been claimed within 24 hours.
 	 *
-	 * @since 2.0.0
+	 * @since  2.0.0
 	 * @access public
-	 * @static
 	 */
 	public static function delete_old_export_files() {
 		GFCommon::log_debug( __METHOD__ . '(): Starting.' );
@@ -5140,9 +5259,8 @@ SET d.value = l.value"
 	/**
 	 * Deletes any log files that are older than one month.
 	 *
-	 * @since 2.0.0
+	 * @since  2.0.0
 	 * @access public
-	 * @static
 	 */
 	public static function delete_old_log_files() {
 		GFCommon::log_debug( __METHOD__ . '(): Starting.' );
@@ -5171,9 +5289,8 @@ SET d.value = l.value"
 	/**
 	 * Deletes all rows in the lead table that don't have corresponding rows in the details table.
 	 *
-	 * @since 2.0.0
+	 * @since  2.0.0
 	 * @access public
-	 * @static
 	 * @global $wpdb
 	 */
 	public static function delete_orphaned_entries() {
@@ -5192,7 +5309,8 @@ SET d.value = l.value"
 	 * Outputs the styles for the Forms Toolbar menu.
 	 * Outputs gf vars if required.
 	 *
-	 * @since 2.0.1.2
+	 * @since  2.0.1.2
+	 * @access public
 	 */
 	public static function load_admin_bar_styles() {
 
@@ -5240,7 +5358,7 @@ SET d.value = l.value"
  * Class RGForms
  *
  * @deprecated
- * Exists only for backwards compatibility.
+ * Exists only for backwards compatibility. Used GFForms instead.
  */
 class RGForms extends GFForms { }
 
@@ -5271,9 +5389,7 @@ function gravity_form( $id, $display_title = true, $display_description = true, 
 /**
  * Enqueues form scripts for the specified form.
  *
- * Passes data off to GFForms::enqueue_form_scripts
- *
- * @see GFForms::enqueue_form_scripts
+ * @uses GFForms::enqueue_form_scripts()
  *
  * @param string $form_id The form ID.
  * @param bool   $is_ajax If the form is submitted via AJAX.  Defaults to false.
@@ -5306,7 +5422,7 @@ if ( ! function_exists( 'rgget' ) ) {
 
 if ( ! function_exists( 'rgpost' ) ) {
 	/**
-	 * Helper function to obtain POST values
+	 * Helper function to obtain POST values.
 	 *
 	 * @param string $name            The key
 	 * @param bool   $do_stripslashes Optional. Performs stripslashes_deep.  Defaults to true.
@@ -5324,8 +5440,12 @@ if ( ! function_exists( 'rgpost' ) ) {
 
 if ( ! function_exists( 'rgar' ) ) {
 	/**
-	 * Get a specific property of an array without needing to check if that property exists. Provide a default value if
-	 * you want to return a specific value if the property is not set.
+	 * Get a specific property of an array without needing to check if that property exists.
+	 *
+	 * Provide a default value if you want to return a specific value if the property is not set.
+	 *
+	 * @since  Unknown
+	 * @access public
 	 *
 	 * @param array  $array   Array from which the property's value should be retrieved.
 	 * @param string $prop    Name of the property to be retrieved.
@@ -5353,9 +5473,10 @@ if ( ! function_exists( 'rgars' ) ) {
 	/**
 	 * Gets a specific property within a multidimensional array.
 	 *
-	 * @see rgar
+	 * @since  Unknown
+	 * @access public
 	 *
-	 * @param array  $array The array to search in
+	 * @param array  $array The array to search in.
 	 * @param string $name  The name of the property to find.
 	 * @param string $default Optional. Value that should be returned if the property is not set or empty. Defaults to null.
 	 *
@@ -5379,9 +5500,12 @@ if ( ! function_exists( 'rgars' ) ) {
 
 if ( ! function_exists( 'rgempty' ) ) {
 	/**
-	 * Determines if a value is empty
+	 * Determines if a value is empty.
 	 *
-	 * @param string $name The property name to check
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @param string $name The property name to check.
 	 * @param array $array Optional. An array to check through.  Otherwise, checks for POST variables.
 	 *
 	 * @return bool True if empty.  False otherwise.
@@ -5406,7 +5530,10 @@ if ( ! function_exists( 'rgblank' ) ) {
 	/**
 	 * Checks if the string is empty
 	 *
-	 * @param string $text The string to check
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @param string $text The string to check.
 	 *
 	 * @return bool True if empty.  False otherwise.
 	 */
@@ -5418,6 +5545,9 @@ if ( ! function_exists( 'rgblank' ) ) {
 if ( ! function_exists( 'rgobj' ) ) {
 	/**
 	 * Gets a property value from an object
+	 *
+	 * @since  Unknown
+	 * @access public
 	 *
 	 * @param object $obj  The object to check
 	 * @param string $name The property name to check for
@@ -5434,7 +5564,10 @@ if ( ! function_exists( 'rgobj' ) ) {
 }
 if ( ! function_exists( 'rgexplode' ) ) {
 	/**
-	 * Converts a delimiter separated string to an array
+	 * Converts a delimiter separated string to an array.
+	 *
+	 * @since  Unknown
+	 * @access public
 	 *
 	 * @param string $sep    The delimiter between values
 	 * @param string $string The string to convert
@@ -5459,8 +5592,11 @@ if ( ! function_exists( 'gf_apply_filters' ) ) {
 	 *
 	 * Allows additional filters based on form and field ID to be defined easily.
 	 *
-	 * @param string $filter The name of the filter
-	 * @param mixed  $value  The value to filter
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @param string $filter The name of the filter.
+	 * @param mixed  $value  The value to filter.
 	 *
 	 * @return mixed The filtered value.
 	 */
@@ -5481,12 +5617,12 @@ if ( ! function_exists( 'gf_apply_filters' ) ) {
 			$args      = array_slice( $args, 3 );
 		}
 
-		// add an empty modifier so the base filter will be applied as well
+		// Add an empty modifier so the base filter will be applied as well
 		array_unshift( $modifiers, '' );
 
 		$args = array_pad( $args, 10, null );
 
-		// apply modified versions of filter
+		// Apply modified versions of filter
 		foreach ( $modifiers as $modifier ) {
 			$modifier = empty( $modifier ) ? '' : sprintf( '_%s', $modifier );
 			$filter  .= $modifier;
@@ -5499,14 +5635,15 @@ if ( ! function_exists( 'gf_apply_filters' ) ) {
 
 if ( ! function_exists( 'gf_do_action' ) ) {
 	/**
-	 * Gravity Forms pre-processing for do_action
+	 * Gravity Forms pre-processing for do_action.
 	 *
 	 * Allows additional actions based on form and field ID to be defined easily.
 	 *
-	 * @since 1.9.14.20 Modifiers should no longer be passed as a separate parameter.
-	 * @since 1.9.12
+	 * @since  1.9.14.20 Modifiers should no longer be passed as a separate parameter.
+	 * @since  1.9.12
+	 * @access public
 	 *
-	 * @param string $action The action
+	 * @param string $action The action.
 	 */
 	function gf_do_action( $action ) {
 

@@ -1,18 +1,55 @@
 <?php
 
+// If Gravity Forms isn't loaded, bail.
 if ( ! class_exists( 'GFForms' ) ) {
 	die();
 }
 
-
+/**
+ * Class GF_Field_List
+ *
+ * Handles the behavior of List fields.
+ *
+ * @since Unknown
+ */
 class GF_Field_List extends GF_Field {
 
+	/**
+	 * Sets the field type for the List field.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @var string The field type.
+	 */
 	public $type = 'list';
 
+	/**
+	 * Sets the field title to be displayed in the form editor.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFCommon::get_field_type_title()
+	 * @used-by GFAddOn::get_field_map_choices()
+	 * @used-by GF_Field::get_form_editor_button()
+	 *
+	 * @return string The field title. Escaped and translatable.
+	 */
 	public function get_form_editor_field_title() {
 		return esc_attr__( 'List', 'gravityforms' );
 	}
 
+	/**
+	 * Defines the field settings available in the form editor.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFFormDetail::inline_scripts()
+	 *
+	 * @return array The settings available.
+	 */
 	function get_form_editor_field_settings() {
 		return array(
 			'columns_setting',
@@ -32,11 +69,56 @@ class GF_Field_List extends GF_Field {
 		);
 	}
 
+	/**
+	 * Gets the ID of the first input.
+	 *
+	 * @since Unknown
+	 * @access public
+	 *
+	 * @uses GF_Field::is_form_editor()
+	 * @uses GF_Field_List::$id
+	 *
+	 * @param array $form The Form Object.
+	 *
+	 * @return string The ID of the first input. Empty string if not found.
+	 */
 	public function get_first_input_id( $form ) {
 		return ! $this->is_form_editor() ? sprintf( 'input_%s_%s_shim', $form['id'], $this->id ) : '';
 	}
 
+	/**
+	 * Defines if the inline style block has been printed.
+	 *
+	 * @since  Unknown
+	 * @access private
+	 *
+	 * @used-by GF_Field_List::get_field_input()
+	 *
+	 * @var bool false
+	 */
 	private static $_style_block_printed = false;
+
+	/**
+	 * Builds the field input HTML markup.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFCommon::get_field_input()
+	 * @uses    GF_Field::is_entry_detail()
+	 * @uses    GF_Field::is_form_editor()
+	 * @uses    GF_Field_List::$_style_block_printed
+	 * @uses    GF_Field_List::$maxRow
+	 * @uses    GF_Field_List::$addIconUrl
+	 * @uses    GF_Field_List::$deleteIconUrl
+	 * @uses    GFCommon::get_base_url()
+	 *
+	 * @param array      $form  The Form Object.
+	 * @param string     $value The field value. Defaults to empty string.
+	 * @param null|array $entry The Entry Object. Defaults to null.
+	 *
+	 * @return string The List field HTML markup.
+	 */
 	public function get_field_input( $form, $value = '', $entry = null ) {
 
 		$form_id         = $form['id'];
@@ -61,7 +143,7 @@ class GF_Field_List extends GF_Field {
 
 		$list = '';
 		if ( ! self::$_style_block_printed ){
-			//This style block needs to be inline so that the list field continues to work even if the option to turn off CSS output is activated
+			// This style block needs to be inline so that the list field continues to work even if the option to turn off CSS output is activated.
 			$list .= '<style type="text/css">
 
 						body .ginput_container_list table.gfield_list tbody tr td.gfield_list_icons {
@@ -142,7 +224,7 @@ class GF_Field_List extends GF_Field {
 			foreach ( $columns as $column ) {
 				$data_label = '';
 
-				//getting value. taking into account columns being added/removed from form meta
+				// Getting value. Taking into account columns being added/removed from form meta.
 				if ( is_array( $item ) ) {
 					if ( $has_columns ) {
 						$val = rgar( $item, $column['text'] );
@@ -161,7 +243,7 @@ class GF_Field_List extends GF_Field {
 
 			if ( $this->maxRows != 1 ) {
 
-				// can't replace these icons with the webfont versions since they appear on the front end.
+				// Can't replace these icons with the webfont versions since they appear on the front end.
 
 				$list .= "<td class='gfield_list_icons'>";
 				$list .= "   <img src='{$add_icon}' class='add_list_item {$disabled_icon_class}' {$disabled_text} title='" . esc_attr__( 'Add another row', 'gravityforms' ) . "' alt='" . esc_attr__( 'Add a new row', 'gravityforms' ) . "' {$add_events} style='cursor:pointer;' " . $this->get_tabindex() . "/>" .
@@ -186,6 +268,23 @@ class GF_Field_List extends GF_Field {
 
 	}
 
+	/**
+	 * Builds the input that will be inside the List field.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @uses GF_Field::get_tabindex()
+	 * @uses GF_Field::is_form_editor()
+	 * @uses GF_Field_List::$choices
+	 *
+	 * @param bool   $has_columns If the input has columns.
+	 * @param array  $column      The column details.
+	 * @param string $value       The existing value of the input.
+	 * @param int    $form_id     The form ID.
+	 *
+	 * @return string The input HTML markup.
+	 */
 	public function get_list_input( $has_columns, $column, $value, $form_id ) {
 
 		$tabindex = $this->get_tabindex();
@@ -203,6 +302,16 @@ class GF_Field_List extends GF_Field {
 		}
 		$input_info = array( 'type' => 'text' );
 
+		/**
+		 * Filters the column input.
+		 *
+		 * @since Unknown
+		 *
+		 * @param array  $input_info     Information about the input. Contains the input type.
+		 * @param object GF_Field_List   Field object for this field type.
+		 * @param string $column['text'] The column text value.
+		 * @param int    $form_id        The form ID.
+		 */
 		$input_info = gf_apply_filters( array(
 			'gform_column_input',
 			$form_id,
@@ -241,6 +350,17 @@ class GF_Field_List extends GF_Field {
 				break;
 		}
 
+		/**
+		 * Filters the column input HTML markup.
+		 *
+		 * @since Unknown
+		 *
+		 * @param string $input          The input markup.
+		 * @param array  $input_info     The information that was used to build the input.
+		 * @param object GF_Field_List   An instance of the List field object.
+		 * @param string $column['text'] The column text value.
+		 * @param int    $form_id        The form ID.
+		 */
 		return gf_apply_filters( array(
 			'gform_column_input_content',
 			$form_id,
@@ -250,6 +370,16 @@ class GF_Field_List extends GF_Field {
 
 	}
 
+	/**
+	 * Gets the CSS class to be used in the field label.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GF_Field::get_field_content()
+	 *
+	 * @return string String containing the CSS class names.
+	 */
 	public function get_field_label_class(){
 
 		$has_columns = is_array( $this->choices );
@@ -257,42 +387,53 @@ class GF_Field_List extends GF_Field {
 		return $has_columns ? 'gfield_label gfield_label_before_complex' : 'gfield_label';
 	}
 
+	/**
+	 * Gets the value of te field from the form submission.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFFormsModel::get_field_value()
+	 * @uses    GF_Field::get_input_value_submission()
+	 * @uses    GF_Field_List::create_list_array()
+	 *
+	 * @param array $field_values             The properties to search for.
+	 * @param bool  $get_from_post_global_var If the global GET variable should be used to obtain the value. Defaults to true.
+	 *
+	 * @return array The submission value.
+	 */
 	public function get_value_submission( $field_values, $get_from_post_global_var = true ) {
 		$value = $this->get_input_value_submission( 'input_' . $this->id, $this->inputName, $field_values, $get_from_post_global_var );
-		//allow the value to be an array of row arrays in addition to the array of rows
-		//EX: new format allowed for pre-populating list field with hook - format generated by create_list_array
-		//array(
-			//array(
-				//'Column 1' => 'row1col1',
-				//'Column 2' => 'row1col2',
-				//'Column 3' => 'row1col3',
-			//),
-			//array(
-			//	'Column 1' => 'row2col1',
-			//	'Column 2' => 'row2col2',
-			//	'Column 3' => 'row2col3'
-			//),
-		//old format still checked for and re-formatted in create_list_array:
-			//array(
-				//'row 1 - col1', 'row 1 - col2', 'row 1 - col3',
-				//'row 2 - col1', 'row 2 - col2', 'row 2 - col3',
-				//'row 3 - col1', 'row 3 - col2', 'row 3 - col3'
-			//);
+
+		// Allow the value to be an array of row arrays in addition to the array of rows.
 		if ( is_array( rgar( $value, 0 ) ) ){
-			//already in correct format, return value unchanged
+			// Already in correct format, return value unchanged.
 			return $value;
 		}
 
-		//not already in the correct format
+		// Not already in the correct format.
 		$value = $this->create_list_array( $value );
 
 		return $value;
 	}
 
+	/**
+	 * Check if the submission value is empty.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFFormDisplay::is_empty()
+	 * @uses    GF_Field_List::$id
+	 *
+	 * @param int $form_id The form ID to check.
+	 *
+	 * @return bool True if empty. False otherwise.
+	 */
 	public function is_value_submission_empty( $form_id ) {
 		$value = rgpost( 'input_' . $this->id );
 		if ( is_array( $value ) ) {
-			//empty if all inputs are empty (for inputs with the same name)
+			// Empty if all inputs are empty (for inputs with the same name).
 			foreach ( $value as $input ) {
 				if ( strlen( trim( $input ) ) > 0 ) {
 					return false;
@@ -302,6 +443,24 @@ class GF_Field_List extends GF_Field {
 		return true;
 	}
 
+	/**
+	 * Gets the field value HTML markup to be used on the entry detail page.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFCommon::get_lead_field_display()
+	 *
+	 * @param array  $value    The submitted entry value.
+	 * @param string $currency Not used.
+	 * @param bool   $use_text Not used.
+	 * @param string $format   The format to be used when building the items.
+	 *                         Accepted values are text, url, or html. Defaults to html.
+	 * @param string $media    Defines how the content will be output.
+	 *                         Accepted values are screen or email. Defaults to screen.
+	 *
+	 * @return string The HTML markup to be displayed.
+	 */
 	public function get_value_entry_detail( $value, $currency = '', $use_text = false, $format = 'html', $media = 'screen' ) {
 		if ( empty( $value ) ) {
 			return '';
@@ -336,9 +495,9 @@ class GF_Field_List extends GF_Field {
 			if ( empty( $items ) ) {
 				return '';
 			} elseif ( $format == 'text' ) {
-				return substr( $items, 0, strlen( $items ) - 2 ); //removing last comma
+				return substr( $items, 0, strlen( $items ) - 2 ); // Removing last comma.
 			} elseif ( $format == 'url' ) {
-				return substr( $items, 0, strlen( $items ) - 1 ); //removing last comma
+				return substr( $items, 0, strlen( $items ) - 1 ); // Removing last comma.
 			} elseif ( $media == 'email' ) {
 				return "<ul class='bulleted'>{$items}</ul>";
 			} else {
@@ -402,7 +561,7 @@ class GF_Field_List extends GF_Field {
 					} else {
 						$list = "<table class='gfield_list'><thead><tr>";
 
-						//reading columns from entry data
+						// Reading columns from entry data.
 						foreach ( $columns as $column ) {
 							$list .= '<th>' . esc_html( $column ) . '</th>' . "\n";
 						}
@@ -431,9 +590,30 @@ class GF_Field_List extends GF_Field {
 		return '';
 	}
 
+	/**
+	 * Gets the value of the field when the entry is saved.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFFormsModel::prepare_value()
+	 * @uses    GF_Field_List::$adminOnly
+	 * @uses    GF_Field_List::$allowsPrepopulate
+	 * @uses    GF_Field_List::create_list_array()
+	 * @uses    GFCommon::is_empty_array()
+	 * @uses    GF_Field::sanitize_entry_value()
+	 *
+	 * @param string $value      The value to use.
+	 * @param array  $form       The form that the entry is associated with.
+	 * @param string $input_name The name of the input containing the value.
+	 * @param int    $lead_id    The entry ID.
+	 * @param array  $lead       The Entry Object.
+	 *
+	 * @return string The entry value. Escaped.
+	 */
 	public function get_value_save_entry( $value, $form, $input_name, $lead_id, $lead ) {
 
-		if ( $this->adminOnly && $this->allowsPrepopulate ) {
+		if ( $this->is_administrative() && $this->allowsPrepopulate ) {
 			$value = json_decode( $value );
 		}
 
@@ -449,13 +629,47 @@ class GF_Field_List extends GF_Field {
 		return $value_safe;
 	}
 
+	/**
+	 * Gets merge tag values.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by
+	 * @uses GFCommon::get_lead_field_display()
+	 *
+	 * @param array|string $value      The value of the input.
+	 * @param string       $input_id   The input ID to use.
+	 * @param array        $entry      The Entry Object.
+	 * @param array        $form       The Form Object
+	 * @param string       $modifier   The modifier passed.
+	 * @param array|string $raw_value  The raw value of the input.
+	 * @param bool         $url_encode If the result should be URL encoded.
+	 * @param bool         $esc_html   If the HTML should be escaped.
+	 * @param string       $format     The format that the value should be.
+	 * @param bool         $nl2br      If the nl2br function should be used.
+	 *
+	 * @return string The processed merge tag.
+	 */
 	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {
 		$output_format = in_array( $modifier, array( 'text', 'html', 'url' ) ) ? $modifier : $format;
 
 		return GFCommon::get_lead_field_display( $this, $raw_value, $entry['currency'], true, $output_format );
 	}
 
-
+	/**
+	 * Creates an array from the list items.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GF_Field_List::get_value_save_entry()
+	 * @used-by GF_Field_List::get_value_submission()
+	 *
+	 * @param array $value The pre-formatted list.
+	 *
+	 * @return array The list rows.
+	 */
 	function create_list_array( $value ) {
 		if ( ! $this->enableColumns ) {
 			return $value;
@@ -479,11 +693,44 @@ class GF_Field_List extends GF_Field {
 		}
 	}
 
+	/**
+	 * Sanitizes the field settings.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFFormDetail::add_field()
+	 * @used-by GFFormsModel::sanitize_settings()
+	 * @uses    GF_Field::sanitize_settings()
+	 * @uses    GF_Field_List::$maxRows
+	 *
+	 * @return void
+	 */
 	public function sanitize_settings() {
 		parent::sanitize_settings();
 		$this->maxRows = absint( $this->maxRows );
 	}
 
+	/**
+	 * Gets the field value, formatted for exports.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFExport::start_export()
+	 * @used-by GFAddOn::get_field_value()
+	 * @uses    GF_Field_List::$id
+	 * @uses    GF_Field_List::$enableColumns
+	 * @uses    GF_Field_List::$choices
+	 * @uses    GFCommon::implode_non_blank()
+	 *
+	 * @param array  $entry    The Entry Object.
+	 * @param string $input_id Input ID to export. If not defined, uses the current input ID. Defaults to empty string.
+	 * @param bool   $use_text Not used. Defaults to false.
+	 * @param bool   $is_csv   If the export should be formatted as CSV. Defaults to false.
+	 *
+	 * @return string
+	 */
 	public function get_value_export( $entry, $input_id = '', $use_text = false, $is_csv = false ) {
 		if ( empty( $input_id ) ) {
 			$input_id = $this->id;
@@ -517,4 +764,5 @@ class GF_Field_List extends GF_Field {
 
 }
 
+// Register the list field.
 GF_Fields::register( new GF_Field_List() );

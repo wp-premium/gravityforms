@@ -13,8 +13,8 @@ class GFHelp {
 	/**
 	 * Displays the Gravity Forms Help page
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 */
 	public static function help_page() {
 		if ( ! GFCommon::ensure_wp_version() ) {

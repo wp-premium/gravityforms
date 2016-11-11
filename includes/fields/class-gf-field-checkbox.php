@@ -137,7 +137,7 @@ class GF_Field_Checkbox extends GF_Field {
 			if ( empty( $items ) ) {
 				return '';
 			} elseif ( $format == 'text' ) {
-				return substr( $items, 0, strlen( $items ) - 2 ); //removing last comma
+				return substr( $items, 0, strlen( $items ) - 2 ); // Removing last comma.
 			} else {
 				return "<ul class='bulleted'>$items</ul>";
 			}
@@ -147,13 +147,40 @@ class GF_Field_Checkbox extends GF_Field {
 
 	}
 
+	/**
+	 * Gets merge tag values.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @uses GFCommon::to_money()
+	 * @uses GFCommon::format_post_category()
+	 * @uses GFFormsModel::is_field_hidden()
+	 * @uses GFFormsModel::get_choice_text()
+	 * @uses GFCommon::format_variable_value()
+	 * @uses GFCommon::implode_non_blank()
+	 *
+	 * @param array|string $value      The value of the input.
+	 * @param string       $input_id   The input ID to use.
+	 * @param array        $entry      The Entry Object.
+	 * @param array        $form       The Form Object
+	 * @param string       $modifier   The modifier passed.
+	 * @param array|string $raw_value  The raw value of the input.
+	 * @param bool         $url_encode If the result should be URL encoded.
+	 * @param bool         $esc_html   If the HTML should be escaped.
+	 * @param string       $format     The format that the value should be.
+	 * @param bool         $nl2br      If the nl2br function should be used.
+	 *
+	 * @return string The processed merge tag.
+	 */
 	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {
+		// Check for passed modifiers.
 		$use_value       = $modifier == 'value';
 		$use_price       = in_array( $modifier, array( 'price', 'currency' ) );
 		$format_currency = $modifier == 'currency';
 
 		if ( is_array( $raw_value ) && (string) intval( $input_id ) != $input_id ) {
-			$items = array( $input_id => $value ); //float input Ids. (i.e. 4.1 ). Used when targeting specific checkbox items
+			$items = array( $input_id => $value ); // Float input IDs. (i.e. 4.1 ). Used when targeting specific checkbox items.
 		} elseif ( is_array( $raw_value ) ) {
 			$items = $raw_value;
 		} else {
@@ -162,19 +189,27 @@ class GF_Field_Checkbox extends GF_Field {
 
 		$ary = array();
 
+		// Get the items available within the merge tags.
 		foreach ( $items as $input_id => $item ) {
+			// If the 'value' modifier was passed.
 			if ( $use_value ) {
 				list( $val, $price ) = rgexplode( '|', $item, 2 );
+
+			// If the 'price' or 'currency' modifiers were passed.
 			} elseif ( $use_price ) {
 				list( $name, $val ) = rgexplode( '|', $item, 2 );
 				if ( $format_currency ) {
 					$val = GFCommon::to_money( $val, rgar( $entry, 'currency' ) );
 				}
+
+			// If this is a post category checkbox.
 			} elseif ( $this->type == 'post_category' ) {
 				$use_id     = strtolower( $modifier ) == 'id';
 				$item_value = GFCommon::format_post_category( $item, $use_id );
 
 				$val = RGFormsModel::is_field_hidden( $form, $this, array(), $entry ) ? '' : $item_value;
+
+			// If no modifiers were passed.
 			} else {
 				$val = RGFormsModel::is_field_hidden( $form, $this, array(), $entry ) ? '' : RGFormsModel::get_choice_text( $this, $raw_value, $input_id );
 			}
@@ -316,10 +351,10 @@ class GF_Field_Checkbox extends GF_Field {
 
 		$allowed_tags = wp_kses_allowed_html( 'post' );
 
-		//looping through lead detail values trying to find an item identical to the column label. Mark with a tick if found.
+		// Looping through lead detail values trying to find an item identical to the column label. Mark with a tick if found.
 		$lead_field_keys = array_keys( $entry );
 		foreach ( $lead_field_keys as $input_id ) {
-			//mark as a tick if input label (from form meta) is equal to submitted value (from lead)
+			// Mark as a tick if input label (from form meta) is equal to submitted value (from lead)
 			if ( is_numeric( $input_id ) && absint( $input_id ) == absint( $field_id ) ) {
 				$sanitized_value = wp_kses( $entry[ $input_id ], $allowed_tags );
 				$sanitized_label = wp_kses( $field_label, $allowed_tags );

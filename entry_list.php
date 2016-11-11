@@ -748,7 +748,17 @@ final class GF_Entry_List_Table extends WP_List_Table {
 
 		$table_columns['column_selector'] = '<a title="' . esc_attr__( 'click to select columns to display', 'gravityforms' ) . '" href="' . trailingslashit( site_url( null, 'admin' ) ) . '?gf_page=select_columns&id=' . absint( $form_id ) . '&TB_iframe=true&height=365&width=600" class="thickbox entries_edit_icon"><i class="fa fa-cog"></i></a>';
 
-		return $table_columns;
+		/**
+		 * Allow the columns to be displayed in the entry list table to be overridden.
+		 *
+		 * @since 2.0.7.6
+		 *
+		 * @param array $table_columns The columns to be displayed in the entry list table.
+		 * @param int   $form_id       The ID of the form the entries to be listed belong to.
+		 */
+		$table_columns = apply_filters( 'gform_entry_list_columns', $table_columns, $form_id );
+
+		return apply_filters( 'gform_entry_list_columns_' . $form_id, $table_columns, $form_id );
 	}
 
 	/**

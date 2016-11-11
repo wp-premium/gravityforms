@@ -1,15 +1,17 @@
 <?php
+/**
+ * @package GFAddOn
+ * @author  Rocketgenius
+ */
 
 if ( ! class_exists( 'GFForms' ) ) {
 	die();
 }
 
 /**
- * Handles all tasks mostly common to any Gravity Forms Add-On, including third party ones
+ * Class GFAddOn
  *
- *
- * @package GFAddOn
- * @author  Rocketgenius
+ * Handles all tasks mostly common to any Gravity Forms Add-On, including third party ones.
  */
 abstract class GFAddOn {
 
@@ -150,9 +152,13 @@ abstract class GFAddOn {
 
 	/**
 	 * Gets all active, registered Add-Ons.
-	 * 
-	 * @static
-	 * @return array - Active, registered Add-Ons
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @uses GFAddOn::$_registered_addons
+	 *
+	 * @return array Active, registered Add-Ons.
 	 */
 	public static function get_registered_addons() {
 		return self::$_registered_addons['active'];
@@ -2022,6 +2028,26 @@ abstract class GFAddOn {
 			}
 		}
 
+		/**
+		 * Filter the choices available in the field map drop down.
+		 *
+		 * @since 2.0.7.11
+		 *
+		 * @param array             $fields              The value and label properties for each choice.
+		 * @param int               $form_id             The ID of the form currently being configured.
+		 * @param null|array        $field_type          Null or the field types to be included in the drop down.
+		 * @param null|array|string $exclude_field_types Null or the field type(s) to be excluded from the drop down.
+		 */
+		$fields = apply_filters( 'gform_addon_field_map_choices', $fields, $form_id, $field_type, $exclude_field_types );
+
+		$callable = array( get_called_class(), 'get_instance' );
+		if ( is_callable( $callable ) ) {
+			$addon = call_user_func( $callable );
+			$slug  = $addon->get_slug();
+
+			$fields = apply_filters( "gform_{$slug}_field_map_choices", $fields, $form_id, $field_type, $exclude_field_types );
+		}
+
  		return $fields;
 	}
 
@@ -2547,94 +2573,6 @@ abstract class GFAddOn {
 		}
 
 		return $html;
-	}
-
-	/**
-	 * Helper to create a simple conditional logic set of fields. It creates one row of conditional logic with Field/Operator/Value inputs.
-	 *
-	 * @param mixed $setting_name_root - The root name to be used for inputs. It will be used as a prefix to the inputs that make up the conditional logic fields.
-	 *
-	 * @return string The HTML
-	 */
-	public function simple_condition( $setting_name_root ) {
-
-		$conditional_fields = $this->get_conditional_logic_fields();
-
-		$value_input = esc_js( '_gaddon_setting_' . esc_attr( $setting_name_root ) . '_value' );
-		$object_type = esc_js( "simple_condition_{$setting_name_root}" );
-
-		$str = $this->settings_select( array(
-			'name' => "{$setting_name_root}_field_id",
-			'type' => 'select',
-			'choices' => $conditional_fields,
-			'class' => 'optin_select',
-			'onchange' => "jQuery('#" . esc_js( $setting_name_root ) . "_container').html(GetRuleValues('{$object_type}', 0, jQuery(this).val(), '', '{$value_input}'));"
-		), false );
-
-		$str .= $this->settings_select( array(
-			'name' => "{$setting_name_root}_operator",
-			'type' => 'select',
-			'onchange' => "SetRuleProperty('{$object_type}', 0, 'operator', jQuery(this).val()); jQuery('#" . esc_js( $setting_name_root ) . "_container').html(GetRuleValues('{$object_type}', 0, jQuery('#{$setting_name_root}_field_id').val(), '', '{$value_input}'));",
-			'choices' => array(
-				array(
-					'value' => 'is',
-					'label' => esc_html__( 'is', 'gravityforms' ),
-				),
-				array(
-					'value' => 'isnot',
-					'label' => esc_html__( 'is not', 'gravityforms' ),
-				),
-				array(
-					'value' => '>',
-					'label' => esc_html__( 'greater than', 'gravityforms' ),
-				),
-				array(
-					'value' => '<',
-					'label' => esc_html__( 'less than', 'gravityforms' ),
-				),
-				array(
-					'value' => 'contains',
-					'label' => esc_html__( 'contains', 'gravityforms' ),
-				),
-				array(
-					'value' => 'starts_with',
-					'label' => esc_html__( 'starts with', 'gravityforms' ),
-				),
-				array(
-					'value' => 'ends_with',
-					'label' => esc_html__( 'ends with', 'gravityforms' ),
-				),
-			),
-
-		), false );
-
-		$str .= sprintf( "<span id='%s_container'></span>", esc_attr( $setting_name_root ) );
-
-		$field_id = $this->get_setting( "{$setting_name_root}_field_id" );
-
-		$value    = $this->get_setting( "{$setting_name_root}_value" );
-		$operator = $this->get_setting( "{$setting_name_root}_operator" );
-		if ( empty( $operator ) ){
-			$operator = 'is';
-		}
-
-		$field_id_attribute = ! empty( $field_id ) ? $field_id : 'jQuery("#' . esc_attr( $setting_name_root ) . '_field_id").val()';
-
-		$str .= "<script type='text/javascript'>
-			var " . esc_attr( $setting_name_root ) . "_object = {'conditionalLogic':{'rules':[{'fieldId':'{$field_id}','operator':'{$operator}','value':'" . esc_attr( $value ) . "'}]}};
-
-			jQuery(document).ready(
-				function(){
-					gform.addFilter( 'gform_conditional_object', 'SimpleConditionObject' );
-
-					jQuery('#" . esc_attr( $setting_name_root ) . "_container').html(
-											GetRuleValues('{$object_type}', 0, {$field_id_attribute}, '" . esc_attr( $value ) . "', '_gaddon_setting_" . esc_attr( $setting_name_root ) . "_value'));
-
-					}
-			);
-			</script>";
-
-		return $str;
 	}
 
 	/**
@@ -3268,6 +3206,145 @@ abstract class GFAddOn {
 
 		return $choices;
 	}
+
+	//--------------  Simple Condition  ------------------------------------------------
+
+	/**
+	 * Helper to create a simple conditional logic set of fields. It creates one row of conditional logic with Field/Operator/Value inputs.
+	 *
+	 * @param mixed $setting_name_root - The root name to be used for inputs. It will be used as a prefix to the inputs that make up the conditional logic fields.
+	 *
+	 * @return string The HTML
+	 */
+	public function simple_condition( $setting_name_root ) {
+
+		$conditional_fields = $this->get_conditional_logic_fields();
+
+		$value_input = esc_js( '_gaddon_setting_' . esc_attr( $setting_name_root ) . '_value' );
+		$object_type = esc_js( "simple_condition_{$setting_name_root}" );
+
+		$str = $this->settings_select( array(
+			'name'     => "{$setting_name_root}_field_id",
+			'type'     => 'select',
+			'choices'  => $conditional_fields,
+			'class'    => 'optin_select',
+			'onchange' => "jQuery('#" . esc_js( $setting_name_root ) . "_container').html(GetRuleValues('{$object_type}', 0, jQuery(this).val(), '', '{$value_input}'));"
+		), false );
+
+		$str .= $this->settings_select( array(
+			'name'     => "{$setting_name_root}_operator",
+			'type'     => 'select',
+			'onchange' => "SetRuleProperty('{$object_type}', 0, 'operator', jQuery(this).val()); jQuery('#" . esc_js( $setting_name_root ) . "_container').html(GetRuleValues('{$object_type}', 0, jQuery('#{$setting_name_root}_field_id').val(), '', '{$value_input}'));",
+			'choices'  => array(
+				array(
+					'value' => 'is',
+					'label' => esc_html__( 'is', 'gravityforms' ),
+				),
+				array(
+					'value' => 'isnot',
+					'label' => esc_html__( 'is not', 'gravityforms' ),
+				),
+				array(
+					'value' => '>',
+					'label' => esc_html__( 'greater than', 'gravityforms' ),
+				),
+				array(
+					'value' => '<',
+					'label' => esc_html__( 'less than', 'gravityforms' ),
+				),
+				array(
+					'value' => 'contains',
+					'label' => esc_html__( 'contains', 'gravityforms' ),
+				),
+				array(
+					'value' => 'starts_with',
+					'label' => esc_html__( 'starts with', 'gravityforms' ),
+				),
+				array(
+					'value' => 'ends_with',
+					'label' => esc_html__( 'ends with', 'gravityforms' ),
+				),
+			),
+
+		), false );
+
+		$str .= sprintf( "<span id='%s_container'></span>", esc_attr( $setting_name_root ) );
+
+		$field_id = $this->get_setting( "{$setting_name_root}_field_id" );
+
+		$value    = $this->get_setting( "{$setting_name_root}_value" );
+		$operator = $this->get_setting( "{$setting_name_root}_operator" );
+		if ( empty( $operator ) ) {
+			$operator = 'is';
+		}
+
+		$field_id_attribute = ! empty( $field_id ) ? $field_id : 'jQuery("#' . esc_attr( $setting_name_root ) . '_field_id").val()';
+
+		$str .= "<script type='text/javascript'>
+			var " . esc_attr( $setting_name_root ) . "_object = {'conditionalLogic':{'rules':[{'fieldId':'{$field_id}','operator':'{$operator}','value':'" . esc_attr( $value ) . "'}]}};
+
+			jQuery(document).ready(
+				function(){
+					gform.addFilter( 'gform_conditional_object', 'SimpleConditionObject' );
+
+					jQuery('#" . esc_attr( $setting_name_root ) . "_container').html(
+											GetRuleValues('{$object_type}', 0, {$field_id_attribute}, '" . esc_attr( $value ) . "', '_gaddon_setting_" . esc_attr( $setting_name_root ) . "_value'));
+
+					}
+			);
+			</script>";
+
+		return $str;
+	}
+
+	/**
+	 * Override this to define the array of choices which should be used to populate the Simple Condition fields drop down.
+	 *
+	 * Each choice should have 'label' and 'value' properties.
+	 *
+	 * @return array
+	 */
+	public function get_conditional_logic_fields() {
+		return array();
+	}
+
+	/**
+	 * Evaluate the rules defined for the Simple Condition field.
+	 *
+	 * @param string $setting_name_root The root name used as the prefix to the inputs that make up the Simple Condition field.
+	 * @param array $form The form currently being processed.
+	 * @param array $entry The entry currently being processed.
+	 * @param array $feed The feed currently being processed or an empty array when the field is stored in the form settings.
+	 *
+	 * @return bool
+	 */
+	public function is_simple_condition_met( $setting_name_root, $form, $entry, $feed = array() ) {
+
+		$settings = empty( $feed ) ? $this->get_form_settings( $form ) : rgar( $feed, 'meta', array() );
+
+		$is_enabled = rgar( $settings, $setting_name_root . '_enabled' );
+
+		if ( ! $is_enabled ) {
+			// The setting is not enabled so we handle it as if the rules are met.
+
+			return true;
+		}
+
+		// Build the logic array to be used by Gravity Forms when evaluating the rules.
+		$logic = array(
+			'logicType' => 'all',
+			'rules'     => array(
+				array(
+					'fieldId'  => rgar( $settings, $setting_name_root . '_field_id' ),
+					'operator' => rgar( $settings, $setting_name_root . '_operator' ),
+					'value'    => rgar( $settings, $setting_name_root . '_value' ),
+				),
+			)
+		);
+
+		return GFCommon::evaluate_conditional_logic( $logic, $form, $entry );
+	}
+
 
 	//--------------  Form settings  ---------------------------------------------------
 
