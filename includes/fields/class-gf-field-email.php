@@ -49,7 +49,7 @@ class GF_Field_Email extends GF_Field {
 			$this->failed_validation  = true;
 			$this->validation_message = empty( $this->errorMessage ) ? esc_html__( 'Please enter a valid email address.', 'gravityforms' ) : $this->errorMessage;
 		} elseif ( $this->emailConfirmEnabled && ! empty( $email ) ) {
-			$confirm = is_array( $value ) ? rgar( $value, 1 ) : rgpost( 'input_' . $this->id . '_2' );
+			$confirm = is_array( $value ) ? rgar( $value, 1 ) : $this->get_input_value_submission( 'input_' . $this->id . '_2' );
 			if ( $confirm != $email ) {
 				$this->failed_validation  = true;
 				$this->validation_message = esc_html__( 'Your emails do not match.', 'gravityforms' );

@@ -20,14 +20,26 @@ if ( ! class_exists( 'RGForms' ) ) {
  * Class GFSelectColumns
  *
  * Handles the changing of what columns are shown on the Entry page
+ *
+ * @since Unknown
  */
 class GFSelectColumns {
 
 	/**
-	 * Renders the column selection page
+	 * Renders the column selection page.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
+	 *
+	 * @uses GFFormsModel::get_form_meta()
+	 * @uses GFFormsModel::get_grid_columns()
+	 * @uses GFSelectColumns::get_selectable_entry_meta()
+	 * @uses GFFormsModel::convert_field_objects()
+	 * @uses GFFormsModel::get_input_type()
+	 * @uses GF_Field::get_entry_inputs()
+	 * @uses GFCommon::get_label()
+	 *
+	 * @return void
 	 */
 	public static function select_columns_page() {
 
@@ -252,15 +264,16 @@ class GFSelectColumns {
 	}
 
 	/**
-	 * Adds the entry meta to the Form object
+	 * Adds the entry meta to the Form object.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFFormsModel::get_entry_meta
 	 *
-	 * @param array $form The Form object
+	 * @uses GFFormsModel::get_entry_meta()
 	 *
-	 * @return array $form The Form object
+	 * @param array $form The Form object.
+	 *
+	 * @return array $form The Form object.
 	 */
 	public static function get_selectable_entry_meta( $form ) {
 		$entry_meta = GFFormsModel::get_entry_meta( $form['id'] );

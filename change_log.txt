@@ -1,4 +1,53 @@
 ------------------------------------------------------------------------------------------------------------------
+Version 2.1.0.1
+    - Fixed an issue with the Paragraph field validation when a max character limit is not configured.
+
+------------------------------------------------------------------------------------------------------------------
+Version 2.1
+	- Updated the field visibility setting to make it more clear and to allow fields marked as hidden to be part of conditional logic.
+
+	- Added gform_is_valid_conditional_logic_operator filter to allow custom operators to pass validation in is_valid_operator().
+    - Added better support for custom address types (added via gform_address_types filter) and conditional logic.
+    - Added GFExports::export_forms() method to allow 3rd parties to more easily export forms.
+    - Added the gform_honeypot_labels_pre_render filter.
+    - Added GFFormsModel::get_phsyical_file_path() method; refactored from code in the GFFormsModel::delete_physical_file() method.
+	- Added gform_rfc_url_validation hook to control whether or not URL validation conforms with RFC standard. Defaults to true.
+	- Added gform_is_valid_url hook to allow for custom URL validation.
+	- Added the gform_savecontinue_link filter for customizing the save and continue links.
+	- Added GFFormDetail::get_field_groups() method.
+    - Added the gform_entry_list_columns filter for overriding the columns to be displayed on the entry list page.
+    - Added logging of sanitize_file_name filter, in some cases it can cause an empty .csv file download.
+	- Added message on entry export if the PHP readfile function is not available, which had been causing an empty .csv file to be downloaded.
+    - Added the gform_reset_pre_conditional_logic_field_action filter which can be used to prevent the field being reset to its default value when hidden. See https://www.gravityhelp.com/documentation/article/gform_reset_pre_conditional_logic_field_action/
+    - Updated the registration of some JavaScript files to use the minified version by default.
+    - Updated the default css and ready class css for better horizontal field justification.
+    - Updated how the tooltip styles and scripts are included.
+	- Updated GF_ShowEditTitle() to automatically give the edit title input focus.
+    - Updated the input container for the textarea field to include the ginput_container_textarea class.
+    - Updated notification routing conditional logic JS to use the get_routing_field_types() method for consistency.
+    - Updated English translations (NZ, ZA). Credit: Ross McKay.
+	- Fixed input mask script not being included for a field with a custom phone format.
+	- Fixed issue with character counter on textareas configured with Rich Text Editor enabled.
+    - Fixed issue where tooltips CSS was not enqueued if No Conflict was enabled.
+    - Fixed a JS error which could occur with the single file upload field when the max file size is configured.
+    - Fixed an issue with the number formatting in the pricing summary table when the entry currency does not match the Forms > Settings currency.
+    - Fixed incorrect conditional logic result for multi-input field types (i.e. Address) using the entry value and the is not operator.
+    - Fixed an issue with the recent forms list not updating when forms are trashed.
+    - Fixed a PHP warning on some systems where the cron task is unable to to create files.
+    - Fixed an issue with the advanced field buttons.
+    - Fixed an issue with the confirmation settings for users without the unfiltered_html capability where merge tags used as attributes get mangled instead of removed.
+    - Fixed PHP warning if a query string parameter uses array notation.
+	- Fixed tabindex issue when save and continue functionality is activated.
+    - Fixed an issue with the Email field validation for forms created in 1.8 or older when the confirmation input value includes trailing spaces.
+    - Fixed an issue with the Web API returning 404 errors under certain circumstances for example saving permalinks.
+    - AF: Fixed fatal error with the add-on specific version of the gform_addon_field_map_choices filter when the add-on doesn't have a get_instance method.
+    - AF: Added gform_fieldmap_add_row Javascript action when adding a new row to a dynamic field map.
+    - AF: Updated jQuery Repeater plugin to support input fields for value.
+	- AF: Fixed fatal error with the add-on specific version of the gform_addon_field_map_choices filter.
+    - AF: Added the gform_addon_field_map_choices filter allowing the choices in the field map drop down to be overridden.
+    - AF: Added GFAddOn::is_simple_condition_met() for evaluating the rule configured for the field created using the simple_condition() helper.
+
+------------------------------------------------------------------------------------------------------------------
 Version 2.0.7
     - Added security enhancement. Credit: @c0mmand3rOpSec
     - Added security enhancement. Credit: Virtualroad.org

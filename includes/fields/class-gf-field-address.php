@@ -106,7 +106,7 @@ class GF_Field_Address extends GF_Field {
 			$country_value = esc_attr( rgget( $this->id . '.6', $value ) );
 		}
 
-		//Inputs
+		// Inputs.
 		$address_street_field_input  = GFFormsModel::get_input( $this, $this->id . '.1' );
 		$address_street2_field_input = GFFormsModel::get_input( $this, $this->id . '.2' );
 		$address_city_field_input    = GFFormsModel::get_input( $this, $this->id . '.3' );
@@ -114,7 +114,7 @@ class GF_Field_Address extends GF_Field {
 		$address_zip_field_input     = GFFormsModel::get_input( $this, $this->id . '.5' );
 		$address_country_field_input = GFFormsModel::get_input( $this, $this->id . '.6' );
 
-		//Placeholders
+		// Placeholders.
 		$street_placeholder_attribute  = GFCommon::get_input_placeholder_attribute( $address_street_field_input );
 		$street2_placeholder_attribute = GFCommon::get_input_placeholder_attribute( $address_street2_field_input );
 		$city_placeholder_attribute    = GFCommon::get_input_placeholder_attribute( $address_city_field_input );
@@ -139,14 +139,14 @@ class GF_Field_Address extends GF_Field {
 		$country_placeholder = GFCommon::get_input_placeholder_value( $address_country_field_input );
 		$country_list        = $this->get_country_dropdown( $country_value, $country_placeholder );
 
-		//changing css classes based on field format to ensure proper display
+		// Changing css classes based on field format to ensure proper display.
 		$address_display_format = apply_filters( 'gform_address_display_format', 'default', $this );
 		$city_location          = $address_display_format == 'zip_before_city' ? 'right' : 'left';
 		$zip_location           = $address_display_format != 'zip_before_city' && ( $this->hideState || rgar( $address_state_field_input, 'isHidden' ) ) ? 'right' : 'left'; // support for $this->hideState legacy property
 		$state_location         = $address_display_format == 'zip_before_city' ? 'left' : 'right';
 		$country_location       = $this->hideState || rgar( $address_state_field_input, 'isHidden' ) ? 'left' : 'right'; // support for $this->hideState legacy property
 
-		//labels
+		// Labels.
 		$address_street_sub_label  = rgar( $address_street_field_input, 'customLabel' ) != '' ? $address_street_field_input['customLabel'] : esc_html__( 'Street Address', 'gravityforms' );
 		$address_street_sub_label  = gf_apply_filters( array( 'gform_address_street', $form_id, $this->id ), $address_street_sub_label, $form_id );
 		$address_street_sub_label  = esc_html( $address_street_sub_label );
@@ -166,7 +166,7 @@ class GF_Field_Address extends GF_Field {
 		$address_country_sub_label = gf_apply_filters( array( 'gform_address_country', $form_id, $this->id ), $address_country_sub_label, $form_id );
 		$address_country_sub_label = esc_html( $address_country_sub_label );
 
-		//address field
+		// Address field.
 		$street_address = '';
 		$tabindex       = $this->get_tabindex();
 		$style          = ( $is_admin && rgar( $address_street_field_input, 'isHidden' ) ) ? "style='display:none;'" : '';
@@ -184,7 +184,7 @@ class GF_Field_Address extends GF_Field {
 			}
 		}
 
-		//address line 2 field
+		// Address line 2 field.
 		$street_address2 = '';
 		$style           = ( $is_admin && ( $this->hideAddress2 || rgar( $address_street2_field_input, 'isHidden' ) ) ) ? "style='display:none;'" : ''; // support for $this->hideAddress2 legacy property
 		if ( $is_admin || ( ! $this->hideAddress2 && ! rgar( $address_street2_field_input, 'isHidden' ) ) ) {
@@ -203,7 +203,7 @@ class GF_Field_Address extends GF_Field {
 		}
 
 		if ( $address_display_format == 'zip_before_city' ) {
-			//zip field
+			// Zip field.
 			$zip      = '';
 			$tabindex = $this->get_tabindex();
 			$style    = ( $is_admin && rgar( $address_zip_field_input, 'isHidden' ) ) ? "style='display:none;'" : '';
@@ -221,7 +221,7 @@ class GF_Field_Address extends GF_Field {
 				}
 			}
 
-			//city field
+			// City field.
 			$city     = '';
 			$tabindex = $this->get_tabindex();
 			$style    = ( $is_admin && rgar( $address_city_field_input, 'isHidden' ) ) ? "style='display:none;'" : '';
@@ -239,7 +239,7 @@ class GF_Field_Address extends GF_Field {
 				}
 			}
 
-			//state field
+			// State field.
 			$style = ( $is_admin && ( $this->hideState || rgar( $address_state_field_input, 'isHidden' ) ) ) ? "style='display:none;'" : ''; // support for $this->hideState legacy property
 			if ( $is_admin || ( ! $this->hideState && ! rgar( $address_state_field_input, 'isHidden' ) ) ) {
 				$state_field = $this->get_state_field( $id, $field_id, $state_value, $disabled_text, $form_id );
@@ -259,7 +259,7 @@ class GF_Field_Address extends GF_Field {
 			}
 		} else {
 
-			//city field
+			// City field.
 			$city     = '';
 			$tabindex = $this->get_tabindex();
 			$style    = ( $is_admin && rgar( $address_city_field_input, 'isHidden' ) ) ? "style='display:none;'" : '';
@@ -277,7 +277,7 @@ class GF_Field_Address extends GF_Field {
 				}
 			}
 
-			//state field
+			// State field.
 			$style = ( $is_admin && ( $this->hideState || rgar( $address_state_field_input, 'isHidden' ) ) ) ? "style='display:none;'" : ''; // support for $this->hideState legacy property
 			if ( $is_admin || ( ! $this->hideState && ! rgar( $address_state_field_input, 'isHidden' ) ) ) {
 				$state_field = $this->get_state_field( $id, $field_id, $state_value, $disabled_text, $form_id );
@@ -296,7 +296,7 @@ class GF_Field_Address extends GF_Field {
 				$state = sprintf( "<input type='hidden' class='gform_hidden' name='input_%d.4' id='%s_4' value='%s'/>", $id, $field_id, $state_value );
 			}
 
-			//zip field
+			// Zip field.
 			$zip      = '';
 			$tabindex = GFCommon::get_tabindex();
 			$style    = ( $is_admin && rgar( $address_zip_field_input, 'isHidden' ) ) ? "style='display:none;'" : '';
@@ -420,6 +420,14 @@ class GF_Field_Address extends GF_Field {
 			)
 		);
 
+		/**
+		 * Filters the address types available.
+		 *
+		 * @since Unknown
+		 *
+		 * @param array $addressTypes Contains the details for existing address types.
+		 * @param int   $form_id      The form ID.
+		 */
 		return gf_apply_filters( array( 'gform_address_types', $form_id ), $addressTypes, $form_id );
 	}
 
@@ -455,7 +463,7 @@ class GF_Field_Address extends GF_Field {
 		if ( empty( $state_value ) ) {
 			$state_value = $this->defaultState;
 
-			//for backwards compatibility (canadian address type used to store the default state into the defaultProvince property)
+			// For backwards compatibility (Canadian address type used to store the default state into the defaultProvince property).
 			if ( $this->addressType == 'canadian' && ! empty( $this->defaultProvince ) ) {
 				$state_value = $this->defaultProvince;
 			}
@@ -472,7 +480,7 @@ class GF_Field_Address extends GF_Field {
 			$text_style           = $has_state_drop_down ? "style='display:none;'" : '';
 			$state_field_id       = '';
 		} else {
-			//id only displayed on front end
+			// ID only displayed on front end.
 			$state_field_id = "id='" . $field_id . "_4'";
 		}
 
@@ -498,10 +506,217 @@ class GF_Field_Address extends GF_Field {
 	public function get_countries() {
 		return apply_filters(
 			'gform_countries', array(
-				esc_html__( 'Afghanistan', 'gravityforms' ), esc_html__( 'Albania', 'gravityforms' ), esc_html__( 'Algeria', 'gravityforms' ), esc_html__( 'American Samoa', 'gravityforms' ), esc_html__( 'Andorra', 'gravityforms' ), esc_html__( 'Angola', 'gravityforms' ), esc_html__( 'Antigua and Barbuda', 'gravityforms' ), esc_html__( 'Argentina', 'gravityforms' ), esc_html__( 'Armenia', 'gravityforms' ), esc_html__( 'Australia', 'gravityforms' ), esc_html__( 'Austria', 'gravityforms' ), esc_html__( 'Azerbaijan', 'gravityforms' ), esc_html__( 'Bahamas', 'gravityforms' ), esc_html__( 'Bahrain', 'gravityforms' ), esc_html__( 'Bangladesh', 'gravityforms' ), esc_html__( 'Barbados', 'gravityforms' ), esc_html__( 'Belarus', 'gravityforms' ), esc_html__( 'Belgium', 'gravityforms' ), esc_html__( 'Belize', 'gravityforms' ), esc_html__( 'Benin', 'gravityforms' ), esc_html__( 'Bermuda', 'gravityforms' ), esc_html__( 'Bhutan', 'gravityforms' ), esc_html__( 'Bolivia', 'gravityforms' ), esc_html__( 'Bosnia and Herzegovina', 'gravityforms' ), esc_html__( 'Botswana', 'gravityforms' ), esc_html__( 'Brazil', 'gravityforms' ), esc_html__( 'Brunei', 'gravityforms' ), esc_html__( 'Bulgaria', 'gravityforms' ), esc_html__( 'Burkina Faso', 'gravityforms' ), esc_html__( 'Burundi', 'gravityforms' ), esc_html__( 'Cambodia', 'gravityforms' ), esc_html__( 'Cameroon', 'gravityforms' ), esc_html__( 'Canada', 'gravityforms' ), esc_html__( 'Cape Verde', 'gravityforms' ), esc_html__( 'Cayman Islands', 'gravityforms' ), esc_html__( 'Central African Republic', 'gravityforms' ), esc_html__( 'Chad', 'gravityforms' ), esc_html__( 'Chile', 'gravityforms' ), esc_html__( 'China', 'gravityforms' ), esc_html__( 'Colombia', 'gravityforms' ), esc_html__( 'Comoros', 'gravityforms' ), esc_html__( 'Congo, Democratic Republic of the', 'gravityforms' ), esc_html__( 'Congo, Republic of the', 'gravityforms' ), esc_html__( 'Costa Rica', 'gravityforms' ), esc_html__( "Côte d'Ivoire", 'gravityforms' ), esc_html__( 'Croatia', 'gravityforms' ), esc_html__( 'Cuba', 'gravityforms' ), esc_html__( 'Curaçao', 'gravityforms' ), esc_html__( 'Cyprus', 'gravityforms' ), esc_html__( 'Czech Republic', 'gravityforms' ), esc_html__( 'Denmark', 'gravityforms' ), esc_html__( 'Djibouti', 'gravityforms' ), esc_html__( 'Dominica', 'gravityforms' ), esc_html__( 'Dominican Republic', 'gravityforms' ), esc_html__( 'East Timor', 'gravityforms' ), esc_html__( 'Ecuador', 'gravityforms' ), esc_html__( 'Egypt', 'gravityforms' ), esc_html__( 'El Salvador', 'gravityforms' ), esc_html__( 'Equatorial Guinea', 'gravityforms' ), esc_html__( 'Eritrea', 'gravityforms' ), esc_html__( 'Estonia', 'gravityforms' ), esc_html__( 'Ethiopia', 'gravityforms' ), esc_html__( 'Faroe Islands', 'gravityforms' ), esc_html__( 'Fiji', 'gravityforms' ), esc_html__( 'Finland', 'gravityforms' ), esc_html__( 'France', 'gravityforms' ), esc_html__( 'French Polynesia', 'gravityforms' ), esc_html__( 'Gabon', 'gravityforms' ),
-				esc_html__( 'Gambia', 'gravityforms' ), _x( 'Georgia', 'Country', 'gravityforms' ), esc_html__( 'Germany', 'gravityforms' ), esc_html__( 'Ghana', 'gravityforms' ), esc_html__( 'Greece', 'gravityforms' ), esc_html__( 'Greenland', 'gravityforms' ), esc_html__( 'Grenada', 'gravityforms' ), esc_html__( 'Guam', 'gravityforms' ), esc_html__( 'Guatemala', 'gravityforms' ), esc_html__( 'Guinea', 'gravityforms' ), esc_html__( 'Guinea-Bissau', 'gravityforms' ), esc_html__( 'Guyana', 'gravityforms' ), esc_html__( 'Haiti', 'gravityforms' ), esc_html__( 'Honduras', 'gravityforms' ), esc_html__( 'Hong Kong', 'gravityforms' ), esc_html__( 'Hungary', 'gravityforms' ), esc_html__( 'Iceland', 'gravityforms' ), esc_html__( 'India', 'gravityforms' ), esc_html__( 'Indonesia', 'gravityforms' ), esc_html__( 'Iran', 'gravityforms' ), esc_html__( 'Iraq', 'gravityforms' ), esc_html__( 'Ireland', 'gravityforms' ), esc_html__( 'Israel', 'gravityforms' ), esc_html__( 'Italy', 'gravityforms' ), esc_html__( 'Jamaica', 'gravityforms' ), esc_html__( 'Japan', 'gravityforms' ), esc_html__( 'Jordan', 'gravityforms' ), esc_html__( 'Kazakhstan', 'gravityforms' ), esc_html__( 'Kenya', 'gravityforms' ), esc_html__( 'Kiribati', 'gravityforms' ), esc_html__( 'North Korea', 'gravityforms' ), esc_html__( 'South Korea', 'gravityforms' ), esc_html__( 'Kosovo', 'gravityforms' ), esc_html__( 'Kuwait', 'gravityforms' ), esc_html__( 'Kyrgyzstan', 'gravityforms' ), esc_html__( 'Laos', 'gravityforms' ), esc_html__( 'Latvia', 'gravityforms' ), esc_html__( 'Lebanon', 'gravityforms' ), esc_html__( 'Lesotho', 'gravityforms' ), esc_html__( 'Liberia', 'gravityforms' ), esc_html__( 'Libya', 'gravityforms' ), esc_html__( 'Liechtenstein', 'gravityforms' ), esc_html__( 'Lithuania', 'gravityforms' ), esc_html__( 'Luxembourg', 'gravityforms' ), esc_html__( 'Macedonia', 'gravityforms' ), esc_html__( 'Madagascar', 'gravityforms' ), esc_html__( 'Malawi', 'gravityforms' ), esc_html__( 'Malaysia', 'gravityforms' ), esc_html__( 'Maldives', 'gravityforms' ), esc_html__( 'Mali', 'gravityforms' ), esc_html__( 'Malta', 'gravityforms' ), esc_html__( 'Marshall Islands', 'gravityforms' ), esc_html__( 'Mauritania', 'gravityforms' ), esc_html__( 'Mauritius', 'gravityforms' ), esc_html__( 'Mexico', 'gravityforms' ), esc_html__( 'Micronesia', 'gravityforms' ), esc_html__( 'Moldova', 'gravityforms' ), esc_html__( 'Monaco', 'gravityforms' ), esc_html__( 'Mongolia', 'gravityforms' ), esc_html__( 'Montenegro', 'gravityforms' ), esc_html__( 'Morocco', 'gravityforms' ), esc_html__( 'Mozambique', 'gravityforms' ), esc_html__( 'Myanmar', 'gravityforms' ), esc_html__( 'Namibia', 'gravityforms' ), esc_html__( 'Nauru', 'gravityforms' ), esc_html__( 'Nepal', 'gravityforms' ), esc_html__( 'Netherlands', 'gravityforms' ), esc_html__( 'New Zealand', 'gravityforms' ),
-				esc_html__( 'Nicaragua', 'gravityforms' ), esc_html__( 'Niger', 'gravityforms' ), esc_html__( 'Nigeria', 'gravityforms' ), esc_html__( 'Northern Mariana Islands', 'gravityforms' ), esc_html__( 'Norway', 'gravityforms' ), esc_html__( 'Oman', 'gravityforms' ), esc_html__( 'Pakistan', 'gravityforms' ), esc_html__( 'Palau', 'gravityforms' ), esc_html__( 'Palestine, State of', 'gravityforms' ), esc_html__( 'Panama', 'gravityforms' ), esc_html__( 'Papua New Guinea', 'gravityforms' ), esc_html__( 'Paraguay', 'gravityforms' ), esc_html__( 'Peru', 'gravityforms' ), esc_html__( 'Philippines', 'gravityforms' ), esc_html__( 'Poland', 'gravityforms' ), esc_html__( 'Portugal', 'gravityforms' ), esc_html__( 'Puerto Rico', 'gravityforms' ), esc_html__( 'Qatar', 'gravityforms' ), esc_html__( 'Romania', 'gravityforms' ), esc_html__( 'Russia', 'gravityforms' ), esc_html__( 'Rwanda', 'gravityforms' ), esc_html__( 'Saint Kitts and Nevis', 'gravityforms' ), esc_html__( 'Saint Lucia', 'gravityforms' ), esc_html__( 'Saint Vincent and the Grenadines', 'gravityforms' ), esc_html__( 'Samoa', 'gravityforms' ), esc_html__( 'San Marino', 'gravityforms' ), esc_html__( 'Sao Tome and Principe', 'gravityforms' ), esc_html__( 'Saudi Arabia', 'gravityforms' ), esc_html__( 'Senegal', 'gravityforms' ), esc_html__( 'Serbia', 'gravityforms' ), esc_html__( 'Seychelles', 'gravityforms' ), esc_html__( 'Sierra Leone', 'gravityforms' ), esc_html__( 'Singapore', 'gravityforms' ), esc_html__( 'Sint Maarten', 'gravityforms' ), esc_html__( 'Slovakia', 'gravityforms' ), esc_html__( 'Slovenia', 'gravityforms' ), esc_html__( 'Solomon Islands', 'gravityforms' ), esc_html__( 'Somalia', 'gravityforms' ), esc_html__( 'South Africa', 'gravityforms' ), esc_html__( 'Spain', 'gravityforms' ), esc_html__( 'Sri Lanka', 'gravityforms' ), esc_html__( 'Sudan', 'gravityforms' ), esc_html__( 'Sudan, South', 'gravityforms' ), esc_html__( 'Suriname', 'gravityforms' ), esc_html__( 'Swaziland', 'gravityforms' ), esc_html__( 'Sweden', 'gravityforms' ), esc_html__( 'Switzerland', 'gravityforms' ), esc_html__( 'Syria', 'gravityforms' ), esc_html__( 'Taiwan', 'gravityforms' ), esc_html__( 'Tajikistan', 'gravityforms' ), esc_html__( 'Tanzania', 'gravityforms' ), esc_html__( 'Thailand', 'gravityforms' ), esc_html__( 'Togo', 'gravityforms' ), esc_html__( 'Tonga', 'gravityforms' ), esc_html__( 'Trinidad and Tobago', 'gravityforms' ), esc_html__( 'Tunisia', 'gravityforms' ), esc_html__( 'Turkey', 'gravityforms' ), esc_html__( 'Turkmenistan', 'gravityforms' ), esc_html__( 'Tuvalu', 'gravityforms' ), esc_html__( 'Uganda', 'gravityforms' ), esc_html__( 'Ukraine', 'gravityforms' ), esc_html__( 'United Arab Emirates', 'gravityforms' ), esc_html__( 'United Kingdom', 'gravityforms' ),
-				esc_html__( 'United States', 'gravityforms' ), esc_html__( 'Uruguay', 'gravityforms' ), esc_html__( 'Uzbekistan', 'gravityforms' ), esc_html__( 'Vanuatu', 'gravityforms' ), esc_html__( 'Vatican City', 'gravityforms' ), esc_html__( 'Venezuela', 'gravityforms' ), esc_html__( 'Vietnam', 'gravityforms' ), esc_html__( 'Virgin Islands, British', 'gravityforms' ), esc_html__( 'Virgin Islands, U.S.', 'gravityforms' ), esc_html__( 'Yemen', 'gravityforms' ), esc_html__( 'Zambia', 'gravityforms' ), esc_html__( 'Zimbabwe', 'gravityforms' ),
+				esc_html__( 'Afghanistan', 'gravityforms' ),
+				esc_html__( 'Albania', 'gravityforms' ),
+				esc_html__( 'Algeria', 'gravityforms' ),
+				esc_html__( 'American Samoa', 'gravityforms' ),
+				esc_html__( 'Andorra', 'gravityforms' ),
+				esc_html__( 'Angola', 'gravityforms' ),
+				esc_html__( 'Antigua and Barbuda', 'gravityforms' ),
+				esc_html__( 'Argentina', 'gravityforms' ),
+				esc_html__( 'Armenia', 'gravityforms' ),
+				esc_html__( 'Australia', 'gravityforms' ),
+				esc_html__( 'Austria', 'gravityforms' ),
+				esc_html__( 'Azerbaijan', 'gravityforms' ),
+				esc_html__( 'Bahamas', 'gravityforms' ),
+				esc_html__( 'Bahrain', 'gravityforms' ),
+				esc_html__( 'Bangladesh', 'gravityforms' ),
+				esc_html__( 'Barbados', 'gravityforms' ),
+				esc_html__( 'Belarus', 'gravityforms' ),
+				esc_html__( 'Belgium', 'gravityforms' ),
+				esc_html__( 'Belize', 'gravityforms' ),
+				esc_html__( 'Benin', 'gravityforms' ),
+				esc_html__( 'Bermuda', 'gravityforms' ),
+				esc_html__( 'Bhutan', 'gravityforms' ),
+				esc_html__( 'Bolivia', 'gravityforms' ),
+				esc_html__( 'Bosnia and Herzegovina', 'gravityforms' ),
+				esc_html__( 'Botswana', 'gravityforms' ),
+				esc_html__( 'Brazil', 'gravityforms' ),
+				esc_html__( 'Brunei', 'gravityforms' ),
+				esc_html__( 'Bulgaria', 'gravityforms' ),
+				esc_html__( 'Burkina Faso', 'gravityforms' ),
+				esc_html__( 'Burundi', 'gravityforms' ),
+				esc_html__( 'Cambodia', 'gravityforms' ),
+				esc_html__( 'Cameroon', 'gravityforms' ),
+				esc_html__( 'Canada', 'gravityforms' ),
+				esc_html__( 'Cape Verde', 'gravityforms' ),
+				esc_html__( 'Cayman Islands', 'gravityforms' ),
+				esc_html__( 'Central African Republic', 'gravityforms' ),
+				esc_html__( 'Chad', 'gravityforms' ),
+				esc_html__( 'Chile', 'gravityforms' ),
+				esc_html__( 'China', 'gravityforms' ),
+				esc_html__( 'Colombia', 'gravityforms' ),
+				esc_html__( 'Comoros', 'gravityforms' ),
+				esc_html__( 'Congo, Democratic Republic of the', 'gravityforms' ),
+				esc_html__( 'Congo, Republic of the', 'gravityforms' ),
+				esc_html__( 'Costa Rica', 'gravityforms' ),
+				esc_html__( "Côte d'Ivoire", 'gravityforms' ),
+				esc_html__( 'Croatia', 'gravityforms' ),
+				esc_html__( 'Cuba', 'gravityforms' ),
+				esc_html__( 'Curaçao', 'gravityforms' ),
+				esc_html__( 'Cyprus', 'gravityforms' ),
+				esc_html__( 'Czech Republic', 'gravityforms' ),
+				esc_html__( 'Denmark', 'gravityforms' ),
+				esc_html__( 'Djibouti', 'gravityforms' ),
+				esc_html__( 'Dominica', 'gravityforms' ),
+				esc_html__( 'Dominican Republic', 'gravityforms' ),
+				esc_html__( 'East Timor', 'gravityforms' ),
+				esc_html__( 'Ecuador', 'gravityforms' ),
+				esc_html__( 'Egypt', 'gravityforms' ),
+				esc_html__( 'El Salvador', 'gravityforms' ),
+				esc_html__( 'Equatorial Guinea', 'gravityforms' ),
+				esc_html__( 'Eritrea', 'gravityforms' ),
+				esc_html__( 'Estonia', 'gravityforms' ),
+				esc_html__( 'Ethiopia', 'gravityforms' ),
+				esc_html__( 'Faroe Islands', 'gravityforms' ),
+				esc_html__( 'Fiji', 'gravityforms' ),
+				esc_html__( 'Finland', 'gravityforms' ),
+				esc_html__( 'France', 'gravityforms' ),
+				esc_html__( 'French Polynesia', 'gravityforms' ),
+				esc_html__( 'Gabon', 'gravityforms' ),
+				esc_html__( 'Gambia', 'gravityforms' ),
+				esc_html( _x( 'Georgia', 'Country', 'gravityforms' ) ),
+				esc_html__( 'Germany', 'gravityforms' ),
+				esc_html__( 'Ghana', 'gravityforms' ),
+				esc_html__( 'Greece', 'gravityforms' ),
+				esc_html__( 'Greenland', 'gravityforms' ),
+				esc_html__( 'Grenada', 'gravityforms' ),
+				esc_html__( 'Guam', 'gravityforms' ),
+				esc_html__( 'Guatemala', 'gravityforms' ),
+				esc_html__( 'Guinea', 'gravityforms' ),
+				esc_html__( 'Guinea-Bissau', 'gravityforms' ),
+				esc_html__( 'Guyana', 'gravityforms' ),
+				esc_html__( 'Haiti', 'gravityforms' ),
+				esc_html__( 'Honduras', 'gravityforms' ),
+				esc_html__( 'Hong Kong', 'gravityforms' ),
+				esc_html__( 'Hungary', 'gravityforms' ),
+				esc_html__( 'Iceland', 'gravityforms' ),
+				esc_html__( 'India', 'gravityforms' ),
+				esc_html__( 'Indonesia', 'gravityforms' ),
+				esc_html__( 'Iran', 'gravityforms' ),
+				esc_html__( 'Iraq', 'gravityforms' ),
+				esc_html__( 'Ireland', 'gravityforms' ),
+				esc_html__( 'Israel', 'gravityforms' ),
+				esc_html__( 'Italy', 'gravityforms' ),
+				esc_html__( 'Jamaica', 'gravityforms' ),
+				esc_html__( 'Japan', 'gravityforms' ),
+				esc_html__( 'Jordan', 'gravityforms' ),
+				esc_html__( 'Kazakhstan', 'gravityforms' ),
+				esc_html__( 'Kenya', 'gravityforms' ),
+				esc_html__( 'Kiribati', 'gravityforms' ),
+				esc_html__( 'North Korea', 'gravityforms' ),
+				esc_html__( 'South Korea', 'gravityforms' ),
+				esc_html__( 'Kosovo', 'gravityforms' ),
+				esc_html__( 'Kuwait', 'gravityforms' ),
+				esc_html__( 'Kyrgyzstan', 'gravityforms' ),
+				esc_html__( 'Laos', 'gravityforms' ),
+				esc_html__( 'Latvia', 'gravityforms' ),
+				esc_html__( 'Lebanon', 'gravityforms' ),
+				esc_html__( 'Lesotho', 'gravityforms' ),
+				esc_html__( 'Liberia', 'gravityforms' ),
+				esc_html__( 'Libya', 'gravityforms' ),
+				esc_html__( 'Liechtenstein', 'gravityforms' ),
+				esc_html__( 'Lithuania', 'gravityforms' ),
+				esc_html__( 'Luxembourg', 'gravityforms' ),
+				esc_html__( 'Macedonia', 'gravityforms' ),
+				esc_html__( 'Madagascar', 'gravityforms' ),
+				esc_html__( 'Malawi', 'gravityforms' ),
+				esc_html__( 'Malaysia', 'gravityforms' ),
+				esc_html__( 'Maldives', 'gravityforms' ),
+				esc_html__( 'Mali', 'gravityforms' ),
+				esc_html__( 'Malta', 'gravityforms' ),
+				esc_html__( 'Marshall Islands', 'gravityforms' ),
+				esc_html__( 'Mauritania', 'gravityforms' ),
+				esc_html__( 'Mauritius', 'gravityforms' ),
+				esc_html__( 'Mexico', 'gravityforms' ),
+				esc_html__( 'Micronesia', 'gravityforms' ),
+				esc_html__( 'Moldova', 'gravityforms' ),
+				esc_html__( 'Monaco', 'gravityforms' ),
+				esc_html__( 'Mongolia', 'gravityforms' ),
+				esc_html__( 'Montenegro', 'gravityforms' ),
+				esc_html__( 'Morocco', 'gravityforms' ),
+				esc_html__( 'Mozambique', 'gravityforms' ),
+				esc_html__( 'Myanmar', 'gravityforms' ),
+				esc_html__( 'Namibia', 'gravityforms' ),
+				esc_html__( 'Nauru', 'gravityforms' ),
+				esc_html__( 'Nepal', 'gravityforms' ),
+				esc_html__( 'Netherlands', 'gravityforms' ),
+				esc_html__( 'New Zealand', 'gravityforms' ),
+				esc_html__( 'Nicaragua', 'gravityforms' ),
+				esc_html__( 'Niger', 'gravityforms' ),
+				esc_html__( 'Nigeria', 'gravityforms' ),
+				esc_html__( 'Northern Mariana Islands', 'gravityforms' ),
+				esc_html__( 'Norway', 'gravityforms' ),
+				esc_html__( 'Oman', 'gravityforms' ),
+				esc_html__( 'Pakistan', 'gravityforms' ),
+				esc_html__( 'Palau', 'gravityforms' ),
+				esc_html__( 'Palestine, State of', 'gravityforms' ),
+				esc_html__( 'Panama', 'gravityforms' ),
+				esc_html__( 'Papua New Guinea', 'gravityforms' ),
+				esc_html__( 'Paraguay', 'gravityforms' ),
+				esc_html__( 'Peru', 'gravityforms' ),
+				esc_html__( 'Philippines', 'gravityforms' ),
+				esc_html__( 'Poland', 'gravityforms' ),
+				esc_html__( 'Portugal', 'gravityforms' ),
+				esc_html__( 'Puerto Rico', 'gravityforms' ),
+				esc_html__( 'Qatar', 'gravityforms' ),
+				esc_html__( 'Romania', 'gravityforms' ),
+				esc_html__( 'Russia', 'gravityforms' ),
+				esc_html__( 'Rwanda', 'gravityforms' ),
+				esc_html__( 'Saint Kitts and Nevis', 'gravityforms' ),
+				esc_html__( 'Saint Lucia', 'gravityforms' ),
+				esc_html__( 'Saint Vincent and the Grenadines', 'gravityforms' ),
+				esc_html__( 'Samoa', 'gravityforms' ),
+				esc_html__( 'San Marino', 'gravityforms' ),
+				esc_html__( 'Sao Tome and Principe', 'gravityforms' ),
+				esc_html__( 'Saudi Arabia', 'gravityforms' ),
+				esc_html__( 'Senegal', 'gravityforms' ),
+				esc_html__( 'Serbia', 'gravityforms' ),
+				esc_html__( 'Seychelles', 'gravityforms' ),
+				esc_html__( 'Sierra Leone', 'gravityforms' ),
+				esc_html__( 'Singapore', 'gravityforms' ),
+				esc_html__( 'Sint Maarten', 'gravityforms' ),
+				esc_html__( 'Slovakia', 'gravityforms' ),
+				esc_html__( 'Slovenia', 'gravityforms' ),
+				esc_html__( 'Solomon Islands', 'gravityforms' ),
+				esc_html__( 'Somalia', 'gravityforms' ),
+				esc_html__( 'South Africa', 'gravityforms' ),
+				esc_html__( 'Spain', 'gravityforms' ),
+				esc_html__( 'Sri Lanka', 'gravityforms' ),
+				esc_html__( 'Sudan', 'gravityforms' ),
+				esc_html__( 'Sudan, South', 'gravityforms' ),
+				esc_html__( 'Suriname', 'gravityforms' ),
+				esc_html__( 'Swaziland', 'gravityforms' ),
+				esc_html__( 'Sweden', 'gravityforms' ),
+				esc_html__( 'Switzerland', 'gravityforms' ),
+				esc_html__( 'Syria', 'gravityforms' ),
+				esc_html__( 'Taiwan', 'gravityforms' ),
+				esc_html__( 'Tajikistan', 'gravityforms' ),
+				esc_html__( 'Tanzania', 'gravityforms' ),
+				esc_html__( 'Thailand', 'gravityforms' ),
+				esc_html__( 'Togo', 'gravityforms' ),
+				esc_html__( 'Tonga', 'gravityforms' ),
+				esc_html__( 'Trinidad and Tobago', 'gravityforms' ),
+				esc_html__( 'Tunisia', 'gravityforms' ),
+				esc_html__( 'Turkey', 'gravityforms' ),
+				esc_html__( 'Turkmenistan', 'gravityforms' ),
+				esc_html__( 'Tuvalu', 'gravityforms' ),
+				esc_html__( 'Uganda', 'gravityforms' ),
+				esc_html__( 'Ukraine', 'gravityforms' ),
+				esc_html__( 'United Arab Emirates', 'gravityforms' ),
+				esc_html__( 'United Kingdom', 'gravityforms' ),
+				esc_html__( 'United States', 'gravityforms' ),
+				esc_html__( 'Uruguay', 'gravityforms' ),
+				esc_html__( 'Uzbekistan', 'gravityforms' ),
+				esc_html__( 'Vanuatu', 'gravityforms' ),
+				esc_html__( 'Vatican City', 'gravityforms' ),
+				esc_html__( 'Venezuela', 'gravityforms' ),
+				esc_html__( 'Vietnam', 'gravityforms' ),
+				esc_html__( 'Virgin Islands, British', 'gravityforms' ),
+				esc_html__( 'Virgin Islands, U.S.', 'gravityforms' ),
+				esc_html__( 'Yemen', 'gravityforms' ),
+				esc_html__( 'Zambia', 'gravityforms' ),
+				esc_html__( 'Zimbabwe', 'gravityforms' ),
 			)
 		);
 	}
@@ -732,81 +947,120 @@ class GF_Field_Address extends GF_Field {
 	public function get_us_states() {
 		return apply_filters(
 			'gform_us_states', array(
-				esc_html__( 'Alabama', 'gravityforms' ), esc_html__( 'Alaska', 'gravityforms' ), esc_html__( 'Arizona', 'gravityforms' ), esc_html__( 'Arkansas', 'gravityforms' ),
-				esc_html__( 'California', 'gravityforms' ), esc_html__( 'Colorado', 'gravityforms' ), esc_html__( 'Connecticut', 'gravityforms' ), esc_html__( 'Delaware', 'gravityforms' ),
-				esc_html__( 'District of Columbia', 'gravityforms' ), esc_html__( 'Florida', 'gravityforms' ), _x( 'Georgia', 'US State', 'gravityforms' ),
-				esc_html__( 'Hawaii', 'gravityforms' ), esc_html__( 'Idaho', 'gravityforms' ), esc_html__( 'Illinois', 'gravityforms' ), esc_html__( 'Indiana', 'gravityforms' ),
-				esc_html__( 'Iowa', 'gravityforms' ), esc_html__( 'Kansas', 'gravityforms' ), esc_html__( 'Kentucky', 'gravityforms' ), esc_html__( 'Louisiana', 'gravityforms' ),
-				esc_html__( 'Maine', 'gravityforms' ), esc_html__( 'Maryland', 'gravityforms' ), esc_html__( 'Massachusetts', 'gravityforms' ), esc_html__( 'Michigan', 'gravityforms' ),
-				esc_html__( 'Minnesota', 'gravityforms' ), esc_html__( 'Mississippi', 'gravityforms' ), esc_html__( 'Missouri', 'gravityforms' ), esc_html__( 'Montana', 'gravityforms' ),
-				esc_html__( 'Nebraska', 'gravityforms' ), esc_html__( 'Nevada', 'gravityforms' ), esc_html__( 'New Hampshire', 'gravityforms' ), esc_html__( 'New Jersey', 'gravityforms' ),
-				esc_html__( 'New Mexico', 'gravityforms' ), esc_html__( 'New York', 'gravityforms' ), esc_html__( 'North Carolina', 'gravityforms' ),
-				esc_html__( 'North Dakota', 'gravityforms' ), esc_html__( 'Ohio', 'gravityforms' ), esc_html__( 'Oklahoma', 'gravityforms' ), esc_html__( 'Oregon', 'gravityforms' ),
-				esc_html__( 'Pennsylvania', 'gravityforms' ), esc_html__( 'Rhode Island', 'gravityforms' ), esc_html__( 'South Carolina', 'gravityforms' ),
-				esc_html__( 'South Dakota', 'gravityforms' ), esc_html__( 'Tennessee', 'gravityforms' ), esc_html__( 'Texas', 'gravityforms' ), esc_html__( 'Utah', 'gravityforms' ),
-				esc_html__( 'Vermont', 'gravityforms' ), esc_html__( 'Virginia', 'gravityforms' ), esc_html__( 'Washington', 'gravityforms' ), esc_html__( 'West Virginia', 'gravityforms' ),
-				esc_html__( 'Wisconsin', 'gravityforms' ), esc_html__( 'Wyoming', 'gravityforms' ), esc_html__( 'Armed Forces Americas', 'gravityforms' ),
-				esc_html__( 'Armed Forces Europe', 'gravityforms' ), esc_html__( 'Armed Forces Pacific', 'gravityforms' ),
+				esc_html__( 'Alabama', 'gravityforms' ),
+				esc_html__( 'Alaska', 'gravityforms' ),
+				esc_html__( 'Arizona', 'gravityforms' ),
+				esc_html__( 'Arkansas', 'gravityforms' ),
+				esc_html__( 'California', 'gravityforms' ),
+				esc_html__( 'Colorado', 'gravityforms' ),
+				esc_html__( 'Connecticut', 'gravityforms' ),
+				esc_html__( 'Delaware', 'gravityforms' ),
+				esc_html__( 'District of Columbia', 'gravityforms' ),
+				esc_html__( 'Florida', 'gravityforms' ),
+				esc_html( _x( 'Georgia', 'US State', 'gravityforms' ) ),
+				esc_html__( 'Hawaii', 'gravityforms' ),
+				esc_html__( 'Idaho', 'gravityforms' ),
+				esc_html__( 'Illinois', 'gravityforms' ),
+				esc_html__( 'Indiana', 'gravityforms' ),
+				esc_html__( 'Iowa', 'gravityforms' ),
+				esc_html__( 'Kansas', 'gravityforms' ),
+				esc_html__( 'Kentucky', 'gravityforms' ),
+				esc_html__( 'Louisiana', 'gravityforms' ),
+				esc_html__( 'Maine', 'gravityforms' ),
+				esc_html__( 'Maryland', 'gravityforms' ),
+				esc_html__( 'Massachusetts', 'gravityforms' ),
+				esc_html__( 'Michigan', 'gravityforms' ),
+				esc_html__( 'Minnesota', 'gravityforms' ),
+				esc_html__( 'Mississippi', 'gravityforms' ),
+				esc_html__( 'Missouri', 'gravityforms' ),
+				esc_html__( 'Montana', 'gravityforms' ),
+				esc_html__( 'Nebraska', 'gravityforms' ),
+				esc_html__( 'Nevada', 'gravityforms' ),
+				esc_html__( 'New Hampshire', 'gravityforms' ),
+				esc_html__( 'New Jersey', 'gravityforms' ),
+				esc_html__( 'New Mexico', 'gravityforms' ),
+				esc_html__( 'New York', 'gravityforms' ),
+				esc_html__( 'North Carolina', 'gravityforms' ),
+				esc_html__( 'North Dakota', 'gravityforms' ),
+				esc_html__( 'Ohio', 'gravityforms' ),
+				esc_html__( 'Oklahoma', 'gravityforms' ),
+				esc_html__( 'Oregon', 'gravityforms' ),
+				esc_html__( 'Pennsylvania', 'gravityforms' ),
+				esc_html__( 'Rhode Island', 'gravityforms' ),
+				esc_html__( 'South Carolina', 'gravityforms' ),
+				esc_html__( 'South Dakota', 'gravityforms' ),
+				esc_html__( 'Tennessee', 'gravityforms' ),
+				esc_html__( 'Texas', 'gravityforms' ),
+				esc_html__( 'Utah', 'gravityforms' ),
+				esc_html__( 'Vermont', 'gravityforms' ),
+				esc_html__( 'Virginia', 'gravityforms' ),
+				esc_html__( 'Washington', 'gravityforms' ),
+				esc_html__( 'West Virginia', 'gravityforms' ),
+				esc_html__( 'Wisconsin', 'gravityforms' ),
+				esc_html__( 'Wyoming', 'gravityforms' ),
+				esc_html__( 'Armed Forces Americas', 'gravityforms' ),
+				esc_html__( 'Armed Forces Europe', 'gravityforms' ),
+				esc_html__( 'Armed Forces Pacific', 'gravityforms' ),
 			)
 		);
 	}
 
 	public function get_us_state_code( $state_name ) {
 		$states = array(
-			GFCommon::safe_strtoupper( esc_html__( 'Alabama', 'gravityforms' ) )               => 'AL',
-			GFCommon::safe_strtoupper( esc_html__( 'Alaska', 'gravityforms' ) )                => 'AK',
-			GFCommon::safe_strtoupper( esc_html__( 'Arizona', 'gravityforms' ) )               => 'AZ',
-			GFCommon::safe_strtoupper( esc_html__( 'Arkansas', 'gravityforms' ) )              => 'AR',
-			GFCommon::safe_strtoupper( esc_html__( 'California', 'gravityforms' ) )            => 'CA',
-			GFCommon::safe_strtoupper( esc_html__( 'Colorado', 'gravityforms' ) )              => 'CO',
-			GFCommon::safe_strtoupper( esc_html__( 'Connecticut', 'gravityforms' ) )           => 'CT',
-			GFCommon::safe_strtoupper( esc_html__( 'Delaware', 'gravityforms' ) )              => 'DE',
-			GFCommon::safe_strtoupper( esc_html__( 'District of Columbia', 'gravityforms' ) )  => 'DC',
-			GFCommon::safe_strtoupper( esc_html__( 'Florida', 'gravityforms' ) )               => 'FL',
-			GFCommon::safe_strtoupper( _x( 'Georgia', 'US State', 'gravityforms' ) )           => 'GA',
-			GFCommon::safe_strtoupper( esc_html__( 'Hawaii', 'gravityforms' ) )                => 'HI',
-			GFCommon::safe_strtoupper( esc_html__( 'Idaho', 'gravityforms' ) )                 => 'ID',
-			GFCommon::safe_strtoupper( esc_html__( 'Illinois', 'gravityforms' ) )              => 'IL',
-			GFCommon::safe_strtoupper( esc_html__( 'Indiana', 'gravityforms' ) )               => 'IN',
-			GFCommon::safe_strtoupper( esc_html__( 'Iowa', 'gravityforms' ) )                  => 'IA',
-			GFCommon::safe_strtoupper( esc_html__( 'Kansas', 'gravityforms' ) )                => 'KS',
-			GFCommon::safe_strtoupper( esc_html__( 'Kentucky', 'gravityforms' ) )              => 'KY',
-			GFCommon::safe_strtoupper( esc_html__( 'Louisiana', 'gravityforms' ) )             => 'LA',
-			GFCommon::safe_strtoupper( esc_html__( 'Maine', 'gravityforms' ) )                 => 'ME',
-			GFCommon::safe_strtoupper( esc_html__( 'Maryland', 'gravityforms' ) )              => 'MD',
-			GFCommon::safe_strtoupper( esc_html__( 'Massachusetts', 'gravityforms' ) )         => 'MA',
-			GFCommon::safe_strtoupper( esc_html__( 'Michigan', 'gravityforms' ) )              => 'MI',
-			GFCommon::safe_strtoupper( esc_html__( 'Minnesota', 'gravityforms' ) )             => 'MN',
-			GFCommon::safe_strtoupper( esc_html__( 'Mississippi', 'gravityforms' ) )           => 'MS',
-			GFCommon::safe_strtoupper( esc_html__( 'Missouri', 'gravityforms' ) )              => 'MO',
-			GFCommon::safe_strtoupper( esc_html__( 'Montana', 'gravityforms' ) )               => 'MT',
-			GFCommon::safe_strtoupper( esc_html__( 'Nebraska', 'gravityforms' ) )              => 'NE',
-			GFCommon::safe_strtoupper( esc_html__( 'Nevada', 'gravityforms' ) )                => 'NV',
-			GFCommon::safe_strtoupper( esc_html__( 'New Hampshire', 'gravityforms' ) )         => 'NH',
-			GFCommon::safe_strtoupper( esc_html__( 'New Jersey', 'gravityforms' ) )            => 'NJ',
-			GFCommon::safe_strtoupper( esc_html__( 'New Mexico', 'gravityforms' ) )            => 'NM',
-			GFCommon::safe_strtoupper( esc_html__( 'New York', 'gravityforms' ) )              => 'NY',
-			GFCommon::safe_strtoupper( esc_html__( 'North Carolina', 'gravityforms' ) )        => 'NC',
-			GFCommon::safe_strtoupper( esc_html__( 'North Dakota', 'gravityforms' ) )          => 'ND',
-			GFCommon::safe_strtoupper( esc_html__( 'Ohio', 'gravityforms' ) )                  => 'OH',
-			GFCommon::safe_strtoupper( esc_html__( 'Oklahoma', 'gravityforms' ) )              => 'OK',
-			GFCommon::safe_strtoupper( esc_html__( 'Oregon', 'gravityforms' ) )                => 'OR',
-			GFCommon::safe_strtoupper( esc_html__( 'Pennsylvania', 'gravityforms' ) )          => 'PA',
-			GFCommon::safe_strtoupper( esc_html__( 'Rhode Island', 'gravityforms' ) )          => 'RI',
-			GFCommon::safe_strtoupper( esc_html__( 'South Carolina', 'gravityforms' ) )        => 'SC',
-			GFCommon::safe_strtoupper( esc_html__( 'South Dakota', 'gravityforms' ) )          => 'SD',
-			GFCommon::safe_strtoupper( esc_html__( 'Tennessee', 'gravityforms' ) )             => 'TN',
-			GFCommon::safe_strtoupper( esc_html__( 'Texas', 'gravityforms' ) )                 => 'TX',
-			GFCommon::safe_strtoupper( esc_html__( 'Utah', 'gravityforms' ) )                  => 'UT',
-			GFCommon::safe_strtoupper( esc_html__( 'Vermont', 'gravityforms' ) )               => 'VT',
-			GFCommon::safe_strtoupper( esc_html__( 'Virginia', 'gravityforms' ) )              => 'VA',
-			GFCommon::safe_strtoupper( esc_html__( 'Washington', 'gravityforms' ) )            => 'WA',
-			GFCommon::safe_strtoupper( esc_html__( 'West Virginia', 'gravityforms' ) )         => 'WV',
-			GFCommon::safe_strtoupper( esc_html__( 'Wisconsin', 'gravityforms' ) )             => 'WI',
-			GFCommon::safe_strtoupper( esc_html__( 'Wyoming', 'gravityforms' ) )               => 'WY',
-			GFCommon::safe_strtoupper( esc_html__( 'Armed Forces Americas', 'gravityforms' ) ) => 'AA',
-			GFCommon::safe_strtoupper( esc_html__( 'Armed Forces Europe', 'gravityforms' ) )   => 'AE',
-			GFCommon::safe_strtoupper( esc_html__( 'Armed Forces Pacific', 'gravityforms' ) )  => 'AP',
+			GFCommon::safe_strtoupper( esc_html__( 'Alabama', 'gravityforms' ) )                 => 'AL',
+			GFCommon::safe_strtoupper( esc_html__( 'Alaska', 'gravityforms' ) )                  => 'AK',
+			GFCommon::safe_strtoupper( esc_html__( 'Arizona', 'gravityforms' ) )                 => 'AZ',
+			GFCommon::safe_strtoupper( esc_html__( 'Arkansas', 'gravityforms' ) )                => 'AR',
+			GFCommon::safe_strtoupper( esc_html__( 'California', 'gravityforms' ) )              => 'CA',
+			GFCommon::safe_strtoupper( esc_html__( 'Colorado', 'gravityforms' ) )                => 'CO',
+			GFCommon::safe_strtoupper( esc_html__( 'Connecticut', 'gravityforms' ) )             => 'CT',
+			GFCommon::safe_strtoupper( esc_html__( 'Delaware', 'gravityforms' ) )                => 'DE',
+			GFCommon::safe_strtoupper( esc_html__( 'District of Columbia', 'gravityforms' ) )    => 'DC',
+			GFCommon::safe_strtoupper( esc_html__( 'Florida', 'gravityforms' ) )                 => 'FL',
+			GFCommon::safe_strtoupper( esc_html( _x( 'Georgia', 'US State', 'gravityforms' ) ) ) => 'GA',
+			GFCommon::safe_strtoupper( esc_html__( 'Hawaii', 'gravityforms' ) )                  => 'HI',
+			GFCommon::safe_strtoupper( esc_html__( 'Idaho', 'gravityforms' ) )                   => 'ID',
+			GFCommon::safe_strtoupper( esc_html__( 'Illinois', 'gravityforms' ) )                => 'IL',
+			GFCommon::safe_strtoupper( esc_html__( 'Indiana', 'gravityforms' ) )                 => 'IN',
+			GFCommon::safe_strtoupper( esc_html__( 'Iowa', 'gravityforms' ) )                    => 'IA',
+			GFCommon::safe_strtoupper( esc_html__( 'Kansas', 'gravityforms' ) )                  => 'KS',
+			GFCommon::safe_strtoupper( esc_html__( 'Kentucky', 'gravityforms' ) )                => 'KY',
+			GFCommon::safe_strtoupper( esc_html__( 'Louisiana', 'gravityforms' ) )               => 'LA',
+			GFCommon::safe_strtoupper( esc_html__( 'Maine', 'gravityforms' ) )                   => 'ME',
+			GFCommon::safe_strtoupper( esc_html__( 'Maryland', 'gravityforms' ) )                => 'MD',
+			GFCommon::safe_strtoupper( esc_html__( 'Massachusetts', 'gravityforms' ) )           => 'MA',
+			GFCommon::safe_strtoupper( esc_html__( 'Michigan', 'gravityforms' ) )                => 'MI',
+			GFCommon::safe_strtoupper( esc_html__( 'Minnesota', 'gravityforms' ) )               => 'MN',
+			GFCommon::safe_strtoupper( esc_html__( 'Mississippi', 'gravityforms' ) )             => 'MS',
+			GFCommon::safe_strtoupper( esc_html__( 'Missouri', 'gravityforms' ) )                => 'MO',
+			GFCommon::safe_strtoupper( esc_html__( 'Montana', 'gravityforms' ) )                 => 'MT',
+			GFCommon::safe_strtoupper( esc_html__( 'Nebraska', 'gravityforms' ) )                => 'NE',
+			GFCommon::safe_strtoupper( esc_html__( 'Nevada', 'gravityforms' ) )                  => 'NV',
+			GFCommon::safe_strtoupper( esc_html__( 'New Hampshire', 'gravityforms' ) )           => 'NH',
+			GFCommon::safe_strtoupper( esc_html__( 'New Jersey', 'gravityforms' ) )              => 'NJ',
+			GFCommon::safe_strtoupper( esc_html__( 'New Mexico', 'gravityforms' ) )              => 'NM',
+			GFCommon::safe_strtoupper( esc_html__( 'New York', 'gravityforms' ) )                => 'NY',
+			GFCommon::safe_strtoupper( esc_html__( 'North Carolina', 'gravityforms' ) )          => 'NC',
+			GFCommon::safe_strtoupper( esc_html__( 'North Dakota', 'gravityforms' ) )            => 'ND',
+			GFCommon::safe_strtoupper( esc_html__( 'Ohio', 'gravityforms' ) )                    => 'OH',
+			GFCommon::safe_strtoupper( esc_html__( 'Oklahoma', 'gravityforms' ) )                => 'OK',
+			GFCommon::safe_strtoupper( esc_html__( 'Oregon', 'gravityforms' ) )                  => 'OR',
+			GFCommon::safe_strtoupper( esc_html__( 'Pennsylvania', 'gravityforms' ) )            => 'PA',
+			GFCommon::safe_strtoupper( esc_html__( 'Rhode Island', 'gravityforms' ) )            => 'RI',
+			GFCommon::safe_strtoupper( esc_html__( 'South Carolina', 'gravityforms' ) )          => 'SC',
+			GFCommon::safe_strtoupper( esc_html__( 'South Dakota', 'gravityforms' ) )            => 'SD',
+			GFCommon::safe_strtoupper( esc_html__( 'Tennessee', 'gravityforms' ) )               => 'TN',
+			GFCommon::safe_strtoupper( esc_html__( 'Texas', 'gravityforms' ) )                   => 'TX',
+			GFCommon::safe_strtoupper( esc_html__( 'Utah', 'gravityforms' ) )                    => 'UT',
+			GFCommon::safe_strtoupper( esc_html__( 'Vermont', 'gravityforms' ) )                 => 'VT',
+			GFCommon::safe_strtoupper( esc_html__( 'Virginia', 'gravityforms' ) )                => 'VA',
+			GFCommon::safe_strtoupper( esc_html__( 'Washington', 'gravityforms' ) )              => 'WA',
+			GFCommon::safe_strtoupper( esc_html__( 'West Virginia', 'gravityforms' ) )           => 'WV',
+			GFCommon::safe_strtoupper( esc_html__( 'Wisconsin', 'gravityforms' ) )               => 'WI',
+			GFCommon::safe_strtoupper( esc_html__( 'Wyoming', 'gravityforms' ) )                 => 'WY',
+			GFCommon::safe_strtoupper( esc_html__( 'Armed Forces Americas', 'gravityforms' ) )   => 'AA',
+			GFCommon::safe_strtoupper( esc_html__( 'Armed Forces Europe', 'gravityforms' ) )     => 'AE',
+			GFCommon::safe_strtoupper( esc_html__( 'Armed Forces Pacific', 'gravityforms' ) )    => 'AP',
 		);
 
 		$state_name = GFCommon::safe_strtoupper( $state_name );
@@ -921,6 +1175,14 @@ class GF_Field_Address extends GF_Field {
 				$line_break = "\n";
 			}
 
+			/**
+			 * Filters the format that the address is displayed in.
+			 *
+			 * @since Unknown
+			 *
+			 * @param string           'default' The format to use. Defaults to 'default'.
+			 * @param GF_Field_Address $this     An instance of the GF_Field_Address object.
+			 */
 			$address_display_format = apply_filters( 'gform_address_display_format', 'default', $this );
 			if ( $address_display_format == 'zip_before_city' ) {
 				/*
@@ -960,7 +1222,7 @@ class GF_Field_Address extends GF_Field {
 				$address .= ! empty( $address ) && ! empty( $country_value ) ? $line_break . $country_value : $country_value;
 			}
 
-			//adding map link
+			// Adding map link.
 			/**
 			 * Disables the Google Maps link from displaying in the address field.
 			 *

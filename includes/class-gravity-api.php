@@ -43,10 +43,9 @@ if ( ! class_exists( 'Gravity_Api' ) ) {
 		 */
 		public function register_current_site( $license_key, $is_md5 = false ) {
 
-			$body = array(
-				'site_name' => get_bloginfo( 'name' ),
-				'site_url'  => get_bloginfo( 'url' ),
-			);
+			$body = GFCommon::get_remote_post_params();
+			$body['site_name'] = get_bloginfo( 'name' );
+			$body['site_url']  = get_bloginfo( 'url' );
 
 			if ( $is_md5 ) {
 				$body['license_key_md5'] = $license_key;
@@ -56,7 +55,8 @@ if ( ! class_exists( 'Gravity_Api' ) ) {
 				$license_key_md5 = md5( $license_key );
 			}
 
-			GFCommon::log_debug( __METHOD__ . '() - requesting new site key' );
+			GFCommon::log_debug( __METHOD__ . '() - registering site' );
+
 			$result = $this->request( 'sites', $body, 'POST', array( 'headers' => $this->get_license_auth_header( $license_key_md5 ) ) );
 			$result = $this->prepare_response_body( $result );
 
@@ -65,12 +65,11 @@ if ( ! class_exists( 'Gravity_Api' ) ) {
 				return $result;
 			}
 
-			$response_body = $result->get_data();
+			//Updating site key and secret
+			update_option( 'gf_site_key', $result->key );
+			update_option( 'gf_site_secret', $result->secret );
 
-			update_option( 'gf_site_key', $response_body->key );
-			update_option( 'gf_site_secret', $response_body->secret );
-
-			GFCommon::log_debug( __METHOD__ . '() - site registration successful.' );
+			GFCommon::log_debug( __METHOD__ . '() - site registration successful. Site Key: ' . $result->key );
 
 			return true;
 		}
@@ -82,17 +81,22 @@ if ( ! class_exists( 'Gravity_Api' ) ) {
 				return false;
 			}
 
+			$body = GFCommon::get_remote_post_params();
+			$body['site_name'] = get_bloginfo( 'name' );
+			$body['site_url']  = get_bloginfo( 'url' );
+			$body['license_key_md5'] = $new_license_key_md5;
+			$body['site_key'] = $site_key;
+
 			$site_secret = $this->get_site_secret();
+			if ( $site_secret ) {
+				$site_secret_md5 = md5( $site_secret );
+				$body['site_secret'] = $site_secret;
+				$body['site_secret_md5'] = $site_secret_md5;
+			}
 
 			GFCommon::log_debug( __METHOD__ . '() - refreshing license info' );
 
-			$body = array(
-				'site_name' => get_bloginfo( 'name' ),
-				'site_url'  => get_bloginfo( 'url' ),
-				'license_key_md5' => $new_license_key_md5,
-			);
-
-			$result = $this->request( 'sites/' . $site_key, $body, 'PUT', array( 'headers' => $this->get_license_auth_header( $new_license_key_md5 ) ) );
+			$result = $this->request( 'sites/' . $site_key, $body, 'PUT', array( 'headers' => $this->get_site_auth_header( $site_key, $site_secret ) ) );
 			$result = $this->prepare_response_body( $result );
 
 			if ( is_wp_error( $result ) ) {
@@ -166,7 +170,6 @@ if ( ! class_exists( 'Gravity_Api' ) ) {
 			}
 
 		}
-
 
 		// # HELPERS
 

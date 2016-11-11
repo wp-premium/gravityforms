@@ -73,18 +73,24 @@ class GF_Field_Post_Excerpt extends GF_Field {
 
 	/**
 	 * Format the entry value for when the field/input merge tag is processed. Not called for the {all_fields} merge tag.
+	 *
 	 * Return a value that is safe for the context specified by $format.
 	 *
-	 * @param string|array $value The field value. Depending on the location the merge tag is being used the following functions may have already been applied to the value: esc_html, nl2br, and urlencode.
-	 * @param string $input_id The field or input ID from the merge tag currently being processed.
-	 * @param array $entry The Entry Object currently being processed.
-	 * @param array $form The Form Object currently being processed.
-	 * @param string $modifier The merge tag modifier. e.g. value
-	 * @param string|array $raw_value The raw field value from before any formatting was applied to $value.
-	 * @param bool $url_encode Indicates if the urlencode function may have been applied to the $value.
-	 * @param bool $esc_html Indicates if the esc_html function may have been applied to the $value.
-	 * @param string $format The format requested for the location the merge is being used. Possible values: html, text or url.
-	 * @param bool $nl2br Indicates if the nl2br function may have been applied to the $value.
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @uses GF_Field::get_allowable_tags()
+	 *
+	 * @param string|array $value      The field value. Depending on the location the merge tag is being used the following functions may have already been applied to the value: esc_html, nl2br, and urlencode.
+	 * @param string       $input_id   The field or input ID from the merge tag currently being processed.
+	 * @param array        $entry      The Entry Object currently being processed.
+	 * @param array        $form       The Form Object currently being processed.
+	 * @param string       $modifier   The merge tag modifier. e.g. value
+	 * @param string|array $raw_value  The raw field value from before any formatting was applied to $value.
+	 * @param bool         $url_encode Indicates if the urlencode function may have been applied to the $value.
+	 * @param bool         $esc_html   Indicates if the esc_html function may have been applied to the $value.
+	 * @param string       $format     The format requested for the location the merge is being used. Possible values: html, text or url.
+	 * @param bool         $nl2br      Indicates if the nl2br function may have been applied to the $value.
 	 *
 	 * @return string
 	 */

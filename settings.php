@@ -14,22 +14,24 @@ class GFSettings {
 	/**
 	 * Settings pages associated with add-ons
 	 *
-	 * @public
-	 * @static
+	 * @since  Unknown
+	 * @access public
+	 *
 	 * @var array $addon_pages
 	 */
 	public static $addon_pages = array();
 
 	/**
-	 * Adds a settings page to the Gravity Forms settings
+	 * Adds a settings page to the Gravity Forms settings.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFSettings::$addon_pages
 	 *
-	 * @param string       $name      The settings page slug
-	 * @param string|array $handler   The callback function to run for this settings page
-	 * @param string       $icon_path The path to the icon for the settings tab
+	 * @uses GFSettings::$addon_pages
+	 *
+	 * @param string       $name      The settings page slug.
+	 * @param string|array $handler   The callback function to run for this settings page.
+	 * @param string       $icon_path The path to the icon for the settings tab.
 	 */
 	public static function add_settings_page( $name, $handler, $icon_path ) {
 
@@ -57,7 +59,9 @@ class GFSettings {
 		}
 
 		/**
-		 * Adds additional actions after settings pages are registered
+		 * Adds additional actions after settings pages are registered.
+		 *
+		 * @since Unknown
 		 *
 		 * @param string|array $handler The callback function being run.
 		 */
@@ -66,15 +70,18 @@ class GFSettings {
 	}
 
 	/**
-	 * Determines the content displayed on the Gravity Forms settings page
+	 * Determines the content displayed on the Gravity Forms settings page.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFSettings::get_subview
-	 * @see GFSettings::gravityforms_settings_page
-	 * @see GFSettings::settings_uninstall_page
-	 * @see GFSettings::page_header
-	 * @see GFSettings::page_footer
+	 *
+	 * @uses GFSettings::get_subview()
+	 * @uses GFSettings::gravityforms_settings_page()
+	 * @uses GFSettings::settings_uninstall_page()
+	 * @uses GFSettings::page_header()
+	 * @uses GFSettings::page_footer()
+	 *
+	 * @return void
 	 */
 	public static function settings_page() {
 
@@ -91,7 +98,9 @@ class GFSettings {
 				self::page_header();
 
 				/**
-				 * Fires in the settings page depending on which page of the settings page you are in (the Subview)
+				 * Fires in the settings page depending on which page of the settings page you are in (the Subview).
+				 *
+				 * @since Unknown
 				 *
 				 * @param mixed $subview The sub-section of the main Form's settings
 				 */
@@ -101,14 +110,19 @@ class GFSettings {
 	}
 
 	/**
-	 * Displays the Gravity Forms uninstall page
+	 * Displays the Gravity Forms uninstall page.
 	 *
-	 * Called by GFSettings::settings_page
-	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFSettings::settings_page
-	 * @see GFSettings::page_header
+	 *
+	 * @used-by GFSettings::settings_page()
+	 * @uses    GFSettings::page_header()
+	 * @uses    GFCommon::current_user_can_any()
+	 * @uses    GFFormsModel::drop_tables()
+	 * @uses    GFCommon::delete_directory()
+	 * @uses    GFFormsModel::get_upload_root()
+	 * @uses    GFCommon::current_user_can_any()
+	 * @uses    GFSettings::page_footer()
 	 */
 	public static function settings_uninstall_page() {
 		self::page_header( __( 'Uninstall Gravity Forms', 'gravityforms' ), '' );
@@ -178,9 +192,11 @@ class GFSettings {
 				$uninstall_button = '<input type="submit" name="uninstall" value="' . esc_attr__( 'Uninstall Gravity Forms', 'gravityforms' ) . '" class="button" onclick="return confirm(\'' . esc_js( __( "Warning! ALL Gravity Forms data, including form entries will be deleted. This cannot be undone. 'OK' to delete, 'Cancel' to stop", 'gravityforms' ) ) . '\');" onkeypress="return confirm(\'' . esc_js( __( "Warning! ALL Gravity Forms data, including form entries will be deleted. This cannot be undone. 'OK' to delete, 'Cancel' to stop", 'gravityforms' ) ) . '\');"/>';
 
 				/**
-				 * Allows for the modification of the Gravity Forms uninstall button
+				 * Allows for the modification of the Gravity Forms uninstall button.
 				 *
-				 * @param string $uninstall_button The HTML of the uninstall button
+				 * @since Unknown
+				 *
+				 * @param string $uninstall_button The HTML of the uninstall button.
 				 */
 				echo apply_filters( 'gform_uninstall_button', $uninstall_button );
 				?>
@@ -194,14 +210,33 @@ class GFSettings {
 	}
 
 	/**
-	 * Displays the main Gravity Forms settings page
+	 * Displays the main Gravity Forms settings page.
 	 *
-	 * Called by GFSettings::settings_page
-	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 * @global $wpdb
-	 * @see GFSettings::settings_page
+	 *
+	 * @used-by GFSettings::settings_page()
+	 * @uses    GFCommon::ensure_wp_version()
+	 * @uses    GFForms::setup()
+	 * @uses    GFCommon::current_user_can_any()
+	 * @uses    GFFormsModel::save_key()
+	 * @uses    GFSettings::get_posted_akismet_setting()
+	 * @uses    GFCommon::log_debug()
+	 * @uses    GF_Field_CAPTCHA
+	 * @uses    GF_Field_CAPTCHA::verify_recaptcha_response()
+	 * @uses    RGCurrency::get_currencies()
+	 * @uses    GFCommon::cache_remote_message()
+	 * @uses    GFCommon::get_version_info()
+	 * @uses    GFCommon::get_key()
+	 * @uses    GFCommon::get_base_url()
+	 * @uses    wpdb::db_version()
+	 * @uses    GF_MIN_WP_VERSION_SUPPORT_TERMS
+	 * @uses    GF_MIN_WP_VERSION
+	 * @uses    GFCommon::$version
+	 * @uses    GFSettings::page_footer()
+	 *
+	 * @return void
 	 */
 	public static function gravityforms_settings_page() {
 		global $wpdb;
@@ -211,7 +246,7 @@ class GFSettings {
 		}
 
 		if ( isset( $_GET['setup'] ) ) {
-			//forcing setup
+			// Forcing setup
 			RGForms::setup( true );
 		}
 
@@ -260,10 +295,10 @@ class GFSettings {
 			}
 
 
-			//Updating message because key could have been changed
+			// Updating message because key could have been changed
 			GFCommon::cache_remote_message();
 
-			//Re-caching version info
+			// Re-caching version info
 			$version_info = GFCommon::get_version_info( false );
 			?>
 			<div class="updated fade" style="padding:6px;">
@@ -516,9 +551,11 @@ class GFSettings {
 					$save_button = '<input type="submit" name="submit" value="' . esc_html__( 'Save Settings', 'gravityforms' ) . '" class="button-primary gfbutton" id="save" />';
 
 					/**
-					 * Filters through and allows modification of the Settings save button HTML for the overall Gravity Forms Settings
+					 * Filters through and allows modification of the Settings save button HTML for the overall Gravity Forms Settings.
 					 *
-					 * @param string $save_button The HTML rendered for the save button
+					 * @since Unknown
+					 *
+					 * @param string $save_button The HTML rendered for the save button.
 					 */
 					echo apply_filters( 'gform_settings_save_button', $save_button );
 					?>
@@ -544,7 +581,9 @@ class GFSettings {
 		/**
 		 * Allows you to disable the Gravity Forms installation status section
 		 *
-		 * @param bool false Set to true to disable the installation status.  Defaults to false.
+		 * @since Unknown
+		 *
+		 * @param bool false Set to true to disable the installation status. Defaults to false.
 		 */
 		if ( ! apply_filters( 'gform_disable_installation_status', false ) ) { ?>
 			<div class="hr-divider"></div>
@@ -642,12 +681,15 @@ class GFSettings {
 	}
 
 	/**
-	 * Handles license upgrades from the Settings page
+	 * Handles license upgrades from the Settings page.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFCommon::post_to_manager
-	 * @see GFCommon::get_key
+	 *
+	 * @uses GFCommon::get_key()
+	 * @uses GFCommon::post_to_manager()
+	 *
+	 * @return void
 	 */
 	public static function upgrade_license() {
 		$key                = GFCommon::get_key();
@@ -668,7 +710,7 @@ class GFSettings {
 			$message = $raw_response['body'];
 		}
 
-		//validating that message is a valid Gravity Form message. If message is invalid, don't display anything
+		// Validating that message is a valid Gravity Form message. If message is invalid, don't display anything.
 		if ( substr( $message, 0, 10 ) != '<!--GFM-->' ) {
 			$message = '';
 		}
@@ -679,27 +721,33 @@ class GFSettings {
 	}
 
 	/**
-	 * Outputs the settings page header
+	 * Outputs the settings page header.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFSettings::get_subview
-	 * @see GFSettings::$addon_page
+	 *
+	 * @uses SCRIPT_DEBUG
+	 * @uses GFSettings::get_subview()
+	 * @uses GFSettings::$addon_pages
+	 * @uses GFCommon::get_browser_class()
+	 * @uses GFCommon::display_dismissible_message()
 	 *
 	 * @param string $title   Optional. The page title to be used. Defaults to an empty string.
 	 * @param string $message Optional. The message to display in the header. Defaults to empty string.
+	 *
+	 * @return void
 	 */
 	public static function page_header( $title = '', $message = '' ) {
 
 		$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] ) ? '' : '.min';
 
-		// register admin styles
+		// Register admin styles.
 		wp_register_style( 'gform_admin', GFCommon::get_base_url() . "/css/admin{$min}.css" );
 		wp_print_styles( array( 'jquery-ui-styles', 'gform_admin' ) );
 
 		$current_tab = self::get_subview();
 
-		// Build left side options, always have GF Settings first and Uninstall last, put add-ons in the middle
+		// Build left side options, always have GF Settings first and Uninstall last, put add-ons in the middle.
 		$setting_tabs = array( '10' => array( 'name' => 'settings', 'label' => __( 'Settings', 'gravityforms' ) ) );
 
 		if ( ! empty( self::$addon_pages ) ) {
@@ -707,7 +755,7 @@ class GFSettings {
 			$sorted_addons = self::$addon_pages;
 			asort( $sorted_addons );
 
-			//add add-ons to menu
+			// Add add-ons to menu
 			foreach ( $sorted_addons as $sorted_addon ) {
 				$setting_tabs[] = array(
 					'name'  => urlencode( $sorted_addon['name'] ),
@@ -717,20 +765,22 @@ class GFSettings {
 			}
 		}
 
-		// Prevent Uninstall tab from being added for users that don't have gravityforms_uninstall capability
+		// Prevent Uninstall tab from being added for users that don't have gravityforms_uninstall capability.
 		if ( GFCommon::current_user_can_any( 'gravityforms_uninstall' ) ) {
 			$setting_tabs[] = array( 'name' => 'uninstall', 'label' => __( 'Uninstall', 'gravityforms' ) );
 		}
 
 		/**
-		 * Filters the Settings menu tabs
+		 * Filters the Settings menu tabs.
 		 *
-		 * @param array $setting_tabs The settings tab names and labels
+		 * @since Unknown
+		 *
+		 * @param array $setting_tabs The settings tab names and labels.
 		 */
 		$setting_tabs = apply_filters( 'gform_settings_menu', $setting_tabs );
 		ksort( $setting_tabs, SORT_NUMERIC );
 
-		// kind of boring having to pass the title, optionally get it from the settings tab
+		// Kind of boring having to pass the title, optionally get it from the settings tab
 		if ( ! $title ) {
 			foreach ( $setting_tabs as $tab ) {
 				if ( $tab['name'] == urlencode( $current_tab ) ) {
@@ -773,10 +823,12 @@ class GFSettings {
 	}
 
 	/**
-	 * Outputs the Settings page footer
+	 * Outputs the Settings page footer.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
+	 *
+	 * @return void
 	 */
 	public static function page_footer() {
 					?>
@@ -802,12 +854,12 @@ class GFSettings {
 	}
 
 	/**
-	 * Gets the Settings page subview based on the query string
+	 * Gets the Settings page subview based on the query string.
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
 	 *
-	 * @return string The subview
+	 * @return string The subview.
 	 */
 	public static function get_subview() {
 
@@ -826,9 +878,10 @@ class GFSettings {
 	 *
 	 * Called from GFSettings::gravityforms_settings_page
 	 *
+	 * @since  Unknown
 	 * @access public
-	 * @static
-	 * @see GFSettings::gravityforms_settings_page
+	 *
+	 * @used-by GFSettings::gravityforms_settings_page()
 	 *
 	 * @return string $akismet_setting '1' if turning on, '2' if turning off.
 	 */
@@ -847,4 +900,117 @@ class GFSettings {
 		return $akismet_setting;
 	}
 
+
+	/**
+	 * Handles the registration of a new site when a new license key is entered
+	 *
+	 * @access public
+	 * @static
+	 * @see GFForms::include_gravity_api
+	 * @see gapi()
+	 * @see Gravity_Api::register_current_site
+	 *
+	 * @param string $value     The new key after edits
+	 * @param string $old_value The previous key
+	 *
+	 * @return string $value The new key
+	 */
+	public static function action_add_option_rg_gforms_key( $option, $value ){
+
+		self::update_site_registration( '', $value );
+
+	}
+
+	/**
+	 * Handles updates to the Gravity Forms license key
+	 *
+	 * @access public
+	 * @static
+	 * @see GFForms::include_gravity_api
+	 * @see gapi()
+	 * @see Gravity_Api::update_current_site
+	 *
+	 * @param string $value     The new key after edits
+	 * @param string $old_value The previous key
+	 *
+	 * @return string $value The new key
+	 */
+	public static function action_update_option_rg_gforms_key( $old_value, $value ){
+
+		self::update_site_registration( $old_value, $value );
+
+	}
+
+	/**
+	 * Handles the deletion of the Gravity Forms key by de-registering the site
+	 *
+	 * @access public
+	 * @static
+	 * @see GFForms::include_gravity_api
+	 * @see gapi()
+	 * @see Gravity_Api::deregister_current_site
+	 */
+	public static function action_delete_option_rg_gforms_key() {
+
+
+		GFForms::include_gravity_api();
+
+		if ( gapi()->is_site_registered() ) {
+
+			gapi()->deregister_current_site();
+		}
+	}
+
+
+	private static function update_site_registration( $previous_key_md5, $new_key_md5 ){
+
+		GFForms::include_gravity_api();
+
+		$result = null;
+
+		if ( empty( $new_key_md5 ) ) {
+
+			//De-registering site when key is removed
+			$result = gapi()->deregister_current_site();
+
+		}
+		else if ( $previous_key_md5 != $new_key_md5 ) {
+
+			//Key has changed, update site record appropriately.
+
+			//Get new key information
+			$version_info = GFCommon::get_version_info( false );
+
+			//Has site been already registered?
+			$is_site_registered = gapi()->is_site_registered();
+
+			$is_valid_new 			= $version_info['is_valid_key'] && !$is_site_registered;
+			$is_valid_registered 	= $version_info['is_valid_key'] && $is_site_registered;
+			$is_invalid				= !$version_info['is_valid_key'] && $is_site_registered;
+
+			if ( $is_valid_new ) {
+				//Site is new (not registered) and license key is valid
+				//Register new site
+				$result = gapi()->register_current_site( $new_key_md5, true );
+			}
+			else if ( $is_valid_registered ) {
+
+				//Site is already registered and new license key is valid
+				//Update site with new key
+				$result = gapi()->update_current_site( $new_key_md5 );
+			}
+
+			else if ( $is_invalid ){
+
+				//invalid key, deregister site
+				$result = gapi()->deregister_current_site();
+			}
+
+		}
+
+		if ( is_wp_error( $result ) ){
+			GFCommon::log_error( 'Failed to update site registration with Gravity Manager. ' . print_r( $result, true ) );
+		}
+
+	}
 }

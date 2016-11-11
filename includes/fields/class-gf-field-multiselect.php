@@ -1,10 +1,19 @@
 <?php
 
+// If the GF_Field class isn't available, bail.
 if ( ! class_exists( 'GFForms' ) ) {
 	die();
 }
 
-
+/**
+ * Class GF_Field_MultiSelect
+ *
+ * Allows the creation of multiselect fields.
+ *
+ * @since Unknown
+ *
+ * @uses GF_Field
+ */
 class GF_Field_MultiSelect extends GF_Field {
 
 	public $type = 'multiselect';
@@ -12,7 +21,10 @@ class GF_Field_MultiSelect extends GF_Field {
 	/**
 	 * Returns the field title.
 	 *
-	 * @return string
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @return string The field title. Escaped.
 	 */
 	public function get_form_editor_field_title() {
 		return esc_attr__( 'Multi Select', 'gravityforms' );
@@ -21,7 +33,10 @@ class GF_Field_MultiSelect extends GF_Field {
 	/**
 	 * Returns the class names of the settings which should be available on the field in the form editor.
 	 *
-	 * @return array
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @return array Settings available within the field editor.
 	 */
 	function get_form_editor_field_settings() {
 		return array(
@@ -53,11 +68,19 @@ class GF_Field_MultiSelect extends GF_Field {
 	/**
 	 * Returns the field inner markup.
 	 *
-	 * @param array $form The Form Object currently being processed.
-	 * @param string|array $value The field value. From default/dynamic population, $_POST, or a resumed incomplete submission.
-	 * @param null|array $entry Null or the Entry Object currently being edited.
+	 * @since  Unknown
+	 * @access public
 	 *
-	 * @return string
+	 * @uses GF_Field_MultiSelect::is_entry_detail()
+	 * @uses GF_Field_MultiSelect::is_form_editor()
+	 * @uses GF_Field_MultiSelect::get_conditional_logic_event()
+	 * @uses GF_Field_MultiSelect::get_tabindex()
+	 *
+	 * @param array        $form  The Form Object currently being processed.
+	 * @param string|array $value The field value. From default/dynamic population, $_POST, or a resumed incomplete submission.
+	 * @param null|array   $entry Null or the Entry Object currently being edited.
+	 *
+	 * @return string The field input HTML markup.
 	 */
 	public function get_field_input( $form, $value = '', $entry = null ) {
 		$form_id         = absint( $form['id'] );
@@ -79,8 +102,11 @@ class GF_Field_MultiSelect extends GF_Field {
 		/**
 		 * Allow the placeholder used by the enhanced ui to be overridden
 		 *
-		 * @param string $placeholder The placeholder text.
-		 * @param integer $form_id The ID of the current form.
+		 * @since 1.9.14 Third parameter containing the field ID was added.
+		 * @since Unknown
+		 *
+		 * @param string  $placeholder The placeholder text.
+		 * @param integer $form_id     The ID of the current form.
 		 */
 		$placeholder = gf_apply_filters( array(
 			'gform_multiselect_placeholder',
@@ -100,9 +126,14 @@ class GF_Field_MultiSelect extends GF_Field {
 	/**
 	 * Helper for retrieving the markup for the choices.
 	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @uses GFCommon::get_select_choices()
+	 *
 	 * @param string|array $value The field value. From default/dynamic population, $_POST, or a resumed incomplete submission.
 	 *
-	 * @return string
+	 * @return string Returns the choices available within the multi-select field.
 	 */
 	public function get_choices( $value ) {
 		return GFCommon::get_select_choices( $this, $value, false );
@@ -111,16 +142,19 @@ class GF_Field_MultiSelect extends GF_Field {
 	/**
 	 * Format the entry value for display on the entries list page.
 	 *
-	 * @param string|array $value The field value.
-	 * @param array $entry The Entry Object currently being processed.
-	 * @param string $field_id The field or input ID currently being processed.
-	 * @param array $columns The properties for the columns being displayed on the entry list page.
-	 * @param array $form The Form Object currently being processed.
+	 * @since  Unknown
+	 * @access public
 	 *
-	 * @return string
+	 * @param string|array $value    The field value.
+	 * @param array        $entry    The Entry Object currently being processed.
+	 * @param string       $field_id The field or input ID currently being processed.
+	 * @param array        $columns  The properties for the columns being displayed on the entry list page.
+	 * @param array        $form     The Form Object currently being processed.
+	 *
+	 * @return string $value The value of the field. Escaped.
 	 */
 	public function get_value_entry_list( $value, $entry, $field_id, $columns, $form ) {
-		// add space after comma-delimited values
+		// Add space after comma-delimited values.
 		$value = implode( ', ', explode( ',', $value ) );
 		return esc_html( $value );
 	}
@@ -128,13 +162,18 @@ class GF_Field_MultiSelect extends GF_Field {
 	/**
 	 * Format the entry value for display on the entry detail page and for the {all_fields} merge tag.
 	 *
-	 * @param string|array $value The field value.
-	 * @param string $currency The entry currency code.
-	 * @param bool|false $use_text When processing choice based fields should the choice text be returned instead of the value.
-	 * @param string $format The format requested for the location the merge is being used. Possible values: html, text or url.
-	 * @param string $media The location where the value will be displayed. Possible values: screen or email.
+	 * @since  Unknown
+	 * @access public
 	 *
-	 * @return string
+	 * @uses GFCommon::selection_display()
+	 *
+	 * @param string|array $value    The field value.
+	 * @param string       $currency The entry currency code.
+	 * @param bool|false   $use_text When processing choice based fields should the choice text be returned instead of the value.
+	 * @param string       $format   The format requested for the location the merge is being used. Possible values: html, text or url.
+	 * @param string       $media    The location where the value will be displayed. Possible values: screen or email.
+	 *
+	 * @return string The list items, stored within an unordered list.
 	 */
 	public function get_value_entry_detail( $value, $currency = '', $use_text = false, $format = 'html', $media = 'screen' ) {
 
@@ -156,13 +195,18 @@ class GF_Field_MultiSelect extends GF_Field {
 	/**
 	 * Format the value before it is saved to the Entry Object.
 	 *
-	 * @param array|string $value The value to be saved.
-	 * @param array $form The Form Object currently being processed.
-	 * @param string $input_name The input name used when accessing the $_POST.
-	 * @param int $lead_id The ID of the Entry currently being processed.
-	 * @param array $lead The Entry Object currently being processed.
+	 * @since  Unknown
+	 * @access public
 	 *
-	 * @return array|string
+	 * @uses GF_Field_MultiSelect::sanitize_entry_value()
+	 *
+	 * @param array|string $value      The value to be saved.
+	 * @param array        $form       The Form Object currently being processed.
+	 * @param string       $input_name The input name used when accessing the $_POST.
+	 * @param int          $lead_id    The ID of the Entry currently being processed.
+	 * @param array        $lead       The Entry Object currently being processed.
+	 *
+	 * @return string $value The field value. Comma separated if an array.
 	 */
 	public function get_value_save_entry( $value, $form, $input_name, $lead_id, $lead ) {
 
@@ -180,18 +224,26 @@ class GF_Field_MultiSelect extends GF_Field {
 	/**
 	 * Format the entry value for when the field/input merge tag is processed.
 	 *
-	 * @param string|array $value The field value. Depending on the location the merge tag is being used the following functions may have already been applied to the value: esc_html, nl2br, and urlencode.
-	 * @param string $input_id The field or input ID from the merge tag currently being processed.
-	 * @param array $entry The Entry Object currently being processed.
-	 * @param array $form The Form Object currently being processed.
-	 * @param string $modifier The merge tag modifier. e.g. value
-	 * @param string|array $raw_value The raw field value from before any formatting was applied to $value.
-	 * @param bool $url_encode Indicates if the urlencode function may have been applied to the $value.
-	 * @param bool $esc_html Indicates if the esc_html function may have been applied to the $value.
-	 * @param string $format The format requested for the location the merge is being used. Possible values: html, text or url.
-	 * @param bool $nl2br Indicates if the nl2br function may have been applied to the $value.
+	 * @since  Unknown
+	 * @access public
 	 *
-	 * @return string
+	 * @uses GFCommon::format_post_category()
+	 * @uses GFCommon::format_variable_value()
+	 * @uses GFCommon::selection_display()
+	 * @uses GFCommon::implode_non_blank()
+	 *
+	 * @param string|array $value      The field value. Depending on the location the merge tag is being used the following functions may have already been applied to the value: esc_html, nl2br, and urlencode.
+	 * @param string       $input_id   The field or input ID from the merge tag currently being processed.
+	 * @param array        $entry      The Entry Object currently being processed.
+	 * @param array        $form       The Form Object currently being processed.
+	 * @param string       $modifier   The merge tag modifier. e.g. value
+	 * @param string|array $raw_value  The raw field value from before any formatting was applied to $value.
+	 * @param bool         $url_encode Indicates if the urlencode function may have been applied to the $value.
+	 * @param bool         $esc_html   Indicates if the esc_html function may have been applied to the $value.
+	 * @param string       $format     The format requested for the location the merge is being used. Possible values: html, text or url.
+	 * @param bool         $nl2br      Indicates if the nl2br function may have been applied to the $value.
+	 *
+	 * @return string $return The merge tag value.
 	 */
 	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {
 		$items = explode( ',', $value );
@@ -223,12 +275,18 @@ class GF_Field_MultiSelect extends GF_Field {
 	/**
 	 * Format the entry value before it is used in entry exports and by framework add-ons using GFAddOn::get_field_value().
 	 *
-	 * @param array $entry The entry currently being processed.
-	 * @param string $input_id The field or input ID.
-	 * @param bool|false $use_text When processing choice based fields should the choice text be returned instead of the value.
-	 * @param bool|false $is_csv Is the value going to be used in the .csv entries export?
+	 * @since  Unknown
+	 * @access public
 	 *
-	 * @return string
+	 * @uses GFCommon::selection_display()
+	 * @uses GFCommon::implode_non_blank()
+	 *
+	 * @param array      $entry    The entry currently being processed.
+	 * @param string     $input_id The field or input ID.
+	 * @param bool|false $use_text When processing choice based fields should the choice text be returned instead of the value.
+	 * @param bool|false $is_csv   Is the value going to be used in the .csv entries export?
+	 *
+	 * @return string $value The value of a field from an export file.
 	 */
 	public function get_value_export( $entry, $input_id = '', $use_text = false, $is_csv = false ) {
 		if ( empty( $input_id ) ) {
@@ -257,6 +315,11 @@ class GF_Field_MultiSelect extends GF_Field {
 	 *
 	 * Currently called only for forms created after version 1.9.6.10.
 	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @return void
+	 *
 	 */
 	public function sanitize_settings() {
 		parent::sanitize_settings();
@@ -268,4 +331,5 @@ class GF_Field_MultiSelect extends GF_Field {
 	}
 }
 
+// Register the new field type.
 GF_Fields::register( new GF_Field_MultiSelect() );

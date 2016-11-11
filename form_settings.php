@@ -4,8 +4,28 @@ if ( ! class_exists( 'GFForms' ) ) {
 	die();
 }
 
+/**
+ * Class GFFormSettings
+ *
+ * Handles the form settings page.
+ *
+ * @since Unknown
+ */
 class GFFormSettings {
 
+	/**
+	 * Determines which form settings page to display.
+	 *
+	 * @access public
+	 * @since  Unknown
+	 *
+	 * @used-by GFForms::forms()
+	 * @uses    GFFormSettings::form_settings_ui()
+	 * @uses    GFFormSettings::confirmations_page()
+	 * @uses    GFFormSettings::notification_page()
+	 *
+	 * @return void
+	 */
 	public static function form_settings_page() {
 
 		$subview = rgget( 'subview' ) ? rgget( 'subview' ) : 'settings';
@@ -26,6 +46,8 @@ class GFFormSettings {
                  *
                  * Used to add additional pages to the form settings
                  *
+                 * @since Unknown
+                 *
                  * @param string $subview Used to complete the action name, allowing an additional subview to be detected
                  */
 				do_action( "gform_form_settings_page_{$subview}" );
@@ -33,6 +55,27 @@ class GFFormSettings {
 
 	}
 
+	/**
+	 * Displays the form settings UI.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFFormSettings::form_settings_page()
+	 * @uses    GFCommon::get_base_path()
+	 * @uses    GFFormsModel::get_form_meta()
+	 * @uses    GFFormsModel::maybe_sanitize_form_settings()
+	 * @uses    GFFormSettings::activate_save()
+	 * @uses    GFFormSettings::deactivate_save()
+	 * @uses    GFFormDetail::save_form_info()
+	 * @uses    GFFormSettings::page_header()
+	 * @uses    GFCommon::gf_global()
+	 * @uses    GFFormSettings::output_field_scripts()
+	 * @uses    gform_tooltip()
+	 * @uses    GFFormSettings::page_footer()
+	 *
+	 * @return void
+	 */
 	public static function form_settings_ui() {
 
 		require_once( GFCommon::get_base_path() . '/form_detail.php' );
@@ -44,13 +87,13 @@ class GFFormSettings {
 
 		if ( rgpost( 'gform_meta' ) ) {
 
-			// die if not posted from correct page
+			// Die if not posted from correct page
 			check_admin_referer( "gform_save_form_settings_{$form_id}", 'gform_save_form_settings' );
 
 			$updated_form           = json_decode( rgpost( 'gform_meta' ), true );
 			$updated_form['fields'] = $form['fields'];
 
-			// -- standard form settings --
+			// -- Standard form settings --
 
 			$updated_form['title']                = rgpost( 'form_title_input' );
 			$updated_form['description']          = rgpost( 'form_description_input' );
@@ -58,13 +101,13 @@ class GFFormSettings {
 			$updated_form['descriptionPlacement'] = rgpost( 'form_description_placement' );
 			$updated_form['subLabelPlacement']    = rgpost( 'form_sub_label_placement' );
 
-			// -- advanced form settings --
+			// -- Advanced form settings --
 
 			$updated_form['cssClass']        = rgpost( 'form_css_class' );
 			$updated_form['enableHoneypot']  = rgpost( 'form_enable_honeypot' );
 			$updated_form['enableAnimation'] = rgpost( 'form_enable_animation' );
 
-			// form button settings
+			// Form button settings
 			$updated_form['button']['type']     = rgpost( 'form_button' );
 			$updated_form['button']['text']     = rgpost( 'form_button' ) == 'text' ? rgpost( 'form_button_text_input' ) : '';
 			$updated_form['button']['imageUrl'] = rgpost( 'form_button' ) == 'image' ? rgpost( 'form_button_image_url' ) : '';
@@ -106,6 +149,13 @@ class GFFormSettings {
 				$updated_form = self::deactivate_save( $updated_form );
 			}
 
+			/**
+			 * Filters the updated form settings before being saved.
+			 *
+			 * @since 1.7
+			 *
+			 * @param array $updated_form The form settings.
+			 */
 			$updated_form = apply_filters( 'gform_pre_form_settings_save', $updated_form );
 
 			$update_result = GFFormDetail::save_form_info( $form_id, addslashes( json_encode( $updated_form ) ) );
@@ -328,9 +378,7 @@ class GFFormSettings {
 		}
 
 
-		/**
-		 * These variables are used to convenient "wrap" child form settings in the appropriate HTML.
-		 */
+		// These variables are used to convenient "wrap" child form settings in the appropriate HTML.
 		$subsetting_open  = '
             <td colspan="2" class="gf_sub_settings_cell">
                 <div class="gf_animate_sub_settings">
@@ -343,8 +391,8 @@ class GFFormSettings {
             </td>';
 
 
-		//create form settings table rows and put them into an array
-		//form title
+		// Create form settings table rows and put them into an array.
+		// Form title.
 		$tr_form_title = '
         <tr>
             <th>
@@ -358,7 +406,7 @@ class GFFormSettings {
             </td>
         </tr>';
 
-		//form description
+		// Form description.
 		$tr_form_description = '
         <tr>
             <th>
@@ -372,7 +420,7 @@ class GFFormSettings {
             </td>
         </tr>';
 
-		//form label placement
+		// Form label placement.
 		$alignment_options = array(
 			'top_label'   => __( 'Top aligned', 'gravityforms' ),
 			'left_label'  => __( 'Left aligned', 'gravityforms' ),
@@ -400,7 +448,7 @@ class GFFormSettings {
 		</td>
 	</tr>';
 
-		//form description placement
+		// Form description placement.
 		$style               = $form['labelPlacement'] != 'top_label' ? 'display:none;' : '';
 		$description_dd      = '';
 		$description_options = array(
@@ -428,7 +476,7 @@ class GFFormSettings {
 	</tr>';
 
 
-		//Sub Label placement
+		// Sub-label placement.
 		$sub_label_placement_dd      = '';
 		$sub_label_placement_options = array(
 			'below' => __( 'Below inputs', 'gravityforms' ),
@@ -455,7 +503,7 @@ class GFFormSettings {
 	</tr>';
 
 
-		//css class name
+		//css class name.
 		$tr_css_class_name = '
         <tr>
             <th>
@@ -470,8 +518,8 @@ class GFFormSettings {
         </tr>';
 
 
-		//create form advanced settings table rows
-		//create form button rows
+		// Create form advanced settings table rows.
+		// Create form button rows.
 		$form_button_type     = rgars( $form, 'button/type' );
 		$text_button_checked  = '';
 		$image_button_checked = '';
@@ -484,7 +532,7 @@ class GFFormSettings {
 			$image_button_checked = 'checked="checked"';
 			$text_style_display   = 'display:none;';
 		}
-		//form button
+		// Form button.
 		$tr_form_button = '
         <tr>
             <th>
@@ -507,7 +555,7 @@ class GFFormSettings {
             </td>
         </tr>';
 
-		//form button text
+		// Form button text.
 		$tr_form_button_text = $subsetting_open . '
         <tr id="form_button_text_setting" class="child_setting_row" style="' . $text_style_display . '">
             <th>
@@ -521,7 +569,7 @@ class GFFormSettings {
             </td>
         </tr>';
 
-		//form button image path
+		// Form button image path.
 		$tr_form_button_image_path = '
         <tr id="form_button_image_path_setting" class="child_setting_row" style="' . $image_style_display . '">
             <th>
@@ -535,7 +583,7 @@ class GFFormSettings {
             </td>
         </tr>' . $subsetting_close;
 
-		//form button conditional logic
+		// Form button conditional logic.
 		$button_conditional_checked = '';
 		if ( rgars( $form, 'button/conditionalLogic' ) ) {
 			$button_conditional_checked = 'checked="checked"';
@@ -561,8 +609,7 @@ class GFFormSettings {
             </td>
         </tr>';
 
-		//create save and continue rows
-
+		// Create save and continue rows.
 		$save_enabled_checked = '';
 		$save_enabled_style = '';
 
@@ -585,7 +632,7 @@ class GFFormSettings {
             </td>
         </tr>';
 
-		// Warning
+		// Warning.
 		$tr_save_warning = '
         <tr id="form_save_warning" class="child_setting_row" ' . $save_enabled_style . '>
             ' . $subsetting_open . '
@@ -607,7 +654,7 @@ class GFFormSettings {
 
         </tr>';
 
-		//save button text
+		// Save button text.
 		$tr_save_button_text = '
         <tr id="form_save_button_text_setting" class="child_setting_row" ' . $save_enabled_style . '>
             <th>
@@ -622,7 +669,7 @@ class GFFormSettings {
             ' . $subsetting_close . '
         </tr>';
 
-		//limit entries
+		// Limit entries.
 		$limit_entry_checked = '';
 		$limit_entry_style   = '';
 		$limit_entries_dd    = '';
@@ -656,7 +703,7 @@ class GFFormSettings {
             </td>
         </tr>';
 
-		//limit entries count
+		// Limit entries count.
 		$tr_limit_entries_count = '
         <tr id="limit_entries_count_setting" class="child_setting_row" style="' . esc_attr( $limit_entry_style ) . '">
             ' . $subsetting_open . '
@@ -675,7 +722,7 @@ class GFFormSettings {
 		' . $subsetting_close . '
         </tr>';
 
-		//limit entries message
+		// Limit entries message.
 		$tr_limit_entries_message = '
         <tr id="limit_entries_message_setting" class="child_setting_row" style="' . $limit_entry_style . '">
             ' . $subsetting_open . '
@@ -691,7 +738,7 @@ class GFFormSettings {
 		</tr>
         ';
 
-		//schedule form
+		// Schedule form.
 		$schedule_form_checked = '';
 		$schedule_form_style   = '';
 		$start_hour_dd         = '';
@@ -708,40 +755,40 @@ class GFFormSettings {
 		} else {
 			$schedule_form_style = 'display:none';
 		}
-		//create start hour dd options
+		// Create start hour dd options.
 		for ( $i = 1; $i <= 12; $i ++ ) {
 			$selected = rgar( $form, 'scheduleStartHour' ) == $i ? 'selected="selected"' : '';
 			$start_hour_dd .= '<option value="' . $i . '" ' . $selected . '>' . $i . '</option>';
 		}
-		//create start minute dd options
+		// Create start minute dd options.
 		foreach ( array( '00', '15', '30', '45' ) as $value ) {
 			$selected = rgar( $form, 'scheduleStartMinute' ) == $value ? 'selected="selected"' : '';
 			$start_minute_dd .= '<option value="' . $value . '" ' . $selected . '>' . $value . '</option>';
 		}
-		//set start am/pm
+		// Set start am/pm.
 		if ( rgar( $form, 'scheduleStartAmpm' ) == 'am' ) {
 			$start_am_selected = 'selected="selected"';
 		} elseif ( rgar( $form, 'scheduleStartAmpm' ) == 'pm' ) {
 			$start_pm_selected = 'selected="selected"';
 		}
-		//create end hour dd options
+		// Create end hour dd options.
 		for ( $i = 1; $i <= 12; $i ++ ) {
 			$selected = rgar( $form, 'scheduleEndHour' ) == $i ? 'selected="selected"' : '';
 			$end_hour_dd .= '<option value="' . $i . ' "' . $selected . '>' . $i . '</option>';
 		}
-		//create end minute dd options
+		// Create end minute dd options.
 		foreach ( array( '00', '15', '30', '45' ) as $value ) {
 			$selected = rgar( $form, 'scheduleEndMinute' ) == $value ? 'selected="selected"' : '';
 			$end_minute_dd .= '<option value="' . $value . '" ' . $selected . '>' . $value . '</option>';
 		}
-		//set end am/pm
+		// Set end am/pm.
 		if ( rgar( $form, 'scheduleEndAmpm' ) == 'am' ) {
 			$end_am_selected = 'selected="selected"';
 		} elseif ( rgar( $form, 'scheduleEndAmpm' ) == 'pm' ) {
 			$end_pm_selected = 'selected="selected"';
 		}
 
-		//schedule form
+		// Schedule form.
 		$tr_schedule_form = '
         <tr>
             <th>
@@ -753,7 +800,7 @@ class GFFormSettings {
             </td>
         </tr>';
 
-		//schedule start
+		// Schedule start.
 		$tr_schedule_start = '
         <tr id="schedule_start_setting" class="child_setting_row" style="' . $schedule_form_style . '">
             ' . $subsetting_open . '
@@ -778,7 +825,7 @@ class GFFormSettings {
             ' . $subsetting_close . '
         </tr>';
 
-		//schedule end
+		// Schedule end.
 		$tr_schedule_end = '
         <tr id="schedule_end_setting" class="child_setting_row" style="' . esc_attr( $schedule_form_style ) . '">
             ' . $subsetting_open . '
@@ -803,7 +850,7 @@ class GFFormSettings {
             ' . $subsetting_close . '
         </tr>';
 
-		//schedule message
+		// Schedule message.
 		$tr_schedule_pending_message = '
         <tr id="schedule_pending_message_setting" class="child_setting_row" style="' . esc_attr( $schedule_form_style ) . '">
             ' . $subsetting_open . '
@@ -816,7 +863,7 @@ class GFFormSettings {
             ' . $subsetting_close . '
         </td>';
 
-		//schedule message
+		// Schedule message.
 		$tr_schedule_message = '
         <tr id="schedule_message_setting" class="child_setting_row" style="' . esc_attr( $schedule_form_style ) . '">
             ' . $subsetting_open . '
@@ -829,7 +876,7 @@ class GFFormSettings {
             ' . $subsetting_close . '
         </td>';
 
-		//honey pot
+		// Honey pot.
 		$honey_pot_checked = '';
 		if ( rgar( $form, 'enableHoneypot' ) ) {
 			$honey_pot_checked = 'checked="checked"';
@@ -845,7 +892,7 @@ class GFFormSettings {
             </td>
         </tr>';
 
-		//enable animation
+		// Enable animation.
 		$enable_animation_checked = '';
 		if ( rgar( $form, 'enableAnimation' ) ) {
 			$enable_animation_checked = 'checked="checked"';
@@ -861,7 +908,7 @@ class GFFormSettings {
             </td>
         </tr>';
 
-		//require login
+		// Require login.
 		$require_login_checked = '';
 		$require_login_style   = '';
 		if ( rgar( $form, 'requireLogin' ) ) {
@@ -880,7 +927,7 @@ class GFFormSettings {
             </td>
         </tr>';
 
-		//require login message
+		// Require login message.
 		$tr_requires_login_message = '
         <tr id="require_login_message_setting" class="child_setting_row" style="' . esc_attr( $require_login_style ) . '">
             ' . $subsetting_open . '
@@ -893,7 +940,7 @@ class GFFormSettings {
             ' . $subsetting_close . '
         </td>';
 
-		//populate arrays with table rows
+		// Populate arrays with table rows
 		$form_basics       = array( 'form_title' => $tr_form_title, 'form_description' => $tr_form_description );
 		$form_layout       = array( 'form_label_placement' => $tr_form_label_placement, 'form_description_placement' => $tr_form_description_placement, 'form_sub_label_placement' => $tr_sub_label_placement, 'css_class_name' => $tr_css_class_name );
 		$form_button       = array( 'form_button_type' => $tr_form_button, 'form_button_text' => $tr_form_button_text, 'form_button_image_path' => $tr_form_button_image_path, 'form_button_conditional' => $tr_form_button_conditional );
@@ -910,6 +957,14 @@ class GFFormSettings {
 			__( 'Form Options', 'gravityforms' )      => $form_options,
 		);
 
+		/**
+		 * Filters the form settings before they are displayed.
+		 *
+		 * @since 1.7
+		 *
+		 * @param array $form_settings The form settings.
+		 * @param array $form          The Form Object.
+		 */
 		$form_settings = apply_filters( 'gform_form_settings', $form_settings, $form );
 		?>
 
@@ -921,9 +976,8 @@ class GFFormSettings {
 
 				<table class="gforms_form_settings" cellspacing="0" cellpadding="0">
 					<?php
-					//write out array of table rows
+					// Write out array of table rows
 					if ( is_array( $form_settings ) ) {
-						//foreach($form_settings as $row) {
 						foreach ( $form_settings as $key => $value ) {
 							?>
 							<tr>
@@ -946,11 +1000,13 @@ class GFFormSettings {
 				<div id="gform_custom_settings">
                     <?php
                     /**
-                     * Fires after form settings are generated, within a custom settings div
+                     * Fires after form settings are generated, within a custom settings div.
                      *
-                     * Used to insert custom form settings within the General settings
+                     * Used to insert custom form settings within the General settings.
                      *
-                     * @param int $form_id The ID of the form that settings are being accessed on
+                     * @since Unknown
+                     *
+                     * @param int $form_id The ID of the form that settings are being accessed on.
                      */
                     ?>
 					<?php do_action( 'gform_properties_settings', 100, $form_id ); ?>
@@ -961,11 +1017,13 @@ class GFFormSettings {
 
                     <?php
                     /**
-                     * Fires after form settings are generated, within a custom settings div
+                     * Fires after form settings are generated, within a custom settings div.
                      *
-                     * Used to insert custom form settings within the Advanced settings
+                     * Used to insert custom form settings within the Advanced settings.
                      *
-                     * @param int $form_id The ID of the form that settings are being accessed on
+                     * @since Unknown
+                     *
+                     * @param int $form_id The ID of the form that settings are being accessed on.
                      */
                     ?>
 					<?php do_action( 'gform_advanced_settings', 100, $form_id ); ?>
@@ -994,6 +1052,18 @@ class GFFormSettings {
 		self::page_footer();
 	}
 
+	/**
+	 * Runs the appropriate Confirmations page content.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFFormSettings::form_settings_page()
+	 * @uses    GFFormSettings::confirmations_edit_page()
+	 * @uses    GFFormSettings::confirmations_list_page()
+	 *
+	 * @return void
+	 */
 	public static function confirmations_page() {
 		$form_id         = rgget( 'id' );
 		$confirmation_id = rgget( 'cid' );
@@ -1004,6 +1074,24 @@ class GFFormSettings {
 		}
 	}
 
+	/**
+	 * Displays the Confirmations listing page.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFFormSettings::confirmations_page()
+	 * @uses    GFFormSettings::maybe_process_confirmation_list_action()
+	 * @uses    GFFormSettings::page_header()
+	 * @uses    GFFormsModel::get_form_meta()
+	 * @uses    GFConfirmationTable::prepare_items()
+	 * @uses    GFConfirmationTable::display()
+	 * @uses    GFFormSettings::page_footer()
+	 *
+	 * @param int $form_id The form ID to display the confirmations for.
+	 *
+	 * @return void
+	 */
 	public static function confirmations_list_page( $form_id ) {
 
 		self::maybe_process_confirmation_list_action();
@@ -1070,10 +1158,40 @@ class GFFormSettings {
 		self::page_footer();
 	}
 
+	/**
+	 * Displays the Confirmation Edit page.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFFormSettings::confirmations_page()
+	 * @uses    GFFormsModel::get_form_meta()
+	 * @uses    GFFormSettings::handle_confirmation_edit_submission()
+	 * @uses    GFFormSettings::is_unique_name()
+	 * @uses    GFFormSettings::get_confirmation_ui_settings()
+	 * @uses    GFFormsModel::get_entry_meta()
+	 * @uses    GFFormSettings::confirmation_looks_unsafe()
+	 * @uses    GFCommon::add_dismissible_message()
+	 * @uses    GFFormSettings::page_header()
+	 * @uses    GFFormSettings::output_field_scripts()
+	 * @uses    GFFormSettings::page_footer()
+	 *
+	 * @param int $form_id         The ID of the form confirmations are being edited for.
+	 * @param int $confirmation_id The confirmation ID being edited.
+	 */
 	public static function confirmations_edit_page( $form_id, $confirmation_id ) {
 
 		$form_id = absint( $form_id );
 
+		/**
+		 * Filters to form meta being used within the confirmations edit page.
+		 *
+		 * @since Unknown
+		 *
+		 * @uses GFFormsModel::get_form_meta()
+		 *
+		 * @param array GFFormsModel::get_form_meta() The Form Object.
+		 */
 		$form = gf_apply_filters( array( 'gform_admin_pre_render', $form_id ), GFFormsModel::get_form_meta( $form_id ) );
 
 		$duplicated_cid = sanitize_key( rgget( 'duplicatedcid' ) );
@@ -1104,6 +1222,15 @@ class GFFormSettings {
 		$confirmation_ui_settings = self::get_confirmation_ui_settings( $confirmation );
 
 		$entry_meta = GFFormsModel::get_entry_meta( $form_id );
+		/**
+		 * Filters the entry meta used within confirmations.
+		 *
+		 * @since Unknown
+		 *
+		 * @param array $entry_meta      The Entry Object.
+		 * @param array $form            The Form Object.
+		 * @param int   $confirmation_id The ID of the confirmation being edited.
+		 */
 		$entry_meta = apply_filters( 'gform_entry_meta_conditional_logic_confirmations', $entry_meta, $form, $confirmation_id );
 
 		if ( ! empty( $confirmation['message'] ) && self::confirmation_looks_unsafe( $confirmation['message'] ) ) {
@@ -1209,6 +1336,18 @@ class GFFormSettings {
 		self::page_footer();
 	}
 
+	/**
+	 * Displays the Confirmations page within the form settings.
+	 *
+	 * @used-by GFFormSettings::confirmations_edit_page()
+	 * @uses    GFCommon::$errors
+	 * @uses    GFFormsModel::get_form_meta()
+	 * @uses    gform_tooltip()
+	 *
+	 * @param array $confirmation The confirmation to display details for.
+	 *
+	 * @return array $ui_settings The content of the Confirmations page.
+	 */
 	public static function get_confirmation_ui_settings( $confirmation ) {
 
 		/**
@@ -1378,22 +1517,67 @@ class GFFormSettings {
 
 		<?php
 		ob_end_clean();
+		/**
+		 * Filters the confirmation page before it is returned.
+		 *
+		 * @since Unknown
+		 *
+		 * @param array $ui_settings  The Settings page markup.
+		 * @param array $confirmation Contains the confirmation details.
+		 * @param array $form         The Form Object.
+		 */
 		$ui_settings = gf_apply_filters( array( 'gform_confirmation_ui_settings', $form_id ), $ui_settings, $confirmation, $form );
 
 		return $ui_settings;
 	}
 
+	/**
+	 * Runs the notification page.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFFormSettings::form_settings_page()
+	 * @uses    GFNotification::notification_page()
+	 *
+	 * @return void
+	 */
 	public static function notification_page() {
 		require_once( 'notification.php' );
 
-		//page header loaded in below function because admin messages were not yet available to the header to display
+		// Page header loaded in below function because admin messages were not yet available to the header to display.
 		GFNotification::notification_page();
 
 	}
 
+	/**
+	 * Displays the form settings page header.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFFormSettings::confirmations_edit_page()
+	 * @used-by GFFormSettings::confirmations_list_page()
+	 * @used-by GFFormSettings::form_settings_ui()
+	 * @used-by GFNotification::notification_edit_page()
+	 * @used-by GFNotification::notification_list_page()
+	 * @used-by GFAddOn::form_settings_page()
+	 * @uses    SCRIPT_DEBUG
+	 * @uses    GFFormsModel::get_form_meta()
+	 * @uses    GFFormSettings::get_tabs()
+	 * @uses    GFCommon::form_page_title()
+	 * @uses    GFCommon::display_dismissible_message()
+	 * @uses    GFCommon::display_admin_message()
+	 * @uses    GFForms::top_toolbar()
+	 * @uses    GFCommon::get_browser_class()
+	 *
+	 * @param string $title The title to display as the page header. Defaults to empty string.
+	 *
+	 * @return void
+	 */
 	public static function page_header( $title = '' ) {
 
-		// register admin styles
+		// Register admin styles.
 		$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] ) ? '' : '.min';
 		wp_register_style( 'gform_admin', GFCommon::get_base_url() . "/css/admin{$min}.css" );
 		wp_print_styles( array( 'jquery-ui-styles', 'gform_admin', 'wp-pointer' ) );
@@ -1402,7 +1586,7 @@ class GFFormSettings {
 		$current_tab  = rgempty( 'subview', $_GET ) ? 'settings' : rgget( 'subview' );
 		$setting_tabs = GFFormSettings::get_tabs( $form['id'] );
 
-		// kind of boring having to pass the title, optionally get it from the settings tab
+		// Kind of boring having to pass the title, optionally get it from the settings tab
 		if ( ! $title ) {
 			foreach ( $setting_tabs as $tab ) {
 				if ( $tab['name'] == $current_tab ) {
@@ -1447,6 +1631,21 @@ class GFFormSettings {
 	<?php
 	}
 
+	/**
+	 * Displays the Settings page footer.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFFormSettings::confirmations_edit_page()
+	 * @used-by GFFormSettings::confirmations_list_page()
+	 * @used-by GFFormSettings::form_settings_ui()
+	 * @used-by GFNotification::notification_edit_page()
+	 * @used-by GFNotification::notification_list_page()
+	 * @used-by GFAddOn::form_settings_page()
+	 *
+	 * @return void
+	 */
 	public static function page_footer() {
 						?>
 					</div>
@@ -1469,6 +1668,20 @@ class GFFormSettings {
 	<?php
 	}
 
+	/**
+	 * Gets the Settings page tabs.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFFormSettings::page_header()
+	 * @used-by GFForms::get_form_settings_sub_menu_items()
+	 * @used-by GFForms::modify_admin_title()
+	 *
+	 * @param int $form_id The form ID to get tabs for.
+	 *
+	 * @return array $settings_tabs The form settings tabs to display.
+	 */
 	public static function get_tabs( $form_id ) {
 
 		$setting_tabs = array(
@@ -1477,12 +1690,43 @@ class GFFormSettings {
 			'30' => array( 'name' => 'notification', 'label' => __( 'Notifications', 'gravityforms' ), 'query' => array( 'nid' => null ) ),
 		);
 
+		/**
+		 * Filters the settings tabs before they are returned.
+		 *
+		 * Tabs are not sorted yet, and will be sorted numerically.
+		 *
+		 * @since Unknown
+		 *
+		 * @param array $setting_tabs The settings tabs.
+		 * @param int   $form_id      The ID of the form being accessed.
+		 */
 		$setting_tabs = apply_filters( 'gform_form_settings_menu', $setting_tabs, $form_id );
 		ksort( $setting_tabs, SORT_NUMERIC );
 
 		return $setting_tabs;
 	}
 
+	/**
+	 * Handles the submission of confirmations page edits.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFFormSettings::confirmations_edit_page()
+	 * @uses    GFFormSettings::maybe_wp_kses()
+	 * @uses    GFFormsModel::sanitize_conditional_logic()
+	 * @uses    GFCommon::add_error_message()
+	 * @uses    GFCommon::is_valid_url()
+	 * @uses    GFCommon::has_merge_tag()
+	 * @uses    GFFormsModel::trim_conditional_logic_values_from_element()
+	 * @uses    GFFormsModel::save_form_confirmations()
+	 * @uses    GFCommon::add_message()
+	 *
+	 * @param array $confirmation The confirmation details.
+	 * @param array $form         The Form Object.
+	 *
+	 * @return array $confirmation The Confirmation that was submitted.
+	 */
 	public static function handle_confirmation_edit_submission( $confirmation, $form ) {
 
 		if ( empty( $_POST ) || ! check_admin_referer( 'gform_confirmation_edit', 'gform_confirmation_edit' ) ) {
@@ -1545,8 +1789,15 @@ class GFFormSettings {
 			return $confirmation;
 		}
 
-
-		// allow user to filter confirmation before save
+		/**
+		 * Filters the confirmation before it is saved.
+		 *
+		 * @since Unknown
+		 *
+		 * @param array $confirmation        The confirmation details.
+		 * @param array $form                The Form Object.
+		 * @param bool  $is_new_confirmation True if this is a new confirmation. False if editing existing.
+		 */
 		$confirmation = gf_apply_filters( array( 'gform_pre_confirmation_save', $form['id'] ), $confirmation, $form, $is_new_confirmation );
 
 		// trim values
@@ -1568,6 +1819,19 @@ class GFFormSettings {
 		return $confirmation;
 	}
 
+	/**
+	 * Processes actions made from the Confirmations List page.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFFormSettings::confirmations_list_page()
+	 * @uses    GFFormSettings::delete_confirmation()
+	 * @uses    GFCommon::add_message()
+	 * @uses    GFCommon::add_error_message()
+	 *
+	 * @return void
+	 */
 	public static function maybe_process_confirmation_list_action() {
 
 		if ( empty( $_POST ) || ! check_admin_referer( 'gform_confirmation_list_action', 'gform_confirmation_list_action' ) )
@@ -1592,10 +1856,19 @@ class GFFormSettings {
 	/**
 	 * Delete a form confirmation by ID.
 	 *
-	 * @param mixed $confirmation_id
-	 * @param mixed $form_id Can pass a form ID or a form object
+	 * @since  Unknown
+	 * @access public
 	 *
-	 * @return mixed The result of the database operation
+	 * @used-by GFFormSettings::maybe_process_confirmation_list_action()
+	 * @used-by GFForms::delete_confirmation()
+	 * @uses    GFFormsModel::get_form_meta()
+	 * @uses    GFFormsModel::flush_current_forms()
+	 * @uses    GFFormsModel::save_form_confirmations()
+	 *
+	 * @param array     $confirmation_id The confirmation to be deleted.
+	 * @param int|array $form_id         The form ID or Form Object form the confirmation being deleted.
+	 *
+	 * @return mixed The result of the database operation.
 	 */
 	public static function delete_confirmation( $confirmation_id, $form_id ) {
 
@@ -1605,12 +1878,12 @@ class GFFormSettings {
 		$form = ! is_array( $form_id ) ? RGFormsModel::get_form_meta( $form_id ) : $form_id;
 
 		/**
-		 * Fires right before the confirmation that a form is deleted
+		 * Fires right before a confirmation is deleted.
 		 *
 		 * @since 1.9
 		 *
-		 * @param int   $form['confirmations'][ $confirmation_id ] The delete confirmation object ID
-		 * @param array $form                                      The Form object
+		 * @param int   $form['confirmations'][$confirmation_id] The ID of the confirmation being deleted.
+		 * @param array $form                                    The Form object.
 		 */
 		do_action( 'gform_pre_confirmation_deleted', $form['confirmations'][ $confirmation_id ], $form );
 
@@ -1622,10 +1895,35 @@ class GFFormSettings {
 		return RGFormsModel::save_form_confirmations( $form['id'], $form['confirmations'] );
 	}
 
+	/**
+	 * Echos a variable.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFNotification::notification_edit_page()
+	 *
+	 * @param string $a Thing to echo.
+	 *
+	 * @return void
+	 */
 	public static function output( $a ) {
 		echo $a;
 	}
 
+	/**
+	 * Checks if a confirmation name is unique.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFFormSettings::confirmations_edit_page()
+	 *
+	 * @param string $name          The confirmation name to check for.
+	 * @param array  $confirmations The confirmations to check through.
+	 *
+	 * @return bool True if unique. False otherwise.
+	 */
 	public static function is_unique_name( $name, $confirmations ) {
 
 		foreach ( $confirmations as $confirmation ) {
@@ -1636,6 +1934,19 @@ class GFFormSettings {
 		return true;
 	}
 
+	/**
+	 * Outputs scripts for conditional logic fields.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @uses GF_Fields::get_all()
+	 * @uses GF_Field::is_conditional_logic_supported()
+	 *
+	 * @param bool $echo If the scripts should be echoed. Defaults to true.
+	 *
+	 * @return string $script_str The scripts to be output.
+	 */
 	public static function output_field_scripts( $echo = true ) {
 		$script_str = '';
 		$conditional_logic_fields = array();
@@ -1655,6 +1966,20 @@ class GFFormSettings {
 		return $script_str;
 	}
 
+	/**
+	 * Handles the saving of notifications and confirmations when activated.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFFormSettings::form_settings_ui()
+	 * @uses    GFFormsModel::save_form_notifications()
+	 * @uses    GFFormsModel::save_form_confirmations()
+	 *
+	 * @param array $form The Form Object to be saved.
+	 *
+	 * @return array $form The Form Object.
+	 */
 	public static function activate_save( $form ) {
 
 		$form_id = $form['id'];
@@ -1720,6 +2045,19 @@ class GFFormSettings {
 		return $form;
 	}
 
+	/**
+	 * Handles the saving of confirmation and notifications when deactivating.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @uses GFFormsModel::save_form_notifications()
+	 * @uses GFFormsModel::save_form_confirmations()
+	 *
+	 * @param array $form The Form Object.
+	 *
+	 * @return array $form The Form Object.
+	 */
 	public static function deactivate_save( $form ) {
 
 		$form_id = $form['id'];
@@ -1747,26 +2085,88 @@ class GFFormSettings {
 		return $form;
 	}
 
+	/**
+	 * Alias for GFCommon::maybe_wp_kses()
+	 *
+	 * @since  Unknown
+	 * @access private
+	 *
+	 * @used-by GFFormSettings::handle_confirmation_edit_submission()
+	 * @uses    GFCommon::maybe_wp_kses()
+	 *
+	 * @param string $html              The HTML markup to sanitize.
+	 * @param string $allowed_html      The allowed HTML content. Defaults to 'post'.
+	 * @param array  $allowed_protocols Allowed protocols. Defaults to empty array.
+	 *
+	 * @return string The sanitized HTML markup.
+	 */
 	private static function maybe_wp_kses( $html, $allowed_html = 'post', $allowed_protocols = array() ) {
+		if ( ! current_user_can( 'unfiltered_html' ) ) {
+			$html = self::remove_unsafe_merge_tags( $html );
+		}
 		return GFCommon::maybe_wp_kses( $html, $allowed_html, $allowed_protocols );
+	}
+
+	/**
+	 * Removes merge tags used as HTML attributes.
+	 *
+	 * @since  2.0.7.8
+	 * @access public
+	 *
+	 * @param string $text The confirmation text to check.
+	 *
+	 * @return bool True if unsafe. False if all is good in the world.
+	 */
+	public static function remove_unsafe_merge_tags( $text ) {
+		preg_match_all( '/(\S+)\s*=\s*["|\']({[^{]*?:(\d+(\.\d+)?)(:(.*?))?})["|\']/mi', $text, $matches, PREG_SET_ORDER );
+		if ( is_array( $matches ) && count( $matches ) > 0 ) {
+			foreach ( $matches as $match ) {
+				// Ignore conditional shortcodes
+				if ( strtolower( $match[1] ) !== 'merge_tag' ) {
+					// Remove the merge tag
+					$text = str_replace( $match[0], $match[1] . '=""', $text );
+				}
+			}
+		}
+		return $text;
 	}
 
 	/**
 	 * Checks the text for merge tags as attribute values.
 	 *
-	 * @param $text
+	 * @since  Unknown
+	 * @access public
 	 *
-	 * @return bool
+	 * @used-by GFFormSettings::confirmations_edit_page()
+	 *
+	 * @param string $text The confirmation text to check.
+	 *
+	 * @return bool True if unsafe. False if all is good in the world.
 	 */
 	public static function confirmation_looks_unsafe( $text ) {
 		$unsafe = false;
-		preg_match_all( '/(\S+)\s*=\s*["|\']({[^{]*?:(\d+(\.\d+)?)(:(.*?))?})["|\']/mi', $text, $matches, PREG_SET_ORDER );
+		preg_match_all( '/[\<^]*.(\S+)\s*=\s*["|\']({[^{]*?:(\d+(\.\d+)?)(:(.*?))?})["|\']/mi', $text, $matches, PREG_SET_ORDER );
 		if ( is_array( $matches ) && count( $matches ) > 0 ) {
-			$unsafe = true;
+			foreach ( $matches as $match ) {
+				if ( strtolower( $match[1] ) !== 'merge_tag' ) {
+					$unsafe = true;
+				}
+			}
 		}
 		return $unsafe;
 	}
-	
+
+	/**
+	 * Handles the saving of form titles.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @uses GFAPI::get_form()
+	 * @uses GFAPI::update_form()
+	 *
+	 * @return void
+	 */
 	public static function save_form_title(){
 
 		check_admin_referer( 'gf_save_title', 'gf_save_title' );
@@ -1781,13 +2181,43 @@ class GFFormSettings {
 	}
 }
 
-
+// Include WP_List_Table.
 require_once( ABSPATH . '/wp-admin/includes/class-wp-list-table.php' );
 
+/**
+ * Class GFConfirmationTable
+ *
+ * Handles the creation of a list table for displaying the confirmations listing.
+ *
+ * @since Unknown
+ *
+ * @used-by GFFormSettings::confirmations_list_page()
+ * @uses    WP_List_Table
+ *
+ * @param array $form The form to display the confirmation listing for.
+ */
 class GFConfirmationTable extends WP_List_Table {
 
+	/**
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @var array The Form Object to get confirmations from.
+	 */
 	public $form;
 
+	/**
+	 * GFConfirmationTable constructor.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @uses GFConfirmationTable::$form
+	 * @uses WP_List_Table::$_column_headers
+	 * @uses WP_List_Table::__construct()
+	 *
+	 * @param array $form The Form Object to display the confirmation listing for.
+	 */
 	function __construct( $form ) {
 
 		$this->form = $form;
@@ -1807,10 +2237,35 @@ class GFConfirmationTable extends WP_List_Table {
 		parent::__construct();
 	}
 
+	/**
+	 * Prepares the confirmation items.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFFormSettings::confirmations_list_page()
+	 * @uses    WP_List_Table::$items
+	 * @uses    GFConfirmationTable::$form
+	 *
+	 * @return void
+	 */
 	function prepare_items() {
 		$this->items = $this->form['confirmations'];
 	}
 
+	/**
+	 * Displays the list table.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFFormSettings::confirmations_list_page()
+	 * @uses    WP_List_Table::get_table_classes()
+	 * @uses    WP_List_Table::print_column_headers()
+	 * @uses    WP_List_Table::display_rows_or_placeholder()
+	 *
+	 * @return void
+	 */
 	function display() {
 		$singular = rgar( $this->_args, 'singular' );
 		?>
@@ -1838,6 +2293,19 @@ class GFConfirmationTable extends WP_List_Table {
 	<?php
 	}
 
+	/**
+	 * Displays a single list table row.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by WP_List_Table::display_rows()
+	 * @uses    WP_List_Table::single_row_columns()
+	 *
+	 * @param array $item The row item.
+	 *
+	 * @return void
+	 */
 	function single_row( $item ) {
 		static $row_class = '';
 		$row_class = ( $row_class == '' ? ' class="alternate"' : '' );
@@ -1847,22 +2315,83 @@ class GFConfirmationTable extends WP_List_Table {
 		echo '</tr>';
 	}
 
+	/**
+	 * Gets the list table column headers.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by WP_List_Table::get_default_primary_column_name()
+	 * @uses    WP_List_Table::$_column_headers
+	 *
+	 * @return string The primary column header.
+	 */
 	function get_columns() {
 		return $this->_column_headers[0];
 	}
 
+	/**
+	 * Gets the column content.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @uses GFConfirmationTable::get_column_content()
+	 *
+	 * @param array $item The column item to process.
+	 *
+	 * @return string The column content HTML markup.
+	 */
 	function column_content( $item ) {
 		return self::get_column_content( $item );
 	}
 
+	/**
+	 * Sets the default column data.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by WP_List_Table::single_row_columns()
+	 *
+	 * @param object $item   The column item.
+	 * @param string $column The column name.
+	 *
+	 * @return void
+	 */
 	function column_default( $item, $column ) {
 		echo rgar( $item, $column );
 	}
 
+	/**
+	 * Sets the column type.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @uses GFConfirmationTable::get_column_type()
+	 *
+	 * @param object $item The column item.
+	 *
+	 * @return string The column type.
+	 */
 	function column_type( $item ) {
 		return self::get_column_type( $item );
 	}
 
+	/**
+	 * Handles the activation/deactivation button on confirmation list table items.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by WP_List_Table::single_row_columns()
+	 * @uses    GFCommon::get_base_url()
+	 *
+	 * @param object $item The list table item.
+	 *
+	 * @return void
+	 */
 	function column_cb( $item ) {
 		if ( isset( $item['isDefault'] ) && $item['isDefault'] )
 			return;
@@ -1873,6 +2402,16 @@ class GFConfirmationTable extends WP_List_Table {
 	<?php
 	}
 
+	/**
+	 * Displays the available confirmation list item actions.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @param object $item The list table column item.
+	 *
+	 * @return void
+	 */
 	function column_name( $item ) {
 		$edit_url      = add_query_arg( array( 'cid' => $item['id'] ) );
 		$duplicate_url = add_query_arg( array( 'cid' => 0, 'duplicatedcid' => $item['id'] ) );
@@ -1914,6 +2453,16 @@ class GFConfirmationTable extends WP_List_Table {
 	<?php
 	}
 
+	/**
+	 * Displays the confirmations list item column content.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @param object $item The list item.
+	 *
+	 * @return string The HTML markup for the column content.
+	 */
 	public static function get_column_content( $item ) {
 		switch ( rgar( $item, 'type' ) ) {
 
@@ -1940,6 +2489,18 @@ class GFConfirmationTable extends WP_List_Table {
 		return '';
 	}
 
+	/**
+	 * Gets the column type.
+	 *
+	 * @since  Unknwon
+	 * @access public
+	 *
+	 * @used-by GFConfirmationTable::column_type()
+	 *
+	 * @param object $item The column item.
+	 *
+	 * @return string The column item type. If none found, empty string. Escaped.
+	 */
 	public static function get_column_type( $item ) {
 		switch ( rgar( $item, 'type' ) ) {
 			case 'message':

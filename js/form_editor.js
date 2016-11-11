@@ -573,11 +573,8 @@ function LoadFieldSettings(){
         jQuery('#field_description_placement_container').show();
     }
 
-    if(field.adminOnly){
-        jQuery("#field_visibility_admin").prop("checked", true);
-    } else {
-        jQuery("#field_visibility_everyone").prop("checked", true);
-    }
+    // field.adminOnly is the old property which stored the visibility setting; only reference if field.visibility is not set
+    SetFieldVisibility( field.visibility, true );
 
     if(typeof field.placeholder == 'undefined'){
         field.placeholder = '';
@@ -3278,26 +3275,34 @@ function SetFieldSubLabelPlacement(subLabelPlacement){
     RefreshSelectedFieldPreview();
 }
 
-function SetFieldAdminOnly( isAdminOnly ) {
+function SetFieldVisibility( visibility, handleInputs ) {
 
-    var setProp = true;
-
-    if( isAdminOnly && HasConditionalLogicDependency( field.id ) ) {
+    if( visibility == 'administrative' && HasConditionalLogicDependency( field.id ) ) {
         if( ! confirm( gf_vars.conditionalLogicDependencyAdminOnly ) ) {
-            setProp = false;
+            return false;
         }
     }
 
-    if( setProp ) {
-        SetFieldProperty( 'adminOnly', isAdminOnly );
-        if( isAdminOnly ) {
-            jQuery( '.field_selected' ).addClass( 'field_admin_only' );
-        } else {
-            jQuery( '.field_selected' ).removeClass( 'field_admin_only' );
+    var isWhitelisted = false;
+    for( var i = 0; i < gf_vars.visibilityOptions.length; i++ ) {
+        if( gf_vars.visibilityOptions[i].value == visibility ) {
+            isWhitelisted = true;
+            break;
         }
     }
 
-    return setProp;
+    if( ! isWhitelisted ) {
+        visibility = 'visible';
+    }
+
+    SetFieldProperty( 'visibility', visibility );
+
+    if( handleInputs ) {
+        var $inputs = jQuery( 'input[name="field_visibility"]' );
+        $inputs.prop( 'checked', false );
+        $inputs.filter( '[value="' + visibility + '"]' ).prop( 'checked', true );
+    }
+
 }
 
 function SetFieldDefaultValue(defaultValue){
@@ -3646,7 +3651,7 @@ jQuery.fn.gfSlide = function(direction) {
  */
 gform.addFilter( 'gform_is_conditional_logic_field', function( isConditionalLogicField, field ) {
 
-    if( field.adminOnly ) {
+    if( field.visibility == 'administrative' ) {
         isConditionalLogicField = false;
     } else if( field.id == GetSelectedField().id ) {
         isConditionalLogicField = false;

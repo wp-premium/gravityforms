@@ -88,14 +88,16 @@ class GF_Field_Post_Image extends GF_Field_Fileupload {
 	public function get_value_save_entry( $value, $form, $input_name, $lead_id, $lead ) {
 		$form_id = $form['id'];
 		$url     = $this->get_single_file_value( $form_id, $input_name );
-		$url     = filter_var( $url, FILTER_VALIDATE_URL );
-		$image_title       = isset( $_POST[ "{$input_name}_1" ] ) ? wp_strip_all_tags( $_POST[ "{$input_name}_1" ] ) : '';
-		$image_caption     = isset( $_POST[ "{$input_name}_4" ] ) ? wp_strip_all_tags( $_POST[ "{$input_name}_4" ] ) : '';
-		$image_description = isset( $_POST[ "{$input_name}_7" ] ) ? wp_strip_all_tags( $_POST[ "{$input_name}_7" ] ) : '';
 
-		$value = ! empty( $url ) ? $url . '|:|' . $image_title . '|:|' . $image_caption . '|:|' . $image_description : '';
+		if ( ! empty( $url ) && GFCommon::is_valid_url( $url ) ) {
+			$image_title       = isset( $_POST["{$input_name}_1"] ) ? wp_strip_all_tags( $_POST["{$input_name}_1"] ) : '';
+			$image_caption     = isset( $_POST["{$input_name}_4"] ) ? wp_strip_all_tags( $_POST["{$input_name}_4"] ) : '';
+			$image_description = isset( $_POST["{$input_name}_7"] ) ? wp_strip_all_tags( $_POST["{$input_name}_7"] ) : '';
 
-		return $value;
+			return $url . '|:|' . $image_title . '|:|' . $image_caption . '|:|' . $image_description;
+		}
+
+		return '';
 	}
 
 	public function get_value_entry_list( $value, $entry, $field_id, $columns, $form ) {
@@ -148,6 +150,25 @@ class GF_Field_Post_Image extends GF_Field_Fileupload {
 		return $value;
 	}
 
+	/**
+	 * Gets merge tag values.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @param array|string $value      The value of the input.
+	 * @param string       $input_id   The input ID to use.
+	 * @param array        $entry      The Entry Object.
+	 * @param array        $form       The Form Object
+	 * @param string       $modifier   The modifier passed.
+	 * @param array|string $raw_value  The raw value of the input.
+	 * @param bool         $url_encode If the result should be URL encoded.
+	 * @param bool         $esc_html   If the HTML should be escaped.
+	 * @param string       $format     The format that the value should be.
+	 * @param bool         $nl2br      If the nl2br function should be used.
+	 *
+	 * @return string The processed merge tag.
+	 */
 	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {
 		list( $url, $title, $caption, $description ) = array_pad( explode( '|:|', $value ), 4, false );
 		switch ( $modifier ) {

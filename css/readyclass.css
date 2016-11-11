@@ -4,7 +4,7 @@
 readyclass.css
 Gravity Forms Ready Class Pre-Set Helper Styles
 http://www.gravityforms.com
-updated: July 12, 2016 10:11 PM GMT-5
+updated: October 20, 2016 11:00 AM GMT-5
 
 Gravity Forms is a Rocketgenius project
 copyright 2008-2016 Rocketgenius Inc.
@@ -95,16 +95,18 @@ to no.
         display: block !important;
     }
 
+
+    .gform_wrapper li.gfield.gfield_error.gf_inline {
+        margin-right: 16px;
+        padding-right: 0;
+    }
+
     .gform_wrapper .top_label li.gfield.gf_left_half,
     .gform_wrapper .top_label li.gfield.gf_right_half {
         display: -moz-inline-stack;
         display: inline-block;
         vertical-align: top;
         width: 50%;
-    }
-
-    .gform_wrapper .top_label li.gfield.gf_left_half,
-    .gform_wrapper .top_label li.gfield.gf_right_half {
         padding-right: 16px;
         float: none;
     }
@@ -129,9 +131,10 @@ to no.
         clear:both;
     }
 
-    .gform_wrapper .top_label li.gfield.gfield_error.gf_left_half,
-    .gform_wrapper .top_label li.gfield.gfield_error.gf_right_half {
-        width: calc(50% - 8px);
+    .gform_wrapper.gform_validation_error .top_label li.gfield.gfield_error.gf_left_half,
+    .gform_wrapper.gform_validation_error .top_label li.gfield.gfield_error.gf_right_half {
+        max-width: calc(50% - 16px);
+        padding-right: 0;
     }
 
     .gform_wrapper .top_label li.gfield.gfield_error.gf_left_half {
@@ -241,7 +244,7 @@ to no.
 
     .gform_wrapper .top_label li.gfield.gfield_error.gf_left_third,
     .gform_wrapper .top_label li.gfield.gfield_error.gf_middle_third {
-        width: calc(33.3% - 16px) !important;
+        width: calc(33.3% - 24px) !important;
         margin-right: 16px;
     }
 

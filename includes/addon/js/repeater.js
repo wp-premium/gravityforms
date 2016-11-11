@@ -154,18 +154,21 @@ jQuery.fn.repeater = function( options ) {
     self.populateSelects = function( item, index ) {
 
         // after appending the row, check each property to see if it is a select and then populate
-        for( var property in item ) {
+        for ( var property in item ) {
 
-            if( ! item.hasOwnProperty( property ) )
+            if ( ! item.hasOwnProperty( property ) ) {
                 continue;
+			}
 
             var input = self.elem.find( '.' + property + '_' + index );
-            if( input.is( 'select' ) ){
-                if(jQuery.isArray(item[property])){
-                    input.val(item[property]);
+            if ( input.is( 'select' ) ) {
+                if ( jQuery.isArray( item[ property ] ) ) {
+                    input.val( item[ property ] );
                 } else {
-                    input.find( 'option[value="' + item[property] + '"]' ).prop( 'selected', true );
+                    input.find( 'option[value="' + item[ property ] + '"]' ).prop( 'selected', true );
                 }
+            } else {
+	            input.val( item[ property ] );
             }
         }
 

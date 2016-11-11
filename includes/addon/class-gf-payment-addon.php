@@ -1,54 +1,183 @@
 <?php
-
-if ( ! class_exists( 'GFForms' ) ) {
-	die();
-}
-
 /**
  * Specialist Add-On class designed for use by Add-Ons that collect payment
  *
  * @package GFPaymentAddOn
  */
 
+// If Gravity Forms doesn't exist, bail.
+if ( ! class_exists( 'GFForms' ) ) {
+	die();
+}
+
+// Require GFFeedAddOn.
 require_once( 'class-gf-feed-addon.php' );
 
+/**
+ * Class GFPaymentAddOn
+ *
+ * Used to extend Gravity Forms. Specifically, payment add-ons.
+ *
+ * @since Unknown
+ *
+ * @uses GFFeedAddOn
+ */
 abstract class GFPaymentAddOn extends GFFeedAddOn {
 
+	/**
+	 * Defines the version of GFPaymentAddOn.
+	 *
+	 * @since  Unknown
+	 * @access private
+	 *
+	 * @used-by GFPaymentAddOn::setup()
+	 *
+	 * @var string The version string.
+	 */
 	private $_payment_version = '1.3';
 
 	/**
+	 * Defines if the credit card field is required by the payment add-on.
+	 *
 	 * If set to true, user will not be able to create feeds for a form until a credit card field has been added.
-	 * @var bool
+	 *
+	 * @since  Unknown
+	 * @access protected
+	 *
+	 * @used-by GFPaymentAddOn::before_delete_field()
+	 * @used-by GFPaymentAddOn::feed_list_message()
+	 * @used-by GFPaymentAddOn::init_admin()
+	 *
+	 * @var bool True if the payment add-on requires a credit card field. Otherwise, false.
 	 */
 	protected $_requires_credit_card = false;
 
 	/**
+	 * Defines if the payment add-on supports callbacks.
+	 *
 	 * If set to true, callbacks/webhooks/IPN will be enabled and the appropriate database table will be created.
-	 * @var bool
+	 *
+	 * @since  Unknown
+	 * @access protected
+	 *
+	 * @used-by GFPaymentAddOn::upgrade_payment()
+	 *
+	 * @var bool True if the add-on supports callbacks. Otherwise, false.
 	 */
 	protected $_supports_callbacks = false;
 
+	/**
+	 * Stores authorization results returned from the payment gateway.
+	 *
+	 * @since  Unknown
+	 * @access protected
+	 *
+	 * @used-by GFPaymentAddOn::entry_post_save()
+	 * @used-by GFPaymentAddOn::validation()
+	 *
+	 * @var array
+	 */
 	protected $authorization = array();
+
+	/**
+	 * Stores the redirect URL that the user should be sent to for payment.
+	 *
+	 * @since  Unknown
+	 * @access protected
+	 *
+	 * @used-by GFPaymentAddOn::confirmation()
+	 * @used-by GFPaymentAddOn::entry_post_save()
+	 *
+	 * @var string The URL to redirect to. Defaults to empty string.
+	 */
 	protected $redirect_url = '';
 
+	/**
+	 * Stores the current feed being processed.
+	 *
+	 * @since  Unknown
+	 * @access protected
+	 *
+	 * @used-by GFPaymentAddOn::entry_post_save()
+	 * @used-by GFPaymentAddOn::validation()
+	 *
+	 * @var array|array The current Feed Object. Defaults to false.
+	 */
 	protected $current_feed = false;
+
+	/**
+	 * Stores the current submission data being processed.
+	 *
+	 * @since  Unknown
+	 * @access protected
+	 *
+	 * @used-by GFPaymentAddOn::entry_post_save()
+	 * @used-by GFPaymentAddOn::validation()
+	 *
+	 * @var array|bool The form submission data. Defaults to false.
+	 */
 	protected $current_submission_data = false;
+
+	/**
+	 * Defines if the payment add-on is a payment gateway add-on.
+	 *
+	 * @since  Unknown
+	 * @access protected
+	 *
+	 * @used-by GFPaymentAddOn::entry_post_save()
+	 * @used-by GFPaymentAddOn::is_payment_gateway()
+	 * @used-by GFPaymentAddOn::is_payment_gateway()
+	 *
+	 * @var bool Set to true if it is a payment gateway add-on. Defaults to false.
+	 */
 	protected $is_payment_gateway = false;
 
+	/**
+	 * Defines if only a single feed should be processed.
+	 *
+	 * @since  Unknown
+	 * @access protected
+	 *
+	 * @used-by GFFeedAddOn::maybe_process_feed()
+	 *
+	 * @var bool True if only a single feed should be processed. Otherwise, false.
+	 */
 	protected $_single_feed_submission = true;
 
 	/**
-	 * Indicates if the payment gateway requires monetary amounts to be formatted as the smallest unit for the currency being used e.g. cents.
+	 * Indicates if the payment gateway requires monetary amounts to be formatted as the smallest unit for the currency being used.
 	 *
-	 * @var bool
+	 * For example, $100.00 will be formatted as 10000.
+	 *
+	 * @since  Unknown
+	 * @access protected
+	 *
+	 * @used-by GFPaymentAddOn::get_amount_export()
+	 * @used-by GFPaymentAddOn::get_amount_import()
+	 *
+	 * @var bool True if the smallest unit should be used. Otherwise, will include the decimal places.
 	 */
 	protected $_requires_smallest_unit = false;
 
 	//--------- Initialization ----------
+	/**
+	 * Runs before the payment add-on is initialized.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFAddOn::__construct()
+	 * @uses    GFAddOn::pre_init()
+	 * @uses    GFPaymentAddOn::payment_method_is_overridden()
+	 * @uses    GFPaymentAddOn::setup_cron()
+	 * @uses    GFPaymentAddOn::maybe_process_callback()
+	 *
+	 * @return void
+	 */
 	public function pre_init() {
 		parent::pre_init();
 
-		// Intercepting callback requests
+		// Intercepting callback requests.
 		add_action( 'parse_request', array( $this, 'maybe_process_callback' ) );
 
 		if ( $this->payment_method_is_overridden( 'check_status' ) ) {
@@ -57,6 +186,19 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
 	}
 
+	/**
+	 * Runs when the payment add-on is initialized.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @uses GFFeedAddOn::init()
+	 * @uses GFPaymentAddOn::confirmation()
+	 * @uses GFPaymentAddOn::maybe_validate()
+	 * @uses GFPaymentAddOn::entry_post_save()
+	 *
+	 * @return void
+	 */
 	public function init() {
 
 		parent::init();
@@ -68,6 +210,20 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
 	}
 
+	/**
+	 * Runs only when the payment add-on is initialized in the admin.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @uses GFFeedAddOn::init_admin()
+	 * @uses GFPaymentAddOn::$_requires_credit_card
+	 * @uses GFPaymentAddOn::supported_currencies()
+	 * @uses GFPaymentAddOn::entry_deleted()
+	 * @uses GFPaymentAddOn::entry_info()
+	 *
+	 * @return void
+	 */
 	public function init_admin() {
 
 		parent::init_admin();
@@ -87,6 +243,20 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		}
 	}
 
+	/**
+	 * Runs only when the payment add-on is initialized on the frontend.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFAddOn::init_frontend()
+	 * @uses    GFAddOn::init_frontend()
+	 * @uses    GFPaymentAddOn::register_creditcard_token_script()
+	 * @uses    GFPaymentAddOn::add_creditcard_token_input()
+	 * @uses    GFPaymentAddOn::force_ajax_for_creditcard_tokens()
+	 *
+	 * @return void
+	 */
 	public function init_frontend() {
 
 		parent::init_frontend();
@@ -97,6 +267,18 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
 	}
 
+	/**
+	 * Runs only when AJAX actions are being performed.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @uses GFFeedAddOn::init_ajax()
+	 * @uses GFPaymentAddOn::ajax_cancel_subscription()
+	 * @uses GFPaymentAddOn::before_delete_field()
+	 *
+	 * @return void
+	 */
 	public function init_ajax() {
 		parent::init_ajax();
 
@@ -104,6 +286,19 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		add_action( 'gform_before_delete_field', array( $this, 'before_delete_field' ), 10, 2 );
 	}
 
+	/**
+	 * Runs the setup of the payment add-on.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @uses GFFeedAddOn::setup()
+	 * @uses GFPaymentAddOn::upgrade_payment()
+	 * @uses GFAddOn::$_slug
+	 * @uses GFPaymentAddOn::$_payment_version
+	 *
+	 * @return void
+	 */
 	public function setup() {
 		parent::setup();
 
@@ -130,6 +325,23 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
 	}
 
+	/**
+	 * Upgrades the payment add-on framework database tables.
+	 *
+	 * Not intended to be used.
+	 *
+	 * @since  Unknown
+	 * @access private
+	 *
+	 * @uses GFFormsModel::dbDelta()
+	 * @uses GFPaymentAddOn::$_supports_callbacks
+	 * @uses GFForms::drop_index()
+	 *
+	 * @global $wpdb
+	 * @param null $previous_versions Not used.
+	 *
+	 * @return void
+	 */
 	private function upgrade_payment( $previous_versions ) {
 		global $wpdb;
 
@@ -166,7 +378,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
 			GFFormsModel::dbDelta( $sql );
 
-			//droping legacy index
+			// Dropping legacy index.
 			GFForms::drop_index( "{$wpdb->prefix}gf_addon_payment_callback", 'slug_callback_id' );
 		}
 
@@ -174,6 +386,22 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 	}
 
 	//--------- Submission Process ------
+
+	/**
+	 * Handles post-submission confirmations.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @uses GFPaymentAddOn::$redirect_url
+	 *
+	 * @param array $confirmation The confirmation details.
+	 * @param array $form         The Form Object that the confirmation is being run for.
+	 * @param array $entry        The Entry Object associated with the submission.
+	 * @param bool  $ajax         If the submission was done using AJAX.
+	 *
+	 * @return array The confirmation details.
+	 */
 	public function confirmation( $confirmation, $form, $entry, $ajax ) {
 
 		if ( empty( $this->redirect_url ) ) {
@@ -186,14 +414,21 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 	}
 
 	/**
-	 * Override this function to specify a URL to the third party payment processor. Useful when developing a payment gateway that processes the payment outside of the website (i.e. PayPal Standard).
+	 * Override this function to specify a URL to the third party payment processor.
 	 *
-	 * @param $feed - Active payment feed containing all the configuration data
-	 * @param $submission_data - Contains form field data submitted by the user as well as payment information (i.e. payment amount, setup fee, line items, etc...)
-	 * @param $form - Current form array containing all form settings
-	 * @param $entry - Current entry array containing entry information (i.e data submitted by users)
+	 * Useful when developing a payment gateway that processes the payment outside of the website (i.e. PayPal Standard).
 	 *
-	 * @return string - Return a full URL (inlucing http:// or https://) to the payment processor
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFPaymentAddOn::entry_post_save()
+	 *
+	 * @param array $feed            Active payment feed containing all the configuration data.
+	 * @param array $submission_data Contains form field data submitted by the user as well as payment information (i.e. payment amount, setup fee, line items, etc...).
+	 * @param array $form            Current form array containing all form settings.
+	 * @param array $entry           Current entry array containing entry information (i.e data submitted by users).
+	 *
+	 * @return void|string Return a full URL (including http:// or https://) to the payment processor.
 	 */
 	public function redirect_url( $feed, $submission_data, $form, $entry ) {
 
@@ -202,7 +437,15 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 	/**
 	 * Check if the rest of the form has passed validation, is the last page, and that the honeypot field has not been completed.
 	 *
-	 * @param array $validation_result Contains the validation result, the form object, and the failed validation page number.
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFPaymentAddOn::init()
+	 * @uses    GFFormDisplay::is_last_page()
+	 * @uses    GFFormDisplay::get_max_field_id()
+	 * @uses    GFPaymentAddOn::validation()
+	 *
+	 * @param array $validation_result Contains the validation result, the Form Object, and the failed validation page number.
 	 *
 	 * @return array $validation_result
 	 */
@@ -217,7 +460,8 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 			$failed_honeypot = ! rgempty( "input_{$honeypot_id}" );
 		}
 
-		$is_heartbeat	 = rgpost('action') == 'heartbeat'; // Validation called by partial entries feature via the heartbeat API.
+		// Validation called by partial entries feature via the heartbeat API.
+		$is_heartbeat = rgpost('action') == 'heartbeat';
 
 		if ( ! $validation_result['is_valid'] || ! $is_last_page || $failed_honeypot || $is_heartbeat) {
 			return $validation_result;
@@ -226,6 +470,31 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		return $this->validation( $validation_result );
 	}
 
+	/**
+	 * Handles the validation and processing of payments.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @uses GFPaymentAddOn::get_payment_feed
+	 * @uses GFPaymentAddOn::get_submission_data
+	 * @uses GFPaymentAddOn::$is_payment_gateway
+	 * @uses GFPaymentAddOn::$current_feed
+	 * @uses GFPaymentAddOn::$current_submission_data
+	 * @uses GFPaymentAddOn::payment_method_is_overridden
+	 * @uses GFPaymentAddOn::authorize
+	 * @uses GFPaymentAddOn::subscribe
+	 * @uses GFPaymentAddOn::get_validation_result
+	 * @uses GFPaymentAddOn::$authorization
+	 * @uses GFFeedAddOn::$_single_submission_feed
+	 * @uses GFFormsModel::create_lead
+	 * @uses GFAddOn::log_debug
+	 * @uses GFFormDisplay::set_current_page
+	 *
+	 * @param array $validation_result The validation details to use.
+	 *
+	 * @return array The validation details after completion.
+	 */
 	public function validation( $validation_result ) {
 
 		if ( ! $validation_result['is_valid'] ) {
