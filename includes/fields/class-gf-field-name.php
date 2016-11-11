@@ -1,21 +1,78 @@
 <?php
 
+// If Gravity Forms isn't loaded, bail.
 if ( ! class_exists( 'GFForms' ) ) {
 	die();
 }
 
+/**
+ * Class GF_Field_Name
+ *
+ * Handles the behavior of the Name field.
+ *
+ * @since Unknown
+ */
 class GF_Field_Name extends GF_Field {
 
+	/**
+	 * Sets the field type.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @var string The type of field.
+	 */
 	public $type = 'name';
 
+	/**
+	 * Sets the field title of the Name field.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFCommon::get_field_type_title()
+	 * @used-by GF_Field::get_form_editor_button()
+	 *
+	 * @return string
+	 */
 	public function get_form_editor_field_title() {
 		return esc_attr__( 'Name', 'gravityforms' );
 	}
 
+	/**
+	 * Defines if conditional logic is supported by the Name field.
+	 *
+	 * @since Unknown
+	 * @access public
+	 *
+	 * @used-by GFFormDetail::inline_scripts()
+	 * @used-by GFFormSettings::output_field_scripts()
+	 *
+	 * @return bool true
+	 */
 	public function is_conditional_logic_supported() {
 		return true;
 	}
 
+	/**
+	 * Validates Name field inputs.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFFormDisplay::validate()
+	 * @uses    GF_Field_Name::$isRequired
+	 * @uses    GF_Field_Name::$nameFormat
+	 * @uses    GF_Field_Name::get_input_property
+	 * @uses    GF_Field_Name::$failed_validation
+	 * @uses    GF_Field_Name::$validation_message
+	 * @uses    GF_Field_Name::$errorMessage
+	 *
+	 * @param array|string $value The value of the field to validate. Not used here.
+	 * @param array        $form  The Form Object. Not used here.
+	 *
+	 * @return void
+	 */
 	function validate( $value, $form ) {
 
 		if ( $this->isRequired && $this->nameFormat != 'simple' ) {
@@ -29,6 +86,16 @@ class GF_Field_Name extends GF_Field {
 		}
 	}
 
+	/**
+	 * Defines the field settings available for the Name field in the form editor.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFFormDetail::inline_scripts()
+	 *
+	 * @return array The field settings available.
+	 */
 	function get_form_editor_field_settings() {
 		return array(
 			'conditional_logic_field_setting',
@@ -48,6 +115,33 @@ class GF_Field_Name extends GF_Field {
 		);
 	}
 
+	/**
+	 * Gets the HTML markup for the field input.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFCommon::get_field_input()
+	 * @uses    GF_Field::is_entry_detail()
+	 * @uses    GF_Field::is_form_editor()
+	 * @uses    GF_Field_Name::$size
+	 * @uses    GF_Field_Name::$id
+	 * @uses    GF_Field_Name::$subLabelPlacement
+	 * @uses    GF_Field_Name::$isRequired
+	 * @uses    GF_Field_Name::$failed_validation
+	 * @uses    GFForms::get()
+	 * @uses    GFFormsModel::get_input()
+	 * @uses    GFCommon::get_input_placeholder_attribute()
+	 * @uses    GFCommon::get_tabindex()
+	 * @uses    GFCommon::get_field_placeholder_attribute()
+	 * @uses    GF_Field_Name::get_css_class()
+	 *
+	 * @param array      $form  The Form Object.
+	 * @param string     $value The value of the field. Defaults to empty string.
+	 * @param array|null $entry The Entry Object. Defaults to null.
+	 *
+	 * @return string The HTML markup for the field input.
+	 */
 	public function get_field_input( $form, $value = '', $entry = null ) {
 
 		$is_entry_detail = $this->is_entry_detail();
@@ -78,11 +172,11 @@ class GF_Field_Name extends GF_Field {
 		$suffix = '';
 
 		if ( is_array( $value ) ) {
-			$prefix = esc_attr( RGForms::get( $this->id . '.2', $value ) );
-			$first  = esc_attr( RGForms::get( $this->id . '.3', $value ) );
-			$middle = esc_attr( RGForms::get( $this->id . '.4', $value ) );
-			$last   = esc_attr( RGForms::get( $this->id . '.6', $value ) );
-			$suffix = esc_attr( RGForms::get( $this->id . '.8', $value ) );
+			$prefix = esc_attr( GFForms::get( $this->id . '.2', $value ) );
+			$first  = esc_attr( GFForms::get( $this->id . '.3', $value ) );
+			$middle = esc_attr( GFForms::get( $this->id . '.4', $value ) );
+			$last   = esc_attr( GFForms::get( $this->id . '.6', $value ) );
+			$suffix = esc_attr( GFForms::get( $this->id . '.8', $value ) );
 		}
 
 		$prefix_input = GFFormsModel::get_input( $this, $this->id . '.2' );
@@ -286,10 +380,31 @@ class GF_Field_Name extends GF_Field {
 		}
 	}
 
-	public function get_field_label_class(){
+	/**
+	 * Defines the CSS class to be applied to the field label.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GF_Field::get_field_content()
+	 *
+	 * @return string The CSS class.
+	 */
+	public function get_field_label_class() {
 		return 'gfield_label gfield_label_before_complex';
 	}
 
+	/**
+	 * Sets the CSS class to be used by the field input.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GF_Field_Name::get_field_input()
+	 * @uses    GFFormsModel::get_input()
+	 *
+	 * @return string The CSS class to use for the field.
+	 */
 	public function get_css_class() {
 
 		$prefix_input = GFFormsModel::get_input( $this, $this->id . '.2' );
@@ -341,6 +456,25 @@ class GF_Field_Name extends GF_Field {
 		return trim( $css_class );
 	}
 
+	/**
+	 * Defines the field markup to be used for the name prefix.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GF_Field_Name::get_field_input()
+	 * @uses    GFCommon::get_input_placeholder_value()
+	 * @uses    GFCommon::get_input_placeholder_attribute()
+	 *
+	 * @param array  $input         The input item choices.
+	 * @param int    $id            The ID of the name field.
+	 * @param int    $field_id      The field ID of the name field.
+	 * @param string $value         The value to be used in the prefix field item.
+	 * @param string $disabled_text The text to be used if the prefix field item is disabled.
+	 * @param int    $tabindex      The tab index of the prefix field item.
+	 *
+	 * @return string The field HTML markup.
+	 */
 	public static function get_name_prefix_field( $input, $id, $field_id, $value, $disabled_text, $tabindex ) {
 
 		$prefix_aria_label = esc_attr__( 'Name prefix', 'gravityforms' );
@@ -371,6 +505,23 @@ class GF_Field_Name extends GF_Field {
 		return $markup;
 	}
 
+	/**
+	 * Gets the field value to be displayed on the entry detail page.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFCommon::get_lead_field_display()
+	 * @uses    GF_Field_Name::$id
+	 *
+	 * @param array|string $value    The value of the field input.
+	 * @param string       $currency Not used.
+	 * @param bool         $use_text Not used.
+	 * @param string       $format   The format to output the value. Defaults to 'html'.
+	 * @param string       $media    Not used.
+	 *
+	 * @return array|string The value to be displayed on the entry detail page.
+	 */
 	public function get_value_entry_detail( $value, $currency = '', $use_text = false, $format = 'html', $media = 'screen' ) {
 
 		if ( is_array( $value ) ) {
@@ -397,12 +548,39 @@ class GF_Field_Name extends GF_Field {
 		return $return;
 	}
 
+	/**
+	 * Gets a property value from an input.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GF_Field_Name::validate()
+	 * @uses    GFFormsModel::get_input()
+	 *
+	 * @param int    $input_id      The input ID to obtain the property from.
+	 * @param string $property_name The property name to search for.
+	 *
+	 * @return null|string The property value if found. Otherwise, null.
+	 */
 	public function get_input_property( $input_id, $property_name ) {
 		$input = GFFormsModel::get_input( $this, $this->id . '.' . (string) $input_id );
 
 		return rgar( $input, $property_name );
 	}
 
+	/**
+	 * Sanitizes the field settings choices.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFFormDetail::add_field()
+	 * @used-by GFFormsModel::sanitize_settings()
+	 * @uses    GF_Field::sanitize_settings()
+	 * @uses    GF_Field::sanitize_settings_choices()
+	 *
+	 * @return void
+	 */
 	public function sanitize_settings() {
 		parent::sanitize_settings();
 		if ( is_array( $this->inputs ) ) {
@@ -414,19 +592,36 @@ class GF_Field_Name extends GF_Field {
 		}
 	}
 
+	/**
+	 * Gets the field value to be used when exporting.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @used-by GFExport::start_export()
+	 * @used-by GFAddOn::get_field_value()
+	 * @used-by GFAddOn::get_full_name()
+	 *
+	 * @param array  $entry    The Entry Object.
+	 * @param string $input_id The input ID to format. Defaults to empty string. If not set, uses t
+	 * @param bool   $use_text Not used.
+	 * @param bool   $is_csv   Not used.
+	 *
+	 * @return string The field value.
+	 */
 	public function get_value_export( $entry, $input_id = '', $use_text = false, $is_csv = false ) {
 		if ( empty( $input_id ) ) {
 			$input_id = $this->id;
 		}
 
 		if ( absint( $input_id ) == $input_id ) {
-			//If field is simple (one input), simply return full content
+			// If field is simple (one input), simply return full content.
 			$name = rgar( $entry, $input_id );
 			if ( ! empty( $name ) ) {
 				return $name;
 			}
 
-			//Complex field (multiple inputs). Join all pieces and create name
+			// Complex field (multiple inputs). Join all pieces and create name.
 			$prefix = trim( rgar( $entry, $input_id . '.2' ) );
 			$first  = trim( rgar( $entry, $input_id . '.3' ) );
 			$middle = trim( rgar( $entry, $input_id . '.4' ) );
@@ -448,4 +643,5 @@ class GF_Field_Name extends GF_Field {
 
 }
 
+// Registers the Name field with the field framework.
 GF_Fields::register( new GF_Field_Name() );

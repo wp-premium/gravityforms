@@ -68,8 +68,8 @@ class GFEntryDetail {
 		 * @since 2.0-beta-3
 		 *
 		 * @param array $meta_boxes The properties for the meta boxes.
-		 * @param array $entry The entry currently being viewed/edited.
-		 * @param array $form The form object used to process the current entry.
+		 * @param array $entry      The entry currently being viewed/edited.
+		 * @param array $form       The form object used to process the current entry.
 		 */
 		$meta_boxes = apply_filters( 'gform_entry_detail_meta_boxes', $meta_boxes, $entry, $form );
 
@@ -164,10 +164,10 @@ class GFEntryDetail {
 		/**
 		 * Allow the entry list search criteria to be overridden.
 		 *
-		 * @since  1.9.14.30
+		 * @since 1.9.14.30
 		 *
 		 * @param array $search_criteria An array containing the search criteria.
-		 * @param int $form_id The ID of the current form.
+		 * @param int   $form_id         The ID of the current form.
 		 */
 		$search_criteria = gf_apply_filters( array( 'gform_search_criteria_entry_list', $form_id ), $search_criteria, $form_id );
 
@@ -992,12 +992,12 @@ class GFEntryDetail {
 											<div class="product_name"><?php echo esc_html( $product['name'] ); ?></div>
 											<ul class="product_options">
 												<?php
-												$price = GFCommon::to_number( $product['price'] );
+												$price = GFCommon::to_number( $product['price'], $lead['currency'] );
 												if ( is_array( rgar( $product, 'options' ) ) ) {
 													$count = sizeof( $product['options'] );
 													$index = 1;
 													foreach ( $product['options'] as $option ) {
-														$price += GFCommon::to_number( $option['price'] );
+														$price += GFCommon::to_number( $option['price'], $lead['currency'] );
 														$class = $index == $count ? " class='lastitem'" : '';
 														$index ++;
 														?>
