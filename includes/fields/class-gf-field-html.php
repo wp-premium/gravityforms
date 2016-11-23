@@ -54,10 +54,7 @@ class GF_Field_HTML extends GF_Field {
 
 	public function sanitize_settings() {
 		parent::sanitize_settings();
-		if ( is_multisite() || ! current_user_can( 'manage_options' ) ) {
-			$allowed_tags  = wp_kses_allowed_html( 'post' );
-			$this->content = wp_kses( $this->content, $allowed_tags );
-		}
+		$this->content = GFCommon::maybe_wp_kses( $this->content );
 	}
 
 	public function do_shortcode( $content ){

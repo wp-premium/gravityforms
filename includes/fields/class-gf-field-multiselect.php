@@ -246,7 +246,7 @@ class GF_Field_MultiSelect extends GF_Field {
 	 * @return string $return The merge tag value.
 	 */
 	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {
-		$items = explode( ',', $value );
+		$items = explode( ',', $raw_value );
 
 		if ( $this->type == 'post_category' ) {
 			$use_id = $modifier == 'id';
@@ -260,6 +260,7 @@ class GF_Field_MultiSelect extends GF_Field {
 		} elseif ( $modifier != 'value' ) {
 			foreach ( $items as &$item ) {
 				$item = GFCommon::selection_display( $item, $this, rgar( $entry, 'currency' ), true );
+				$item = GFCommon::format_variable_value( $item, $url_encode, $esc_html, $format );
 			}
 		}
 

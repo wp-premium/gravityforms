@@ -795,6 +795,7 @@ class GF_Field_Address extends GF_Field {
 			esc_html__( 'FIJI', 'gravityforms' )                              => 'FJ',
 			esc_html__( 'FINLAND', 'gravityforms' )                           => 'FI',
 			esc_html__( 'FRANCE', 'gravityforms' )                            => 'FR',
+			esc_html__( 'FRENCH POLYNESIA', 'gravityforms' )                  => 'PF',
 			esc_html__( 'GABON', 'gravityforms' )                             => 'GA',
 			esc_html__( 'GAMBIA', 'gravityforms' )                            => 'GM',
 			esc_html( _x( 'GEORGIA', 'Country', 'gravityforms' ) )            => 'GE',

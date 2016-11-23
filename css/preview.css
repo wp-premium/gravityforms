@@ -4,7 +4,7 @@
 preview.css
 Gravity Forms Form Preview Styles
 http://www.gravityforms.com
-updated: June 27, 2016 2:34 PM GMT-5
+updated: November 11, 2016 9:28 AM GMT-5
 
 Gravity Forms is a Rocketgenius project
 copyright 2008-2016 Rocketgenius Inc.
@@ -131,6 +131,127 @@ div#preview_form_container.showgrid {
 	border-bottom: 4px solid #D3D3D3;
 	background-image:url(../images/preview_grid.gif);
 	background-position: 20px 0;
+	position: relative;
+	box-sizing: border-box;
+}
+
+@media only screen and (min-width: 641px)  {
+
+	div#preview_form_container.showgrid .gform_wrapper form {
+		z-index: 50 !important;
+		position: relative;
+	}
+
+	div#preview_form_container.showgrid span.rule25 {
+		padding-left: 4px;
+		display: inline-block;
+		height: 100% !important;
+		border-left: 1px solid rgba(116, 156, 40, .5);
+		position: absolute;
+		left: 25%;
+		top: 0;
+		vertical-align: top;
+		z-index: 1;
+	}
+
+	div#preview_form_container.showgrid span.rule25:before {
+		content:"25%";
+		font-size: .75rem;
+		color: rgba(116, 156, 40, .5);
+		background-color: rgba(255, 255, 255, .5);
+		margin-left: -.75rem;
+		font-weight: 700;
+		font-family: monospace;
+	}
+
+	div#preview_form_container.showgrid span.rule33 {
+		padding-left: 4px;
+		display: inline-block;
+		height: 100% !important;
+		border-left: 1px solid rgba(198, 7, 9, .25);
+		position: absolute;
+		left: 33.3%;
+		top: 0;
+		vertical-align: top;
+		z-index: 1;
+	}
+
+	div#preview_form_container.showgrid span.rule33:before {
+		content:"33%";
+		font-size: .75rem;
+		color: rgba(198, 7, 9, .5);
+		background-color: rgba(255, 255, 255, .5);
+		margin-left: -.75rem;
+		font-weight: 700;
+		font-family: monospace;
+	}
+
+	div#preview_form_container.showgrid span.rule50 {
+		padding-left: 4px;
+		display: inline-block;
+		height: 100% !important;
+		border-left: 1px solid rgba(116, 156, 40, .5);
+		position: absolute;
+		left: 50%;
+		top: 0;
+		vertical-align: top;
+		z-index: 1;
+	}
+
+	div#preview_form_container.showgrid span.rule50:before {
+		content:"50%";
+		font-size: .75rem;
+		color: rgba(116, 156, 40, .5);
+		background-color: rgba(255, 255, 255, .5);
+		margin-left: -.75rem;
+		font-weight: 700;
+		font-family: monospace;
+	}
+
+	div#preview_form_container.showgrid span.rule66 {
+		padding-left: 4px;
+		display: inline-block;
+		height: 100% !important;
+		border-left: 1px solid rgba(198, 7, 9, .25);
+		position: absolute;
+		left: 66.6%;
+		top: 0;
+		vertical-align: top;
+		z-index: 1;
+	}
+
+	div#preview_form_container.showgrid span.rule66:before {
+		content:"66%";
+		font-size: .75rem;
+		color: rgba(198, 7, 9, .5);
+		background-color: rgba(255, 255, 255, .5);
+		margin-left: -.75rem;
+		font-weight: 700;
+		font-family: monospace;
+	}
+
+	div#preview_form_container.showgrid span.rule75 {
+		padding-left: 4px;
+		display: inline-block;
+		height: 100% !important;
+		border-left: 1px solid rgba(116, 156, 40, .5);
+		position: absolute;
+		left: 75%;
+		top: 0;
+		vertical-align: top;
+		z-index: 1;
+	}
+
+	div#preview_form_container.showgrid span.rule75:before {
+		content:"75%";
+		font-size: .75rem;
+		color: rgba(116, 156, 40, .5);
+		background-color: rgba(255, 255, 255, .5);
+		margin-left: -.75rem;
+		font-weight: 700;
+		font-family: monospace;
+	}
+
 }
 
 .gform_wrapper {
@@ -255,6 +376,7 @@ div#browser_size_info {
 	      color: #060;
 	      padding: 2px 4px;
 	      text-indent: 4px;
+	      font-family: monospace;
 	}
 
 	.gform_wrapper .gf_showme ul.gfield_checkbox li label:before,
@@ -269,6 +391,7 @@ div#browser_size_info {
 	      color: #060;
 	      padding: 2px 4px;
 	      text-indent: 4px;
+	      font-family: monospace;
 	}
 
 	.gform_wrapper .gf_showme .gform_heading,
@@ -423,6 +546,7 @@ div#browser_size_info {
 		padding: 2px 4px;
 		color: #963;
 		text-indent: 4px;
+		font-family: monospace;
 	}
 
 	.gform_wrapper .gf_showme .gform_footer input[type='submit'].gform_button.button {
