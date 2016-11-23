@@ -3,7 +3,7 @@
 
 Gravity Forms Front End Form Styles
 http: //www.gravityforms.com
-updated: October 20, 2016 10:51 AM GMT-5
+updated: November 10, 2016 3:38 PM GMT-5
 
 Gravity Forms is a Rocketgenius project
 copyright 2008-2016 Rocketgenius Inc.
@@ -25,7 +25,7 @@ to no.
 */
 
 
-/* mobile styles first */
+/* mobile styles first ​*/
 
 .gform_wrapper {
     margin: 16px 0;
@@ -34,7 +34,6 @@ to no.
 
 .gform_wrapper form {
     text-align: left;
-    overflow-x: hidden;
     max-width: 100%;
     margin: 0 auto;
 }
@@ -52,8 +51,6 @@ to no.
     border: none;
     background: none;
 }
-
-
 
 .gform_wrapper input:not([type='radio']):not([type='checkbox']):not([type='submit']):not([type='button']):not([type='image']):not([type='file']) {
     font-size: inherit;
@@ -165,19 +162,116 @@ html>body .entry ul,
     margin-bottom: 18px;
 }
 
-.gform_wrapper .gfield_time_hour,
-.gform_wrapper .gfield_time_minute,
-.gform_wrapper .gfield_date_month,
+.gform_wrapper .clear-multi{
+    display: flex;
+}
+
+/* date ​fields */
+
 .gform_wrapper .gfield_date_day,
 .gform_wrapper .gfield_date_year {
-    width: 75px;
     display: -moz-inline-stack;
     display: inline-block;
 }
 
-.gform_wrapper .top_label .ginput_container_time {
-    display: -moz-inline-stack;
-    display: inline-block;
+.gform_wrapper .gfield_date_day,
+.gform_wrapper .gfield_date_month,
+.gform_wrapper .gfield_date_year {
+    width: 33.333%;
+    flex-direction: row;
+}
+
+@media only screen and (min-width: 321px) {
+
+    .gform_wrapper .gfield_date_day,
+    .gform_wrapper .gfield_date_month {
+        max-width: 4rem;
+    }
+
+    .gform_wrapper .gfield_date_year,
+    .gform_wrapper .gfield_time_ampm {
+        max-width: calc(4rem + .5rem);
+    }
+
+}
+
+.gform_wrapper .gfield_date_dropdown_month,
+.gform_wrapper .gfield_date_dropdown_day,
+.gform_wrapper .gfield_date_dropdown_year {
+    vertical-align: top;
+    flex-direction: row;
+}
+
+.gform_wrapper .gfield_date_dropdown_month,
+.gform_wrapper .gfield_date_dropdown_day,
+.gform_wrapper .gfield_date_dropdown_year {
+    margin-right: .5rem;
+}
+
+.gform_wrapper .gfield_date_month,
+.gform_wrapper .gfield_date_day {
+    width: 4rem;
+    margin-right: .5rem;
+}
+
+.gform_wrapper .gfield_date_month input[type="number"],
+.gform_wrapper .gfield_date_day input[type="number"] {
+    width: calc(3rem + 8px) !important;
+}
+
+.gform_wrapper .gfield_date_year input[type="number"] {
+    width: calc(4rem + 8px) !important;
+}
+
+.gform_wrapper .gfield_date_year {
+    width: 5rem;
+}
+
+.gform_wrapper .gfield_date_month input,
+.gform_wrapper .gfield_date_day input {
+    width: calc(3rem + 8px);
+}
+
+.gform_wrapper .gfield_date_year input {
+    width: 4rem;
+}
+
+.gform_wrapper .field_sublabel_above div[class*="gfield_date_"].ginput_container label,
+.gform_wrapper .field_sublabel_below div[class*="gfield_date_"].ginput_container label {
+    width: 3rem;
+    text-align: center;
+}
+
+.gform_wrapper .field_sublabel_above div.gfield_date_year.ginput_container label,
+.gform_wrapper .field_sublabel_below div.gfield_date_year.ginput_container label {
+    width: 4rem;
+}
+
+/* time ​fields */
+
+.gform_wrapper .gfield_time_hour,
+.gform_wrapper .gfield_time_minute,
+.gform_wrapper .gfield_time_ampm {
+    width: 33.333%;
+    flex-direction: row;
+}
+
+@media only screen and (min-width: 321px) {
+
+    .gform_wrapper .gfield_time_hour,
+    .gform_wrapper .gfield_time_minute {
+        max-width: 4rem;
+    }
+
+    .gform_wrapper .gfield_time_hour,
+    .gform_wrapper .gfield_time_ampm {
+        max-width: calc(4rem + .5rem);
+    }
+
+    .gform_wrapper .gfield_time_hour {
+        max-width: calc(4rem + .5rem);
+    }
+
 }
 
 .gform_wrapper ul.gform_fields:not(.top_label) .ginput_container_time span {
@@ -193,24 +287,12 @@ html>body .entry ul,
     margin-top: 9%;
 }
 
-.gform_wrapper .gfield_date_month,
-.gform_wrapper .gfield_date_day,
-.gform_wrapper .gfield_date_year {
-    margin-right: 12px;
+.gform_wrapper .gfield_time_minute {
+    margin-right: .5rem;
 }
 
-.gform_wrapper .gfield_date_dropdown_month,
-.gform_wrapper .gfield_date_dropdown_day,
-.gform_wrapper .gfield_date_dropdown_year {
-    vertical-align: top;
-    display: -moz-inline-stack;
-    display: inline-block;
-}
-
-.gform_wrapper .gfield_date_dropdown_month,
-.gform_wrapper .gfield_date_dropdown_day,
-.gform_wrapper .gfield_date_dropdown_year {
-    margin-right: 6px;
+.gform_wrapper .gfield_time_hour {
+    margin-right: .25rem;
 }
 
 .gform_wrapper .gfield_time_ampm {
@@ -225,40 +307,19 @@ html>body .entry ul,
 }
 
 .gform_wrapper .gfield_time_hour input,
-.gform_wrapper .gfield_time_minute input,
-.gform_wrapper .gfield_date_month input,
-.gform_wrapper .gfield_date_day input,
-.gform_wrapper .gfield_date_year input {
-    width: 70% !important;
+.gform_wrapper .gfield_time_minute input {
+    width: calc(3rem + 8px);
 }
 
 .gform_wrapper .gfield_time_hour input[type="number"],
-.gform_wrapper .gfield_time_minute input[type="number"],
-.gform_wrapper .gfield_date_month input[type="number"],
-.gform_wrapper .gfield_date_day input[type="number"],
-.gform_wrapper .gfield_date_year input[type="number"] {
-    width: calc(60% + 16px) !important;
+.gform_wrapper .gfield_time_minute input[type="number"] {
+    width: calc(3rem + 8px) !important;
 }
 
-.gform_wrapper .gfield_date_month,
-.gform_wrapper .gfield_date_day,
-.gform_wrapper .gfield_date_year {
-    width: 50px;
-    float: left;
-}
-
-.gform_wrapper .gfield_date_year {
-    width: 48px !important;
-}
-
-.gform_wrapper .gfield_date_month input,
-.gform_wrapper .gfield_date_day input,
-.gform_wrapper .gfield_date_year input {
-    width: 85% !important;
-}
-
-.gform_wrapper .gfield_date_year input {
-    width: 88% !important;
+.gform_wrapper .field_sublabel_above div[class*="gfield_time_"].ginput_container label,
+.gform_wrapper .field_sublabel_below div[class*="gfield_time_"].ginput_container label {
+    width: 3rem;
+    text-align: center;
 }
 
 .gform_wrapper .field_hover {
@@ -310,9 +371,11 @@ html>body .entry ul,
 .gform_wrapper .field_sublabel_above .ginput_complex.ginput_container label,
 .gform_wrapper .field_sublabel_below .ginput_complex.ginput_container label,
 .gform_wrapper .field_sublabel_above div[class*="gfield_time_"].ginput_container label,
-.gform_wrapper .field_sublabel_below div[class*="gfield_time_"].ginput_container label {
+.gform_wrapper .field_sublabel_below div[class*="gfield_time_"].ginput_container label,
+.gform_wrapper .field_sublabel_above div[class*="gfield_date_"].ginput_container label,
+.gform_wrapper .field_sublabel_below div[class*="gfield_date_"].ginput_container label {
     display: block;
-    font-size: 80%;
+    font-size: .813rem;
     letter-spacing: .5pt;
     white-space: nowrap;
 }
@@ -528,7 +591,7 @@ body .gform_wrapper ul li.field_description_below div.ginput_container_checkbox 
 .gform_wrapper .gfield_description,
 .gform_wrapper .gsection_description,
 .gform_wrapper .instruction {
-    font-size: 80%;
+    font-size: .813rem;
     line-height: inherit;
     clear: both;
     font-family: inherit;
@@ -1038,7 +1101,7 @@ body .gform_wrapper ul.gform_fields li.gfield.gform_validation_container {
 
 .gform_wrapper .gform_page_footer {
     margin: 14px 0;
-    width: calc(100% - 6px);
+    width: calc(100% - 16px);
     border-top: 1px dotted #CCC;
     padding: 16px 0 0 0;
     clear: both;
@@ -1060,7 +1123,7 @@ body .gform_wrapper ul.gform_fields li.gfield.gform_validation_container {
 
 .gform_wrapper .gf_progressbar_wrapper {
     clear: both;
-    width: calc(100% + 16px);
+    width: 100%;
     margin: 0 0 16px 0;
     padding: 0 0 16px 0;
 }
@@ -2456,7 +2519,7 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
 @media only screen and (min-width: 641px) {
 
     .gform_wrapper .gform_body {
-        width: calc(100% + 16px);
+        width: 100%;
     }
 
     .gform_wrapper.gform_validation_error .gform_body ul li.gfield.gfield_error:not(.gf_left_half):not(.gf_right_half) {

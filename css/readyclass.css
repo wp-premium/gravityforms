@@ -4,7 +4,7 @@
 readyclass.css
 Gravity Forms Ready Class Pre-Set Helper Styles
 http://www.gravityforms.com
-updated: October 20, 2016 11:00 AM GMT-5
+updated: November 11, 2016 9:39 AM GMT-5
 
 Gravity Forms is a Rocketgenius project
 copyright 2008-2016 Rocketgenius Inc.
@@ -942,3 +942,7 @@ to no.
 /* end media query */
 
 }
+
+/* add equal padding to form for better centering */
+
+body .gform_wrapper.gf_form_center_wrapper {padding: 16px 0 16px 16px;}

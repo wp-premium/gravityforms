@@ -161,15 +161,17 @@ jQuery.fn.repeater = function( options ) {
 			}
 
             var input = self.elem.find( '.' + property + '_' + index );
-            if ( input.is( 'select' ) ) {
-                if ( jQuery.isArray( item[ property ] ) ) {
-                    input.val( item[ property ] );
-                } else {
-                    input.find( 'option[value="' + item[ property ] + '"]' ).prop( 'selected', true );
-                }
-            } else {
-	            input.val( item[ property ] );
+
+            if ( ! input.is( 'select' ) ) {
+	            continue;
             }
+            
+            if ( jQuery.isArray( item[ property ] ) ) {
+                input.val( item[ property ] );
+            } else {
+                input.find( 'option[value="' + item[ property ] + '"]' ).prop( 'selected', true );
+            }
+            
         }
 
     }

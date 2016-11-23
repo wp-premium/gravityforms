@@ -4840,6 +4840,7 @@ class GFFormsModel {
 		return $leads;
 	}
 
+
 	public static function search_lead_ids( $form_id, $search_criteria = array() ) {
 		global $wpdb;
 
@@ -4956,7 +4957,7 @@ class GFFormsModel {
 		if ( false === empty( $entry_meta ) && array_key_exists( $sort_field, $entry_meta ) ) {
 			$entry_meta_sql_join      = $wpdb->prepare(
 				"
-                INNER JOIN
+                LEFT JOIN
                 (
                 SELECT
                      lead_id, meta_value as $sort_field
