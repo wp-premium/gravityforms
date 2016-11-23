@@ -3275,9 +3275,9 @@ function SetFieldSubLabelPlacement(subLabelPlacement){
     RefreshSelectedFieldPreview();
 }
 
-function SetFieldVisibility( visibility, handleInputs ) {
+function SetFieldVisibility( visibility, handleInputs, isInit ) {
 
-    if( visibility == 'administrative' && HasConditionalLogicDependency( field.id ) ) {
+    if (!isInit && visibility == 'administrative' && HasConditionalLogicDependency(field.id)) {
         if( ! confirm( gf_vars.conditionalLogicDependencyAdminOnly ) ) {
             return false;
         }

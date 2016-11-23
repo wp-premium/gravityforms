@@ -96,8 +96,11 @@ class GF_Field_Number extends GF_Field {
 			return false;
 		}
 
-		if ( ( is_numeric( $this->rangeMin ) && $value < $this->rangeMin ) ||
-		     ( is_numeric( $this->rangeMax ) && $value > $this->rangeMax )
+		$numeric_min = $this->numberFormat == 'decimal_comma' ? GFCommon::clean_number( $this->rangeMin, 'decimal_comma' ) : $this->rangeMin;
+		$numeric_max = $this->numberFormat == 'decimal_comma' ? GFCommon::clean_number( $this->rangeMax, 'decimal_comma' ) : $this->rangeMax;
+
+		if ( ( is_numeric( $numeric_min ) && $value < $numeric_min ) ||
+		     ( is_numeric( $numeric_max ) && $value > $numeric_max )
 		) {
 			return false;
 		} else {
@@ -108,13 +111,22 @@ class GF_Field_Number extends GF_Field {
 	public function get_range_message() {
 		$min     = $this->rangeMin;
 		$max     = $this->rangeMax;
+
+		$numeric_min = $min;
+		$numeric_max = $max;
+
+		if( $this->numberFormat == 'decimal_comma' ){
+			$numeric_min = empty( $min ) ? '' : GFCommon::clean_number( $min, 'decimal_comma', '');
+			$numeric_max = empty( $max ) ? '' : GFCommon::clean_number( $max, 'decimal_comma', '');
+		}
+
 		$message = '';
 
-		if ( is_numeric( $min ) && is_numeric( $max ) ) {
+		if ( is_numeric( $numeric_min ) && is_numeric( $numeric_max ) ) {
 			$message = sprintf( esc_html__( 'Please enter a value between %s and %s.', 'gravityforms' ), "<strong>$min</strong>", "<strong>$max</strong>" );
-		} elseif ( is_numeric( $min ) ) {
+		} elseif ( is_numeric( $numeric_min ) ) {
 			$message = sprintf( esc_html__( 'Please enter a value greater than or equal to %s.', 'gravityforms' ), "<strong>$min</strong>" );
-		} elseif ( is_numeric( $max ) ) {
+		} elseif ( is_numeric( $numeric_max ) ) {
 			$message = sprintf( esc_html__( 'Please enter a value less than or equal to %s.', 'gravityforms' ), "<strong>$max</strong>" );
 		} elseif ( $this->failed_validation ) {
 			$message = esc_html__( 'Please enter a valid number', 'gravityforms' );
@@ -190,7 +202,6 @@ class GF_Field_Number extends GF_Field {
 		return GFCommon::format_number( $value, $this->numberFormat, rgar( $entry, 'currency' ), $include_thousands_sep );
 	}
 
-
 	public function get_value_entry_detail( $value, $currency = '', $use_text = false, $format = 'html', $media = 'screen' ) {
 		$include_thousands_sep = apply_filters( 'gform_include_thousands_sep_pre_format_number', $use_text, $this );
 
@@ -258,12 +269,18 @@ class GF_Field_Number extends GF_Field {
 			$currency = new RGCurrency( GFCommon::get_currency() );
 			$this->rangeMin    = $currency->to_number( $this->rangeMin );
 			$this->rangeMax    = $currency->to_number( $this->rangeMax );
+
 		} elseif ( $this->numberFormat == 'decimal_comma' ) {
 			$this->rangeMin = GFCommon::clean_number( $this->rangeMin, 'decimal_comma' );
 			$this->rangeMax = GFCommon::clean_number( $this->rangeMax, 'decimal_comma' );
+
+			$this->rangeMin = GFCommon::format_number( $this->rangeMin, 'decimal_comma' );
+			$this->rangeMax = GFCommon::format_number( $this->rangeMax, 'decimal_comma' );
+
 		} elseif ( $this->numberFormat == 'decimal_dot' ) {
 			$this->rangeMin = GFCommon::clean_number( $this->rangeMin, 'decimal_dot' );
-			$this->rangeMin = GFCommon::clean_number( $this->rangeMin, 'decimal_dot' );
+			$this->rangeMax = GFCommon::clean_number( $this->rangeMax, 'decimal_dot' );
+
 		}
 	}
 

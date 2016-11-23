@@ -1,6 +1,22 @@
 ------------------------------------------------------------------------------------------------------------------
-Version 2.1.0.1
+Version 2.1.1
+    - Added PF (French Polynesia) to the country code list. Credit: the GravityView team.
+    - Added percentage based rule lines for alignment check in preview page.
+    - Added gf_form_center readyclass style to properly center the form in the gform_wrapper container.
+    - Updated the HTML field to check for the unfiltered_html capability instead of manage_options before allowing unfiltered HTML to be saved in the form editor.
+    - Fixed an issue with the Drop Down field merge tag where the value is not encoded for use in query string params.
+    - Fixed an issue with the Multi Select field merge tag where the value is displayed instead of the text.
+    - Fixed an issue with the entry list when sorting by entry meta where some entries may not be included in the results.
+    - Fixed an issue with the date and time field input sizes and switched the input containers to a flex layout.
+    - Fixed an issue with the date and time field label sizes and text-alignment.
+    - Fixed an issue caused by the overflow property of the form element.
+    - Fixed an issue with the form wrapper width value.
+    - Fixed conditional logic dependency confirmation appearing every time a field is edited when the visibility is already set to administrative.
+    - Fixed an issue with the Paragraph field validation when a max character limit is configured and the value contains multi-byte characters.
+	- Fixed issue with number max range sanitization.
+	- Fixed an issue with number field min and max range settings when number format is configured with commas as decimal separators.
     - Fixed an issue with the Paragraph field validation when a max character limit is not configured.
+	- AF: Fixed an issue when only using custom keys with the dynamic field map.
 
 ------------------------------------------------------------------------------------------------------------------
 Version 2.1
@@ -10,7 +26,7 @@ Version 2.1
     - Added better support for custom address types (added via gform_address_types filter) and conditional logic.
     - Added GFExports::export_forms() method to allow 3rd parties to more easily export forms.
     - Added the gform_honeypot_labels_pre_render filter.
-    - Added GFFormsModel::get_phsyical_file_path() method; refactored from code in the GFFormsModel::delete_physical_file() method.
+    - Added GFFormsModel::get_phsyical_file_path() method; re-factored from code in the GFFormsModel::delete_physical_file() method.
 	- Added gform_rfc_url_validation hook to control whether or not URL validation conforms with RFC standard. Defaults to true.
 	- Added gform_is_valid_url hook to allow for custom URL validation.
 	- Added the gform_savecontinue_link filter for customizing the save and continue links.
@@ -327,7 +343,7 @@ Version 2.0.0
 ------------------------------------------------------------------------------------------------------------------
 Version 1.9.19.6
     - Added gform_not_found class to the paragraph tag used to wrap 'Oops! We could not locate your form.' error message
-    
+
 ------------------------------------------------------------------------------------------------------------------
 Version 1.9.19.5
     - Fixed an issue restoring field defaults on display by conditional logic when the value was 0.

@@ -4747,8 +4747,11 @@ class GFCommon {
 		$i          = $match[0][0] == '{' ? 4 : 5;
 		$modifier   = strtolower( rgar( $match, $i ) );
 		$modifiers  = array_map( 'trim', explode( ',', $modifier ) );
-		$url_encode = ! $url_encode && in_array( 'urlencode', $modifiers );
 		$field->set_modifiers( $modifiers );
+
+		if( in_array( 'urlencode', $modifiers ) ) {
+			$url_encode = true;
+		}
 
 		$value = $field->get_value_merge_tag( $value, $input_id, $lead, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br );
 

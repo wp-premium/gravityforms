@@ -168,6 +168,11 @@ $min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] 
 	</ul>
 </div>
 <div id="preview_form_container">
+	<span class="rule25"></span>
+	<span class="rule33"></span>
+	<span class="rule50"></span>
+	<span class="rule66"></span>
+	<span class="rule75"></span>
 	<?php echo RGForms::get_form( $form_id, true, true, true ); ?>
 </div>
 <div id="browser_size_info"></div>
