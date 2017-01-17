@@ -148,9 +148,9 @@ function gf_is_match_default( $input, rule, formId, fieldId ) {
 		}
 
 		var ruleValue = rule.value;
-		if ( fieldNumberFormat ) {
-			ruleValue = gf_format_number( ruleValue, fieldNumberFormat );
-		}
+		//if ( fieldNumberFormat ) {
+		//	ruleValue = gf_format_number( ruleValue, fieldNumberFormat );
+		//}
 
 		if( gf_matches_operation( fieldValue, ruleValue, rule.operator ) ) {
 			matchCount++;

@@ -465,7 +465,12 @@ class GF_Field_List extends GF_Field {
 		if ( empty( $value ) ) {
 			return '';
 		}
-		$value = unserialize( $value );
+
+		$value = maybe_unserialize( $value );
+		
+		if( ! is_array( $value ) ) {
+			return '';
+		}
 
 		$has_columns = is_array( $value[0] );
 

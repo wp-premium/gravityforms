@@ -113,7 +113,7 @@ class GFExport {
 			$form_ids = array();
 		} else {
 			foreach ( $form_ids as $key => $form_id ) {
-				$forms[ $key ]['id'] = $form_id;
+				$forms[ $key ] = GFAPI::get_form( $form_id );
 			}
 			/**
 			 * Fires after forms have been imported.
@@ -672,7 +672,6 @@ class GFExport {
 		$total_entry_count     = GFAPI::count_entries( $form_id, $search_criteria );
 		$remaining_entry_count = $offset == 0 ? $total_entry_count : $total_entry_count - $offset;
 
-		// Adding BOM marker for UTF-8
 		$lines = '';
 
 		// Set the separator
@@ -683,8 +682,19 @@ class GFExport {
 		if ( $offset == 0 ) {
 			GFCommon::log_debug( __METHOD__ . '(): Processing request for form #' . $form_id );
 
+
+			/**
+			 * Allows the BOM character to be excluded from the beginning of entry export files.
+			 * 
+			 * @since 2.1.1.21
+			 *
+			 * @param bool  $include_bom Whether or not to include the BOM characters. Defaults to true.
+			 * @param array $form        The Form Object.
+			 */
+			$include_bom = apply_filters( 'gform_include_bom_export_entries', true, $form );
+
 			//Adding BOM marker for UTF-8
-			$lines = chr( 239 ) . chr( 187 ) . chr( 191 );
+			$lines = $include_bom ? chr( 239 ) . chr( 187 ) . chr( 191 ) : '';
 
 			//writing header
 			$headers = array();

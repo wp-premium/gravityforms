@@ -27,8 +27,15 @@ class GFEntryDetail {
 	 */
 	private static $_total_count = 0;
 
+	/**
+	 * Prepare meta boxes and screen options.
+	 */
 	public static function add_meta_boxes() {
-		// Prepare meta boxes and screen options.
+
+		$entry = self::get_current_entry();
+		if ( is_wp_error( $entry ) ) {
+			return;
+		}
 
 		$meta_boxes = array(
 			'submitdiv'     => array(
@@ -36,12 +43,15 @@ class GFEntryDetail {
 				'callback' => array( 'GFEntryDetail', 'meta_box_entry_info' ),
 				'context'  => 'side',
 			),
-			'notifications' => array(
+		);
+
+		if ( GFCommon::current_user_can_any( 'gravityforms_edit_entry_notes' ) ) {
+			$meta_boxes['notifications'] = array(
 				'title'    => esc_html__( 'Notifications', 'gravityforms' ),
 				'callback' => array( 'GFEntryDetail', 'meta_box_notifications' ),
 				'context'  => 'side',
-			),
-		);
+			);
+		}
 
 		if ( GFCommon::current_user_can_any( 'gravityforms_view_entry_notes' ) ) {
 			$meta_boxes['notes'] = array(
@@ -51,9 +61,6 @@ class GFEntryDetail {
 			);
 		}
 
-		$entry = self::get_current_entry();
-		$form  = self::get_current_form();
-
 		if ( ! empty( $entry['payment_status'] ) ) {
 			$meta_boxes['payment'] = array(
 				'title'    => $entry['transaction_type'] == 2 ? esc_html__( 'Subscription Details', 'gravityforms' ) : esc_html__( 'Payment Details', 'gravityforms' ),
@@ -61,6 +68,8 @@ class GFEntryDetail {
 				'context'  => 'side',
 			);
 		}
+
+		$form = self::get_current_form();
 
 		/**
 		 * Allow custom meta boxes to be added to the entry detail page.
@@ -1174,7 +1183,7 @@ class GFEntryDetail {
 
 	public static function meta_box_notes( $args, $metabox ) {
 		$entry = $args['entry'];
-		$form = $args['form'];
+		$form  = $args['form'];
 		?>
 		<form method="post">
 			<?php wp_nonce_field( 'gforms_update_note', 'gforms_update_note' ) ?>
@@ -1201,9 +1210,9 @@ class GFEntryDetail {
 	}
 
 	public static function meta_box_entry_info( $args, $metabox ) {
-		$form = $args['form'];
+		$form  = $args['form'];
 		$entry = $args['entry'];
-		$mode = $args['mode'];
+		$mode  = $args['mode'];
 		?>
 		<div id="submitcomment" class="submitbox">
 			<div id="minor-publishing" style="padding:10px;">
@@ -1321,7 +1330,7 @@ class GFEntryDetail {
 	}
 
 	public static function meta_box_notifications( $args, $metabox ){
-		$form = $args['form'];
+		$form    = $args['form'];
 		$form_id = $form['id'];
 
 		if ( ! GFCommon::current_user_can_any( 'gravityforms_edit_entry_notes' ) ) {
