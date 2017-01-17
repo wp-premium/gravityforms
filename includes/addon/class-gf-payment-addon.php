@@ -1390,20 +1390,38 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 	/**
 	 * Processes callback based on provided data.
 	 *
-	 * $action = array(
-	 *     'type' => 'cancel_subscription',     // required
-	 *     'transaction_id' => '',              // required (if payment)
-	 *     'subscription_id' => '',             // required (if subscription)
-	 *     'amount' => '0.00',                  // required (some exceptions)
-	 *     'entry_id' => 1,                     // required (some exceptions)
-	 *     'transaction_type' => '',
-	 *     'payment_status' => '',
-	 *     'note' => ''
-	 * );
+	 * @since  Unknown
+	 * @access private
 	 *
-	 * @param array $action
+	 * @uses GFPaymentAddOn::is_duplicate_callback()
+	 * @uses GFAPI::get_entry()
+	 * @uses GFPaymentAddOn::complete_payment()
+	 * @uses GFPaymentAddOn::refund_payment()
+	 * @uses GFPaymentAddOn::fail_payment()
+	 * @uses GFPaymentAddOn::add_pending_payment()
+	 * @uses GFPaymentAddOn::void_authorization()
+	 * @uses GFPaymentAddOn::start_subscription()
+	 * @uses GFPaymentAddOn::get_payment_feed()
+	 * @uses GFPaymentAddOn::cancel_subscription()
+	 * @uses GFPaymentAddOn::expire_subscription()
+	 * @uses GFPaymentAddOn::add_subscription_payment()
+	 * @uses GFPaymentAddOn::fail_subscription_payment()
+	 * @uses GFPaymentAddOn::register_callback()
 	 *
-	 * @return mixed
+	 * @param array $action {
+	 *     The action to perform.
+	 *
+	 *     @type string $type             The callback action type. Required.
+	 *     @type string $transaction_id   The transaction ID to perform the action on. Required if the action is a payment.
+	 *     @type string $subscription_id  The subscription ID. Required if this is related to a subscription.
+	 *     @type string $amount           The transaction amount. Typically required.
+	 *     @type int    $entry_id         The ID of the entry associated with the action. Typically required.
+	 *     @type string $transaction_type The transaction type to process this action as. Optional.
+	 *     @type string $payment_status   The payment status to set the payment to. Optional.
+	 *     @type string $note             The note to associate with this payment action. Optional.
+	 * }
+	 *
+	 * @return bool|mixed True, unless a custom transaction type defines otherwise.
 	 */
 	private function process_callback_action( $action ) {
 		$this->log_debug( __METHOD__ . '(): Processing callback action.' );
@@ -1431,7 +1449,14 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 			return $result;
 		}
 
-		//$action = do_action('gform_action_pre_payment_callback', $action, $entry);
+		/**
+		 * Performs actions before the the payment action callback is processed.
+		 *
+		 * @since Unknown
+		 *
+		 * @param array $action The action array.
+		 * @param array $entry  The Entry Object.
+		 */
 		do_action( 'gform_action_pre_payment_callback', $action, $entry );
 		if ( has_filter( 'gform_action_pre_payment_callback' ) ) {
 			$this->log_debug( __METHOD__ . '(): Executing functions hooked to gform_action_pre_payment_callback.' );
@@ -1471,7 +1496,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 				$result = $this->fail_subscription_payment( $entry, $action );
 				break;
 			default:
-				// handle custom events
+				// Handle custom events.
 				if ( is_callable( array( $this, rgar( $action, 'callback' ) ) ) ) {
 					$result = call_user_func_array( array( $this, $action['callback'] ), array( $entry, $action ) );
 				}
@@ -1483,35 +1508,24 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		}
 
 		/**
-		 * Fires right after the payment callback
+		 * Fires right after the payment callback.
+		 *
+		 * @since Unknown
 		 *
 		 * @param array $entry The Entry Object
-		 * @param array $action The Action Object
-		 * $action = array(
-		 *     'type' => 'cancel_subscription',     // See Below
-		 *     'transaction_id' => '',              // What is the ID of the transaction made?
-		 *     'subscription_id' => '',             // What is the ID of the Subscription made?
-		 *     'amount' => '0.00',                  // Amount to charge?
-		 *     'entry_id' => 1,                     // What entry to check?
-		 *     'transaction_type' => '',
-		 *     'payment_status' => '',
-		 *     'note' => ''
-		 * );
+		 * @param array $action {
+		 *     The action performed.
 		 *
-		 * 'type' can be:
-		 *
-		 * - complete_payment
-		 * - refund_payment
-		 * - fail_payment
-		 * - add_pending_payment
-		 * - void_authorization
-		 * - create_subscription
-		 * - cancel_subscription
-		 * - expire_subscription
-		 * - add_subscription_payment
-		 * - fail_subscription_payment
-		 *
-		 * @param mixed $result The Result Object
+		 *     @type string $type             The callback action type. Required.
+		 *     @type string $transaction_id   The transaction ID to perform the action on. Required if the action is a payment.
+		 *     @type string $subscription_id  The subscription ID. Required if this is related to a subscription.
+		 *     @type string $amount           The transaction amount. Typically required.
+		 *     @type int    $entry_id         The ID of the entry associated with the action. Typically required.
+		 *     @type string $transaction_type The transaction type to process this action as. Optional.
+		 *     @type string $payment_status   The payment status to set the payment to. Optional.
+		 *     @type string $note             The note to associate with this payment action. Optional.
+		 * }
+		 * @param mixed $result The Result Object.
 		 */
 		do_action( 'gform_post_payment_callback', $entry, $action, $result );
 		if ( has_filter( 'gform_post_payment_callback' ) ) {
@@ -1521,6 +1535,21 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		return $result;
 	}
 
+	/**
+	 * Registers a callback action.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @uses wpdb::insert()
+	 * @uses GFAddOn::$_slug
+	 *
+	 * @global wpdb   $wpdb
+	 * @param  string $callback_id The callback ID for the action.
+	 * @param  int    $entry_id    The entry ID associated with the callback.
+	 *
+	 * @return void
+	 */
 	public function register_callback( $callback_id, $entry_id ) {
 		global $wpdb;
 
@@ -1532,6 +1561,21 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		) );
 	}
 
+	/**
+	 * Checks if a callback is duplicate.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @uses wpdb::$prefix
+	 * @uses wpdb::prepare()
+	 * @uses wpdb::get_var()
+	 *
+	 * @global wpdb   $wpdb
+	 * @param  string $callback_id The callback ID to chack.
+	 *
+	 * @return bool If the callback is a duplicate, true. Otherwise, false.
+	 */
 	public function is_duplicate_callback( $callback_id ) {
 		global $wpdb;
 
@@ -1943,9 +1987,13 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		GFAPI::update_entry_property( $entry['id'], 'payment_status', 'Cancelled' );
 		$this->add_note( $entry['id'], $note );
 
-		// include $subscriber_id as 3rd parameter for backwards compatibility
+		// Include $subscriber_id as 3rd parameter for backwards compatibility
 		do_action( 'gform_subscription_canceled', $entry, $feed, $entry['transaction_id'] );
-		if ( has_filter( 'gform_subscription_canceled' ) ) {
+
+		// Include alternative spelling of "cancelled".
+		do_action( 'gform_subscription_cancelled', $entry, $feed, $entry['transaction_id'] );
+
+		if ( has_filter( 'gform_subscription_canceled' ) || has_filter( 'gform_subscription_cancelled' ) ) {
 			$this->log_debug( __METHOD__ . '(): Executing functions hooked to gform_subscription_canceled.' );
 		}
 

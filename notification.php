@@ -320,7 +320,7 @@ Class GFNotification {
 				var email = routings[i]["email"] ? routings[i]["email"] : '';
 
 				str += "<div style='width:99%'>" + <?php echo json_encode( esc_html__( 'Send to', 'gravityforms' ) ); ?> + " <input type='text' id='routing_email_" + i + "' value='" + email + "' onkeyup='SetRouting(" + i + ");'/>";
-				str += " " + <?php echo json_encode( esc_html__( 'if', 'gravityforms' ) ); ?> + " " + GetRoutingFields(i, routings[i].fieldId);
+				str += " " + <?php echo json_encode( esc_html__( 'if', 'gravityforms' ) ); ?> + " " + GetRoutingFields(i, routings[i].fieldId) + "&nbsp;";
 				str += "<select id='routing_operator_" + i + "' onchange='SetRouting(" + i + ");' class='gform_routing_operator'>";
 				str += "<option value='is' " + isSelected + ">" + <?php echo json_encode( esc_html__( 'is', 'gravityforms' ) ); ?> + "</option>";
 				str += "<option value='isnot' " + isNotSelected + ">" + <?php echo json_encode( esc_html__( 'is not', 'gravityforms' ) ); ?> + "</option>";
@@ -329,8 +329,8 @@ Class GFNotification {
 				str += "<option value='contains' " + containsSelected + ">" + <?php echo json_encode( esc_html__( 'contains', 'gravityforms' ) ); ?> + "</option>";
 				str += "<option value='starts_with' " + startsWithSelected + ">" + <?php echo json_encode( esc_html__( 'starts with', 'gravityforms' ) ); ?> + "</option>";
 				str += "<option value='ends_with' " + endsWithSelected + ">" + <?php echo json_encode( esc_html__( 'ends with', 'gravityforms' ) ); ?> + "</option>";
-				str += "</select>";
-				str += GetRoutingValues(i, routings[i].fieldId, routings[i].value);
+				str += "</select>&nbsp;";
+				str += GetRoutingValues(i, routings[i].fieldId, routings[i].value) + "&nbsp;";
 				str += "<a class='gf_insert_field_choice' title='add another rule' onclick=\"InsertRouting(" + (i + 1) + ");\" onkeypress=\"InsertRouting(" + (i + 1) + ");\"><i class='gficon-add'></i></a>";
 				if (routings.length > 1)
 					str += "<a class='gf_delete_field_choice' title='remove this rule' onclick=\"DeleteRouting(" + i + ");\" onkeypress=\"DeleteRouting(" + i + ");\"><i class='gficon-subtract'></i></a>";

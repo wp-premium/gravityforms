@@ -2933,6 +2933,20 @@ input.headercb {
 	width: 120px;
 }
 
+.gfield_rule_input{
+	vertical-align: bottom;
+	height: 28px;
+}
+
+.gf_conditional_logic_rules_container{
+	margin-top:4px;
+}
+
+.gf_conditional_logic_rules_container select, .gf_conditional_logic_rules_container input {
+	margin-top:0px!important;
+	margin-left:2px;
+}
+
 .gform_routing_operator{
     width:60px;
 }
@@ -4208,6 +4222,11 @@ div.gf_clear.gf_clear_complex {
     cursor: pointer;
 }
 
+.gform-filter-value{
+	vertical-align: bottom;
+	height: 28px!important;
+}
+
 .gform-filter-value,
 .gform-filter-field,
 .gform-filter-operator {
@@ -4229,6 +4248,18 @@ div.gf_clear.gf_clear_complex {
 
 #gform-field-filters {
     overflow-y: auto;
+}
+
+.gform-field-filter{
+	margin-top:4px;
+}
+
+.gform-field-filter select, .gform-field-filter input{
+	margin-right:2px;
+}
+
+.gform-field-filter .gform-add{
+	margin-right:4px;
 }
 
 .ui-resizable-handle {
@@ -4465,9 +4496,23 @@ table tbody tr#gform_notification_to_email_container.notification_to_container t
 	width: 100% !important;
 }
 
-div#gform_notification_to_routing_rules div input:first-child {
-	min-width: 50%;
+div#gform_notification_to_routing_rules div{
+	margin-top:4px;
 }
+div#gform_notification_to_routing_rules div:first-child{
+	margin-top:0px!important;
+}
+
+div#gform_notification_to_routing_rules div input:first-child {
+	min-width: 35%;
+}
+
+div#gform_notification_to_routing_rules input {
+	height: 28px;
+	vertical-align: middle;
+}
+
+
 
 /* safari specific styles */
 
@@ -4661,6 +4706,7 @@ div.wrap.gf_browser_chrome .gfield_checkbox li input {
 
 #entry_search_button{
     float:right;
+	margin-top:3px;
 }
 
 /* Entry Detail */

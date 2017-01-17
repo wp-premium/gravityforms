@@ -191,7 +191,10 @@ class GF_Field_CAPTCHA extends GF_Field {
 					$language     = empty( $this->captchaLanguage ) ? 'en' : $this->captchaLanguage;
 
 					// script is queued for the footer with the language property specified
-					wp_enqueue_script( 'gform_recaptcha', 'https://www.google.com/recaptcha/api.js?hl=' . $language . '&onload=renderRecaptcha&render=explicit', array(), false, true );
+					wp_enqueue_script( 'gform_recaptcha', 'https://www.google.com/recaptcha/api.js?hl=' . $language . '&render=explicit', array(), false, true );
+
+					add_action( 'wp_footer', array( $this, 'ensure_recaptcha_js' ) );
+					add_action( 'gform_preview_footer', array( $this, 'ensure_recaptcha_js' ) );
 
 					$stoken = $this->use_stoken() ? sprintf( 'data-stoken=\'%s\'', esc_attr( $secure_token ) ) : '';
 					$output = "<div id='" . esc_attr( $field_id ) ."' class='ginput_container ginput_recaptcha' data-sitekey='" . esc_attr( $site_key ) . "' {$stoken} data-theme='" . esc_attr( $theme ) . "' ></div>";
@@ -199,6 +202,21 @@ class GF_Field_CAPTCHA extends GF_Field {
 					return $output;
 				}
 		}
+	}
+
+	public function ensure_recaptcha_js(){
+		?>
+		<script type="text/javascript">
+			var gfRecaptchaPoller = setInterval( function() {
+				if( ! window.grecaptcha ) {
+					return;
+				}
+				renderRecaptcha();
+				clearInterval( gfRecaptchaPoller );
+			}, 100 );
+		</script>
+
+		<?php
 	}
 
 	public function get_captcha() {
@@ -368,7 +386,8 @@ class GF_Field_CAPTCHA extends GF_Field {
 		$padded = $plaintext . str_repeat( chr( $pad ), $pad );
 
 		//encrypt as 128
-		$encrypted = GFCommon::encrypt( $padded, $secret_key, MCRYPT_RIJNDAEL_128 );
+		$cypher = defined( 'MCRYPT_RIJNDAEL_128' ) ? MCRYPT_RIJNDAEL_128 : false;
+		$encrypted = GFCommon::encrypt( $padded, $secret_key, $cypher );
 
 		$token = str_replace( array( '+', '/', '=' ), array( '-', '_', '' ), $encrypted );
 		GFCommon::log_debug( ' token being used is: ' . $token );

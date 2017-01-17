@@ -1,4 +1,54 @@
 ------------------------------------------------------------------------------------------------------------------
+Version 2.1.2
+    - Added $entry as a fourth parameter for the gform_merge_tag_data filter.
+    - Added support for auxiliary data for confirmations.
+    - Added GFFormDisplay::get_confirmation_message() method; refactored from GFFormDisplay::handle_confirmation().
+    - Added logging statements.
+    - Added the $field parameter to the gform_other_choice_value filter.
+    - Added gform_subscription_cancelled action.
+    - Added the gform_secure_file_download_url filter for overriding the url returned when the file upload field value is output in the entries area and merge tags. Credit: Chris Wiegman.
+    - Added the gform_purge_expired_incomplete_submissions_query filter allowing the query used to purge expired incomplete (save and continue) submissions to be overridden.
+	- Added gform_include_bom_export_entries filter allowing the BOM character to be excluded from entry export files.
+    - Added the gform_secure_file_download_is_https filter which can be used to prevent file upload urls from being changed from http to https when SSL is enabled. Credit: Chris Wiegman.
+    - Added the gform_fileupload_entry_value_file_path filter allowing the file upload url to be overridden when the field values are being prepared for output for the entry detail page and {all_fields} merge tag. Credit: Chris Wiegman.
+	- Added "numeric" modifier to merge tags to return numeric/unformatted numbers.
+    - Updated English translations (NZ, ZA). Credit: Ross McKay.
+    - Updated font size definitions to em (relative font size) in favor of rem (root font size)
+    - Updated the product field types array used by GFCommon::is_product_field() to include the hiddenproduct, singleproduct, and singleshipping input types. Credit: Naomi C. Bush.
+    - Updated the minimum version of WordPress required for support to 4.6.
+    - Updated the Afrikaans translation filename.
+	- Fixed issue with conditional logic when using numbers formatted with comma as decimal separators.
+	- Fixed conflict when reCaptcha script is enqueued by other plugins and themes.
+    - Fixed an issue where the partial entry was not available to the gform_review_page filter when resuming an incomplete submission.
+	- Fixed fatal error on PHP 7.1
+	- Fixed PHP warning on the entry list page if the value retrieved from the gform_entries_screen_options user option is not an array.
+    - Fixed a fatal error which would occur with 2.1.1.14+ if the cached version info contained a WP_Error.
+    - Fixed file size limit validation message not appearing when a validation message already exists.
+	- Fixed an issue with option currency formatting with decimal comma separator.
+    - Fixed an issue with total field formatting on currencies with decimal comma separator.
+    - Fixed an issue with the processing of custom fields during post creation which prevented the content template being processed.
+	- Fixed an issue with number formatting on calculated fields.
+	- Fixed an issue on number range setting defaulting to 'false'.
+	- Fixed an issue with form import process where the edit form link in incorrect.
+	- Fixed an issue with currency formatting.
+    - Fixed an issue where the version info may not get cached on some systems resulting in very slow loading of the admin pages.
+    - Fixed an issue with the Notifications meta box on the entry detail page when the user doesn't have the gravityforms_edit_entry_notes capability.
+    - Fixed an issue with the forms sent to the gform_forms_post_import action after import.
+    - Fixed an issue where GFFormDisplay::has_price_field() could incorrectly return false for some form configurations.
+    - Fixed issue where gfAjaxSpinner() did not link to a valid default spinner graphic.
+    - Fixed a JS error in the form editor when deleting a field on a form added via the GFAPI where the form button properties have not been defined.
+    - Fixed an issue with the submission time evaluation of conditional logic based on the multiselect type field.
+    - Fixed rgget helper function returning null when the value is 0.
+    - Fixed the send email form on the save and continue confirmation which occasionally would not submit when AJAX is enabled.
+    - Fixed entry filter from disappearing when no search results are found.
+    - Fixed entry filter not correctly populating search drop down when starred is set to no.
+    - Fixed a fatal error when a WP_Error object is passed as the second parameter of the rgget helper function.
+    - Fixed a fatal error which could occur on the entry detail page if a WP_Error is returned when getting the entry to be displayed.
+    - AF: Fixed an issue where following successful PayPal payment only one of the add-ons delayed feeds would be processed and would not be added to the entry processed_feeds meta item.
+    - AF: Updated logging for feed processing.
+    - API: Fixed an issue with entry searches when using numeric values for checkbox search keys which could return incorrect results.
+
+------------------------------------------------------------------------------------------------------------------
 Version 2.1.1
     - Added PF (French Polynesia) to the country code list. Credit: the GravityView team.
     - Added percentage based rule lines for alignment check in preview page.

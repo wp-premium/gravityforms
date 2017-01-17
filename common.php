@@ -875,13 +875,16 @@ class GFCommon {
 		/**
 		 * Filter data that will be used to replace merge tags.
 		 *
+		 * @since 2.1.1.11 Added the Entry Object as the 4th parameter.
+		 *
 		 * @param $data  array  Array of key/value pairs, where key is used as merge tag and value is an array of data available to the merge tag.
 		 * @param $text  string String of text which will be searched for merge tags.
 		 * @param $form  array  Current form object.
+		 * @param $lead  array  The current Entry Object.
 		 *
 		 * @see https://www.gravityhelp.com/documentation/article/gform_merge_tag_data/
 		 */
-		$data = apply_filters( 'gform_merge_tag_data', $data, $text, $form );
+		$data = apply_filters( 'gform_merge_tag_data', $data, $text, $form, $lead );
 
 		$lead = $data['entry'];
 
@@ -2006,8 +2009,26 @@ class GFCommon {
 		return self::is_product_field( $field_type ) || $field_type == 'donation';
 	}
 
+	/**
+	 * Checks if a field is a product field.
+	 *
+	 * @access public
+	 * @since  2.1.1.12 Added support for hiddenproduct, singleproduct, and singleshipping input types.
+	 * 
+	 * @param  string  $field_type The field type.
+	 * 
+	 * @return bool Returns true if it is a product field. Otherwise, false.
+	 */
 	public static function is_product_field( $field_type ) {
-		$product_fields = apply_filters( 'gform_product_field_types', array( 'option', 'quantity', 'product', 'total', 'shipping', 'calculation', 'price' ) );
+		/**
+		 * Filters the input types to use when checking if a field is a product field.
+		 *
+		 * @since 2.1.1.12 Added support for hiddenproduct, singleproduct, and singleshipping input types.
+		 * @since 1.9.14
+		 * 
+		 * @param $product_fields The product field types.
+		 */
+		$product_fields = apply_filters( 'gform_product_field_types', array( 'option', 'quantity', 'product', 'total', 'shipping', 'calculation', 'price', 'hiddenproduct', 'singleproduct', 'singleshipping' ) );
 		return in_array( $field_type, $product_fields );
 	}
 
@@ -2092,18 +2113,23 @@ class GFCommon {
 
 	public static function get_version_info( $cache = true ) {
 
-		$raw_response = get_transient( 'gform_update_info' );
+		$version_info = get_transient( 'gform_update_info' );
 		if ( ! $cache ) {
-			$raw_response = null;
+			$version_info = null;
 		}
 
-		if ( ! $raw_response ) {
+		if ( is_wp_error( $version_info ) || isset( $version_info['headers'] ) ) {
+			// Legacy ( < 2.1.1.14 ) version info contained the whole raw response.
+			$version_info = null;
+		}
+
+		if ( ! $version_info ) {
 			//Getting version number
 			$options            = array( 'method' => 'POST', 'timeout' => 20 );
 			$options['headers'] = array(
 				'Content-Type' => 'application/x-www-form-urlencoded; charset=' . get_option( 'blog_charset' ),
 				'User-Agent'   => 'WordPress/' . get_bloginfo( 'version' ),
-				'Referer'      => get_bloginfo( 'url' )
+				'Referer'      => get_bloginfo( 'url' ),
 			);
 			$options['body']    = self::get_remote_post_params();
 			$options['timeout'] = 15;
@@ -2112,19 +2138,18 @@ class GFCommon {
 
 			$raw_response = self::post_to_manager( 'version.php', $nocache, $options );
 
-			//caching responses.
-			set_transient( 'gform_update_info', $raw_response, 86400 ); //caching for 24 hours
-		}
+			if ( is_wp_error( $raw_response ) || rgars( $raw_response, 'response/code' ) != 200 ) {
 
-		if ( is_wp_error( $raw_response ) || rgars( $raw_response, 'response/code' ) != 200 ) {
+				$version_info = array( 'is_valid_key' => '1', 'version' => '', 'url' => '', 'is_error' => '1' );
+			} else {
+				$version_info = json_decode( $raw_response['body'], true );
+				if ( empty( $version_info ) ) {
+					$version_info = array( 'is_valid_key' => '1', 'version' => '', 'url' => '', 'is_error' => '1' );
+				}
+			}
 
-			return array( 'is_valid_key' => '1', 'version' => '', 'url' => '', 'is_error' => '1' );
-		}
-
-		$version_info = json_decode( $raw_response['body'], true );
-
-		if ( empty( $version_info ) ) {
-			return array( 'is_valid_key' => '1', 'version' => '', 'url' => '', 'is_error' => '1' );
+			// Caching response.
+			set_transient( 'gform_update_info', $version_info, 86400 ); //caching for 24 hours
 		}
 
 		return $version_info;
@@ -3296,10 +3321,28 @@ class GFCommon {
 		return $value;
 	}
 
-	public static function get_other_choice_value() {
-		$value = apply_filters( 'gform_other_choice_value', esc_html__( 'Other' , 'gravityforms' ) );
+	/**
+	 * Get the placeholder to use for the radio button field other choice.
+	 *
+	 * @param null|GF_Field_Radio $field Null or the Field currently being prepared for display or being validated.
+	 *
+	 * @return string
+	 */
+	public static function get_other_choice_value( $field = null ) {
+		$placeholder = esc_html__( 'Other', 'gravityforms' );
 
-		return $value;
+		/**
+		 * Filter the default placeholder for the radio button field other choice.
+		 *
+		 * @since 2.1.1.6 Added the $field parameter.
+		 * @since Unknown
+		 *
+		 * @param string              $placeholder The placeholder to be filtered. Defaults to "Other".
+		 * @param null|GF_Field_Radio $field       Null or the Field currently being prepared for display or being validated.
+		 */
+		$placeholder = apply_filters( 'gform_other_choice_value', $placeholder, $field );
+
+		return $placeholder;
 	}
 
 	public static function get_browser_class() {
@@ -4757,7 +4800,7 @@ class GFCommon {
 
 		if ( ! in_array( $field->type, array( 'html', 'section', 'signature' ) ) ) {
 			$value = self::encode_shortcodes( $value );
-		};
+		}
 
 		if ( $esc_attr ) {
 			$value = esc_attr( $value );
@@ -4765,7 +4808,12 @@ class GFCommon {
 
 		if ( $modifier == 'label' ) {
 			$value = empty( $value ) ? '' : $field->label;
-		} else if ( $modifier == 'qty' && $field->type == 'product' ) {
+		}
+		else if( $modifier == 'numeric' ) {
+			$number_format = $field->numberFormat ? $field->numberFormat : 'decimal_dot';
+			$value = self::clean_number( $value, $number_format );
+		}
+		else if ( $modifier == 'qty' && $field->type == 'product' ) {
 			// Getting quantity associated with product field.
 			$products = self::get_product_fields( $form, $lead, false, false );
 			$value    = 0;
@@ -4969,6 +5017,11 @@ class GFCategoryWalker extends Walker {
 			$pad .= '&nbsp;';
 		}
 		$object->name = "{$pad}{$object->name}";
+
+		if( empty( $output ) ){
+			$output = array();
+		}
+
 		$output[]     = $object;
 	}
 }
