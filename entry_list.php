@@ -182,7 +182,7 @@ class GFEntryList {
 
 		$option_values = get_user_option( 'gform_entries_screen_options' );
 
-		if ( empty( $option_values ) ) {
+		if ( empty( $option_values ) || ! is_array( $option_values ) ) {
 			$option_values = array();
 		}
 		$option_values = array_merge( $default_values, $option_values );
@@ -219,8 +219,6 @@ class GFEntryList {
 
 			<?php
 			GFForms::top_toolbar();
-
-			if ( $table->has_items() ) :
 				?>
 
 				<div id="entry_search_container">
@@ -229,8 +227,6 @@ class GFEntryList {
 					   href="javascript:Search('<?php echo esc_js( $table->get_orderby() ); ?>', '<?php echo esc_js( $table->get_order() ) ?>', <?php echo absint( $form_id ); ?>, jQuery('.gform-filter-value').val(), '<?php echo esc_js( $table->get_filter() ) ?>', jQuery('.gform-filter-field').val(), jQuery('.gform-filter-operator').val());"><?php esc_html_e( 'Search', 'gravityforms' ) ?></a>
 
 				</div>
-
-			<?php endif; ?>
 
 			<form id="entry_list_form" method="post">
 				<?php
@@ -1367,8 +1363,8 @@ final class GF_Entry_List_Table extends WP_List_Table {
 	function output_scripts() {
 
 		$form_id = $this->get_form_id();
-		$form       = $this->get_form();
-		$search     = stripslashes( rgget( 's' ) );
+		$form    = $this->get_form();
+		$search  = isset( $_GET['s'] ) ? stripslashes( $_GET['s'] ) : null;
 
 		$orderby      = empty( $_GET['orderby'] ) ? 0 : $_GET['orderby'];
 		$order = empty( $_GET['order'] ) ? 'ASC' : strtoupper( $_GET['order'] );

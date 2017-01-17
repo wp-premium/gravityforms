@@ -230,10 +230,15 @@ class GFFormDisplay {
 	/**
 	 * Get form object and insert review page, if necessary.
 	 *
-	 * @param array $form The current Form object
-	 * @return mixed The form meta array or false
+	 * @since 2.1.1.25 Added $partial_entry parameter.
+	 * @since 1.9.15
+	 *
+	 * @param array $form          The current Form object.
+	 * @param array $partial_entry The partial entry from the resumed incomplete submission. Defaults to an empty array.
+	 *
+	 * @return array The form object.
 	 */
-	public static function maybe_add_review_page( $form ) {
+	public static function maybe_add_review_page( $form, $partial_entry = array() ) {
 
 		/* Setup default review page parameters. */
 		$review_page = array(
@@ -255,8 +260,10 @@ class GFFormDisplay {
 
 		if ( has_filter( 'gform_review_page' ) || has_filter( "gform_review_page_{$form['id']}" ) ) {
 
-			// Prepare partial entry for review page.
-			$partial_entry = GFFormsModel::get_current_lead();
+			if ( empty( $partial_entry ) ) {
+				// Prepare partial entry for review page.
+				$partial_entry = GFFormsModel::get_current_lead();
+			}
 
 			/**
 			 * GFFormsModel::create_lead() caches the field value and conditional logic visibility which can create
@@ -662,8 +669,6 @@ class GFFormDisplay {
 		//reading form metadata
 		$form = GFAPI::get_form( $form_id );
 
-		$form = self::maybe_add_review_page( $form );
-
 		$action = remove_query_arg( 'gf_token' );
 
 		//disable ajax if form has a reCAPTCHA field (not supported).
@@ -707,7 +712,7 @@ class GFFormDisplay {
 			return self::handle_save_confirmation( $form, $resume_token, $confirmation_message, $ajax );
 		}
 
-		$partial_entry = $submitted_values = false;
+		$partial_entry = $submitted_values = $review_page_done = false;
 		if ( isset( $_GET['gf_token'] ) ) {
 			$incomplete_submission_info = GFFormsModel::get_incomplete_submission_values( $_GET['gf_token'] );
 			if ( $incomplete_submission_info['form_id'] == $form_id ) {
@@ -721,10 +726,17 @@ class GFFormDisplay {
 				self::set_submission_if_null( $form_id, 'resuming_incomplete_submission', true );
 				self::set_submission_if_null( $form_id, 'form_id', $form_id );
 
+				$form             = self::maybe_add_review_page( $form, $partial_entry );
+				$review_page_done = true;
+
 				$max_page_number = self::get_max_page_number( $form );
 				$page_number     = $submission_details['page_number'] > $max_page_number ? $max_page_number : $submission_details['page_number'];
 				self::set_submission_if_null( $form_id, 'page_number', $page_number );
 			}
+		}
+
+		if ( ! $review_page_done ) {
+			$form = self::maybe_add_review_page( $form );
 		}
 
 		if ( ! is_array( $partial_entry ) ) {
@@ -1420,23 +1432,28 @@ class GFFormDisplay {
 		}
 	}
 
-	public static function handle_confirmation( $form, $lead, $ajax = false ) {
+	/**
+	 * Handles the actions that occur when a confirmation occurs.
+	 *
+	 * @since 2.1.1.11 Refactored to use GFFormDisplay::get_confirmation_message()
+	 * 
+	 * @param  array   $form     The Form Object.
+	 * @param  array   $lead     The Entry Object.
+	 * @param  bool    $ajax     If AJAX is being used. Defaults to false.
+	 * @param  array   $aux_data Additional data to use when building the confirmation message. Defaults to empty array.
+	 * 
+	 * @return array The Confirmation Object.
+	 */
+	public static function handle_confirmation( $form, $lead, $ajax = false, $aux_data = array() ) {
 
 		GFCommon::log_debug( 'GFFormDisplay::handle_confirmation(): Sending confirmation.' );
 
-		//run the function to populate the legacy confirmation format to be safe
+		// Run the function to populate the legacy confirmation format to be safe.
 		$form = self::update_confirmation( $form, $lead );
 		$form_id = absint( $form['id'] );
 
 		if ( $form['confirmation']['type'] == 'message' ) {
-			$default_anchor = self::has_pages( $form ) ? 1 : 0;
-			$anchor         = gf_apply_filters( array( 'gform_confirmation_anchor', $form_id ), $default_anchor, $form ) ? "<a id='gf_{$form['id']}' class='gform_anchor' ></a>" : '';
-			$nl2br          = rgar( $form['confirmation'], 'disableAutoformat' ) ? false : true;
-			$cssClass       = esc_attr( rgar( $form, 'cssClass' ) );
-			$confirmation_message = GFCommon::replace_variables( $form['confirmation']['message'], $form, $lead, false, true, $nl2br );
-
-			$confirmation_message = self::maybe_sanitize_confirmation_message( $confirmation_message );
-			$confirmation   = empty( $form['confirmation']['message'] ) ? "{$anchor} " : "{$anchor}<div id='gform_confirmation_wrapper_{$form_id}' class='gform_confirmation_wrapper {$cssClass}'><div id='gform_confirmation_message_{$form_id}' class='gform_confirmation_message_{$form_id} gform_confirmation_message'>" . $confirmation_message . '</div></div>';
+			$confirmation = self::get_confirmation_message( $form['confirmation'], $form, $lead, $aux_data );
 		} else {
 			if ( ! empty( $form['confirmation']['pageId'] ) ) {
 				$url = get_permalink( $form['confirmation']['pageId'] );
@@ -1467,7 +1484,7 @@ class GFFormDisplay {
 			}
 
 			if ( headers_sent() || $ajax ) {
-				//Perform client side redirect for AJAX forms, of if headers have already been sent
+				// Perform client side redirect for AJAX forms, of if headers have already been sent.
 				$confirmation = self::get_js_redirect_confirmation( $url, $ajax );
 			} else {
 				$confirmation = array( 'redirect' => $url );
@@ -1489,6 +1506,33 @@ class GFFormDisplay {
 		GFCommon::log_debug( 'GFFormDisplay::handle_confirmation(): Confirmation => ' . print_r( $confirmation, true ) );
 
 		return $confirmation;
+	}
+
+	/**
+	 * Gets the confirmation message to be displayed.
+	 *
+	 * @since  2.1.1.11
+	 * @access public
+	 * 
+	 * @param  array $confirmation The Confirmation Object.
+	 * @param  array $form         The Form Object.
+	 * @param  array $entry        The Entry Object.
+	 * @param  array $aux_data     Additional data to be passed to GFCommon::replace_variables().
+	 * 
+	 * @return string The confirmation message.
+	 */
+	public static function get_confirmation_message( $confirmation, $form, $entry, $aux_data = array() ) {
+
+		$default_anchor = self::has_pages( $form ) ? 1 : 0;
+		$anchor         = gf_apply_filters( array( 'gform_confirmation_anchor', $form['id'] ), $default_anchor, $form ) ? "<a id='gf_{$form['id']}' class='gform_anchor' ></a>" : '';
+		$nl2br          = rgar( $confirmation, 'disableAutoformat' ) ? false : true;
+		$css_class      = esc_attr( rgar( $form, 'cssClass' ) );
+
+		$message = GFCommon::replace_variables( $confirmation['message'], $form, $entry, false, true, $nl2br, 'html', $aux_data );
+		$message = self::maybe_sanitize_confirmation_message( $message );
+		$message = empty( $confirmation['message'] ) ? "{$anchor} " : "{$anchor}<div id='gform_confirmation_wrapper_{$form['id']}' class='gform_confirmation_wrapper {$css_class}'><div id='gform_confirmation_message_{$form['id']}' class='gform_confirmation_message_{$form['id']} gform_confirmation_message'>" . $message . '</div></div>';
+
+		return $message;
 	}
 
 	/**
@@ -2508,14 +2552,28 @@ class GFFormDisplay {
 		return false;
 	}
 
+	/**
+	 * Determines if the supplied form has a product field.
+	 *
+	 * @since 2.1.1.12 Updated to check the $field->type instead of the $field->inputType.
+	 * @since Unknown
+	 *
+	 * @uses GFCommon::is_product_field()
+	 *
+	 * @param array $form The current forms properties.
+	 *
+	 * @return bool
+	 */
 	private static function has_price_field( $form ) {
-		$has_price_field = false;
-		foreach ( $form['fields'] as $field ) {
-			$input_type      = GFFormsModel::get_input_type( $field );
-			$has_price_field = GFCommon::is_product_field( $input_type ) ? true : $has_price_field;
+		if ( is_array( $form['fields'] ) ) {
+			foreach ( $form['fields'] as $field ) {
+				if ( GFCommon::is_product_field( $field->type ) ) {
+					return true;
+				}
+			}
 		}
-		
-		return $has_price_field;
+
+		return false;
 	}
 
 	private static function has_fileupload_field( $form ) {
@@ -3177,13 +3235,15 @@ class GFFormDisplay {
 			$ajax_fields .= "<input type='hidden' name='gform_field_values' value='' />";
 		}
 
+		$ajax_submit = $ajax ? "onclick='jQuery(\"#gform_{$form_id}\").trigger(\"submit\",[true]);'" : '';
+
 		$resume_form = "<div class='form_saved_message_emailform'>
 							<form action='{$action}' method='POST' id='gform_{$form_id}' {$target}>
 								{$ajax_fields}
 								<input type='{$html_input_type}' name='gform_resume_email' value='{$email_esc}'/>
 								<input type='hidden' name='gform_resume_token' value='{$resume_token}' />
 								<input type='hidden' name='gform_send_resume_link' value='{$form_id}' />
-	                            <input type='submit' name='gform_send_resume_link_button' id='gform_send_resume_link_button_{$form_id}' value='{$resume_submit_button_text}' />
+	                            <input type='submit' name='gform_send_resume_link_button' id='gform_send_resume_link_button_{$form_id}' value='{$resume_submit_button_text}' {$ajax_submit}/>
 	                            {$validation_message}
 	                            {$nonce_input}
 							</form>

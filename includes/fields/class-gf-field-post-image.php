@@ -89,15 +89,21 @@ class GF_Field_Post_Image extends GF_Field_Fileupload {
 		$form_id = $form['id'];
 		$url     = $this->get_single_file_value( $form_id, $input_name );
 
-		if ( ! empty( $url ) && GFCommon::is_valid_url( $url ) ) {
-			$image_title       = isset( $_POST["{$input_name}_1"] ) ? wp_strip_all_tags( $_POST["{$input_name}_1"] ) : '';
-			$image_caption     = isset( $_POST["{$input_name}_4"] ) ? wp_strip_all_tags( $_POST["{$input_name}_4"] ) : '';
-			$image_description = isset( $_POST["{$input_name}_7"] ) ? wp_strip_all_tags( $_POST["{$input_name}_7"] ) : '';
-
-			return $url . '|:|' . $image_title . '|:|' . $image_caption . '|:|' . $image_description;
+		if ( empty( $url ) ) {
+			return '';
 		}
 
-		return '';
+		if ( ! GFCommon::is_valid_url( $url ) ) {
+			GFCommon::log_debug( __METHOD__ . '(): aborting; File URL invalid.' );
+
+			return '';
+		}
+
+		$image_title       = isset( $_POST["{$input_name}_1"] ) ? wp_strip_all_tags( $_POST["{$input_name}_1"] ) : '';
+		$image_caption     = isset( $_POST["{$input_name}_4"] ) ? wp_strip_all_tags( $_POST["{$input_name}_4"] ) : '';
+		$image_description = isset( $_POST["{$input_name}_7"] ) ? wp_strip_all_tags( $_POST["{$input_name}_7"] ) : '';
+
+		return $url . '|:|' . $image_title . '|:|' . $image_caption . '|:|' . $image_description;
 	}
 
 	public function get_value_entry_list( $value, $entry, $field_id, $columns, $form ) {

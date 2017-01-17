@@ -40,6 +40,12 @@ abstract class GFFeedAddOn extends GFAddOn {
 	protected $_supports_feed_ordering = false;
 
 	/**
+	 * If true, maybe_delay_feed() checks will be bypassed allowing the feeds to be processed.
+	 * @var bool
+	 */
+	protected $_bypass_feed_delay = false;
+
+	/**
 	 * @var string Version number of the Add-On Framework
 	 */
 	private $_feed_version = '0.13';
@@ -195,6 +201,14 @@ abstract class GFFeedAddOn extends GFAddOn {
 
 	public function maybe_process_feed( $entry, $form ) {
 
+		if ( 'spam' === $entry['status'] ) {
+			$this->log_debug( "GFFeedAddOn::maybe_process_feed(): Entry #{$entry['id']} is marked as spam; not processing feeds for {$this->_slug}." );
+
+			return $entry;
+		}
+
+		$this->log_debug( __METHOD__ . "(): Checking for feeds to process for entry #{$entry['id']} for {$this->_slug}." );
+
 		$feeds = false;
 
 		// Getting all feeds for current add-on
@@ -210,12 +224,8 @@ abstract class GFFeedAddOn extends GFAddOn {
 		$feeds = $this->pre_process_feeds( $feeds, $entry, $form );
 
 		if ( empty( $feeds ) ) {
-			// no feeds to process
-			return $entry;
-		}
+			$this->log_debug( __METHOD__ . "(): No feeds to process for entry #{$entry['id']}." );
 
-		if ( 'spam' === $entry['status'] ) {
-			$this->log_debug( 'GFFeedAddOn::maybe_process_feed(): Entry #' . $entry['id'] . ' is marked as spam.' );
 			return $entry;
 		}
 
@@ -227,21 +237,20 @@ abstract class GFFeedAddOn extends GFAddOn {
 			$feed_name = rgempty( 'feed_name', $feed['meta'] ) ? rgar( $feed['meta'], 'feedName' ) : rgar( $feed['meta'], 'feed_name' );
 
 			if ( ! $feed['is_active'] ) {
-				$this->log_debug( "GFFeedAddOn::maybe_process_feed(): Feed is inactive, not processing feed (#{$feed['id']} - {$feed_name}) for entry #{$entry['id']} for {$this->_slug}" );
+				$this->log_debug( "GFFeedAddOn::maybe_process_feed(): Feed is inactive, not processing feed (#{$feed['id']} - {$feed_name}) for entry #{$entry['id']}." );
 				continue;
 			}
 			if ( ! $this->is_feed_condition_met( $feed, $form, $entry ) ) {
-				$this->log_debug( "GFFeedAddOn::maybe_process_feed(): Feed condition not met, not processing feed (#{$feed['id']} - {$feed_name}) for entry #{$entry['id']} for {$this->_slug}" );
+				$this->log_debug( "GFFeedAddOn::maybe_process_feed(): Feed condition not met, not processing feed (#{$feed['id']} - {$feed_name}) for entry #{$entry['id']}." );
 				continue;
 			}
 
-			$processed_feeds[] = $feed['id'];
-
 			// process feed if not delayed
 			if ( ! $is_delayed ) {
+				$processed_feeds[] = $feed['id'];
 
 				// all requirements met, process feed
-				$this->log_debug( "GFFeedAddOn::maybe_process_feed(): Starting to process feed (#{$feed['id']} - {$feed_name}) for entry #{$entry['id']} for {$this->_slug}" );
+				$this->log_debug( "GFFeedAddOn::maybe_process_feed(): Starting to process feed (#{$feed['id']} - {$feed_name}) for entry #{$entry['id']}." );
 				$returned_entry = $this->process_feed( $feed, $entry, $form );
 
 				// If returned value from the process feed call is an array containing an id, set the entry to its value.
@@ -262,13 +271,9 @@ abstract class GFFeedAddOn extends GFAddOn {
 				do_action( 'gform_post_process_feed', $feed, $entry, $form, $this );
 				do_action( "gform_{$this->_slug}_post_process_feed", $feed, $entry, $form, $this );
 
-				// should the add-on fulfill be done here????
-				$this->log_debug( 'GFFeedAddOn::maybe_process_feed(): Marking entry #' . $entry['id'] . ' as fulfilled for ' . $this->_slug );
-				gform_update_meta( $entry['id'], "{$this->_slug}_is_fulfilled", true );
-
 			} else {
 
-				$this->log_debug( 'GFFeedAddOn::maybe_process_feed(): Feed processing is delayed, not processing feed for entry #' . $entry['id'] . ' for ' . $this->_slug );
+				$this->log_debug( "GFFeedAddOn::maybe_process_feed(): Feed processing is delayed, not processing feed (#{$feed['id']} - {$feed_name}) for entry #{$entry['id']}." );
 				$this->delay_feed( $feed, $entry, $form );
 
 			}
@@ -284,6 +289,9 @@ abstract class GFFeedAddOn extends GFAddOn {
 			$meta[ $this->_slug ] = $processed_feeds;
 
 			gform_update_meta( $entry['id'], 'processed_feeds', $meta );
+
+			$this->log_debug( 'GFFeedAddOn::maybe_process_feed(): Marking entry #' . $entry['id'] . ' as fulfilled for ' . $this->_slug );
+			gform_update_meta( $entry['id'], "{$this->_slug}_is_fulfilled", true );
 		}
 
 		return $entry;
@@ -300,6 +308,10 @@ abstract class GFFeedAddOn extends GFAddOn {
 	 * @return bool
 	 */
 	public function maybe_delay_feed( $entry, $form ) {
+		if ( $this->_bypass_feed_delay ) {
+			return false;
+		}
+
 		$is_delayed = false;
 		$slug       = $this->get_slug();
 
@@ -1400,36 +1412,10 @@ abstract class GFFeedAddOn extends GFAddOn {
 			return false;
 		}
 
-		$form = RGFormsModel::get_form_meta( $entry['form_id'] );
+		$form                     = RGFormsModel::get_form_meta( $entry['form_id'] );
+		$this->_bypass_feed_delay = true;
+		$this->maybe_process_feed( $entry, $form );
 
-		$feed_to_process = '';
-		$feeds = $this->get_feeds( $entry['form_id'] );
-		$feeds = $this->pre_process_feeds( $feeds, $entry, $form  );
-
-		foreach ( $feeds as $feed ){
-			if ( $feed['is_active'] && $this->is_feed_condition_met( $feed, $form, $entry ) ) {
-				$feed_to_process = $feed;
-				break;
-			}
-		}
-		if ( empty( $feed_to_process ) ) {
-			$this->log_debug( 'GFFeedAddOn::paypal_fulfillment(): No active feeds found or feeds did not meet conditional logic for ' . $this->_slug . '. No fulfillment necessary.' );
-			return false;
-		}
-
-		$returned_entry = $this->process_feed( $feed_to_process, $entry, $form );
-
-		// If returned value from the process feed call is an array containing an id, set the entry to its value.
-		if ( is_array( $returned_entry ) && rgar( $returned_entry, 'id' ) ) {
-			$entry = $returned_entry;
-		}
-
-		do_action( 'gform_post_process_feed', $feed_to_process, $entry, $form, $this );
-		do_action( "gform_{$this->_slug}_post_process_feed", $feed_to_process, $entry, $form, $this );
-
-		// updating meta to indicate this entry has been fulfilled for the current add-on
-		$this->log_debug( 'GFFeedAddOn::paypal_fulfillment(): Marking entry ' . $entry['id'] . ' as fulfilled for ' . $this->_slug );
-		gform_update_meta( $entry['id'], "{$this->_slug}_is_fulfilled", true );
 	}
 
 	//--------------- Notes ------------------

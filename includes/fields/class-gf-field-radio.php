@@ -40,7 +40,7 @@ class GF_Field_Radio extends GF_Field {
 			$value = rgpost( "input_{$this->id}_other" );
 		}
 
-		if ( $this->isRequired && $this->enableOtherChoice && $value == GFCommon::get_other_choice_value() ) {
+		if ( $this->isRequired && $this->enableOtherChoice && $value == GFCommon::get_other_choice_value( $this ) ) {
 			$this->failed_validation  = true;
 			$this->validation_message = empty( $this->errorMessage ) ? esc_html__( 'This field is required.', 'gravityforms' ) : $this->errorMessage;
 		}
@@ -77,7 +77,7 @@ class GF_Field_Radio extends GF_Field {
 
 			// add 'other' choice to choices if enabled
 			if ( $this->enableOtherChoice ) {
-				$other_default_value = GFCommon::get_other_choice_value();
+				$other_default_value = GFCommon::get_other_choice_value( $this );
 				$this->choices[]     = array( 'text' => $other_default_value, 'value' => 'gf_other_choice', 'isSelected' => false, 'isOtherChoice' => true );
 			}
 
