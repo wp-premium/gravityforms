@@ -10,10 +10,10 @@
 admin.css
 Gravity Forms Administration Styles
 http: //www.gravityforms.com
-updated: July 12, 2016 10:10 PM GMT-5
+updated: January 24, 2017 05:08 PM (GMT-05:00) US Eastern Time
 
 Gravity Forms is a Rocketgenius project
-copyright 2008-2016 Rocketgenius Inc.
+copyright 2008-2017 Rocketgenius Inc.
 http: //www.rocketgenius.com
 this may not be re-distrubited without the
 express written permission of the author.
@@ -100,9 +100,15 @@ select {
     display: none;
 }
 
-.gform_pending_delete{
-	background-color: #FFE1E1;
-	border: 5px solid #f00;
+.gform_pending_delete,
+.field_hover.gform_pending_delete {
+	background-color: rgba(255, 223, 224, 0.5);
+	color: #790000 !important;
+	background-image: none;
+	border: 1px solid rgba(121, 0, 0, 1) !important;
+	-webkit-box-shadow: 0px 1px 1px 0px rgba(0,0,0,0);
+	-moz-box-shadow: 0px 1px 1px 0px rgba(0,0,0,0);
+	box-shadow: 0px 1px 1px 0px rgba(0,0,0,0);
 }
 
 table.xwidefat {
@@ -375,7 +381,7 @@ label.float_label {
 	width: 80% !important;
 }
 
-.field_hover {
+.field_hover:not(.gform_pending_delete) {
 	border: 1px solid #D2E0EB !important;
 	background-image: url(../images/gf-fieldsettings-header.jpg);
 	background-position: 0 0;
@@ -683,7 +689,7 @@ h2.gsection_title {
 	font-size: 20px;
 	font-family: helvetica,arial,sans-serif;
 	width: 100%;
-	border-bottom: 5px double #CCC !important;
+	border-bottom: 1px solid #CCC !important;
 }
 
 h3.gf_add_fields {

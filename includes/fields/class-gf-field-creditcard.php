@@ -390,6 +390,23 @@ class GF_Field_CreditCard extends GF_Field {
 	}
 
 	/**
+	 * Upgrades inputs, if needed.
+	 *
+	 * @since  2.1.2.7
+	 * @access public
+	 * @see    GF_Field::post_convert_field()
+	 *
+	 * @uses GF_Field::post_convert_field()
+	 * @uses GF_Field_CreditCard::maybe_upgrade_inputs()
+	 *
+	 * @return void
+	 */
+	public function post_convert_field() {
+		parent::post_convert_field();
+		$this->maybe_upgrade_inputs();
+	}
+
+	/**
 	 * GF1.8 and earlier used 5 inputs (1 input for the expiration date); GF1.9 changed to 6 inputs (the expiration month and year now separate); upgrade those fields still using the older configuration.
 	 */
 	public function maybe_upgrade_inputs() {

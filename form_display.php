@@ -455,7 +455,7 @@ class GFFormDisplay {
 
 	/**
 	 * Determine if form has any pages.
-	 * 
+	 *
 	 * @access private
 	 *
 	 * @param array $form The form object
@@ -566,7 +566,19 @@ class GFFormDisplay {
 			$page_number = 0;
 		}
 
-		return $page_number;
+		/**
+		 * Modify the target page.
+		 *
+		 * @since 2.1.2.13
+		 *
+		 * @see https://www.gravityhelp.com/documentation/article/gform_target_page/
+		 *
+		 * @param int   $page_number  The target page number.
+		 * @param array $form         The current form object.
+		 * @param int   $current_page The page that was submitted.
+		 * @param array $field_values Dynamic population values that were provided when loading the form.
+		 */
+		return gf_apply_filters( array( 'gform_target_page', $form['id'] ), $page_number, $form, $current_page, $field_values );
 	}
 
 	public static function get_source_page( $form_id ) {
@@ -730,7 +742,10 @@ class GFFormDisplay {
 				$review_page_done = true;
 
 				$max_page_number = self::get_max_page_number( $form );
-				$page_number     = $submission_details['page_number'] > $max_page_number ? $max_page_number : $submission_details['page_number'];
+				$page_number     = $submission_details['page_number'];
+				if ( $page_number > 1 && $max_page_number > 0 && $page_number > $max_page_number ) {
+					$page_number = $max_page_number;
+				}
 				self::set_submission_if_null( $form_id, 'page_number', $page_number );
 			}
 		}
@@ -854,24 +869,24 @@ class GFFormDisplay {
 
 			//Hiding entire form if conditional logic is on to prevent 'hidden' fields from blinking. Form will be set to visible in the conditional_logic.php after the rules have been applied.
 			$style                    = self::has_conditional_logic( $form ) ? "style='display:none'" : '';
-			
+
 			// Split form CSS class by spaces and apply wrapper to each.
 			$custom_wrapper_css_class = '';
 			if ( ! empty( $form_css_class ) ) {
-				
+
 				// Separate the CSS classes.
 				$form_css_classes = explode( ' ', $form_css_class );
-				
+
 				// Append _wrapper to each class.
 				foreach ( $form_css_classes as &$wrapper_class ) {
 					$wrapper_class .= '_wrapper';
 				}
-				
+
 				// Merge back into a string.
 				$custom_wrapper_css_class = ' ' . implode( ' ', $form_css_classes );
-			
+
 			}
-			
+
 			$form_string .= "
                 <div class='{$wrapper_css_class}{$custom_wrapper_css_class}' id='gform_wrapper_$form_id' " . $style . '>';
 
@@ -1436,12 +1451,12 @@ class GFFormDisplay {
 	 * Handles the actions that occur when a confirmation occurs.
 	 *
 	 * @since 2.1.1.11 Refactored to use GFFormDisplay::get_confirmation_message()
-	 * 
+	 *
 	 * @param  array   $form     The Form Object.
 	 * @param  array   $lead     The Entry Object.
 	 * @param  bool    $ajax     If AJAX is being used. Defaults to false.
 	 * @param  array   $aux_data Additional data to use when building the confirmation message. Defaults to empty array.
-	 * 
+	 *
 	 * @return array The Confirmation Object.
 	 */
 	public static function handle_confirmation( $form, $lead, $ajax = false, $aux_data = array() ) {
@@ -1513,12 +1528,12 @@ class GFFormDisplay {
 	 *
 	 * @since  2.1.1.11
 	 * @access public
-	 * 
+	 *
 	 * @param  array $confirmation The Confirmation Object.
 	 * @param  array $form         The Form Object.
 	 * @param  array $entry        The Entry Object.
 	 * @param  array $aux_data     Additional data to be passed to GFCommon::replace_variables().
-	 * 
+	 *
 	 * @return string The confirmation message.
 	 */
 	public static function get_confirmation_message( $confirmation, $form, $entry, $aux_data = array() ) {
@@ -2904,7 +2919,7 @@ class GFFormDisplay {
 
 		$field_content = str_replace( '{FIELD}', GFCommon::get_field_input( $field, $value, 0, $form_id, $form ), $field_content );
 
-		$field_content = apply_filters( 'gform_field_content', $field_content, $field, $value, 0, $form_id );
+		$field_content = gf_apply_filters( array( 'gform_field_content', $form_id, $field->id ), $field_content, $field, $value, 0, $form_id );
 
 		return $field_content;
 	}
@@ -3362,21 +3377,21 @@ class GFFormDisplay {
 
 		/* Add review page break field to form. */
 		$form['fields'][] = $review_page_break;
-		
+
 		/* Create new HTML field for review page. */
 		$review_page_field             = new GF_Field_HTML();
 		$review_page_field->id         = $new_field_id++;
 		$review_page_field->pageNumber = $page_number;
 		$review_page_field->content    = rgar( $review_page, 'content' );
-		
+
 		/* Add review page field to form. */
 		$form['fields'][] = $review_page_field;
 
 		/* Configure the last page previous button */
 		$form['lastPageButton'] = rgar( $review_page, 'previousButton' );
-				
+
 		return $form;
-		
+
 	}
 
 }

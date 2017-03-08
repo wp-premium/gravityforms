@@ -2361,7 +2361,6 @@ class GFFormDetail {
 
 						<?php
 						$field_groups = self::get_field_groups();
-						
 
 						foreach ( $field_groups as $group ) {
 							$tooltip_class = empty( $group['tooltip_class'] ) ? 'tooltip_left' : $group['tooltip_class'];
@@ -2395,11 +2394,15 @@ class GFFormDetail {
 						$trash_link = apply_filters( 'gform_form_delete_link', $trash_link );
 
 						/**
-						 * Allows for modification of the Form Trash Link
+						 * Allows for modification of the Form Trash Link.
 						 *
-						 * @param string $trash_link The Trash link HTML
+						 * @since 2.1.2.3 Added the $form_id param.
+						 * @since 1.8
+						 *
+						 * @param string $trash_link The Trash link HTML.
+						 * @param int    $form_id    The ID of the form being edited.
 						 */
-						echo apply_filters( 'gform_form_trash_link', $trash_link );
+						echo apply_filters( 'gform_form_trash_link', $trash_link, $form_id );
 					}
 
 					$button_text = rgar( $form, 'id' ) > 0 ? __( 'Update Form', 'gravityforms' ) : __( 'Save Form', 'gravityforms' );
@@ -2480,7 +2483,7 @@ class GFFormDetail {
 	 * @return array
 	 */
 	public static function get_field_groups() {
-		
+
 		// Set initial field groups.
 		$field_groups = array(
 			'standard_fields' => array(

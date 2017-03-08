@@ -1,4 +1,30 @@
 ------------------------------------------------------------------------------------------------------------------
+Version 2.1.3
+    - Added security enhancements. Credit: James Golovich from Pritect, Inc. (https://pritect.net)
+    - Added Dutch (Belgium) translation. Credit: Dave Loodts
+    - Added form ID and field ID modifiers to 'gform_field_content' and 'gform_field_input' filters.
+    - Added 'gform_target_page' filter to allow modifying the target page; See https://www.gravityhelp.com/documentation/article/gform_target_page/
+    - Added 'gform_order_summary' filter. See https://www.gravityhelp.com/documentation/article/gform_order_summary/
+
+	- Updated gform_add_meta() and gform_get_meta() to no longer save meta for psuedo-entries; requires an integer greater than zero.
+    - Updated strings for translations
+    - Updated the Czech (cs_CZ) translation. Credit: Tomáš Očadlý.
+    - Updated the gform_form_trash_link filter to include $form_id as the second parameter.
+
+	- Fixed several PHP notices and warnings which occurred when saving a new confirmation with PHP 7.1.
+	- Fixed the entry detail/{all_fields} display value for the Single Product field when the quantity input is empty or the price is 0. Credit: the GravityView team.
+	- Fixed an issue with the PHPMailer error message logging statement.
+	- Fixed the filter links on the Forms list page incorrectly displaying "All" as the current filter when another filter was selected.
+	- Fixed an issue where fields can show up as invalid in the form editor if the form was updated using the form object returned after a validation failure.
+	- Fixed an issue with the view entry links on the entry list page when the list has been sorted.
+	- Fixed PHP notice during submission if a non-field merge tag is used in a calculation formula.
+	- Fixed an issue with the no duplicates validation for the Phone field.
+    - Fixed strings for translations.
+    - Fixed an issue with the forms current page number when resuming an incomplete submission for a single page form which could prevent Stripe.js from processing the submission.
+
+	- AF: Fixed an issue setting the entry payment date when starting a subscription.
+
+------------------------------------------------------------------------------------------------------------------
 Version 2.1.2
     - Added $entry as a fourth parameter for the gform_merge_tag_data filter.
     - Added support for auxiliary data for confirmations.

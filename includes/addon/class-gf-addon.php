@@ -4399,7 +4399,7 @@ abstract class GFAddOn {
 
 				<h3><span><i class="fa fa-times"></i> <?php printf( esc_html__( 'Uninstall %s Add-On', 'gravityforms' ), $this->get_short_title() ) ?></span></h3>
 				<div class="delete-alert alert_red">
-					<h3><i class="fa fa-exclamation-triangle gf_invalid"></i> Warning</h3>
+					<h3><i class="fa fa-exclamation-triangle gf_invalid"></i> <?php printf( esc_html__('Warning', 'gravityforms' ) ); ?></h3>
 					<div class="gf_delete_notice">
 						<?php echo $this->uninstall_warning_message() ?>
 					</div>

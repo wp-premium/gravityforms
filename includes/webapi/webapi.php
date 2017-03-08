@@ -1849,6 +1849,10 @@ if ( class_exists( 'GFForms' ) ) {
 				die();
 			}
 
+			if ( ! GFAPI::current_user_can_any( 'gravityforms_api_settings' ) ) {
+				die();
+			}
+
 			$data['url']         = site_url();
 			$data['name']        = get_bloginfo();
 			$data['public_key']  = rgar( $settings, 'public_key' );
