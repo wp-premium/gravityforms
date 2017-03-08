@@ -4,10 +4,10 @@
 browsers.css
 Gravity Forms Browser-Specific CSS
 http://www.gravityforms.com
-updated: September 27, 2016 12:02 PM GMT-5
+updated: January 12, 2017 03:56 PM (GMT-05:00) US Eastern Time
 
 Gravity Forms is a Rocketgenius project
-copyright 2008-2016 Rocketgenius Inc.
+copyright 2008-2017 Rocketgenius Inc.
 http: //www.rocketgenius.com
 this may not be redistributed without the
 express written permission of the author.
@@ -144,10 +144,6 @@ to no.
 
 .gform_wrapper.gf_browser_chrome span.address_country {
         margin-top:-2px;
-}
-
-.gform_wrapper.gf_browser_chrome .gform_body {
-        width: calc(100% + 15px);
 }
 
 /* Firefox specific styles */

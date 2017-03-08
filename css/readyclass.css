@@ -4,10 +4,10 @@
 readyclass.css
 Gravity Forms Ready Class Pre-Set Helper Styles
 http://www.gravityforms.com
-updated: November 11, 2016 9:39 AM GMT-5
+updated: January 12, 2017 04:17 PM (GMT-05:00) US Eastern Time
 
 Gravity Forms is a Rocketgenius project
-copyright 2008-2016 Rocketgenius Inc.
+copyright 2008-2017 Rocketgenius Inc.
 http: //www.rocketgenius.com
 this may not be redistributed without the
 express written permission of the author.
@@ -803,6 +803,12 @@ to no.
 
     /* simple horizontal form ready class - very simple implementation for up to 5 fields and a button */
 
+    .gform_wrapper.gf_simple_horizontal_wrapper.centered_wrapper {
+        width: auto;
+        margin: 0 auto;
+        display: table;
+    }
+
     .gform_wrapper form.gf_simple_horizontal {
         width: calc(100% -16px);
         margin: 0 auto;
@@ -810,8 +816,7 @@ to no.
 
     .gform_wrapper form.gf_simple_horizontal div.gform_body,
     .gform_wrapper form.gf_simple_horizontal div.gform_footer.top_label {
-        display: -moz-inline-stack;
-        display: inline-block;
+        display: table-cell;
         vertical-align: middle;
         margin: 0;
         padding: 0;
@@ -839,10 +844,14 @@ to no.
         text-align: left
     }
 
+    .gform_wrapper form.gf_simple_horizontal div.gform_body ul.top_label {
+        display: table;
+        width: 100%;
+    }
+
     .gform_wrapper form.gf_simple_horizontal div.gform_body ul.top_label li.gfield {
-        display: -moz-inline-stack;
-        display: inline-block;
-        padding-right: 16px;
+        display: table-cell;
+        padding-right: 1em;
         height: auto;
     }
 
@@ -856,57 +865,6 @@ to no.
         position: absolute;
         top: 0;
         left: - 9000px;
-    }
-
-    /* simple horizontal form - set a width for one field */
-
-    .gform_wrapper form.gf_simple_horizontal div.gform_body ul.top_label li.gfield:nth-child(1):nth-last-child(1) {
-        width: 100%;
-    }
-
-    /* simple horizontal form - set a width for two fields */
-
-    .gform_wrapper form.gf_simple_horizontal div.gform_body ul.top_label li.gfield:nth-child(1):nth-last-child(2),
-    .gform_wrapper form.gf_simple_horizontal div.gform_body ul.top_label li.gfield:nth-child(2):nth-last-child(1) {
-        width: 50%;
-    }
-
-    /* simple horizontal form - set a width for three fields */
-
-    .gform_wrapper form.gf_simple_horizontal div.gform_body ul.top_label li.gfield:nth-child(1):nth-last-child(3),
-    .gform_wrapper form.gf_simple_horizontal div.gform_body ul.top_label li.gfield:nth-child(2):nth-last-child(2),
-    .gform_wrapper form.gf_simple_horizontal div.gform_body ul.top_label li.gfield:nth-child(3):nth-last-child(1) {
-        width: 33.3333%;
-    }
-
-    /* simple horizontal form - set a width for four fields */
-
-    .gform_wrapper form.gf_simple_horizontal div.gform_body ul.top_label li.gfield:nth-child(1):nth-last-child(4),
-    .gform_wrapper form.gf_simple_horizontal div.gform_body ul.top_label li.gfield:nth-child(2):nth-last-child(3),
-    .gform_wrapper form.gf_simple_horizontal div.gform_body ul.top_label li.gfield:nth-child(3):nth-last-child(2),
-    .gform_wrapper form.gf_simple_horizontal div.gform_body ul.top_label li.gfield:nth-child(4):nth-last-child(1) {
-        width: 25%;
-    }
-
-    /* simple horizontal form - simple horizontal form - set a width for five fields */
-
-    .gform_wrapper form.gf_simple_horizontal div.gform_body ul.top_label li.gfield:nth-child(1):nth-last-child(5),
-    .gform_wrapper form.gf_simple_horizontal div.gform_body ul.top_label li.gfield:nth-child(2):nth-last-child(4),
-    .gform_wrapper form.gf_simple_horizontal div.gform_body ul.top_label li.gfield:nth-child(3):nth-last-child(3),
-    .gform_wrapper form.gf_simple_horizontal div.gform_body ul.top_label li.gfield:nth-child(4):nth-last-child(2),
-    .gform_wrapper form.gf_simple_horizontal div.gform_body ul.top_label li.gfield:nth-child(5):nth-last-child(1) {
-        width: 20%;
-    }
-
-    /* simple horizontal form - set a width for six fields */
-
-    .gform_wrapper form.gf_simple_horizontal div.gform_body ul.top_label li.gfield:nth-child(1):nth-last-child(6),
-    .gform_wrapper form.gf_simple_horizontal div.gform_body ul.top_label li.gfield:nth-child(2):nth-last-child(5),
-    .gform_wrapper form.gf_simple_horizontal div.gform_body ul.top_label li.gfield:nth-child(3):nth-last-child(4),
-    .gform_wrapper form.gf_simple_horizontal div.gform_body ul.top_label li.gfield:nth-child(4):nth-last-child(3),
-    .gform_wrapper form.gf_simple_horizontal div.gform_body ul.top_label li.gfield:nth-child(5):nth-last-child(2),
-    .gform_wrapper form.gf_simple_horizontal div.gform_body ul.top_label li.gfield:nth-child(6):nth-last-child(1) {
-        width: 16.6%;
     }
 
     .gform_wrapper form.gf_simple_horizontal div.gform_body ul.top_label.form_sublabel_below li.gfield {
@@ -938,6 +896,29 @@ to no.
     .gform_wrapper form.gf_simple_horizontal .top_label .gfield_error {
         margin-bottom: 0;
     }
+
+    .gform_wrapper form.gf_simple_horizontal ul li.gfield .ginput_container_checkbox ul li,
+    .gform_wrapper form.gf_simple_horizontal ul li.gfield .ginput_container_radio ul li {
+        display: inline-block;
+        margin-right: .5em;
+    }
+
+    html[dir="rtl"] .gform_wrapper form.gf_simple_horizontal div.ginput_complex.ginput_container.gf_name_has_2 span {
+        width: 48.5%;
+    }
+
+    html[dir="rtl"] .gform_wrapper form.gf_simple_horizontal div.ginput_complex.ginput_container.gf_name_has_3 span {
+        width: 33%;
+    }
+
+    html[dir="rtl"] .gform_wrapper form.gf_simple_horizontal div.ginput_complex.ginput_container.gf_name_has_4 span {
+        width: 24.5%;
+    }
+
+    html[dir="rtl"] .gform_wrapper form.gf_simple_horizontal div.ginput_complex.ginput_container.gf_name_has_5 span {
+        width: 19.5%;
+    }
+
 
 /* end media query */
 

@@ -716,7 +716,18 @@ class GFEntryDetail {
 								break;
 						}
 
-						$content = apply_filters( 'gform_field_content', $content, $field, $value, $lead['id'], $form['id'] );
+						/**
+						 * Filters the field content.
+						 *
+						 * @since 2.1.2.14 Added form and field ID modifiers.
+						 *
+						 * @param string $content    The field content.
+						 * @param array  $field      The Field Object.
+						 * @param string $value      The field value.
+						 * @param int    $lead['id'] The entry ID.
+						 * @param int    $form['id'] The form ID.
+						 */
+						$content = gf_apply_filters( array( 'gform_field_content', $form['id'], $field->id ), $content, $field, $value, $lead['id'], $form['id'] );
 
 						echo $content;
 					}
@@ -929,11 +940,11 @@ class GFEntryDetail {
 					case 'html':
 					case 'password':
 					case 'page':
-						//ignore captcha, html, password, page field
+						// Ignore captcha, html, password, page field.
 						break;
 
 					default :
-						//ignore product fields as they will be grouped together at the end of the grid
+						// Ignore product fields as they will be grouped together at the end of the grid.
 						if ( GFCommon::is_product_field( $field->type ) ) {
 							$has_product_fields = true;
 							continue;
@@ -942,6 +953,16 @@ class GFEntryDetail {
 						$value         = RGFormsModel::get_lead_field_value( $lead, $field );
 						$display_value = GFCommon::get_lead_field_display( $field, $value, $lead['currency'] );
 
+						/**
+						 * Filters a field value displayed within an entry.
+						 *
+						 * @since 1.5
+						 *
+						 * @param string   $display_value The value to be displayed.
+						 * @param GF_Field $field         The Field Object.
+						 * @param array    $lead          The Entry Object.
+						 * @param array    $form          The Form Object.
+						 */
 						$display_value = apply_filters( 'gform_entry_field_value', $display_value, $field, $lead, $form );
 
 						if ( $display_empty_fields || ! empty( $display_value ) || $display_value === '0' ) {
@@ -962,7 +983,18 @@ class GFEntryDetail {
 						break;
 				}
 
-				$content = apply_filters( 'gform_field_content', $content, $field, $value, $lead['id'], $form['id'] );
+				/**
+				 * Filters the field content.
+				 *
+				 * @since 2.1.2.14 Added form and field ID modifiers.
+				 *
+				 * @param string $content    The field content.
+				 * @param array  $field      The Field Object.
+				 * @param string $value      The field value.
+				 * @param int    $lead['id'] The entry ID.
+				 * @param int    $form['id'] The form ID.
+				 */
+				$content = gf_apply_filters( array( 'gform_field_content', $form['id'], $field->id ), $content, $field, $value, $lead['id'], $form['id'] );
 
 				echo $content;
 			}
@@ -971,6 +1003,7 @@ class GFEntryDetail {
 			if ( $has_product_fields ) {
 				$products = GFCommon::get_product_fields( $form, $lead );
 				if ( ! empty( $products['products'] ) ) {
+				    ob_start();
 					?>
 					<tr>
 						<td colspan="2" class="entry-view-field-name"><?php echo esc_html( gf_apply_filters( array( 'gform_order_label', $form_id ), __( 'Order', 'gravityforms' ), $form_id ) ); ?></td>
@@ -1055,8 +1088,21 @@ class GFEntryDetail {
 							</table>
 						</td>
 					</tr>
-
 					<?php
+					/**
+					 * Filter the markup of the order summary which appears on the Entry Detail, the {all_fields} merge tag and the {pricing_fields} merge tag.
+                     *
+                     * @since 2.1.2.5
+                     * @see   https://www.gravityhelp.com/documentation/article/gform_order_summary/
+					 *
+					 * @var string $markup          The order summary markup.
+					 * @var array  $form            Current form object.
+					 * @var array  $lead            Current entry object.
+					 * @var array  $products        Current order summary object.
+					 * @var string $format          Format that should be used to display the summary ('html' or 'text').
+					 */
+                    $order_summary = gf_apply_filters( array( 'gform_order_summary', $form['id'] ), ob_get_clean(), $form, $lead, $products, 'html' );
+                    echo $order_summary;
 				}
 			}
 			?>
@@ -1397,7 +1443,7 @@ class GFEntryDetail {
 		if ( $allow_display_empty_fields ) {
 			$display_empty_fields = rgget( 'gf_display_empty_fields', $_COOKIE );
 		}
-		
+
 		if ( ! $lead ) {
 			$lead = self::get_current_entry();
 		}

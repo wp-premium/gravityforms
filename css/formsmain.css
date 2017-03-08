@@ -3,10 +3,10 @@
 
 Gravity Forms Front End Form Styles
 http: //www.gravityforms.com
-updated: November 18, 2016 12:25 PM GMT-5
+updated: January 12, 2017 04:02 PM (GMT-05:00) US Eastern Time
 
 Gravity Forms is a Rocketgenius project
-copyright 2008-2016 Rocketgenius Inc.
+copyright 2008-2017 Rocketgenius Inc.
 http: //www.rocketgenius.com
 this may not be redistributed without the
 express written permission of the author.
@@ -1101,7 +1101,7 @@ body .gform_wrapper ul.gform_fields li.gfield.gform_validation_container {
 
 .gform_wrapper .gform_page_footer {
     margin: 14px 0;
-    width: calc(100% - 16px);
+    width: 100%;
     border-top: 1px dotted #CCC;
     padding: 16px 0 0 0;
     clear: both;

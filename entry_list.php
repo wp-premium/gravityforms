@@ -923,8 +923,8 @@ final class GF_Entry_List_Table extends WP_List_Table {
 		$search_field_id = rgget( 'field_id' );
 		$search_operator = rgget( 'operator' );
 
-		$orderby = $this->get_order();
-		$order   = $this->get_orderby();
+		$order   = $this->get_order();
+		$orderby = $this->get_orderby();
 
 		$search_qs  = empty( $search ) ? '' : '&s=' . esc_attr( urlencode( $search ) );
 		$orderby_qs = empty( $orderby ) ? '' : '&orderby=' . esc_attr( $orderby );
@@ -937,7 +937,7 @@ final class GF_Entry_List_Table extends WP_List_Table {
 
 		$position = ( $page_size * $page_index ) + $this->row_index;
 
-		$edit_url = 'page=gf_entries&view=entry&id=' . absint( $form_id ) . '&lid=' . esc_attr( $entry['id'] . $search_qs . $orderby_qs . $order_qs . $filter_qs ) . '&paged=' . $page_num .'&pos=' . $position .'&field_id=' . esc_attr( $search_field_id ) .  '&operator=' .  esc_attr( $search_operator );
+		$edit_url = 'page=gf_entries&view=entry&id=' . absint( $form_id ) . '&lid=' . esc_attr( $entry['id'] ) . $search_qs . $orderby_qs . $order_qs . $filter_qs . '&paged=' . $page_num .'&pos=' . $position .'&field_id=' . esc_attr( $search_field_id ) .  '&operator=' .  esc_attr( $search_operator );
 		return $edit_url;
 	}
 
@@ -950,7 +950,8 @@ final class GF_Entry_List_Table extends WP_List_Table {
 	 */
 	function get_detail_url( $entry ) {
 		$query_string = $this->get_detail_query_string( $entry );
-		$url = admin_url( 'admin.php?' . $query_string );
+		$url          = admin_url( 'admin.php?' . $query_string );
+
 		return $url;
 	}
 
