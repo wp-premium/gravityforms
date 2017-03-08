@@ -101,9 +101,17 @@ class GF_Field_SingleProduct extends GF_Field {
 			$price        = trim( $value[ $this->id . '.2' ] );
 			$quantity     = trim( $value[ $this->id . '.3' ] );
 
-			$product = $product_name . ', ' . esc_html__( 'Qty: ', 'gravityforms' ) . $quantity . ', ' . esc_html__( 'Price: ', 'gravityforms' ) . $price;
+			$product_details = $product_name;
 
-			return $product;
+			if ( ! rgblank( $quantity ) ) {
+				$product_details .= ', ' . esc_html__( 'Qty: ', 'gravityforms' ) . $quantity;
+			}
+
+			if ( ! rgblank( $price ) ) {
+				$product_details .= ', ' . esc_html__( 'Price: ', 'gravityforms' ) . GFCommon::format_number( $price, 'currency', $currency );
+			}
+
+			return $product_details;
 		} else {
 			return '';
 		}

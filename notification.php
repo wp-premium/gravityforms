@@ -667,7 +667,7 @@ Class GFNotification {
 			case 'duplicate':
 				$notification_duplicated = GFNotification::duplicate_notification( $object_id, rgget( 'id' ) );
 				if ( $notification_duplicated ) {
-					GFCommon::add_message( esc_html__( 'Notification duplicates.', 'gravityforms' ) );
+					GFCommon::add_message( esc_html__( 'Notification duplicated.', 'gravityforms' ) );
 				} else {
 					GFCommon::add_error_message( esc_html__( 'There was an issue duplicating this notification.', 'gravityforms' ) );
 				}

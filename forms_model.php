@@ -747,7 +747,7 @@ class GFFormsModel {
 			foreach ( $form['fields'] as &$field ) {
 
 				// convert adminOnly property to visibility
-				if( ! isset( $field['visibility'] ) ) {
+				if ( ! isset( $field['visibility'] ) ) {
 					$field['visibility'] = isset( $field['adminOnly'] ) && $field['adminOnly'] ? 'administrative' : 'visible';
 					unset( $field['adminOnly'] );
 				}
@@ -763,9 +763,7 @@ class GFFormsModel {
 					$field->pageNumber = $page_number;
 				}
 
-				if ( $field->type == 'creditcard' ) {
-					$field->maybe_upgrade_inputs();
-				}
+				$field->post_convert_field();
 			}
 		}
 
@@ -3955,7 +3953,7 @@ class GFFormsModel {
 
 		$lead_detail_table_name = self::get_lead_details_table_name();
 		$lead_table_name        = self::get_lead_table_name();
-
+		$sql_comparison         = 'ld.value = %s';
 
 		switch ( GFFormsModel::get_input_type( $field ) ) {
 			case 'time':
@@ -3983,7 +3981,7 @@ class GFFormsModel {
 
 		$inner_sql_template .= "WHERE l.form_id=%d AND ld.form_id=%d
                                 AND ld.field_number between %s AND %s
-                                AND status='active' AND ld.value = %s";
+                                AND status='active' AND {$sql_comparison}";
 
 		$sql = "SELECT count(distinct input) as match_count FROM ( ";
 
@@ -6037,6 +6035,11 @@ function gform_get_meta_values_for_entries( $entry_ids, $meta_keys ) {
  */
 function gform_update_meta( $entry_id, $meta_key, $meta_value, $form_id = null ) {
 	global $wpdb, $_gform_lead_meta;
+
+	if( intval( $entry_id ) <= 0 ) {
+		return;
+	}
+
 	$table_name = RGFormsModel::get_lead_meta_table_name();
 	if ( false === $meta_value ) {
 		$meta_value = '0';
@@ -6076,6 +6079,11 @@ function gform_update_meta( $entry_id, $meta_key, $meta_value, $form_id = null )
  */
 function gform_add_meta( $entry_id, $meta_key, $meta_value, $form_id = null ) {
 	global $wpdb, $_gform_lead_meta;
+
+	if( intval( $entry_id ) <= 0 ) {
+		return;
+	}
+
 	$table_name = RGFormsModel::get_lead_meta_table_name();
 	if ( false === $meta_value ) {
 		$meta_value = '0';

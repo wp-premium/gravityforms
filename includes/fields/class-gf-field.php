@@ -1181,7 +1181,7 @@ class GF_Field extends stdClass implements ArrayAccess {
 	 *
 	 * @param null|int $form_id If not specified the form_id field property is used.
 	 *
-	 * @return mixed|void TRUE, FALSE or a string of tags.
+	 * @return bool|string TRUE, FALSE or a string of tags.
 	 */
 	public function get_allowable_tags( $form_id = null ) {
 		if ( empty( $form_id ) ) {
@@ -1205,6 +1205,25 @@ class GF_Field extends stdClass implements ArrayAccess {
 		 */
 		$allowable_tags = apply_filters( 'gform_allowable_tags', $allow_html, $this, $form_id );
 		$allowable_tags = apply_filters( "gform_allowable_tags_{$form_id}", $allowable_tags, $this, $form_id );
+
 		return $allowable_tags;
+	}
+
+	/**
+	 * Actions to be performed after the field has been converted to an object.
+	 *
+	 * @since  2.1.2.7
+	 * @access public
+	 *
+	 * @uses    GF_Field::failed_validation()
+	 * @uses    GF_Field::validation_message()
+	 * @used-by GFFormsModel::convert_field_objects()
+	 *
+	 * @return void
+	 */
+	public function post_convert_field() {
+		// Fix an issue where fields can show up as invalid in the form editor if the form was updated using the form object returned after a validation failure.
+		unset( $this->failed_validation );
+		unset( $this->validation_message );
 	}
 }

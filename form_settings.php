@@ -1200,7 +1200,7 @@ class GFFormSettings {
 			$confirmation_id = $duplicated_cid;
 		}
 
-		$confirmation = self::handle_confirmation_edit_submission( rgar( $form['confirmations'], $confirmation_id ), $form );
+		$confirmation = self::handle_confirmation_edit_submission( rgar( $form['confirmations'], $confirmation_id, array() ), $form );
 
 
 		if ( $is_duplicate ) {

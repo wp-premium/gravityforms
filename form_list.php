@@ -402,7 +402,8 @@ class GF_Form_List_Table extends WP_List_Table {
 		$hidden                = array();
 		$sortable              = $this->get_sortable_columns();
 		$this->_column_headers = array( $columns, $hidden, $sortable, 'title' );
-		$this->locking_info = new GFFormLocking();
+		$this->locking_info    = new GFFormLocking();
+		$this->filter          = rgget( 'filter' );
 	}
 
 	function get_sortable_columns() {
@@ -437,7 +438,7 @@ class GF_Form_List_Table extends WP_List_Table {
 
 	function prepare_items() {
 
-		$sort_column    = empty( $_GET['orderby'] ) ? 'title' : $_GET['orderby'];
+		$sort_column  = empty( $_GET['orderby'] ) ? 'title' : $_GET['orderby'];
 		$sort_columns = array_keys( $this->get_sortable_columns() );
 
 		if ( ! in_array( strtolower( $sort_column ), $sort_columns ) ) {
@@ -446,8 +447,9 @@ class GF_Form_List_Table extends WP_List_Table {
 
 		$sort_direction = empty( $_GET['order'] ) ? 'ASC' : strtoupper( $_GET['order'] );
 		$sort_direction = $sort_direction == 'ASC' ? 'ASC' : 'DESC';
-		$filter = rgget( 'filter' );
-		$trash = false;
+		$filter         = $this->filter;
+		$trash          = false;
+
 		switch ( $filter ) {
 			case '':
 				$active = null;
@@ -462,7 +464,8 @@ class GF_Form_List_Table extends WP_List_Table {
 				$active = null;
 				$trash = true;
 		}
-		$forms   = RGFormsModel::get_forms( $active, $sort_column, $sort_direction, $trash );
+
+		$forms = RGFormsModel::get_forms( $active, $sort_column, $sort_direction, $trash );
 
 		$per_page = $this->get_items_per_page( 'gform_forms_per_page', 20 );
 

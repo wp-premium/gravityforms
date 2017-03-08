@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms
 Plugin URI: http://www.gravityforms.com
 Description: Easily create web forms and manage form entries within the WordPress admin.
-Version: 2.1.2
+Version: 2.1.3
 Author: rocketgenius
 Author URI: http://www.rocketgenius.com
 Text Domain: gravityforms
@@ -210,7 +210,7 @@ class GFForms {
 	 *
 	 * @var string $version The version number.
 	 */
-	public static $version = '2.1.2';
+	public static $version = '2.1.3';
 
 	/**
 	 * Runs after Gravity Forms is loaded.
@@ -2440,7 +2440,7 @@ SET d.value = l.value"
 		} else {
 			?>
 			<div class="gf_dashboard_noforms_notice">
-				<?php echo sprintf( esc_html__( "You don't have any forms. Let's go %s create one %s!", 'gravityforms' ), '<a href="admin.php?page=gf_new_form">', '</a>' ); ?>
+				<?php echo sprintf( esc_html__( "You don't have any forms. Let's go %screate one %s!", 'gravityforms' ), '<a href="admin.php?page=gf_new_form">', '</a>' ); ?>
 			</div>
 		<?php
 		}
