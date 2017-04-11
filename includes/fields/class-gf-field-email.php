@@ -141,9 +141,9 @@ class GF_Field_Email extends GF_Field {
 			if ( $this->emailConfirmEnabled && ! $is_entry_detail ) {
 				$first_tabindex        = $this->get_tabindex();
 				$last_tabindex         = $this->get_tabindex();
-				$email_value           = is_array( $value ) ? $value[0] : $value;
+				$email_value           = is_array( $value ) ? rgar( $value, 0 ) : $value;
 				$email_value = esc_attr( $email_value );
-				$confirmation_value    = is_array( $value ) ? $value[1] : rgpost( 'input_' . $this->id . '_2' );
+				$confirmation_value    = is_array( $value ) ? rgar( $value, 1 ) : rgpost( 'input_' . $this->id . '_2' );
 				$confirmation_value = esc_attr( $confirmation_value );
 				$confirmation_disabled = $is_entry_detail ? "disabled='disabled'" : $disabled_text;
 				if ( $is_sub_label_above ) {
@@ -177,7 +177,7 @@ class GF_Field_Email extends GF_Field {
 				$class    = esc_attr( $class );
 
 				return "<div class='ginput_container ginput_container_email'>
-                            <input name='input_{$id}' id='{$field_id}' type='{$html_input_type}' value='$value' class='{$class}' {$tabindex} {$logic_event} {$disabled_text} {$single_placeholder_attribute}/>
+                            <input name='input_{$id}' id='{$field_id}' type='{$html_input_type}' value='$value' class='{$class}' {$tabindex} {$logic_event} {$disabled_text} {$single_placeholder_attribute} {$required_attribute} {$invalid_attribute}/>
                         </div>";
 			}
 		}

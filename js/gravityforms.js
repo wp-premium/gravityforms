@@ -269,7 +269,7 @@ function gformDeleteUploadedFile(formId, fieldId, deleteButton){
     parent.find(".ginput_preview").eq(fileIndex).remove();
 
     //displaying single file upload field
-    parent.find("input[type=\"file\"]").removeClass("gform_hidden");
+    parent.find('input[type="file"],#extensions_message,.validation_message').removeClass("gform_hidden");
 
     //displaying post image label
     parent.find(".ginput_post_image_file").show();
@@ -752,7 +752,7 @@ function gformAddListItem( addButton, max ) {
 
     // reset all inputs to empty state
     $clone
-        .find( 'input, select' ).attr( 'tabindex', tabindex )
+        .find( 'input, select, textarea' ).attr( 'tabindex', tabindex )
         .not( ':checkbox, :radio' ).val( '' );
     $clone.find( ':checkbox, :radio' ).prop( 'checked', false );
 
@@ -762,6 +762,8 @@ function gformAddListItem( addButton, max ) {
 
     gformToggleIcons( $container, max );
     gformAdjustClasses( $container );
+
+    gform.doAction( 'gform_list_post_item_add', $clone, $container );
 
 }
 
@@ -775,6 +777,8 @@ function gformDeleteListItem( deleteButton, max ) {
 
     gformToggleIcons( $container, max );
     gformAdjustClasses( $container );
+ 
+    gform.doAction( 'gform_list_post_item_delete', $container );
 
 }
 
@@ -1649,29 +1653,34 @@ function gformValidateFileSize( field, max_file_size ) {
 //------ GENERAL FUNCTIONS -------
 //----------------------------------------
 
-function gformInitSpinner( formId, spinnerUrl ) {
+function gformInitSpinner(formId, spinnerUrl) {
 
-    if( typeof spinnerUrl == 'undefined' || ! spinnerUrl ) {
-        spinnerUrl = gform.applyFilters( "gform_spinner_url", gf_global.spinnerUrl, formId );
-    }
-
-	jQuery('#gform_' + formId).submit( function () {
-		if ( jQuery('#gform_ajax_spinner_' + formId).length == 0 ) {
-            /**
-             * Filter the element after which the AJAX spinner will be inserted.
-             *
-             * @since 2.0
-             *
-             * @param object $targetElem jQuery object containing all of the elements after which the AJAX spinner will be inserted.
-             * @param int    formId      ID of the current form.
-             */
-            var $spinnerTarget = gform.applyFilters( 'gform_spinner_target_elem', jQuery('#gform_submit_button_' + formId + ', #gform_wrapper_' + formId + ' .gform_next_button, #gform_send_resume_link_button_' + formId ), formId );
-            $spinnerTarget.after( '<img id="gform_ajax_spinner_' + formId + '"  class="gform_ajax_spinner" src="' + spinnerUrl + '" alt="" />' );
-		}
-	} );
+	jQuery('#gform_' + formId).submit(function () {
+		gformAddSpinner(formId, spinnerUrl);
+	});
 
 }
 
+function gformAddSpinner(formId, spinnerUrl) {
+
+	if (typeof spinnerUrl == 'undefined' || !spinnerUrl) {
+		spinnerUrl = gform.applyFilters('gform_spinner_url', gf_global.spinnerUrl, formId);
+	}
+
+	if (jQuery('#gform_ajax_spinner_' + formId).length == 0) {
+		/**
+		 * Filter the element after which the AJAX spinner will be inserted.
+		 *
+		 * @since 2.0
+		 *
+		 * @param object $targetElem jQuery object containing all of the elements after which the AJAX spinner will be inserted.
+		 * @param int    formId      ID of the current form.
+		 */
+		var $spinnerTarget = gform.applyFilters('gform_spinner_target_elem', jQuery('#gform_submit_button_' + formId + ', #gform_wrapper_' + formId + ' .gform_next_button, #gform_send_resume_link_button_' + formId), formId);
+		$spinnerTarget.after('<img id="gform_ajax_spinner_' + formId + '"  class="gform_ajax_spinner" src="' + spinnerUrl + '" alt="" />');
+	}
+
+}
 
 
 //----------------------------------------

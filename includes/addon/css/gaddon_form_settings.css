@@ -2,7 +2,10 @@
 .settings-field-map-table thead th { font-weight: bold; border-bottom: 1px solid #ccc; }
 .settings-field-map-table tbody td { border-bottom: 1px dotted #eee; }
 .settings-field-map-table select { max-width: 90%; }
-.settings-field-map-table .custom-key-reset, .gaddon-setting-select-custom-container .select-custom-reset {
+
+.settings-field-map-table .custom-key-reset,
+.settings-field-map-table .custom-value-reset,
+.gaddon-setting-select-custom-container .select-custom-reset {
 	background: url( ../../../images/xit.gif ) no-repeat scroll 0 0 transparent;
 	cursor:pointer;
 	display:none;
@@ -21,8 +24,17 @@
 }
 .settings-field-map-table .repeater th { padding-left: 0px; }
 
-.settings-field-map-table .custom-key-reset:hover, .gaddon-setting-select-custom-container .select-custom-reset:hover { background-position-x: -10px; }
-.settings-field-map-table .custom-key-container:hover .custom-key-reset, .gaddon-setting-select-custom-container:hover .select-custom-reset { display:block; }
+.settings-field-map-table .custom-key-reset:hover,
+.settings-field-map-table .custom-value-reset:hover,
+.gaddon-setting-select-custom-container .select-custom-reset:hover {
+	background-position-x: -10px;
+}
+
+.settings-field-map-table .custom-key-container:hover .custom-key-reset,
+.settings-field-map-table .custom-key-container:hover .custom-value-reset,
+.gaddon-setting-select-custom-container:hover .select-custom-reset {
+	display:block;
+}
 
 .gaddon-setting-select-custom-container { display:inline-block;position:relative; }
 .gaddon-setting-select-custom-container .select-custom-reset {

@@ -1,4 +1,104 @@
 ------------------------------------------------------------------------------------------------------------------
+Version 2.2.1.2
+	- Fixed an issue with license validation request that can prevent license key validation.
+
+------------------------------------------------------------------------------------------------------------------
+Version 2.2.1.1
+	- Fixed a PHP notice on the System Status page with PHP versions older than 5.4.
+
+------------------------------------------------------------------------------------------------------------------
+Version 2.2.1
+	- Updated email format so that it defaults to html instead of multipart.
+	- Added filter to allow email TO formatting to be turned on or off. Defaults to off.
+	- Fixed a typo in the notification From header.
+
+------------------------------------------------------------------------------------------------------------------
+Version 2.2
+	- Added System Report page.
+	- Added search functionality to Forms list page.
+	- Added logging functionality to core so that a Logging Add-On is no longer needed.
+	- Added security enhancements.
+	- Added emoji support to entry values where UTF-8 is the available charset.
+	- Updated the file download process to clean the out buffer before delivering the file. This reduces the risk of potential conflicts with third-party code which can affect the delivery of the file.
+	- Updated notifications to include SpamAssassin optimizations, which will make notifications less likely to be marked as spam.
+	- Updated feed list page so that it is responsive.
+	- Updated the way the entry IP Addresses are collected. This may affect sites behind reverse proxies. Further details: https://www.gravityhelp.com/documentation/article/changes-entry-ip-detection/
+	- Updated form editor so that fields are only deleted after the "Update" button is pressed.
+	- Fixed an issue when sending emails with special characters in the subject.
+	- Fixed fatal error when Logging Add-On is installed.
+    - Fixed confirmation, feed list and notification tables showing colons for hidden header columns in smaller viewports.
+	- Fixed issue with form title editor that allowed duplicate and blank titles to be entered.
+	- Fixed issue with the system report page that displayed an issue with the uploads folder on new installations.
+	- Fixed issue where From Name was getting truncated from notifications.
+	- Fixed active state not being copied when duplicating a form.
+	- Fixed issue with generated form name when duplicating a previously duplicated form.
+	- AF: Fixed feed list not being organized by feed order.
+	- AF: Fixed feed ordering interface not initializing properly.
+    - AF: Fixed returned entry not being saved during async feed processing.
+    - AF: Updated async feed processing to get entry and form at processing time.
+	- AF: Fixed default feed name generator attempting to use non-existent feed name.
+	- AF: Added generic_map settings field for mapping custom/pre-defined keys to custom/pre-defined values.
+	- AF: Added GFAddOn::minimum_requirements() method to define server environment required to initialize Add-On.
+	- AF: Added support for asynchronous feed processing, defined by the GFFeedAddOn::_async_feed_processing property or by overriding the GFFeedAddOn::is_asynchronous() method.
+	- AF: Added support for defining pre-requisites/minimum requirements for addons (i.e. whether cURL or OpenSSL is installed, minimum PHP version, minimum WordPress version, etc...).
+	- API: Added default confirmation when adding a form if no confirmations exist.
+
+------------------------------------------------------------------------------------------------------------------
+Version 2.1.3.10
+	- Fixed an issue with the ARIA required and invalid attributes for the Email field.
+	- Fixed an issue with the conditional logic rule value drop down for the Category field when configured to include all categories.
+
+------------------------------------------------------------------------------------------------------------------
+Version 2.1.3.9
+	- Fixed missing country input settings for the international type Address field when the country input is set to hidden.
+	- Fixed PHP warning when getting the conditional logic default value for the Time field if an array was returned by the gform_field_value filter.
+	- Fixed an issue with the checkbox type Category field inputs when the gform_post_category_choices filter is used to override the choices.
+
+------------------------------------------------------------------------------------------------------------------
+Version 2.1.3.8
+	- Fixed the honeypot field ID type being double instead of integer.
+	- Fixed an issue with number field validation when the submitted value contained leading or trailing spaces.
+
+------------------------------------------------------------------------------------------------------------------
+Version 2.1.3.7
+	- Added "gform_list_post_item_add" Javascript action. See https://www.gravityhelp.com/documentation/article/gform_list_post_item_add/.
+	- Added "gform_list_post_item_delete" Javascript action. See https://www.gravityhelp.com/documentation/article/gform_list_post_item_delete/.
+
+------------------------------------------------------------------------------------------------------------------
+Version 2.1.3.6
+	- Added ability to import entries when creating acceptance tests.
+	- Fixed the single file upload field validation and extension messages not being redisplayed after the existing file is deleted.
+
+------------------------------------------------------------------------------------------------------------------
+Version 2.1.3.5
+	- Added the gform_temp_file_expiration_days filter. See https://www.gravityhelp.com/documentation/article/gform_temp_file_expiration_days/
+	- Fixed wrong entry being displayed when using the next/previous links on the entry detail page when the entry list has been sorted.
+	- Fixed the Paragraph field character limit not being displayed on form render.
+
+------------------------------------------------------------------------------------------------------------------
+Version 2.1.3.4
+	- Fixed textarea content not being cleared when adding a new list field item.
+
+------------------------------------------------------------------------------------------------------------------
+Version 2.1.3.3
+	- Fixed the Number field range settings in the form editor not accepting 0.
+
+------------------------------------------------------------------------------------------------------------------
+Version 2.1.3.2
+	- Added gformAddSpinner() to gravityforms.js.
+	- Updated gformInitSpinner() to use gformAddSpinner().
+	- AF: Fixed field select not auto-populating previously selected field value.
+
+------------------------------------------------------------------------------------------------------------------
+Version 2.1.2.15
+    - Added security enhancements. Credit: James Golovich from Pritect, Inc. (https://pritect.net)
+	- Updated gform_add_meta() and gform_get_meta() to no longer save meta for psuedo-entries; requires an integer greater than zero.
+
+------------------------------------------------------------------------------------------------------------------
+Version 2.1.3.1
+    - Fixed formatting issue with settings update confirmation message.
+
+------------------------------------------------------------------------------------------------------------------
 Version 2.1.3
     - Added security enhancements. Credit: James Golovich from Pritect, Inc. (https://pritect.net)
     - Added Dutch (Belgium) translation. Credit: Dave Loodts

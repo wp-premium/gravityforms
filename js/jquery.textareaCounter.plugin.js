@@ -182,6 +182,8 @@
     charLeftInfo = getNextCharLeftInformation(container);
     charLeftInfo.addClass(options.originalStyle);
 
+    limitTextAreaByCharacterCount();
+
     container.bind('keyup', function(){
       limitTextAreaByCharacterCount();}
     ).bind('mouseover paste', function(){

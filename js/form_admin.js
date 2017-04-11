@@ -315,12 +315,13 @@ function GetRuleValues(objectType, ruleIndex, selectedFieldId, selectedValue, in
 
         var dropdown = jQuery('#' + dropdownId + ".gfield_category_dropdown");
 
-        //don't load category drop down if it already exists (to avoid unecessary ajax requests)
+        //don't load category drop down if it already exists (to avoid unnecessary ajax requests)
         if(dropdown.length > 0){
 
-            var options = dropdown.html();
-            options = options.replace("value=\"" + selectedValue + "\"", "value=\"" + selectedValue + "\" selected=\"selected\"");
-            str = "<select id='" + dropdownId + "' class='gfield_rule_select gfield_rule_value_dropdown gfield_category_dropdown'>" + options + "</select>";
+	        var options = dropdown.html();
+	        options = options.replace(/ selected="selected"/g, '');
+	        options = options.replace("value=\"" + selectedValue + "\"", "value=\"" + selectedValue + "\" selected=\"selected\"");
+	        str = "<select id='" + dropdownId + "' class='gfield_rule_select gfield_rule_value_dropdown gfield_category_dropdown'>" + options + "</select>";
         }
         else{
             var placeholderName = inputName == false ? "gfield_ajax_placeholder_" + ruleIndex : inputName + "_placeholder";
