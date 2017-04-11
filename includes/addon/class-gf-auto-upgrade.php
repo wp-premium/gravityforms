@@ -30,9 +30,11 @@ class GFAutoUpgrade {
 	public function init() {
 		if ( is_admin() ) {
 			GFCommon::load_gf_text_domain();
-			add_action( 'install_plugins_pre_plugin-information', array( $this, 'display_changelog' ) );
+			add_action( 'install_plugins_pre_plugin-information', array( $this, 'display_changelog' ), 9 );
 			add_action( 'gform_after_check_update', array( $this, 'flush_version_info' ) );
 			add_action( 'gform_updates', array( $this, 'display_updates' ) );
+
+			add_filter( 'gform_updates_list', array( $this, 'get_update_info' ) );
 
 			if ( RG_CURRENT_PAGE == 'plugins.php' ) {
 				add_action( 'after_plugin_row_' . $this->_path, array( $this, 'rg_plugin_row' ) );
@@ -210,6 +212,61 @@ class GFAutoUpgrade {
 		} else {
 			return '';
 		}
+	}
+
+	public function get_update_info( $updates ) {
+
+		$force_check = rgget( 'force-check' ) == 1;
+		$version_info = $this->get_version_info( $this->_slug, ! $force_check );
+
+		$plugin_file = $this->_path;
+		$upgrade_url = wp_nonce_url( 'update.php?action=upgrade-plugin&amp;plugin=' . urlencode( $plugin_file ), 'upgrade-plugin_' . $plugin_file );
+
+		if ( ! rgar( $version_info, 'is_valid_key' ) ) {
+
+			$version_icon    = 'dashicons-no';
+			$version_message = sprintf(
+				'<p>%s</p>',
+				sprintf(
+					esc_html( '%sRegister%s your copy of Gravity Forms to receive access to automatic updates and support. Need a license key? %sPurchase one now%s.', 'gravityforms' ),
+					'<a href="admin.php?page=gf_settings">',
+					'</a>',
+					'<a href="http://www.gravityforms.com">',
+					'</a>'
+				)
+			);
+
+		} elseif ( version_compare( $this->_version, $version_info['version'], '<' ) ) {
+
+			$details_url = self_admin_url( 'plugin-install.php?tab=plugin-information&plugin=' . urlencode( $this->_slug ) . '&section=changelog&TB_iframe=true&width=600&height=800' );
+			$message_link_text = sprintf( esc_html__( 'View version %s details', 'gravityforms' ), $version_info['version'] );
+			$message_link      = sprintf( '<a href="%s" class="thickbox" title="%s">%s</a>', esc_url( $details_url ), esc_attr( $this->_title ), $message_link_text );
+			$message           = sprintf( esc_html__( 'There is a new version of %1$s available. %s.', 'gravityforms' ), $this->_title, $message_link );
+
+			$version_icon    = 'dashicons-no';
+			$version_message = $message;
+
+		} else {
+
+			$version_icon    = 'dashicons-yes';
+			$version_message = sprintf( esc_html__( 'Your version of %s is up to date.', 'gravityforms' ), $this->_title );
+		}
+
+		$updates[] = array(
+			'name'              => esc_html( $this->_title ),
+			'is_valid_key'      => rgar( $version_info, 'is_valid_key' ),
+			'path'              => $this->_path,
+			'slug'              => $this->_slug,
+			'latest_version'    => $version_info['version'],
+			'installed_version' => $this->_version,
+			'upgrade_url'       => $upgrade_url,
+			'download_url'      => $version_info['url'],
+			'version_icon'      => $version_icon,
+			'version_message'   => $version_message,
+		);
+
+		return $updates;
+
 	}
 
 	public function display_updates() {

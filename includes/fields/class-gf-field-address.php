@@ -473,7 +473,7 @@ class GF_Field_Address extends GF_Field {
 		$address_types       = $this->get_address_types( $form_id );
 		$has_state_drop_down = isset( $address_types[ $address_type ]['states'] ) && is_array( $address_types[ $address_type ]['states'] );
 
-		if ( $is_admin && RG_CURRENT_VIEW != 'entry' ) {
+		if ( $is_admin && rgget('view') != 'entry' ) {
 			$state_dropdown_class = "class='state_dropdown'";
 			$state_text_class     = "class='state_text'";
 			$state_style          = ! $has_state_drop_down ? "style='display:none;'" : '';
@@ -494,7 +494,7 @@ class GF_Field_Address extends GF_Field {
 		$state_placeholder_attribute = GFCommon::get_input_placeholder_attribute( $state_input );
 		$state_text                  = sprintf( "<input type='text' name='input_%d.4' %s value='%s' {$tabindex} %s {$state_text_class} {$text_style} {$state_placeholder_attribute}/>", $id, $state_field_id, $state_value, $disabled_text );
 
-		if ( $is_admin && RG_CURRENT_VIEW != 'entry' ) {
+		if ( $is_admin && rgget('view') != 'entry' ) {
 			return $state_dropdown . $state_text;
 		} elseif ( $has_state_drop_down ) {
 			return $state_dropdown;

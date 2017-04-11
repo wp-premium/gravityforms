@@ -2385,6 +2385,28 @@ class GFFormDetail {
 					<!--end add button boxes -->
 
 					<?php
+					$save_button_text = __( 'Update', 'gravityforms' );
+
+					$save_button      = '<input type="button" class="button button-large button-primary update-form" value="' . $save_button_text . '" onclick="SaveForm();" onkeypress="SaveForm();" />';
+
+					/**
+					 * A filter to allow you to modify the Form Save button
+					 *
+					 * @param string $save_button The Form Save button HTML
+					 */
+					$save_button = apply_filters( 'gform_save_form_button', $save_button );
+					echo $save_button;
+
+					$cancel_button = '<a href="' . admin_url( 'admin.php?page=gf_edit_forms' ) . '" class="button button-large cancel-update-form">' . esc_html__( 'Cancel', 'gravityforms' ) . '</a>';
+
+					/**
+					 * A filter to allow you to modify the Form Cancel button
+					 *
+					 * @param string $cancel_button The Form Cancel button HTML
+					 */
+					$cancel_button = apply_filters( 'gform_cancel_form_button', $cancel_button );
+					echo $cancel_button;
+
 					if ( GFCommon::current_user_can_any( 'gravityforms_delete_forms' ) ) {
 						$trash_link = '<a class="submitdelete" title="' . __( 'Move this form to the trash', 'gravityforms' ) . '" onclick="gf_vars.isFormTrash = true; jQuery(\'#form_trash\')[0].submit();" onkeypress="gf_vars.isFormTrash = true; jQuery(\'#form_trash\')[0].submit();">' . __( 'Move to Trash', 'gravityforms' ) . '</a>';
 
@@ -2404,18 +2426,6 @@ class GFFormDetail {
 						 */
 						echo apply_filters( 'gform_form_trash_link', $trash_link, $form_id );
 					}
-
-					$button_text = rgar( $form, 'id' ) > 0 ? __( 'Update Form', 'gravityforms' ) : __( 'Save Form', 'gravityforms' );
-					$isNew = rgar( $form, 'id' ) > 0 ? 0 : 1;
-					$save_button = '<input type="button" class="button button-large button-primary update-form" value="' . $button_text . '" onclick="SaveForm(' . $isNew . ');" onkeypress="SaveForm(' . $isNew . ');" />';
-
-					/**
-					 * A filter to aloow you to modify the Form Save button
-					 *
-					 * @param string $save_button The Form Save button HTML
-					 */
-					$save_button = apply_filters( 'gform_save_form_button', $save_button );
-					echo $save_button;
 					?>
 
 					<span id="please_wait_container" style="display:none;"><i class='gficon-gravityforms-spinner-icon gficon-spin'></i></span>
@@ -2775,15 +2785,6 @@ class GFFormDetail {
 		die( $args_json );
 	}
 
-	public static function delete_field() {
-		check_ajax_referer( 'rg_delete_field', 'rg_delete_field' );
-		$form_id  = absint( $_POST['form_id'] );
-		$field_id = absint( $_POST['field_id'] );
-
-		RGFormsModel::delete_field( $form_id, $field_id );
-		die( "EndDeleteField($field_id);" );
-	}
-
 	public static function change_input_type() {
 		check_ajax_referer( 'rg_change_input_type', 'rg_change_input_type' );
 		$field_json       = stripslashes_deep( $_POST['field'] );
@@ -2808,8 +2809,10 @@ class GFFormDetail {
 		$field_json       = stripslashes_deep( $_POST['field'] );
 		$field_properties = GFCommon::json_decode( $field_json, true );
 		$field            = GF_Fields::create( $field_properties );
+		$field->sanitize_settings();
 		$form_id          = absint( $_POST['formId'] );
 		$form             = GFFormsModel::get_form_meta( $form_id );
+		$form             = GFFormsModel::maybe_sanitize_form_settings( $form );
 
 		require_once( GFCommon::get_base_path() . '/form_display.php' );
 		$field_content       = GFFormDisplay::get_field_content( $field, '', true, $form_id, $form );
@@ -2839,46 +2842,80 @@ class GFFormDetail {
 	 * @return array
 	 */
 	public static function save_form_info( $id, $form_json ) {
+
 		global $wpdb;
+
+		// Clean up form meta JSON.
 		$form_json = stripslashes( $form_json );
 		$form_json = nl2br( $form_json );
 
 		GFCommon::log_debug( 'GFFormDetail::save_form_info(): Form meta json: ' . $form_json );
 
+		// Convert form meta JSON to array.
 		$form_meta = json_decode( $form_json, true );
 		$form_meta = GFFormsModel::convert_field_objects( $form_meta );
 
+		// Set version of Gravity Forms form was created with.
 		if ( $id === 0 ) {
-			$form_meta['version'] = GFForms::$version; // update version on save
+			$form_meta['version'] = GFForms::$version;
 		}
 
+		// Sanitize form settings.
 		$form_meta = GFFormsModel::maybe_sanitize_form_settings( $form_meta );
 
+		// Extract deleted field IDs.
+		$deleted_fields = rgar( $form_meta, 'deletedFields' );
+		unset( $form_meta['deletedFields'] );
 
 		GFCommon::log_debug( 'GFFormDetail::save_form_info(): Form meta => ' . print_r( $form_meta, true ) );
 
+		// If form meta is not found, exit.
 		if ( ! $form_meta ) {
 			return array( 'status' => 'invalid_json', 'meta' => null );
 		}
 
+		// Get form table name.
+		$form_table_name = GFFormsModel::get_form_table_name();
 
-		$form_table_name = $wpdb->prefix . 'rg_form';
+		// Get all forms.
+		$forms = GFFormsModel::get_forms();
 
-		// Making sure title is not duplicate
-		$forms = RGFormsModel::get_forms();
+		// Loop through forms.
 		foreach ( $forms as $form ) {
+
+			// If form has a duplicate title, exit.
 			if ( strtolower( $form->title ) == strtolower( $form_meta['title'] ) && rgar( $form_meta, 'id' ) != $form->id ) {
 				return array( 'status' => 'duplicate_title', 'meta' => $form_meta );
 			}
+
 		}
 
+		// If an ID exists, update existing form.
 		if ( $id > 0 ) {
+
+			// Trim form meta values.
 			$form_meta = GFFormsModel::trim_form_meta_values( $form_meta );
-			RGFormsModel::update_form_meta( $id, $form_meta );
 
-			//updating form title
-			$wpdb->query( $wpdb->prepare( "UPDATE $form_table_name SET title=%s WHERE id=%d", $form_meta['title'], $form_meta['id'] ) );
+			// Save form meta.
+			GFFormsModel::update_form_meta( $id, $form_meta );
 
+			// Update form title.
+			GFAPI::update_form_property( $id, 'title', $form_meta['title'] );
+
+			// Delete fields.
+			if ( ! empty( $deleted_fields ) ) {
+
+				// Loop through fields.
+				foreach ( $deleted_fields as $deleted_field ) {
+
+					// Delete field.
+					GFFormsModel::delete_field( $id, $deleted_field );
+
+				}
+
+			}
+
+			// Get form meta.
 			$form_meta = RGFormsModel::get_form_meta( $id );
 
             /**
@@ -2892,6 +2929,7 @@ class GFFormDetail {
 			do_action( 'gform_after_save_form', $form_meta, false );
 
 			return array( 'status' => $id, 'meta' => $form_meta );
+
 		} else {
 
 			//inserting form
@@ -2935,9 +2973,10 @@ class GFFormDetail {
 			GFFormsModel::save_form_confirmations( $id, $confirmations );
 
 			//updating form meta
-			RGFormsModel::update_form_meta( $id, $form_meta );
+			GFFormsModel::update_form_meta( $id, $form_meta );
 
-			$form_meta = RGFormsModel::get_form_meta( $id );
+			// Get form meta.
+			$form_meta = GFFormsModel::get_form_meta( $id );
 
             /**
              * Fires after a form is saved

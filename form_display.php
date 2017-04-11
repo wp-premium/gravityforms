@@ -846,6 +846,11 @@ class GFFormDisplay {
 			if ( ( $entry_limit_validation && ! $is_postback ) || ( $entry_limit_validation && $is_postback && ! $is_valid ) ) {
 				return $entry_limit_validation;
 			}
+
+			// make sure database isn't currently being upgraded.
+			if ( gf_upgrade()->is_upgrading() ){
+				return "<div class='gf_submission_limit_message'><p>" . esc_html__( 'This area of the site is currently undergoing maintenance and is temporarily not accepting new submissions. Please try again in a few minutes. Sorry for any inconvenience.', 'gravityforms' ) . '</p></div>';
+			}
 		}
 
 		$form_string = '';
@@ -1294,11 +1299,18 @@ class GFFormDisplay {
 		return $field;
 	}
 
+	/**
+	 * Get the maximum field ID for the current form.
+	 *
+	 * @param array $form The current form object.
+	 *
+	 * @return int
+	 */
 	public static function get_max_field_id( $form ) {
 		$max = 0;
 		foreach ( $form['fields'] as $field ) {
-			if ( floatval( $field->id ) > $max ) {
-				$max = floatval( $field->id );
+			if ( intval( $field->id ) > $max ) {
+				$max = intval( $field->id );
 			}
 		}
 
@@ -1396,6 +1408,8 @@ class GFFormDisplay {
 		do_action( 'gform_entry_created', $lead, $form );
 		$lead = gf_apply_filters( array( 'gform_entry_post_save', $form['id'] ), $lead, $form );
 
+		gf_feed_processor()->save()->dispatch();
+
 		RGFormsModel::set_current_lead( $lead );
 
 		if ( ! $is_spam ) {
@@ -1431,14 +1445,36 @@ class GFFormDisplay {
 		// clean up files from abandoned submissions older than 48 hours (30 days if Save and Continue is enabled)
 		$files = glob( $target_path . '*' );
 		if ( is_array( $files ) ) {
-			$seconds_in_day = 24 * 60 * 60;
+			$seconds_in_day  = 24 * 60 * 60;
+			$save_enabled    = rgars( $form, 'save/enabled' );
+			$expiration_days = $save_enabled ? 30 : 2;
 
 			/**
-			 * Filter lifetime in days of an incomplete form submission
+			 * Filter lifetime in days of temporary files.
 			 *
-			 * @see GFFormsModel::purge_expired_incomplete_submissions()
+			 * @since 2.1.3.5
+			 *
+			 * @param int   $expiration_days The number of days temporary files should remain in the uploads directory. Default is 2 or 30 if save and continue is enabled.
+			 * @param array $form            The form currently being processed.
 			 */
-			$lifespan = rgars( $form, 'save/enabled' ) ? $expiration_days = apply_filters( 'gform_incomplete_submissions_expiration_days', 30 ) * $seconds_in_day : 2 * $seconds_in_day;
+			$expiration_days = apply_filters( 'gform_temp_file_expiration_days', $expiration_days, $form );
+
+			if ( $save_enabled ) {
+
+				/**
+				 * Filter lifetime in days of an incomplete form submission
+				 *
+				 * @since 2.1.3.5
+				 * @see   GFFormsModel::purge_expired_incomplete_submissions()
+				 *
+				 * @param int $expiration_days The number of days temporary files should remain in the uploads directory.
+				 */
+				$expiration_days = apply_filters( 'gform_incomplete_submissions_expiration_days', $expiration_days );
+
+			}
+
+			$lifespan = $expiration_days * $seconds_in_day;
+
 			foreach ( $files as $file ) {
 				if ( is_file( $file ) && time() - filemtime( $file ) >= $lifespan ) {
 					unlink( $file );
@@ -1589,6 +1625,11 @@ class GFFormDisplay {
 
 		// validate entry limit
 		if ( self::validate_entry_limit( $form ) ) {
+			return false;
+		}
+
+		// make sure database isn't being upgraded now
+		if ( gf_upgrade()->is_upgrading() ) {
 			return false;
 		}
 
@@ -2076,7 +2117,7 @@ class GFFormDisplay {
 					}
 				} elseif ( $input_type == 'time' ) { // maintained for backwards compatibility. The Time field now has an inputs array.
 					$parameter_val = RGFormsModel::get_parameter_value( $field->inputName, $field_values, $field );
-					if ( ! empty( $parameter_val ) && preg_match( '/^(\d*):(\d*) ?(.*)$/', $parameter_val, $matches ) ) {
+					if ( ! empty( $parameter_val ) && ! is_array( $parameter_val ) && preg_match( '/^(\d*):(\d*) ?(.*)$/', $parameter_val, $matches ) ) {
 						$field_val   = array();
 						$field_val[] = esc_attr( $matches[1] ); //hour
 						$field_val[] = esc_attr( $matches[2] ); //minute

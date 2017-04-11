@@ -122,6 +122,24 @@ class GFAPI {
 	}
 
 	/**
+	 * Duplicates the form with the given Form ID.
+	 *
+	 * @since  2.2
+	 * @access public
+	 *
+	 * @uses GFFormsModel::duplicate_form()
+	 *
+	 * @param int $form_id The ID of the Form to delete.
+	 *
+	 * @return mixed True for success, or a WP_Error instance
+	 */
+	public static function duplicate_form( $form_id ) {
+
+		return GFFormsModel::duplicate_form( $form_id );
+
+	}
+
+	/**
 	 * Updates the forms with an array of form objects.
 	 *
 	 * @since  1.8
@@ -362,6 +380,26 @@ class GFAPI {
 
 		// Updating object's id property.
 		$form_meta['id'] = $form_id;
+
+		// Add default confirmation if form has no confirmations.
+		if ( ! isset( $form_meta['confirmations'] ) || empty( $form_meta['confirmations'] ) ) {
+
+			// Generate confirmation ID.
+			$confirmation_id = uniqid();
+
+			// Add default confirmation to form.
+			$form_meta['confirmations'][ $confirmation_id ] = array(
+				'id'          => $confirmation_id,
+				'name'        => __( 'Default Confirmation', 'gravityforms' ),
+				'isDefault'   => true,
+				'type'        => 'message',
+				'message'     => __( 'Thanks for contacting us! We will get in touch with you shortly.', 'gravityforms' ),
+				'url'         => '',
+				'pageId'      => '',
+				'queryString' => '',
+			);
+
+		}
 
 		if ( isset( $form_meta['confirmations'] ) ) {
 			$form_meta['confirmations'] = self::set_property_as_key( $form_meta['confirmations'], 'id' );

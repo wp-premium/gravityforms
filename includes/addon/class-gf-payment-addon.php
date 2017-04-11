@@ -300,9 +300,11 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 	 * @return void
 	 */
 	public function setup() {
+
 		parent::setup();
 
 		$installed_version = get_option( 'gravityformsaddon_payment_version' );
+
 
 		$installed_addons = get_option( 'gravityformsaddon_payment_addons' );
 		if ( ! is_array( $installed_addons ) ) {
@@ -314,12 +316,15 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
 			$installed_addons = array( $this->_slug );
 			update_option( 'gravityformsaddon_payment_addons', $installed_addons );
-		} elseif ( ! in_array( $this->_slug, $installed_addons ) ) {
+		}
+		elseif ( ! in_array( $this->_slug, $installed_addons ) ) {
+
 			$this->upgrade_payment( $installed_version );
 
 			$installed_addons[] = $this->_slug;
 			update_option( 'gravityformsaddon_payment_addons', $installed_addons );
 		}
+
 
 		update_option( 'gravityformsaddon_payment_version', $this->_payment_version );
 
@@ -362,7 +367,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
                   KEY type_lead (lead_id,transaction_type)
                 ) $charset_collate;";
 
-		GFFormsModel::dbDelta( $sql );
+		gf_upgrade()->dbDelta( $sql );
 
 
 		if ( $this->_supports_callbacks ) {
@@ -376,13 +381,35 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
                       KEY addon_slug_callback_id (addon_slug(50),callback_id(100))
                     ) $charset_collate;";
 
-			GFFormsModel::dbDelta( $sql );
+			gf_upgrade()->dbDelta( $sql );
 
 			// Dropping legacy index.
-			GFForms::drop_index( "{$wpdb->prefix}gf_addon_payment_callback", 'slug_callback_id' );
+			gf_upgrade()->drop_index( "{$wpdb->prefix}gf_addon_payment_callback", 'slug_callback_id' );
 		}
 
 
+	}
+
+	/**
+	 * Gets called when Gravity Forms upgrade process is completed. This function is intended to be used internally, override the upgrade() function to execute database update scripts.
+	 * @param $db_version - Current Gravity Forms database version
+	 * @param $previous_db_version - Previous Gravity Forms database version
+	 * @param $force_upgrade - True if this is a request to force an upgrade. False if this is a standard upgrade (due to version change)
+	 */
+	public function post_gravityforms_upgrade( $db_version, $previous_db_version, $force_upgrade ){
+
+		// Forcing Upgrade
+		if( $force_upgrade ){
+
+			$installed_version = get_option( 'gravityformsaddon_payment_version' );
+
+			$this->upgrade_payment( $installed_version );
+
+			update_option( 'gravityformsaddon_payment_version', $this->_payment_version );
+
+		}
+
+		parent::post_gravityforms_upgrade( $db_version, $previous_db_version, $force_upgrade );
 	}
 
 	//--------- Submission Process ------
@@ -3461,6 +3488,10 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		$card_number = str_replace( array( "\t", "\n", "\r", ' ' ), '', $card_number );
 
 		return $card_number;
+	}
+
+	public function get_supports_callback(){
+		return $this->_supports_callbacks;
 	}
 }
 

@@ -80,6 +80,7 @@ class GF_Download {
 			header( 'Content-Description: File Transfer' );
 			header( 'Content-Disposition: ' . $content_disposition . '; filename="' . basename( $file ) . '"' );
 			header( 'Content-Transfer-Encoding: binary' );
+			ob_clean();
 			self::readfile_chunked( $file_path );
 			die();
 		} else {

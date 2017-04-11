@@ -43,15 +43,11 @@ class GFSelectColumns {
 	 */
 	public static function select_columns_page() {
 
-		$form_id = $_GET['id'];
+		$form_id = absint( $_GET['id'] );
 		if ( empty( $form_id ) ) {
 			echo __( 'Oops! We could not locate your form. Please try again.', 'gravityforms' );
 			exit;
 		}
-
-		// Reading form metadata
-		$form = RGFormsModel::get_form_meta( $form_id );
-
 		?>
 		<html>
 		<head>
@@ -284,8 +280,6 @@ class GFSelectColumns {
 
 		return $form;
 	}
-
-
 }
 
 GFSelectColumns::select_columns_page();
