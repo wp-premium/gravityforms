@@ -292,7 +292,7 @@ class GF_Field_Checkbox extends GF_Field {
 				$is_form_editor  = $this->is_form_editor();
 				$is_admin = $is_entry_detail || $is_form_editor;
 
-				if ( $is_admin && RG_CURRENT_VIEW != 'entry' && $count >= 5 ) {
+				if ( $is_admin && rgget('view') != 'entry' && $count >= 5 ) {
 					break;
 				}
 

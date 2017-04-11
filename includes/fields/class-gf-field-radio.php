@@ -99,7 +99,7 @@ class GF_Field_Radio extends GF_Field {
 					$field_value .= '|' . $price;
 				}
 
-				if ( rgblank( $value ) && RG_CURRENT_VIEW != 'entry' ) {
+				if ( rgblank( $value ) && rgget('view') != 'entry' ) {
 					$checked = rgar( $choice, 'isSelected' ) ? "checked='checked'" : '';
 				} else {
 					$checked = RGFormsModel::choice_value_match( $this, $choice, $value ) ? "checked='checked'" : '';

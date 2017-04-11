@@ -167,7 +167,7 @@ class GF_Field_Number extends GF_Field {
 					$instruction = "<div class='instruction $validation_class'>" . $message . '</div>';
 				}
 			}
-		} elseif ( RG_CURRENT_VIEW == 'entry' ) {
+		} elseif ( rgget('view') == 'entry' ) {
 			$value = GFCommon::format_number( $value, $this->numberFormat, rgar( $entry, 'currency' ) );
 		}
 
@@ -264,23 +264,16 @@ class GF_Field_Number extends GF_Field {
 		parent::sanitize_settings();
 		$this->enableCalculation = (bool) $this->enableCalculation;
 
-		if ( $this->numberFormat == 'currency' ) {
-			require_once( GFCommon::get_base_path() . '/currency.php' );
-			$currency = new RGCurrency( GFCommon::get_currency() );
-			$this->rangeMin    = $currency->to_number( $this->rangeMin );
-			$this->rangeMax    = $currency->to_number( $this->rangeMax );
+		if ( ! in_array( $this->numberFormat, array( 'currency', 'decimal_comma', 'decimal_dot' ) ) ) {
+			$this->numberFormat = GFCommon::is_currency_decimal_dot() ? 'decimal_dot' : 'decimal_comma';
+		}
 
-		} elseif ( $this->numberFormat == 'decimal_comma' ) {
-			$this->rangeMin = GFCommon::clean_number( $this->rangeMin, 'decimal_comma' );
-			$this->rangeMax = GFCommon::clean_number( $this->rangeMax, 'decimal_comma' );
+		$this->rangeMin = $this->clean_number( $this->rangeMin );
+		$this->rangeMax = $this->clean_number( $this->rangeMax );
 
+		if ( $this->numberFormat == 'decimal_comma' ) {
 			$this->rangeMin = GFCommon::format_number( $this->rangeMin, 'decimal_comma' );
 			$this->rangeMax = GFCommon::format_number( $this->rangeMax, 'decimal_comma' );
-
-		} elseif ( $this->numberFormat == 'decimal_dot' ) {
-			$this->rangeMin = GFCommon::clean_number( $this->rangeMin, 'decimal_dot' );
-			$this->rangeMax = GFCommon::clean_number( $this->rangeMax, 'decimal_dot' );
-
 		}
 	}
 

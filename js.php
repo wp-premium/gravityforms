@@ -487,47 +487,10 @@ if ( ! class_exists( 'GFForms' ) ) {
 		var form_json = jQuery.toJSON(form);
 		gforms_original_json = form_json;
 
-		if (!isNew) {
-			jQuery("#gform_meta").val(form_json);
-			jQuery("#gform_update").submit();
-		}
-		else {
-			jQuery("#please_wait_container").show();
-			var mysack = new sack("<?php echo admin_url( 'admin-ajax.php' )?>");
-			mysack.execute = 1;
-			mysack.method = 'POST';
-			mysack.setVar("action", "rg_save_form");
-			mysack.setVar("rg_save_form", "<?php echo wp_create_nonce( 'rg_save_form' ) ?>");
-			mysack.setVar("id", form.id);
-			mysack.setVar("form", form_json);
-			mysack.onError = function () {
-				alert(<?php echo json_encode( __( 'Ajax error while saving form', 'gravityforms' ) ); ?>)
-			};
-			mysack.runAJAX();
-		}
+		jQuery("#gform_meta").val(form_json);
+		jQuery("#gform_update").submit();
 
 		return true;
-	}
-
-	function DeleteField(fieldId) {
-
-		if (form.id == 0 || confirm(<?php echo json_encode( __( "Warning! Deleting this field will also delete all entry data associated with it. 'Cancel' to stop. 'OK' to delete", 'gravityforms' ) ); ?>)) {
-
-			jQuery('#gform_fields li#field_' + fieldId).addClass('gform_pending_delete');
-			var mysack = new sack("<?php echo admin_url( 'admin-ajax.php' )?>");
-			mysack.execute = 1;
-			mysack.method = 'POST';
-			mysack.setVar("action", "rg_delete_field");
-			mysack.setVar("rg_delete_field", "<?php echo wp_create_nonce( 'rg_delete_field' ) ?>");
-			mysack.setVar("form_id", form.id);
-			mysack.setVar("field_id", fieldId);
-			mysack.onError = function () {
-				alert(<?php echo json_encode( esc_html__( 'Ajax error while deleting field.', 'gravityforms' ) ); ?>)
-			};
-			mysack.runAJAX();
-
-			return true;
-		}
 	}
 
 	function SetDefaultValues( field, index ) {
@@ -609,6 +572,7 @@ if ( ! class_exists( 'GFForms' ) ) {
 				break;
 
 			case "multiselect" :
+				field.storageType = 'json';
 			case "select" :
 				if (!field.label)
 					field.label = <?php echo json_encode( esc_html__( 'Untitled', 'gravityforms' ) ); ?>;

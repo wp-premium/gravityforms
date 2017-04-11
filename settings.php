@@ -125,6 +125,7 @@ class GFSettings {
 	 * @uses    GFSettings::page_footer()
 	 */
 	public static function settings_uninstall_page() {
+
 		self::page_header( __( 'Uninstall Gravity Forms', 'gravityforms' ), '' );
 		if ( isset( $_POST['uninstall'] ) ) {
 
@@ -156,9 +157,15 @@ class GFSettings {
 			delete_option( 'gform_api_count' );
 			delete_option( 'gform_email_count' );
 			delete_option( 'gform_enable_toolbar_menu' );
+			delete_option( 'gform_enable_logging' );
+			delete_option( 'gform_pending_installation' );
 
 			// Removing gravity forms upload folder
 			GFCommon::delete_directory( RGFormsModel::get_upload_root() );
+
+			// Delete Logging settings and logging files
+			gf_logging()->delete_settings();
+			gf_logging()->delete_log_files();
 
 			// Deactivating plugin
 			$plugin = 'gravityforms/gravityforms.php';
@@ -217,6 +224,7 @@ class GFSettings {
 	 * @global $wpdb
 	 *
 	 * @used-by GFSettings::settings_page()
+	 * @uses    GFCommon::is_logging_plugin_active()
 	 * @uses    GFCommon::ensure_wp_version()
 	 * @uses    GFForms::setup()
 	 * @uses    GFCommon::current_user_can_any()
@@ -245,11 +253,6 @@ class GFSettings {
 			return;
 		}
 
-		if ( isset( $_GET['setup'] ) ) {
-			// Forcing setup
-			RGForms::setup( true );
-		}
-
 		require_once( 'currency.php' );
 
 		if ( isset( $_POST['submit'] ) ) {
@@ -269,7 +272,41 @@ class GFSettings {
 			update_option( 'rg_gforms_captcha_public_key', sanitize_text_field( rgpost( 'gforms_captcha_public_key' ) ) );
 			update_option( 'rg_gforms_captcha_private_key', sanitize_text_field( rgpost( 'gforms_captcha_private_key' ) ) );
 
-			if( rgpost( 'gform_recaptcha_reset' ) ) {
+			// If Logging was enabled, add Logging tab to settings page.
+			if ( rgpost( 'gform_enable_logging' ) ) {
+
+				// Update option.
+				update_option( 'gform_enable_logging', (bool) rgpost( 'gform_enable_logging' ) );
+
+				// Add settings page.
+				self::add_settings_page(
+					array(
+						'name'      => gf_logging()->get_slug(),
+						'tab_label' => gf_logging()->get_short_title(),
+						'title'     => gf_logging()->plugin_settings_title(),
+						'handler'   => array( gf_logging(), 'plugin_settings_page' ),
+					),
+					null,
+					null
+				);
+
+				// Enabling all loggers by default
+				gf_logging()->enable_all_loggers();
+
+			} else {
+
+				// Update option.
+				update_option( 'gform_enable_logging', (bool) rgpost( 'gform_enable_logging' ) );
+
+				// Remove settings page.
+				unset( self::$addon_pages[ gf_logging()->get_slug() ] );
+
+				// Remove Log Files
+				gf_logging()->delete_log_files();
+
+			}
+
+			if ( rgpost( 'gform_recaptcha_reset' ) ) {
 
 				$site = get_option( 'rg_gforms_captcha_public_key' );
 				$secret = get_option( 'rg_gforms_captcha_private_key' );
@@ -279,7 +316,7 @@ class GFSettings {
 				GFCommon::log_debug( 'secret:' . $secret );
 				GFCommon::log_debug( 'response:' . $response );
 
-				if( $site && $secret && $response ) {
+				if ( $site && $secret && $response ) {
 					$recaptcha = new GF_Field_CAPTCHA();
 					$recaptcha_response = $recaptcha->verify_recaptcha_response( $response, $secret );
 					GFCommon::log_debug( 'recaptcha response:' . $recaptcha_response );
@@ -287,7 +324,6 @@ class GFSettings {
 				} else {
 					delete_option( 'gform_recaptcha_keys_status' );
 				}
-
 			}
 
 			if ( ! rgempty( 'gforms_currency' ) && in_array( rgpost( 'gforms_currency' ), array_keys( RGCurrency::get_currencies() ) ) ) {
@@ -301,8 +337,8 @@ class GFSettings {
 			// Re-caching version info
 			$version_info = GFCommon::get_version_info( false );
 			?>
-			<div class="updated fade" style="padding:6px;">
-				<?php esc_html_e( 'Settings Updated', 'gravityforms' ); ?>.
+			<div class="updated fade">
+				<p><?php esc_html_e( 'Settings Updated', 'gravityforms' ); ?>.</p>
 			</div>
 		<?php
 		}
@@ -438,6 +474,25 @@ class GFSettings {
 						<span class="gf_settings_description"><?php esc_html_e( 'Set this to ON to display the Forms menu in the WordPress top toolbar. The Forms menu will display the latest ten forms recently opened in the form editor.', 'gravityforms' ); ?></span>
 					</td>
 				</tr>
+
+				<?php
+				if ( ! GFCommon::is_logging_plugin_active() ) {
+					?>
+					<tr valign="top">
+						<th scope="row">
+							<label for="gform_toolbar_menu"><?php esc_html_e( 'Logging', 'gravityforms' ); ?></label> <?php gform_tooltip( 'settings_logging' ) ?>
+						</th>
+						<td>
+							<input type="radio" name="gform_enable_logging" value="1" <?php echo get_option( 'gform_enable_logging' ) == 1 ? "checked='checked'" : '' ?> id="gform_enable_logging" /> <?php esc_html_e( 'On', 'gravityforms' ); ?>&nbsp;&nbsp;
+							<input type="radio" name="gform_enable_logging" value="0" <?php echo get_option( 'gform_enable_logging' ) == 1 ? '' : "checked='checked'" ?> id="gform_disable_logging" /> <?php esc_html_e( 'Off', 'gravityforms' ); ?>
+							<br />
+							<span class="gf_settings_description"><?php esc_html_e( 'Set this to ON to enable logging within Gravity Forms. Logging allows you to easily debug the inner workings of Gravity Forms.', 'gravityforms' ); ?></span>
+						</td>
+					</tr>
+					<?php
+				}
+				?>
+
 			</table>
 
 			<div class="hr-divider"></div>
@@ -460,11 +515,11 @@ class GFSettings {
 					</th>
 					<td>
 						<input type="text" name="gforms_captcha_public_key" style="width:350px;" value="<?php echo esc_attr( get_option( 'rg_gforms_captcha_public_key' ) ); ?>" onchange="loadRecaptcha();" />
-						<?php if( $key_status !== null ): ?>
+						<?php if ( $key_status !== null ) : ?>
 							<span class="gforms_captcha_site_key_status">
-								<?php if( $key_status ): ?>
+								<?php if ( $key_status ) : ?>
 									<i class="fa fa-check gf_valid"></i>
-								<?php else: ?>
+								<?php else : ?>
 									<i class="fa fa-times gf_invalid"></i>
 								<?php endif; ?>
 							</span>
@@ -477,11 +532,11 @@ class GFSettings {
 					</th>
 					<td>
 						<input type="text" name="gforms_captcha_private_key" style="width:350px;" value="<?php echo esc_attr( get_option( 'rg_gforms_captcha_private_key' ) ) ?>" onchange="loadRecaptcha();" />
-						<?php if( $key_status !== null ): ?>
+						<?php if ( $key_status !== null ) : ?>
 							<span class="gforms_captcha_site_key_status">
-								<?php if( $key_status ): ?>
+								<?php if ( $key_status ) : ?>
 									<i class="fa fa-check gf_valid"></i>
-								<?php else: ?>
+								<?php else : ?>
 									<i class="fa fa-times gf_invalid"></i>
 								<?php endif; ?>
 							</span>
@@ -578,104 +633,7 @@ class GFSettings {
 			});
 		</script>
 		<?php
-		/**
-		 * Allows you to disable the Gravity Forms installation status section
-		 *
-		 * @since Unknown
-		 *
-		 * @param bool false Set to true to disable the installation status. Defaults to false.
-		 */
-		if ( ! apply_filters( 'gform_disable_installation_status', false ) ) { ?>
-			<div class="hr-divider"></div>
 
-			<h3><span><i class="fa fa-dashboard"></i> <?php esc_html_e( 'Installation Status', 'gravityforms' ); ?><span></h3>
-			<table class="form-table">
-
-				<tr valign="top">
-					<th scope="row"><label><?php esc_html_e( 'PHP Version', 'gravityforms' ); ?></label></th>
-					<td class="installation_item_cell">
-						<strong><?php echo phpversion(); ?></strong>
-					</td>
-					<td>
-						<?php
-						if ( version_compare( phpversion(), '5.0.0', '>' ) ) {
-							?>
-							<i class="fa fa-check gf_valid"></i>
-						<?php
-						} else {
-							?>
-							<i class="fa fa-times gf_invalid"></i>
-							<span class="installation_item_message"><?php esc_html_e( 'Gravity Forms requires PHP 5 or above.', 'gravityforms' ); ?></span>
-						<?php
-						}
-						?>
-					</td>
-				</tr>
-				<tr valign="top">
-					<th scope="row"><label><?php esc_html_e( 'MySQL Version', 'gravityforms' ); ?></label></th>
-					<td class="installation_item_cell">
-						<strong><?php echo esc_html( $wpdb->db_version() ); ?></strong>
-					</td>
-					<td>
-						<?php
-						if ( version_compare( $wpdb->db_version(), '5.0.0', '>' ) ) {
-							?>
-							<i class="fa fa-check gf_valid"></i>
-						<?php
-						} else {
-							?>
-							<i class="fa fa-times gf_invalid"></i>
-							<span class="installation_item_message"><?php esc_html_e( 'Gravity Forms requires MySQL 5 or above.', 'gravityforms' ); ?></span>
-						<?php
-						}
-						?>
-					</td>
-				</tr>
-				<tr valign="top">
-					<th scope="row"><label><?php esc_html_e( 'WordPress Version', 'gravityforms' ); ?></label></th>
-					<td class="installation_item_cell">
-						<strong><?php echo esc_html( get_bloginfo( 'version' ) ); ?></strong>
-					</td>
-					<td>
-						<?php
-						if ( version_compare( get_bloginfo( 'version' ), GF_MIN_WP_VERSION_SUPPORT_TERMS, '>=' ) ) {
-							?>
-							<i class="fa fa-check gf_valid"></i>
-						<?php
-						} elseif ( version_compare( get_bloginfo( 'version' ), GF_MIN_WP_VERSION, '>=' ) ) {
-							?>
-							<i class="fa fa-times gf_invalid"></i>
-							<span class="installation_item_message"><?php printf( esc_html__( 'The Gravity Forms support agreement requires WordPress v%s or greater. This site must be upgraded in order to be eligible for support.', 'gravityforms' ), GF_MIN_WP_VERSION_SUPPORT_TERMS ); ?></span>
-							<?php
-						} else {
-							?>
-							<i class="fa fa-times gf_invalid"></i>
-							<span class="installation_item_message"><?php printf( esc_html__( 'Gravity Forms requires WordPress v%s or greater. You must upgrade WordPress in order to use this version of Gravity Forms.', 'gravityforms' ), GF_MIN_WP_VERSION ); ?></span>
-						<?php
-						}
-						?>
-					</td>
-				</tr>
-				<tr valign="top">
-					<th scope="row"><label><?php esc_html_e( 'Gravity Forms Version', 'gravityforms' ); ?></label></th>
-					<td class="installation_item_cell">
-						<strong><?php echo esc_html( GFCommon::$version ) ?></strong>
-					</td>
-					<td>
-						<?php
-						if ( version_compare( GFCommon::$version, $version_info['version'], '>=' ) ) {
-							?>
-							<i class="fa fa-check gf_valid"></i>
-						<?php
-						} else {
-							echo sprintf( esc_html__( 'New version %s available. Automatic upgrade available on the %splugins page%s', 'gravityforms' ), esc_html( $version_info['version'] ), '<a href="plugins.php">', '</a>' );
-						}
-						?>
-					</td>
-				</tr>
-			</table>
-		<?php
-		}
 
 		self::page_footer();
 	}
@@ -739,10 +697,7 @@ class GFSettings {
 	 */
 	public static function page_header( $title = '', $message = '' ) {
 
-		$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] ) ? '' : '.min';
-
-		// Register admin styles.
-		wp_register_style( 'gform_admin', GFCommon::get_base_url() . "/css/admin{$min}.css" );
+		// Print admin styles.
 		wp_print_styles( array( 'jquery-ui-styles', 'gform_admin' ) );
 
 		$current_tab = self::get_subview();

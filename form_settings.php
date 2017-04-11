@@ -1577,9 +1577,7 @@ class GFFormSettings {
 	 */
 	public static function page_header( $title = '' ) {
 
-		// Register admin styles.
-		$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] ) ? '' : '.min';
-		wp_register_style( 'gform_admin', GFCommon::get_base_url() . "/css/admin{$min}.css" );
+		// Print admin styles.
 		wp_print_styles( array( 'jquery-ui-styles', 'gform_admin', 'wp-pointer' ) );
 
 		$form         = GFFormsModel::get_form_meta( rgget( 'id' ) );
@@ -2167,17 +2165,35 @@ class GFFormSettings {
 	 *
 	 * @return void
 	 */
-	public static function save_form_title(){
+	public static function save_form_title() {
 
 		check_admin_referer( 'gf_save_title', 'gf_save_title' );
 
 		$form_title = json_decode( rgpost( 'title' ) );
 		$form_id = rgpost( 'formId' );
 
-		$form = GFAPI::get_form( $form_id );
-		$form['title'] = $form_title;
+		$result = array( 'isValid' => true, 'message' => '' );
 
-		GFAPI::update_form( $form, $form_id );
+		if ( empty( $form_title ) ) {
+
+			$result['isValid'] = false;
+			$result['message'] = __( 'Please enter a form title.', 'gravityforms' );
+
+		} elseif ( ! GFFormsModel::is_unique_title( $form_title, $form_id ) ) {
+			$result['isValid'] = false;
+			$result['message'] = __( 'Please enter a unique form title.', 'gravityforms' );
+
+		} else {
+
+			$form = GFAPI::get_form( $form_id );
+			$form['title'] = $form_title;
+
+			GFAPI::update_form( $form, $form_id );
+
+		}
+
+		die( json_encode( $result ) );
+
 	}
 }
 

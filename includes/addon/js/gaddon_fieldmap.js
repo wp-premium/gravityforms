@@ -19,14 +19,15 @@ var gfieldmap = function( options ) {
 		
 		self.UI.on( 'change', 'select[name="_gaddon_setting_'+ self.options.keyFieldName +'"]', function() {
 
-			var $select = jQuery( this ),
-				$input  = $select.next( '.custom-key-container' );
+			var $select    = jQuery( this ),
+				$selectElm = $select.data( 'chosen' ) ? $select.siblings( '.chosen-container' ) : ( $select.data( 'select2' ) ? $select.siblings( '.select2-container' ) : $select ),
+				$input     = $select.siblings( '.custom-key-container' );
 
 			if( $select.val() != 'gf_custom' ) {
 				return;
 			}
 
-			$select.fadeOut( function() {
+			$selectElm.fadeOut( function() {
 				$input.fadeIn().focus();
 			} );
 
@@ -36,13 +37,15 @@ var gfieldmap = function( options ) {
 
 			event.preventDefault();
 
-			var $reset  = jQuery( this ),
-				$input  = $reset.parents( '.custom-key-container' ),
-				$select = $input.prev( 'select.key' );
+			var $reset     = jQuery( this ),
+				$input     = $reset.parents( '.custom-key-container' ),
+				$select    = $input.siblings( 'select.key' ),
+				$selectElm = $select.data( 'chosen' ) ? $select.siblings( '.chosen-container' ) : ( $select.data( 'select2' ) ? $select.siblings( '.select2-container' ) : $select );
 
 			$input.fadeOut( function() {
 				$input.find( 'input' ).val( '' ).change();
-				$select.fadeIn().focus().val( '' );
+				$select.val( '' ).trigger( 'change' );
+				$selectElm.fadeIn().focus();
 			} );
 
 		} );
@@ -87,8 +90,8 @@ var gfieldmap = function( options ) {
 			
 			limit:              limit,
 			items:              self.data,
-			addButtonMarkup:    '<img src="'+ self.options.baseURL +'/images/add.png" style="cursor:pointer;" />',
-			removeButtonMarkup: '<img src="'+ self.options.baseURL +'/images/remove.png" style="cursor:pointer;" />',
+			addButtonMarkup:    '<span>+</span>',
+			removeButtonMarkup: '<span>-</span>',
 			callbacks:          {
 				add:  function( obj, $elem, item ) {
 					

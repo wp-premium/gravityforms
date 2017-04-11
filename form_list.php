@@ -210,18 +210,28 @@ class GFFormList {
 			} ?>
 		</h2>
 
-		<?php GFCommon::display_dismissible_message(); ?>
+		<?php
 
+		GFCommon::display_dismissible_message();
+
+		$table = new GF_Form_List_Table();
+		$table->process_action();
+		$table->views();
+		$table->prepare_items();
+		?>
+		<form id="form_list_search" method="get">
+		<input type="hidden" value="gf_edit_forms" name="page" />
+		<?php
+			if ( rgget( 'filter' ) ) {
+				echo '<input type="hidden" value="' . esc_attr( rgget( 'filter' ) ) . '" name="filter" />';
+			}
+						
+			$table->search_box( esc_html__( 'Search Forms', 'gravityforms' ), 'form' );
+		?>
+		</form>
 		<form id="form_list_form" method="post">
-			<?php
+		<?php $table->display(); ?>
 
-			$table = new GF_Form_List_Table();
-			$table->process_action();
-			$table->views();
-			$table->prepare_items();
-
-			$table->display();
-			?>
 		</form>
 	<?php
 
@@ -260,7 +270,7 @@ class GFFormList {
 
 			default:
 				$form_id = absint( $result['status'] );
-				die( json_encode( array( 'redirect' => admin_url( "admin.php?page=gf_edit_forms&id={$form_id}" ) ) ) );
+				die( json_encode( array( 'redirect' => admin_url( "admin.php?page=gf_edit_forms&id={$form_id}&isnew=1" ) ) ) );
 		}
 	}
 
@@ -447,10 +457,10 @@ class GF_Form_List_Table extends WP_List_Table {
 
 		$sort_direction = empty( $_GET['order'] ) ? 'ASC' : strtoupper( $_GET['order'] );
 		$sort_direction = $sort_direction == 'ASC' ? 'ASC' : 'DESC';
-		$filter         = $this->filter;
-		$trash          = false;
+		$search_query   = rgget( 's' );
+		$trash = false;
+		switch ( $this->filter ) {
 
-		switch ( $filter ) {
 			case '':
 				$active = null;
 			break;
@@ -465,7 +475,11 @@ class GF_Form_List_Table extends WP_List_Table {
 				$trash = true;
 		}
 
-		$forms = RGFormsModel::get_forms( $active, $sort_column, $sort_direction, $trash );
+		if ( rgblank( $search_query ) ) {
+			$forms = GFFormsModel::get_forms( $active, $sort_column, $sort_direction, $trash );
+		} else {
+			$forms = GFFormsModel::search_forms( $search_query, $active, $sort_column, $sort_direction, $trash );
+		}
 
 		$per_page = $this->get_items_per_page( 'gform_forms_per_page', 20 );
 
@@ -475,12 +489,6 @@ class GF_Form_List_Table extends WP_List_Table {
 			'total_items' => count( $forms ),
 			'per_page'    => $per_page,
 		) );
-
-		if ( $trash ) {
-			$this->filter = 'trash';
-		} else {
-			$this->filter = 'active';
-		}
 
 		if ( in_array( $sort_column, array( 'view_count', 'lead_count', 'conversion' ) ) ) {
 			usort( $forms, array( $this, 'compare_' . $sort_column . '_'  . $sort_direction ) );
@@ -553,7 +561,7 @@ class GF_Form_List_Table extends WP_List_Table {
 				echo "<td $attributes>";
 				do_action( 'gform_form_list_column_' . $column_name, $item );
 				echo $this->handle_row_actions( $item, $column_name, $primary );
-				echo "</td>";				
+				echo '</td>';
 			} elseif ( method_exists( $this, '_column_' . $column_name ) ) {
 				echo call_user_func(
 					array( $this, '_column_' . $column_name ),
@@ -698,7 +706,13 @@ class GF_Form_List_Table extends WP_List_Table {
 	}
 
 	function no_items() {
-		if ( $this->filter == 'trash' ) {
+		if ( rgget( 's' ) ) {
+			printf(
+				esc_html__( "No forms were found for your search query. %sView all forms%s.", 'gravityforms' ),
+				'<a href="' . remove_query_arg( 's' ) . '">',
+				'</a>'
+			);
+		} else if ( $this->filter == 'trash' ) {
 			esc_html_e( 'There are no forms in the trash.', 'gravityforms' );
 		} else {
 			printf( esc_html__( "You don't have any forms. Let's go %screate one%s!", 'gravityforms' ), '<a href="admin.php?page=gf_new_form">', '</a>' );

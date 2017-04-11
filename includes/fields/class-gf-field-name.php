@@ -154,7 +154,7 @@ class GF_Field_Name extends GF_Field {
 		$form_id  = ( $is_entry_detail || $is_form_editor ) && empty( $form_id ) ? rgget( 'id' ) : $form_id;
 
 		$size         = $this->size;
-		$class_suffix = RG_CURRENT_VIEW == 'entry' ? '_admin' : '';
+		$class_suffix = rgget('view') == 'entry' ? '_admin' : '';
 		$class        = $size . $class_suffix;
 
 		$disabled_text = $is_form_editor ? "disabled='disabled'" : '';
