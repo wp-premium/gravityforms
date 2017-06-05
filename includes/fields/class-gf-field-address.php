@@ -32,7 +32,7 @@ class GF_Field_Address extends GF_Field {
 		return esc_attr__( 'Address', 'gravityforms' );
 	}
 
-	function validate( $value, $form ) {
+	public function validate( $value, $form ) {
 
 		if ( $this->isRequired ) {
 			$copy_values_option_activated = $this->enableCopyValuesOption && rgpost( 'input_' . $this->id . '_copy_values_activated' );
