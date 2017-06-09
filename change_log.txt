@@ -1,10 +1,46 @@
 ------------------------------------------------------------------------------------------------------------------
-Version 2.2.1.2
-	- Fixed an issue with license validation request that can prevent license key validation.
+Version 2.2.3
+    - Added security enhancements. Credit: Gennady Kovshenin.
+    - Added support for Mastercard 2-series number.
+    - Fixed an issue which could prevent the gravityhelp.com support forms being successfully submitted when including the System Report from some sites.
+	- Fixed an issue with the ID attribute of the accepted file types message container when multiple File Upload fields are present on the page.
+	- Fixed an issue where a new field could be assigned the same id as a field to be deleted resulting in the new field being lost when the original field is deleted on save.
+	- Fixed an issue with File Upload field URLs in text format notifications containing escaped ampersands.
+	- Fixed missing confirmation message anchor for AJAX enabled single page forms.
+	- Fixed an issue where the urls of deleted files could remain in the multi-file enabled upload field entry value when editing the entry, if a new file was added at the same time.
+	- AF: Added "description" settings field property to display description below settings field.
+	- AF: Added "no_choices" select settings field property to display message when no choice are available for field.
+	- API: Fixed a database error in gform_get_meta_values_for_entries() when searching for meta keys with special characters e.g. hyphens.
 
 ------------------------------------------------------------------------------------------------------------------
-Version 2.2.1.1
+Version 2.2.2
+	- Added 'gform_multifile_upload_field' filter to allow field object to be filtered.
+	- Added 'gform_duplicate_field' javascript filter to allow duplicated field to be changed.
+	- Added the 'gform_html_message_template_pre_send_email' filter allowing the html formatted notification message to be overridden.
+	- Updated delivery of files requested for download to prevent third-parties to corrupt the file content.
+	- Updated the System Report.
+	- Fixed issues with the Copy System Report button and the form switcher drop down when no-conflict mode is enabled.
+	- Fixed issue with special characters when defining a new choice group in the bulk editor popup.
+	- Fixed a PHP warning and fatal error related to the Forms toolbar menu.
+	- Fixed the extremely outdated version message remaining after updating to the latest version.
+	- Fixed 'undefined' appearing as a header in the bulk add / predefined choices modal.
+	- Fixed the Members plugin integration which was missing the System Status page capability (gravityforms_system_status).
+	- Fixed styling issue with Entry Updated message.
+	- Fixed the minimum width of the form switcher drop down when all the forms have titles which are only a few characters in length.
+    - Fixed a potential conflict with other plugins that load modified versions of the WP_Background_Process class.
+	- Fixed an issue where dynamic population of a field may fail when the value passed in the query string is 0.
+	- Fixed a PHP notice when using the gf-download file link if the output buffer is not set.
+	- Fixed currently selected multi-select field choices not being selected when editing an entry.
+	- Fixed an issue with the confirmation message markup for AJAX enabled forms containing an extra gforms_confirmation_message div.
+	- Fixed the Forms dashboard widget including trashed forms.
+	- Fixed a PHP fatal error which occurred on the global settings page of the installation wizard when the entry point was the Forms > Add-Ons page.
+	- Fixed an issue with the submission time evaluation of conditional logic rules using the contains operator when the rule value is 0.
+	- Fixed an inconsistency between the front-end and validation character counts for the Paragraph field.
+	- Fixed a fatal error which could occur when checking if the logging add-on is active in some environments.
+	- Fixed an issue with license validation request that can prevent license key validation.
 	- Fixed a PHP notice on the System Status page with PHP versions older than 5.4.
+	- AF: Fixed a PHP fatal error which could occur with add-ons using the field_map type setting with PHP versions older than 5.3.
+    - AF: Fixed an issue preventing feeds from being processed in the background.
 
 ------------------------------------------------------------------------------------------------------------------
 Version 2.2.1

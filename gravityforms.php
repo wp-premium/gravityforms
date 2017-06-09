@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms
 Plugin URI: http://www.gravityforms.com
 Description: Easily create web forms and manage form entries within the WordPress admin.
-Version: 2.2.1.2
+Version: 2.2.3
 Author: rocketgenius
 Author URI: http://www.rocketgenius.com
 Text Domain: gravityforms
@@ -162,7 +162,6 @@ require_once( plugin_dir_path( __FILE__ ) . 'includes/fields/class-gf-fields.php
 require_once( plugin_dir_path( __FILE__ ) . 'includes/class-gf-download.php' );
 
 // Load Logging if Logging Add-On is not active.
-require_once ABSPATH . 'wp-admin/includes/plugin.php';
 if ( ! GFCommon::is_logging_plugin_active() ) {
 	require_once( plugin_dir_path( __FILE__ ) . 'includes/logging/logging.php' );
 }
@@ -209,7 +208,7 @@ class GFForms {
 	 *
 	 * @var string $version The version number.
 	 */
-	public static $version = '2.2.1.2';
+	public static $version = '2.2.3';
 
 	/**
 	 * Runs after Gravity Forms is loaded.
@@ -787,6 +786,7 @@ class GFForms {
 				'media-views',
 				'buttons',
 				'wp-pointer',
+				'gform_chosen'
 			),
 			'gf_edit_forms_notification' => array(
 				'thickbox',
@@ -796,7 +796,7 @@ class GFForms {
 				'buttons',
 			),
 			'gf_new_form'                => array( 'thickbox' ),
-			'gf_entries'                 => array( 'thickbox' ),
+			'gf_entries'                 => array( 'thickbox', 'gform_chosen' ),
 			'gf_settings'                => array(),
 			'gf_export'                  => array(),
 			'gf_help'                    => array(),
@@ -859,7 +859,8 @@ class GFForms {
 				'wp-plupload',
 				'wpdialogs-popup',
 				'wplink',
-				'wp-pointer'
+				'wp-pointer',
+				'gform_chosen'
 			),
 			'gf_edit_forms_notification' => array(
 				'editor',
@@ -901,11 +902,13 @@ class GFForms {
 				'gform_json',
 				'gform_field_filter',
 				'plupload-all',
-				'postbox'
+				'postbox',
+				'gform_chosen'
 			),
 			'gf_settings'                => array(),
 			'gf_export'                  => array( 'gform_form_admin', 'jquery-ui-datepicker', 'gform_field_filter' ),
 			'gf_help'                    => array(),
+			'gf_system_status'           => array( 'gform_system_report_clipboard' )
 		);
 
 		self::no_conflict_mode( $wp_scripts, $wp_required_scripts, $gf_required_scripts, 'scripts' );
@@ -1209,7 +1212,7 @@ class GFForms {
 
 		// Gravity Forms pages
 		$current_page = trim( strtolower( self::get( 'page' ) ) );
-		$gf_pages     = array( 'gf_edit_forms', 'gf_new_form', 'gf_entries', 'gf_settings', 'gf_export', 'gf_help' );
+		$gf_pages     = array( 'gf_edit_forms', 'gf_new_form', 'gf_entries', 'gf_settings', 'gf_export', 'gf_help', 'gf_addons', 'gf_system_status' );
 
 		return in_array( $current_page, $gf_pages );
 	}
@@ -1824,6 +1827,10 @@ class GFForms {
 				<tbody class="list:user user-list">
 				<?php
 				foreach ( $forms as $form ) {
+					if ( $form['is_trash'] ) {
+						continue;
+					}
+
 					$date_display = GFCommon::format_date( $form['last_lead_date'] );
 					if ( ! empty( $form['total_leads'] ) ) {
 						?>
@@ -4068,17 +4075,7 @@ class GFForms {
 
 		$wp_admin_bar->add_node( $args );
 
-		$current_user_id = get_current_user_id();
-		$recent_form_ids = get_user_meta( $current_user_id, 'gform_recent_forms', true );
-
-		if ( empty( $recent_form_ids ) ) {
-			$all_form_ids    = GFFormsModel::get_form_ids();
-			$all_form_ids    = array_reverse( $all_form_ids );
-			$recent_form_ids = array_slice( $all_form_ids, 0, 10 );
-			if ( $recent_form_ids ) {
-				update_user_meta( $current_user_id, 'gform_recent_forms', $recent_form_ids );
-			}
-		}
+		$recent_form_ids = GFFormsModel::get_recent_forms();
 
 		if ( $recent_form_ids ) {
 			$forms = GFFormsModel::get_form_meta_by_id( $recent_form_ids );
@@ -5173,7 +5170,7 @@ if ( ! function_exists( 'gf_apply_filters' ) ) {
 	 * @since  Unknown
 	 * @access public
 	 *
-	 * @param string $filter The name of the filter.
+	 * @param string|array $filter The name of the filter.
 	 * @param mixed  $value  The value to filter.
 	 *
 	 * @return mixed The filtered value.

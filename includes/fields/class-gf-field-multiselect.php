@@ -136,7 +136,12 @@ class GF_Field_MultiSelect extends GF_Field {
 	 * @return string Returns the choices available within the multi-select field.
 	 */
 	public function get_choices( $value ) {
+
+		// If we are in the entry editor, convert value to an array.
+		$value = $this->is_entry_detail() ? $this->to_array( $value ) : $value;
+
 		return GFCommon::get_select_choices( $this, $value, false );
+
 	}
 
 	/**

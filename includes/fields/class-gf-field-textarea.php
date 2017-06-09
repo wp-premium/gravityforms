@@ -144,7 +144,11 @@ class GF_Field_Textarea extends GF_Field {
 			return;
 		}
 
+		// Clean the string of characters not counted by the textareaCounter plugin.
 		$value = strip_tags( $value );
+		$value = str_replace( "\r", '', $value );
+		$value = trim( $value );
+
 		if ( GFCommon::safe_strlen( $value ) > $this->maxLength ) {
 			$this->failed_validation  = true;
 			$this->validation_message = empty( $this->errorMessage ) ? esc_html__( 'The text entered exceeds the maximum number of characters.', 'gravityforms' ) : $this->errorMessage;

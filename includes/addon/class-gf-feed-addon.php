@@ -100,9 +100,6 @@ abstract class GFFeedAddOn extends GFAddOn {
 	 * Performs upgrade tasks when the version of the Add-On changes. To add additional upgrade tasks, override the upgrade() function, which will only get executed when the plugin version has changed.
 	 */
 	public function setup() {
-		global $wpdb;
-		$table_name = $wpdb->prefix . 'gf_addon_feed';
-
 		// upgrading Feed Add-On base class
 		$installed_version = get_option( 'gravityformsaddon_feed-base_version' );
 		if ( $installed_version != $this->_feed_version ) {
@@ -297,8 +294,8 @@ abstract class GFFeedAddOn extends GFAddOn {
 						array(
 							'addon' => $this,
 							'feed'  => $feed,
-							'entry' => $entry['id'],
-							'form'  => $form['id'],
+							'entry_id' => $entry['id'],
+							'form_id'  => $form['id'],
 						)
 					);
 

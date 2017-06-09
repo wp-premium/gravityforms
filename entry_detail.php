@@ -659,8 +659,8 @@ class GFEntryDetail {
 
 		if ( rgpost( 'action' ) == 'update' ) {
 			?>
-			<div class="updated fade" style="padding:6px;">
-				<?php esc_html_e( 'Entry Updated.', 'gravityforms' ); ?>
+			<div class="updated fade">
+				<p><?php esc_html_e( 'Entry Updated.', 'gravityforms' ); ?></p>
 			</div>
 			<?php
 		}

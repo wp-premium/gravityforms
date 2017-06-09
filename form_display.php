@@ -895,12 +895,10 @@ class GFFormDisplay {
 			$form_string .= "
                 <div class='{$wrapper_css_class}{$custom_wrapper_css_class}' id='gform_wrapper_$form_id' " . $style . '>';
 
-			$default_anchor = $has_pages || $ajax ? true : false;
-			$use_anchor     = gf_apply_filters( array( 'gform_confirmation_anchor', $form_id ), $default_anchor, $form );
-			if ( $use_anchor !== false ) {
-				$form_string .= "<a id='gf_$form_id' class='gform_anchor' ></a>";
-				$action .= "#gf_$form_id";
-			}
+			$anchor      = self::get_anchor( $form, $ajax );
+			$form_string .= $anchor['tag'];
+			$action      .= $anchor['id'];
+
 			$target = $ajax ? "target='gform_ajax_frame_{$form_id}'" : '';
 
 			$form_css_class = ! empty( $form['cssClass'] ) ? "class='{$form_css_class}'" : '';
@@ -1020,9 +1018,9 @@ class GFFormDisplay {
 				$spinner_url     = gf_apply_filters( array( 'gform_ajax_spinner_url', $form_id ), GFCommon::get_base_url() . '/images/spinner.gif', $form );
 				$scroll_position = array( 'default' => '', 'confirmation' => '' );
 
-				if ( $use_anchor !== false ) {
-					$scroll_position['default']      = is_numeric( $use_anchor ) ? 'jQuery(document).scrollTop(' . intval( $use_anchor ) . ');' : "jQuery(document).scrollTop(jQuery('#gform_wrapper_{$form_id}').offset().top);";
-					$scroll_position['confirmation'] = is_numeric( $use_anchor ) ? 'jQuery(document).scrollTop(' . intval( $use_anchor ) . ');' : "jQuery(document).scrollTop(jQuery('#gforms_confirmation_message_{$form_id}').offset().top);";
+				if ( $anchor['scroll'] !== false ) {
+					$scroll_position['default']      = is_numeric( $anchor['scroll'] ) ? 'jQuery(document).scrollTop(' . intval( $anchor['scroll'] ) . ');' : "jQuery(document).scrollTop(jQuery('#gform_wrapper_{$form_id}').offset().top);";
+					$scroll_position['confirmation'] = is_numeric( $anchor['scroll'] ) ? 'jQuery(document).scrollTop(' . intval( $anchor['scroll'] ) . ');' : "jQuery(document).scrollTop(jQuery('{$anchor['id']}').offset().top);";
 				}
 
 				$iframe_style = defined( 'GF_DEBUG' ) && GF_DEBUG ? 'display:block;width:600px;height:300px;border:1px solid #eee;' : 'display:none;width:0px;height:0px;';
@@ -1056,12 +1054,12 @@ class GFFormDisplay {
 								"window['gf_submitting_{$form_id}'] = false;" .
 							'}' .
 							'else if(!is_redirect){' .
-								"var confirmation_content = jQuery(this).contents().find('#gforms_confirmation_message_{$form_id}').html();" .
+								"var confirmation_content = jQuery(this).contents().find('.GF_AJAX_POSTBACK').html();" .
 								'if(!confirmation_content){' .
 									'confirmation_content = contents;' .
 								'}' .
 								'setTimeout(function(){' .
-									"jQuery('#gform_wrapper_{$form_id}').replaceWith('<' + 'div id=\'gforms_confirmation_message_{$form_id}\' class=\'gform_confirmation_message_{$form_id} gforms_confirmation_message\'' + '>' + confirmation_content + '<' + '/div' + '>');" .
+									"jQuery('#gform_wrapper_{$form_id}').replaceWith(confirmation_content);" .
 									"{$scroll_position['confirmation']}" .
 									"jQuery(document).trigger('gform_confirmation_loaded', [{$form_id}]);" .
 									"window['gf_submitting_{$form_id}'] = false;" .
@@ -1573,11 +1571,12 @@ class GFFormDisplay {
 	 * @return string The confirmation message.
 	 */
 	public static function get_confirmation_message( $confirmation, $form, $entry, $aux_data = array() ) {
+		$ajax   = isset( $_POST['gform_ajax'] );
+		$anchor = self::get_anchor( $form, $ajax );
+		$anchor = $anchor['tag'];
 
-		$default_anchor = self::has_pages( $form ) ? 1 : 0;
-		$anchor         = gf_apply_filters( array( 'gform_confirmation_anchor', $form['id'] ), $default_anchor, $form ) ? "<a id='gf_{$form['id']}' class='gform_anchor' ></a>" : '';
-		$nl2br          = rgar( $confirmation, 'disableAutoformat' ) ? false : true;
-		$css_class      = esc_attr( rgar( $form, 'cssClass' ) );
+		$nl2br     = rgar( $confirmation, 'disableAutoformat' ) ? false : true;
+		$css_class = esc_attr( rgar( $form, 'cssClass' ) );
 
 		$message = GFCommon::replace_variables( $confirmation['message'], $form, $entry, false, true, $nl2br, 'html', $aux_data );
 		$message = self::maybe_sanitize_confirmation_message( $message );
@@ -3215,7 +3214,7 @@ class GFFormDisplay {
 
 	public static function replace_save_variables( $text, $form, $resume_token, $email = null ) {
 		$resume_token = sanitize_key( $resume_token );
-		$form_id = intval( $form['id'] );
+		$form_id      = intval( $form['id'] );
 
 		/**
 		 * Filters the 'Save and Continue' URL to be used with a partial entry submission.
@@ -3260,16 +3259,9 @@ class GFFormDisplay {
 
 		$action = esc_url( remove_query_arg( 'gf_token' ) );
 
-		$ajax = isset( $_POST['gform_ajax'] );
-
-		$has_pages = self::has_pages( $form );
-
-		$default_anchor = $has_pages || $ajax ? true : false;
-
-		$use_anchor     = gf_apply_filters( array( 'gform_confirmation_anchor', $form_id ), $default_anchor, $form );
-		if ( $use_anchor !== false ) {
-			$action .= "#gf_$form_id";
-		}
+		$ajax   = isset( $_POST['gform_ajax'] );
+		$anchor = self::get_anchor( $form, $ajax );
+		$action .= $anchor['id'];
 
 		$html_input_type = RGFormsModel::is_html5_enabled() ? 'email' : 'text';
 
@@ -3311,9 +3303,10 @@ class GFFormDisplay {
 	}
 
 	public static function handle_save_email_confirmation( $form, $ajax ) {
-		$resume_email       = $_POST['gform_resume_email'];
+		$resume_email = $_POST['gform_resume_email'];
 		if ( ! GFCommon::is_valid_email( $resume_email ) ) {
 			GFCommon::log_debug( 'GFFormDisplay::handle_save_email_confirmation(): Invalid email address: ' . $resume_email );
+
 			return new WP_Error( 'invalid_email' );
 		}
 		$resume_token       = $_POST['gform_resume_token'];
@@ -3328,23 +3321,12 @@ class GFFormDisplay {
 		$confirmation            = '<div class="form_saved_message_sent"><span>' . $confirmation_message . '</span></div>';
 		$nl2br                   = rgar( $form['confirmation'], 'disableAutoformat' ) ? false : true;
 		$save_email_confirmation = self::replace_save_variables( $confirmation, $form, $resume_token, $resume_email );
-
 		$save_email_confirmation = GFCommon::replace_variables( $save_email_confirmation, $form, $entry, false, true, $nl2br );
 		$save_email_confirmation = GFCommon::gform_do_shortcode( $save_email_confirmation );
-
 		$save_email_confirmation = self::maybe_sanitize_confirmation_message( $save_email_confirmation );
 
-		$form_id = absint( $form['id'] );
-
-		$has_pages = self::has_pages( $form );
-
-		$default_anchor = $has_pages || $ajax ? true : false;
-
-		$use_anchor     = gf_apply_filters( array( 'gform_confirmation_anchor', $form_id ), $default_anchor, $form );
-
-		if ( $use_anchor !== false ) {
-			$save_email_confirmation = "<a id='gf_$form_id' class='gform_anchor' ></a>" . $save_email_confirmation;
-		}
+		$anchor                  = self::get_anchor( $form, $ajax );
+		$save_email_confirmation = $anchor['tag'] . $save_email_confirmation;
 
 		if ( $ajax ) {
 			$save_email_confirmation = "<!DOCTYPE html><html><head><meta charset='UTF-8' /></head><body class='GF_AJAX_POSTBACK'>" . $save_email_confirmation . '</body></html>';
@@ -3356,28 +3338,17 @@ class GFFormDisplay {
 	}
 
 	public static function handle_save_confirmation( $form, $resume_token, $confirmation_message, $ajax ) {
-		$resume_email         = isset( $_POST['gform_resume_email'] ) ? $_POST['gform_resume_email'] : null;
+		$resume_email = isset( $_POST['gform_resume_email'] ) ? $_POST['gform_resume_email'] : null;
 
 		$confirmation_message = self::maybe_sanitize_confirmation_message( $confirmation_message );
-
 		$confirmation_message = self::replace_save_variables( $confirmation_message, $form, $resume_token, $resume_email );
-
 		$confirmation_message = GFCommon::gform_do_shortcode( $confirmation_message );
-
 		$confirmation_message = "<div class='form_saved_message'><span>" . $confirmation_message . '</span></div>';
 
-		$form_id = absint( $form['id'] );
+		$anchor               = self::get_anchor( $form, $ajax );
+		$confirmation_message = $anchor['tag'] . $confirmation_message;
 
-		$has_pages = self::has_pages( $form );
-
-		$default_anchor = $has_pages || $ajax ? true : false;
-
-		$use_anchor     = gf_apply_filters( array( 'gform_confirmation_anchor', $form_id ), $default_anchor, $form );
-
-		if ( $use_anchor !== false ) {
-			$confirmation_message = "<a id='gf_{$form_id}' class='gform_anchor' ></a>" . $confirmation_message;
-		}
-
+		$form_id           = absint( $form['id'] );
 		$wrapper_css_class = GFCommon::get_browser_class() . ' gform_wrapper';
 
 		$confirmation_message = "<div class='{$wrapper_css_class}' id='gform_wrapper_{$form_id}'>" . $confirmation_message . '</div>';
@@ -3390,7 +3361,6 @@ class GFFormDisplay {
 
 		return $confirmation_message;
 	}
-
 
 	/**
 	 * Insert review page into form.
@@ -3433,6 +3403,38 @@ class GFFormDisplay {
 
 		return $form;
 
+	}
+
+	/**
+	 * Get the anchor config for the current form.
+	 *
+	 * @since 2.2.2.1
+	 *
+	 * @param array $form The current Form object.
+	 * @param bool $ajax Indicates if AJAX is enabled for the current form.
+	 *
+	 * @return array
+	 */
+	public static function get_anchor( $form, $ajax ) {
+		$form_id = absint( $form['id'] );
+		$anchor  = $ajax || self::has_pages( $form ) ? true : false;
+
+		/**
+		 * Allow the anchor to be enabled/disabled or set to a scroll distance.
+		 *
+		 * @since 1.9.17.12 Added the $form parameter.
+		 * @since Unknown
+		 *
+		 * @param bool|int $anchor Is the form anchor enabled? True when ajax enabled or when the form has multiple pages.
+		 * @param array    $form   The current Form object.
+		 */
+		$anchor = gf_apply_filters( array( 'gform_confirmation_anchor', $form_id ), $anchor, $form );
+
+		return array(
+			'scroll' => $anchor,
+			'tag'    => $anchor !== false ? "<a id='gf_{$form_id}' class='gform_anchor' ></a>" : '',
+			'id'     => $anchor !== false ? "#gf_{$form_id}" : ''
+		);
 	}
 
 }

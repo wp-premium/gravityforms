@@ -84,8 +84,8 @@ class GF_Field_Website extends GF_Field {
 	}
 
 	public function get_value_entry_detail( $value, $currency = '', $use_text = false, $format = 'html', $media = 'screen' ) {
-
-		return GFCommon::is_valid_url( $value ) && $format == 'html' ? "<a href='$value' target='_blank'>$value</a>" : $value;
+		$safe_value = esc_url( $value );
+		return GFCommon::is_valid_url( $value ) && $format == 'html' ? "<a href='$safe_value' target='_blank'>$safe_value</a>" : $safe_value;
 	}
 
 	public function get_value_save_entry( $value, $form, $input_name, $lead_id, $lead ) {
