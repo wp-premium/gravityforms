@@ -189,6 +189,8 @@ class GF_System_Report {
 
 		}
 
+		$system_report_text = str_replace( '()', '', $system_report_text );
+
 		return $system_report_text;
 
 	}
@@ -405,9 +407,9 @@ class GF_System_Report {
 								'label_export'       => 'Version',
 								'value'              => esc_html( phpversion() ),
 								'type'               => 'version_check',
-								'version_compare'    => '>',
-								'minimum_version'    => '5.0.0',
-								'validation_message' => esc_html__( 'Gravity Forms requires PHP 5 or above.', 'gravityforms' ),
+								'version_compare'    => '>=',
+								'minimum_version'    => '5.6',
+								'validation_message' => esc_html__( 'Gravity Forms requires PHP 5.6 or above.', 'gravityforms' ),
 							),
 							array(
 								'label'        => esc_html__( 'Memory Limit', 'gravityforms' ) . ' (memory_limit)',
@@ -638,6 +640,11 @@ class GF_System_Report {
 
 		$is_writable = wp_is_writable( $upload_path );
 
+		$disable_css      = get_option( 'rg_gforms_disable_css' );
+		$enable_html5     = get_option( 'rg_gforms_enable_html5' );
+		$no_conflict_mode = get_option( 'gform_enable_noconflict' );
+		$updates          = get_option( 'gform_enable_background_updates' );
+
 		// Prepare versions array.
 		$gravityforms = array(
 			array(
@@ -664,6 +671,35 @@ class GF_System_Report {
 				'value_export'       => $is_writable ? 'Writable' : 'Not writable',
 				'is_valid'           => $is_writable,
 				'validation_message' => $is_writable ? '' : esc_html__( 'File uploads, entry exports, and logging will not function properly.', 'gravityforms' ),
+			),
+			array(
+				'label'        => esc_html__( 'Output CSS', 'gravityforms' ),
+				'label_export' => 'Output CSS',
+				'value'        => ! $disable_css ? __( 'Yes', 'gravityforms' ) : __( 'No', 'gravityforms' ),
+				'value_export' => ! $disable_css ? 'Yes' : 'No',
+			),
+			array(
+				'label'        => esc_html__( 'Output HTML5', 'gravityforms' ),
+				'label_export' => 'Output HTML5',
+				'value'        => $enable_html5 ? __( 'Yes', 'gravityforms' ) : __( 'No', 'gravityforms' ),
+				'value_export' => $enable_html5 ? 'Yes' : 'No',
+			),
+			array(
+				'label'        => esc_html__( 'No-Conflict Mode', 'gravityforms' ),
+				'label_export' => 'No-Conflict Mode',
+				'value'        => $no_conflict_mode ? __( 'Yes', 'gravityforms' ) : __( 'No', 'gravityforms' ),
+				'value_export' => $no_conflict_mode ? 'Yes' : 'No',
+			),
+			array(
+				'label'        => esc_html__( 'Currency', 'gravityforms' ),
+				'label_export' => 'Currency',
+				'value'        => get_option( 'rg_gforms_currency' ),
+			),
+			array(
+				'label'        => esc_html__( 'Background updates', 'gravityforms' ),
+				'label_export' => 'Background updates',
+				'value'        => $updates ? __( 'Yes', 'gravityforms' ) : __( 'No', 'gravityforms' ),
+				'value_export' => $updates ? 'Yes' : 'No',
 			),
 		);
 
@@ -886,7 +922,7 @@ class GF_System_Report {
 		$active_plugins = array();
 
 		// Get Gravity Forms version info.
-		$version_info = GFCommon::get_version_info( false );
+		$version_info = GFCommon::get_version_info();
 
 		// Prepare active plugins.
 		foreach ( get_plugins() as $plugin_path => $plugin ) {

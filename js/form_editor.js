@@ -2043,15 +2043,20 @@ function StartDuplicateField(element) {
 
                     var id = field.inputs[inputIndex]['id'] + "";
                     field.inputs[inputIndex]['id'] = id.replace(/(\d+\.)/, field.id + '.');
-                    /*
-                    if(inputId % 10 == 0)
-                        inputId++;
-
-                    field.inputs[inputIndex]['id'] = field.id + '.' + inputId;
-                    inputId++;*/
 
                 }
             }
+
+	        /**
+	         * Modify the field that is being duplicated.
+	         *
+	         * @param object field The duplicated field.
+	         * @param object form  The current form object.
+	         *
+	         * @since @todo
+	         */
+	        field = gform.applyFilters( 'gform_duplicate_field', field, form );
+	        field = gform.applyFilters( 'gform_duplicate_field_{0}'.format( GetInputType( field ) ), field, form );
 
             form.fields.splice(fieldIndex, 0, field);
             DuplicateField(field, sourcefieldId);
@@ -2097,6 +2102,14 @@ function GetNextFieldId(){
         if(parseFloat(form.fields[i].id) > max)
             max = parseFloat(form.fields[i].id);
     }
+
+	if (form.deletedFields) {
+		for (var i = 0; i < form.deletedFields.length; i++) {
+			if (parseFloat(form.deletedFields[i]) > max)
+				max = parseFloat(form.deletedFields[i]);
+		}
+	}
+
     return parseFloat(max) + 1;
 }
 
@@ -2477,14 +2490,41 @@ function LoadCustomChoices(){
             if(!gform_custom_choices.hasOwnProperty(key))
                 continue;
 
-            str += "<li class='bulk_custom_choice'><a href='javascript:void(0);' onclick='SelectCustomChoice(\"" + key + "\");' onkeypress='SelectCustomChoice(\"" + key + "\");' class='bulk-choice bulk_custom_choice'>" + key + "</a></li>";
+			var selectChoiceAction = 'SelectCustomChoice( jQuery(this).data("key") );';
+
+			str += "<li class='bulk_custom_choice'><a href='javascript:void(0);' data-key='" + escapeAttr( key ) + "' onclick='" + selectChoiceAction + "' onkeypress='" + selectChoiceAction + "' class='bulk-choice bulk_custom_choice'>" + escapeHtml( key ) + "</a></li>";
         }
         str += "<li class='choice_section_header'>" + gf_vars.predefinedChoices + "</li>";
         jQuery("#bulk_items").prepend(str);
     }
 }
 
-function SelectCustomChoice(name){
+
+var entityMap = {
+	'&': '&amp;',
+	'<': '&lt;',
+	'>': '&gt;',
+	'"': '&quot;',
+	"'": '&#39;',
+	'/': '&#x2F;',
+	'`': '&#x60;',
+	'=': '&#x3D;'
+};
+
+function escapeAttr (string) {
+
+	return String(string).replace(/["']/g, function (s) {
+		return entityMap[s];
+	});
+}
+
+function escapeHtml (string) {
+	return String(string).replace(/[&<>"'`=\/]/g, function (s) {
+		return entityMap[s];
+	});
+}
+
+function SelectCustomChoice( name ){
 
     jQuery("#gfield_bulk_add_input").val(gform_custom_choices[name].join("\n"));
     gform_selected_custom_choice = name;
@@ -2806,9 +2846,13 @@ function GetFieldType(fieldId){
     return fieldId.substr(0, fieldId.lastIndexOf("_"));
 }
 
-function GetSelectedField(){
-    var id = jQuery(".field_selected")[0].id.substr(6);
-    return GetFieldById(id);
+function GetSelectedField() {
+	var $field = jQuery( '.field_selected' );
+	if( $field.length <= 0 ) {
+		return false;
+	}
+    var id = $field[0].id.substr( 6 );
+    return GetFieldById( id );
 }
 
 function SetPasswordProperty(isChecked){

@@ -2332,6 +2332,14 @@ Content-Type: text/html;
 		return in_array( $field_type, $product_fields );
 	}
 
+	/**
+	 * Returns all the plugin capabilities.
+	 *
+	 * @since 2.2.1.12 Added gravityforms_system_status.
+	 * @since unknown
+	 *
+	 * @return array
+	 */
 	public static function all_caps() {
 		return array(
 			'gravityforms_edit_forms',
@@ -2349,6 +2357,7 @@ Content-Type: text/html;
 			'gravityforms_view_updates',
 			'gravityforms_view_addons',
 			'gravityforms_preview_forms',
+			'gravityforms_system_status',
 		);
 	}
 
@@ -2486,7 +2495,7 @@ Content-Type: text/html;
 				'slug' => $slug,
 				'version' => $plugin['Version'],
 				'is_active' => $is_active,
-				);
+			);
 		}
 		$plugins = json_encode( $plugins );
 
@@ -2611,15 +2620,15 @@ Content-Type: text/html;
 	public static function post_to_manager( $file, $query, $options ) {
 
 		$request_url = GRAVITY_MANAGER_URL . '/' . $file . '?' . $query;
-		self::log_debug( 'Posting to manager: ' . $request_url );
+		self::log_debug( __METHOD__ . '(): endpoint: ' . $request_url );
 		$raw_response = wp_remote_post( $request_url, $options );
-		self::log_debug( print_r( $raw_response, true ) );
+		self::log_remote_response( $raw_response );
 
 		if ( is_wp_error( $raw_response ) || 200 != $raw_response['response']['code'] ) {
-			self::log_error( 'Error from manager. Sending to proxy...' );
+			self::log_error( __METHOD__ . '(): Error from manager. Sending to proxy...' );
 			$request_url  = GRAVITY_MANAGER_PROXY_URL . '/proxy.php?f=' . $file . '&' . $query;
 			$raw_response = wp_remote_post( $request_url, $options );
-			self::log_debug( print_r( $raw_response, true ) );
+			self::log_remote_response( $raw_response );
 		}
 
 		return $raw_response;
@@ -3845,7 +3854,7 @@ Content-Type: text/html;
 				'name'     => 'MasterCard',
 				'slug'     => 'mastercard',
 				'lengths'  => '16',
-				'prefixes' => '51,52,53,54,55',
+				'prefixes' => '51,52,53,54,55,22,23,24,25,26,270,271,272',
 				'checksum' => true,
 			),
 			array(
@@ -3971,9 +3980,12 @@ Content-Type: text/html;
 	 *
 	 * @return bool If the logging plugin is active.
 	 */
-	public static function is_logging_plugin_active(){
+	public static function is_logging_plugin_active() {
+		if ( ! function_exists( 'is_plugin_active' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
 
-		//In some scenarios, is_plugin_active() will return true when plugin file has been manually deleted.
+		// In some scenarios, is_plugin_active() will return true when plugin file has been manually deleted.
 		return is_plugin_active( 'gravityformslogging/logging.php' ) && file_exists( trailingslashit( WP_PLUGIN_DIR ) . 'gravityformslogging/logging.php' );
 
 	}
@@ -4259,6 +4271,21 @@ Content-Type: text/html;
 		}
 	}
 
+	/**
+	 * Log the remote request response.
+	 *
+	 * @since 2.2.2.1
+	 *
+	 * @param WP_Error|array $response The remote request response or WP_Error on failure.
+	 */
+	public static function log_remote_response( $response ) {
+		if ( is_wp_error( $response ) || isset( $_GET['gform_debug'] ) ) {
+			self::log_error( __METHOD__ . '(): ' . print_r( $response, 1 ) );
+		} else {
+			self::log_debug( sprintf( '%s(): code: %s; body: %s', __METHOD__, wp_remote_retrieve_response_code( $response ), wp_remote_retrieve_body( $response ) ) );
+		}
+	}
+
 	public static function echo_if( $condition, $text ) {
 		_deprecated_function( 'GFCommon::echo_if() is deprecated', '1.9.9', 'Use checked() or selected() instead.' );
 
@@ -4362,8 +4389,8 @@ Content-Type: text/html;
 		$gf_vars['removeFieldFilter'] = esc_html__( 'Remove a condition', 'gravityforms' );
 		$gf_vars['filterAndAny']      = esc_html__( 'Include results if {0} match:', 'gravityforms' );
 
-		$gf_vars['customChoices'] = esc_html__( 'Custom Choices', 'gravityforms' );
-
+		$gf_vars['customChoices']     = esc_html__( 'Custom Choices', 'gravityforms' );
+		$gf_vars['predefinedChoices'] = esc_html__( 'Predefined Choices', 'gravityforms' );
 
 		if ( is_admin() && rgget( 'id' ) ) {
 
@@ -5503,23 +5530,38 @@ Content-Type: text/html;
 	}
 
 	/**
-	 * @param $message
-	 * @param $subject
+	 * Maybe wrap the notification message in html tags.
+	 *
+	 * @since 2.2.0
+	 *
+	 * @param string $message The notification message. Merge tags have already been processed.
+	 * @param string $subject The notification subject line. Merge tags have already been processed.
 	 *
 	 * @return string
 	 */
 	private static function format_html_message( $message, $subject ) {
 		if ( ! preg_match( '/<html/i', $message ) ) {
-			$message =
+			$template =
 				"<html>
 	<head>
-		<title>{$subject}</title>
+		<title>{subject}</title>
 	</head>
 	<body>
-		{$message}
+		{message}
 	</body>
 </html>";
 
+			/**
+			 * Allow the template for the html formatted message to be overridden.
+			 *
+			 * @since 2.2.1.5
+			 *
+			 * @param string $template The template for the html formatted message. Use {message} and {subject} as placeholders.
+			 */
+			$template = apply_filters( 'gform_html_message_template_pre_send_email', $template );
+
+			$message = str_replace( '{message}', $message, $template );
+			$message = str_replace( '{subject}', $subject, $message );
 		}
 
 		return $message;

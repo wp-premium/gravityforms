@@ -80,8 +80,8 @@ class GFAsyncUpload {
 		$uploaded_filename = $_FILES['file']['name'];
 		$file_name = isset( $_REQUEST['name'] ) ? $_REQUEST['name'] : '';
 		$field_id  = rgpost( 'field_id' );
-		$field_id = absint( $field_id );
-		$field     = GFFormsModel::get_field( $form, $field_id );
+		$field_id  = absint( $field_id );
+		$field     = gf_apply_filters( array( 'gform_multifile_upload_field', $form['id'], $field_id ), GFFormsModel::get_field( $form, $field_id ), $form, $field_id );
 
 		if ( empty( $field ) || GFFormsModel::get_input_type( $field ) != 'fileupload' ) {
 			die();

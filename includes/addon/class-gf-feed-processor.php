@@ -8,8 +8,8 @@ if ( ! class_exists( 'WP_Async_Request' ) ) {
 	require_once( GFCommon::get_base_path() . '/includes/libraries/wp-async-request.php' );
 }
 
-if ( ! class_exists( 'WP_Background_Process' ) ) {
-	require_once( GFCommon::get_base_path() . '/includes/libraries/wp-background-process.php' );
+if ( ! class_exists( 'GF_Background_Process' ) ) {
+	require_once( GFCommon::get_base_path() . '/includes/libraries/gf-background-process.php' );
 }
 
 /**
@@ -17,7 +17,7 @@ if ( ! class_exists( 'WP_Background_Process' ) ) {
  *
  * @since 2.2
  */
-class GF_Feed_Processor extends WP_Background_Process {
+class GF_Feed_Processor extends GF_Background_Process {
 
 	/**
 	 * Contains an instance of this class, if available.
@@ -142,8 +142,8 @@ class GF_Feed_Processor extends WP_Background_Process {
 		// Extract items.
 		$addon = $item['addon'];
 		$feed  = $item['feed'];
-		$entry = GFAPI::get_entry( $item['entry'] );
-		$form  = GFAPI::get_form( $item['form'] );
+		$entry = GFAPI::get_entry( $item['entry_id'] );
+		$form  = GFAPI::get_form( $item['form_id'] );
 
 		// Get feed name.
 		$feed_name = rgars( $feed, 'meta/feed_name' ) ? $feed['meta']['feed_name'] : rgars( $feed, 'meta/feedName' );
@@ -297,12 +297,12 @@ class GF_Feed_Processor extends WP_Background_Process {
 		$batch = $this->get_batch();
 
 		$item_feed  = rgar( $item, 'feed' );
-		$item_entry = rgar( $item, 'entry' );
+		$item_entry_id = rgar( $item, 'entry_id' );
 
 		foreach ( $batch->data as $key => $task ) {
 			$task_feed  = rgar( $task, 'feed' );
-			$task_entry = rgar( $task, 'entry' );
-			if ( $item_feed['id'] === $task_feed['id'] && $item_entry['id'] === $task_entry['id'] ) {
+			$task_entry_id = rgar( $task, 'entry_id' );
+			if ( $item_feed['id'] === $task_feed['id'] && $item_entry_id === $task_entry_id ) {
 				$batch->data[ $key ]['attempts'] = isset( $batch->data[ $key ]['attempts'] ) ? $batch->data[ $key ]['attempts'] + 1 : 1;
 				$item['attempts'] = $batch->data[ $key ]['attempts'];
 				break;

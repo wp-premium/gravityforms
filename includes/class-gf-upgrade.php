@@ -92,13 +92,14 @@ class GF_Upgrade {
 
 	/**
 	 * Performs an upgrade of Gravity Forms.
-	 * @since  2.2
+	 *
+	 * @since 2.2.1.14 Update cached remote message.
+	 * @since 2.2
 	 */
 	public function upgrade( $from_db_version = null, $force_upgrade = false ) {
 
 		if ( ! $this->set_upgrade_started( $force_upgrade ) ) {
-
-			//Upgrade can't be started. Abort.
+			// Upgrade can't be started. Abort.
 			return false;
 		}
 
@@ -138,6 +139,9 @@ class GF_Upgrade {
 		$this->set_upgrade_ended();
 
 		$this->flush_versions();
+
+		// Updating cached message so the extremely outdated version message is removed.
+		GFCommon::cache_remote_message();
 
 	}
 

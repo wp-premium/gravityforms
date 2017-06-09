@@ -443,7 +443,7 @@ class GF_Field extends stdClass implements ArrayAccess {
 	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {
 
 		if ( $format === 'html' ) {
-			$form_id = absint( $form['id'] );
+			$form_id = isset( $form['id'] ) ? absint( $form['id'] ) : null;
 			$allowable_tags = $this->get_allowable_tags( $form_id );
 
 			if ( $allowable_tags === false ) {

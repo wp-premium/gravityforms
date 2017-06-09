@@ -1,19 +1,20 @@
 <?php
 /**
- * WP Background Process
+ * GF Background Process
  *
- * @package WP-Background-Processing
+ * Based on WP_Background_Process
+ * https://github.com/A5hleyRich/wp-background-processing/blob/master/classes/wp-background-process.php
  */
 
-if ( ! class_exists( 'WP_Background_Process' ) ) {
+if ( ! class_exists( 'GF_Background_Process' ) ) {
 
 	/**
-	 * Abstract WP_Background_Process class.
+	 * Abstract GF_Background_Process class.
 	 *
 	 * @abstract
 	 * @extends WP_Async_Request
 	 */
-	abstract class WP_Background_Process extends WP_Async_Request {
+	abstract class GF_Background_Process extends WP_Async_Request {
 
 		/**
 		 * Action
