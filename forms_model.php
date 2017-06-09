@@ -615,7 +615,7 @@ class GFFormsModel {
 
 		$lead_date_results = $wpdb->get_results( $sql, ARRAY_A );
 
-		$sql = "SELECT id, title, '' as last_lead_date, 0 as unread_count
+		$sql = "SELECT id, title, is_trash, '' as last_lead_date, 0 as unread_count
                 FROM $form_table_name
                 WHERE is_active=1
                 ORDER BY title";
@@ -2530,7 +2530,7 @@ class GFFormsModel {
 				break;
 
 			case 'contains' :
-				return ! empty( $val2 ) && strpos( $val1, $val2 ) !== false;
+				return ! rgblank( $val2 ) && strpos( $val1, $val2 ) !== false;
 				break;
 
 			case 'starts_with' :
@@ -2865,7 +2865,7 @@ class GFFormsModel {
 
 	public static function get_parameter_value( $name, $field_values, $field ) {
 		$value = stripslashes_deep( rgget( $name ) );
-		if ( empty( $value ) ) {
+		if ( rgblank( $value ) ) {
 			$value = rgget( $name, $field_values );
 		}
 
@@ -4807,7 +4807,7 @@ class GFFormsModel {
 			$field_id = intval( $field_id );
 		} //removing floating part of field (i.e 1.3 -> 1) to return field by input id
 
-		if ( ! is_array( $form['fields'] ) ) {
+		if ( ! isset( $form['fields'] ) || ! isset( $form['id'] ) || ! is_array( $form['fields'] ) ) {
 			return null;
 		}
 
@@ -6084,7 +6084,7 @@ class GFFormsModel {
 		}
 
 		$current_user_id = get_current_user_id();
-		$recent_form_ids = get_user_meta( $current_user_id, 'gform_recent_forms', true );
+		$recent_form_ids = self::get_recent_forms( $current_user_id );
 
 		$i = array_search( $form_id, $recent_form_ids );
 
@@ -6101,6 +6101,34 @@ class GFFormsModel {
 		}
 
 		update_user_meta( $current_user_id, 'gform_recent_forms', $recent_form_ids );
+	}
+
+	/**
+	 * Get the recent forms list for the current user.
+	 *
+	 * @since 2.2.1.14
+	 *
+	 * @param int $current_user_id The ID of the currently logged in user.
+	 *
+	 * @return array
+	 */
+	public static function get_recent_forms( $current_user_id = 0 ) {
+		if ( ! $current_user_id ) {
+			$current_user_id = get_current_user_id();
+		}
+
+		$recent_form_ids = get_user_meta( $current_user_id, 'gform_recent_forms', true );
+
+		if ( empty( $recent_form_ids ) ) {
+			$all_form_ids    = self::get_form_ids();
+			$all_form_ids    = array_reverse( $all_form_ids );
+			$recent_form_ids = array_slice( $all_form_ids, 0, 10 );
+			if ( $recent_form_ids ) {
+				update_user_meta( $current_user_id, 'gform_recent_forms', $recent_form_ids );
+			}
+		}
+
+		return $recent_form_ids;
 	}
 }
 
@@ -6140,7 +6168,7 @@ function gform_get_meta_values_for_entries( $entry_ids, $meta_keys ) {
 	$meta_key_select_array = array();
 
 	foreach ( $meta_keys as $meta_key ) {
-		$meta_key_select_array[] = "max(case when meta_key = '$meta_key' then meta_value end) as $meta_key";
+		$meta_key_select_array[] = "max(case when meta_key = '$meta_key' then meta_value end) as `$meta_key`";
 	}
 
 	$entry_ids_str = join( ',', $entry_ids );

@@ -80,7 +80,10 @@ class GF_Download {
 			header( 'Content-Description: File Transfer' );
 			header( 'Content-Disposition: ' . $content_disposition . '; filename="' . basename( $file ) . '"' );
 			header( 'Content-Transfer-Encoding: binary' );
-			ob_clean();
+			// Clear buffer AND turn off output buffering before starting delivery of files requested for download to prevent third-parties to corrupt the file content.
+			if ( ob_get_contents() ) {
+				ob_end_clean();
+			}
 			self::readfile_chunked( $file_path );
 			die();
 		} else {

@@ -144,6 +144,8 @@ class GF_Field_FileUpload extends GF_Field {
 			$extensions_message = '';
 		}
 
+		$extensions_message_id = 'extensions_message_' . $form_id . '_' . $id;
+
 		if ( $multiple_files ) {
 			$upload_action_url = trailingslashit( site_url() ) . '?gf_page=' . GFCommon::get_upload_page_slug();
 			$max_files         = $this->maxFiles > 0 ? $this->maxFiles : 0;
@@ -208,11 +210,11 @@ class GF_Field_FileUpload extends GF_Field {
 			$upload             = "<div id='{$container_id}' data-settings='{$plupload_init_json}' class='gform_fileupload_multifile'>
 										<div id='{$drag_drop_id}' class='gform_drop_area'>
 											<span class='gform_drop_instructions'>{$drop_files_here_text} </span>
-											<input id='{$browse_button_id}' type='button' value='{$select_files_text}' class='button gform_button_select_files' aria-describedby='extensions_message' {$tabindex} />
+											<input id='{$browse_button_id}' type='button' value='{$select_files_text}' class='button gform_button_select_files' aria-describedby='{$extensions_message_id}' {$tabindex} />
 										</div>
 									</div>";
 			if ( ! $is_admin ) {
-				$upload .= "<span id='extensions_message' class='screen-reader-text'>{$extensions_message}</span>";
+				$upload .= "<span id='{$extensions_message_id}' class='screen-reader-text'>{$extensions_message}</span>";
 				$upload .= "<div class='validation_message'>
 								<ul id='{$messages_id}'>
 								</ul>
@@ -228,10 +230,10 @@ class GF_Field_FileUpload extends GF_Field {
 				//  MAX_FILE_SIZE > 2048MB fails. The file size is checked anyway once uploaded, so it's not necessary.
 				$upload = sprintf( "<input type='hidden' name='MAX_FILE_SIZE' value='%d' />", $max_upload_size );
 			}
-			$upload .= sprintf( "<input name='input_%d' id='%s' type='file' class='%s' aria-describedby='extensions_message' onchange='javascript:gformValidateFileSize( this, %s );' {$tabindex} %s/>", $id, $field_id, esc_attr( $class ), esc_attr( $max_upload_size ), $disabled_text );
+			$upload .= sprintf( "<input name='input_%d' id='%s' type='file' class='%s' aria-describedby='%s' onchange='javascript:gformValidateFileSize( this, %s );' {$tabindex} %s/>", $id, $field_id, esc_attr( $class ), $extensions_message_id, esc_attr( $max_upload_size ), $disabled_text );
 
 			if ( ! $is_admin ) {
-				$upload .= "<span id='extensions_message' class='screen-reader-text'>{$extensions_message}</span>";
+				$upload .= "<span id='{$extensions_message_id}' class='screen-reader-text'>{$extensions_message}</span>";
 				$upload .= "<div class='validation_message'></div>";
 			}
 		}
@@ -324,7 +326,17 @@ class GF_Field_FileUpload extends GF_Field {
 	}
 
 	public function get_value_save_entry( $value, $form, $input_name, $lead_id, $lead ) {
-		return $this->multipleFiles ? $this->get_multifile_value( $form['id'], $input_name, $value ) : $this->get_single_file_value( $form['id'], $input_name );
+		if ( ! $this->multipleFiles ) {
+			return $this->get_single_file_value( $form['id'], $input_name );
+		}
+
+		if ( $this->is_entry_detail() && empty( $lead ) ) {
+			// Deleted files remain in the $value from $_POST so use the updated entry value.
+			$lead  = GFFormsModel::get_lead( $lead_id );
+			$value = rgar( $lead, strval( $this->id ) );
+		}
+
+		return $this->get_multifile_value( $form['id'], $input_name, $value );
 	}
 
 	public function get_multifile_value( $form_id, $input_name, $value ) {
@@ -481,10 +493,9 @@ class GF_Field_FileUpload extends GF_Field {
 					 * @param string              $file_path The file path of the download file.
 					 * @param GF_Field_FileUpload $field     The field object for further context.
 					 */
-					$file_path          = esc_attr( str_replace( ' ', '%20', apply_filters( 'gform_fileupload_entry_value_file_path', $file_path, $this ) ) );
-					$base_name          = $info['basename'];
-					$click_to_view_text = esc_attr__( 'Click to view', 'gravityforms' );
-					$output_arr[]       = $format == 'text' ? $file_path . PHP_EOL : "<li><a href='{$file_path}' target='_blank' title='{$click_to_view_text}'>{$base_name}</a></li>";
+					$file_path    = str_replace( ' ', '%20', apply_filters( 'gform_fileupload_entry_value_file_path', $file_path, $this ) );
+					$output_arr[] = $format == 'text' ? $file_path : sprintf( "<li><a href='%s' target='_blank' title='%s'>%s</a></li>", esc_attr( $file_path ), esc_attr__( 'Click to view', 'gravityforms' ), $info['basename'] );
+
 				}
 				$output = join( PHP_EOL, $output_arr );
 			}
