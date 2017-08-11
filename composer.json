@@ -3,6 +3,7 @@
   "type": "wordpress-plugin",
   "description": "Gravity Forms, composer-ified",
   "version": "2.2.3",
+  "minimum-stability": "stable",
   "require": {
     "composer/installers": "~1.0"
   },
