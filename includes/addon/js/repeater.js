@@ -179,7 +179,7 @@ jQuery.fn.repeater = function( options ) {
     self.addNewItem = function( elemOrItem, index ) {
 
         var isElem = self.isElement( elemOrItem ),
-            index  = parseInt( typeof index != 'undefined' ? index : ( isElem ? jQuery( elemOrItem ).attr( 'data-index' ) + 1 : self.items.length ) ),
+            index  = parseInt( typeof index !== 'undefined' ? index : ( isElem ? parseInt( jQuery( elemOrItem ).attr( 'data-index' ), 10 ) + 1 : self.items.length ), 10 ),
             item   = isElem ? self.getBaseObject() : elemOrItem;
 
         self.callbacks.beforeAddNew( self, index );

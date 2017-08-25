@@ -145,7 +145,7 @@ if ( ! class_exists( 'GFWidget' ) ) {
 			</p>
 			<p id="<?php echo esc_attr( $this->get_field_id( 'advanced' ) ); ?>" class="gf_widget_advanced" style="display:none;">
 				<input type="checkbox" name="<?php echo esc_attr( $this->get_field_name( 'ajax' ) ); ?>" id="<?php echo esc_attr( $this->get_field_id( 'ajax' ) ); ?>" <?php checked( rgar( $instance, 'ajax' ) ); ?> value="1" />
-				<label for="<?php echo esc_attr( $this->get_field_id( 'ajax' ) ); ?>"><?php esc_html_e( 'Enable AJAX', 'gravityforms' ); ?></label><br />
+				<label for="<?php echo esc_attr( $this->get_field_id( 'ajax' ) ); ?>"><?php esc_html_e( 'Enable Ajax', 'gravityforms' ); ?></label><br />
 				<input type="checkbox" name="<?php echo esc_attr( $this->get_field_name( 'disable_scripts' ) ); ?>" id="<?php echo esc_attr( $this->get_field_id( 'disable_scripts' ) ); ?>" <?php checked( rgar( $instance, 'disable_scripts' ) ); ?> value="1" />
 				<label for="<?php echo esc_attr( $this->get_field_id( 'disable_scripts' ) ); ?>"><?php esc_html_e( 'Disable script output', 'gravityforms' ); ?></label><br />
 				<label for="<?php echo esc_attr( $this->get_field_id( 'tabindex' ) ); ?>"><?php esc_html_e( 'Tab Index Start', 'gravityforms' ); ?>: </label>

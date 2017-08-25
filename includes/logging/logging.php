@@ -118,11 +118,12 @@ class GFLogging extends GFAddOn {
 	/**
 	 * Defines the maximum file size for a log file.
 	 *
+	 * @since  2.2.3.3 Reduced max file size from 100MB to 5MB.
 	 * @since  2.2
 	 * @access private
 	 * @var    string $max_file_size Maximum file size for a log file.
 	 */
-	private $max_file_size = 104857600;
+	private $max_file_size = 5242880;
 
 	/**
 	 * Defines the maximum number of log files to store for a plugin.
@@ -184,11 +185,17 @@ class GFLogging extends GFAddOn {
 	public function plugin_settings_page() {
 
 		// If the delete_log parameter is set, delete the log file and display a message.
-		if ( rgget( 'delete_log' ) ) {
-			if ( wp_verify_nonce( rgget( $this->_nonce_action ), $this->_nonce_action ) && $this->delete_log_file( rgget( 'delete_log' ) ) ) {
-				GFCommon::add_message( esc_html__( 'Log file was successfully deleted.', 'gravityforms' ) );
+		$plugin_slug = rgget( 'delete_log' );
+		if ( $plugin_slug ) {
+			$supported_plugins = $this->get_supported_plugins();
+			if ( isset( $supported_plugins[ $plugin_slug ] ) ) {
+				if ( wp_verify_nonce( rgget( $this->_nonce_action ), $this->_nonce_action ) && $this->delete_log_file( rgget( 'delete_log' ) ) ) {
+					GFCommon::add_message( esc_html__( 'Log file was successfully deleted.', 'gravityforms' ) );
+				} else {
+					GFCommon::add_error_message( esc_html__( 'Log file could not be deleted.', 'gravityforms' ) );
+				}
 			} else {
-				GFCommon::add_error_message( esc_html__( 'Log file could not be deleted.', 'gravityforms' ) );
+				GFCommon::add_error_message( esc_html__( 'Invalid log file.', 'gravityforms' ) );
 			}
 		}
 

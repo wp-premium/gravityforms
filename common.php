@@ -116,9 +116,6 @@ class GFCommon {
 				$currency = GFCommon::get_currency();
 			}
 
-			if ( false === class_exists( 'RGCurrency' ) ) {
-				require_once( GFCommon::get_base_path() . '/currency.php' );
-			}
 			$currency = new RGCurrency( $currency );
 			$number   = $currency->to_money( $number );
 		} else {
@@ -228,10 +225,6 @@ class GFCommon {
 		} else if ( $number_format == 'decimal_comma' ) {
 			$decimal_char = ',';
 		} else if ( $number_format == 'currency' ) {
-			if ( ! class_exists( 'RGCurrency' ) ) {
-				require_once( self::get_base_path() . '/currency.php' );
-			}
-
 			$currency     = RGCurrency::get_currency( GFCommon::get_currency() );
 			$decimal_char = $currency['decimal_separator'];
 		}
@@ -1019,7 +1012,20 @@ class GFCommon {
 
 		// Entry URL.
 		$entry_url = get_bloginfo( 'wpurl' ) . '/wp-admin/admin.php?page=gf_entries&view=entry&id=' . rgar( $form, 'id' ) . '&lid=' . rgar( $lead, 'id' );
-		$text      = str_replace( '{entry_url}', $url_encode ? urlencode( $entry_url ) : $entry_url, $text );
+
+		/**
+		 * Filter the entry URL
+		 *
+		 * Allows for the filtering of the entry_url placeholder to handle situation in which the wpurl might not agree with the admin_url.
+		 *
+		 * @since 2.2.3.14
+		 *
+		 * @param string $entry_url The Entry URL to filter.
+		 * @param array  $form      The current Form object.
+		 * @param array  $lead      The current Entry object.
+		 */
+		$entry_url      = esc_url( apply_filters( 'gform_entry_detail_url', $entry_url, $form, $lead ) );
+		$text           = str_replace( '{entry_url}', $url_encode ? urlencode( $entry_url ) : $entry_url, $text );
 
 		// Post ID.
 		$text = str_replace( '{post_id}', $url_encode ? urlencode( rgar( $lead, 'post_id' ) ) : rgar( $lead, 'post_id' ), $text );
@@ -1322,6 +1328,9 @@ class GFCommon {
 					$field_value = self::encode_shortcodes( $field_value );
 
 					$field_value = apply_filters( 'gform_merge_tag_filter', $field_value, $merge_tag, $options, $field, $raw_field_value );
+
+					// Clear merge tag modifiers from the field object.
+					$field->set_modifiers( array() );
 
 					if ( $field_value === false ) {
 						continue;
@@ -1947,7 +1956,8 @@ class GFCommon {
 				break;
 
 			default :
-				$error = new WP_Error( 'invalid_message_format', "Cannot send email because the message format ({$message_format}) is invalid." );
+				//When content type is unknown, default to HTML
+				$content_type = 'text/html';
 
 				break;
 		}
@@ -2001,7 +2011,21 @@ class GFCommon {
 		$headers['Content-type'] = "Content-type: {$content_type}; charset=" . get_option( 'blog_charset' );
 
 		$abort_email = false;
-		extract( apply_filters( 'gform_pre_send_email', compact( 'to', 'subject', 'message', 'headers', 'attachments', 'abort_email' ), $message_format, $notification ) );
+
+		/**
+		 * Modify the email before a notification has been sent.
+		 * You may also use this to prevent an email from being sent.
+		 *
+		 * @since 2.2.3.8  Added $entry parameter.
+		 * @since 1.9.15.6 Added $notification parameter.
+		 * @since Unknown
+		 *
+		 * @param array  $email          An array containing the email to address, subject, message, headers, attachments and abort email flag.
+		 * @param string $message_format The message format: html or text.
+		 * @param array  $notification   The current Notification object.
+		 * @param array  $entry          The current Entry object.
+		 */
+		extract( apply_filters( 'gform_pre_send_email', compact( 'to', 'subject', 'message', 'headers', 'attachments', 'abort_email' ), $message_format, $notification, $entry ) );
 
 		$is_success = false;
 		if ( ! $abort_email ) {
@@ -3319,10 +3343,6 @@ Content-Type: text/html;
 	}
 
 	public static function to_money( $number, $currency_code = '' ) {
-		if ( ! class_exists( 'RGCurrency' ) ) {
-			require_once( 'currency.php' );
-		}
-
 		if ( empty( $currency_code ) ) {
 			$currency_code = self::get_currency();
 		}
@@ -3333,15 +3353,9 @@ Content-Type: text/html;
 	}
 
 	public static function to_number( $text, $currency_code = '' ) {
-		if ( ! class_exists( 'RGCurrency' ) ) {
-			require_once( 'currency.php' );
-		}
-
-
 		if ( empty( $currency_code ) ) {
 			$currency_code = self::get_currency();
 		}
-
 
 		$currency = new RGCurrency( $currency_code );
 
@@ -4002,7 +4016,7 @@ Content-Type: text/html;
 
 		$display_all = $field->displayAllCategories;
 
-		$args = array( 'hide_empty' => false, 'orderby' => 'name' );
+		$args = array( 'hide_empty' => false, 'orderby' => 'name', 'taxonomy' => 'category' );
 
 		if ( ! $display_all ) {
 			foreach ( $field->choices as $field_choice_to_include ) {
@@ -4011,7 +4025,7 @@ Content-Type: text/html;
 		}
 
 		$args  = gf_apply_filters( array( 'gform_post_category_args', $field->id ), $args, $field );
-		$terms = get_terms( 'category', $args );
+		$terms = get_terms( $args['taxonomy'], $args );
 
 		$terms_copy = unserialize( serialize( $terms ) ); // deep copy the terms to avoid repeating GFCategoryWalker on previously cached terms.
 		$walker     = new GFCategoryWalker();
@@ -4130,9 +4144,6 @@ Content-Type: text/html;
 		$number_format = $field->numberFormat;
 
 		if ( empty( $number_format ) ) {
-			if ( ! class_exists( 'RGCurrency' ) ) {
-				require_once( GFCommon::get_base_path() . '/currency.php' );
-			}
 			$currency      = RGCurrency::get_currency( rgar( $lead, 'currency' ) );
 			$number_format = self::is_currency_decimal_dot( $currency ) ? 'decimal_dot' : 'decimal_comma';
 		}
@@ -4165,6 +4176,11 @@ Content-Type: text/html;
 		}
 
 		$result = apply_filters( 'gform_calculation_result', $result, $formula, $field, $form, $lead );
+
+		if ( ! $result || ! is_numeric( $result ) || is_nan( $result ) ) {
+			GFCommon::log_debug( __METHOD__ . '(): No result or non-numeric result. Returning zero instead.' );
+			$result = 0;
+		}
 
 		return $result;
 	}
@@ -4301,9 +4317,6 @@ Content-Type: text/html;
 	}
 
 	public static function gf_global( $echo = true ) {
-
-		require_once( GFCommon::get_base_path() . '/currency.php' );
-
 		$gf_global                       = array();
 		$gf_global['gf_currency_config'] = RGCurrency::get_currency( GFCommon::get_currency() );
 		$gf_global['base_url']           = GFCommon::get_base_url();
@@ -4320,10 +4333,6 @@ Content-Type: text/html;
 	}
 
 	public static function gf_vars( $echo = true ) {
-		if ( ! class_exists( 'RGCurrency' ) ) {
-			require_once( 'currency.php' );
-		}
-
 		$gf_vars                            = array();
 		$gf_vars['active']                  = esc_attr__( 'Active', 'gravityforms' );
 		$gf_vars['inactive']                = esc_attr__( 'Inactive', 'gravityforms' );
@@ -4369,7 +4378,7 @@ Content-Type: text/html;
 		$gf_vars['confirmationInvalidPageSelection'] = __( 'Please select a page.', 'gravityforms' );
 		$gf_vars['confirmationInvalidRedirect']      = __( 'Please enter a URL.', 'gravityforms' );
 		$gf_vars['confirmationInvalidName']          = __( 'Please enter a confirmation name.', 'gravityforms' );
-		$gf_vars['confirmationDeleteField']          = __( "Warning! Deleting this field will also delete all entry data associated with it. 'Cancel' to stop. 'OK' to delete", 'gravityforms' );
+		$gf_vars['confirmationDeleteField']          = __( "Warning! Deleting this field will also delete all entry data associated with it. 'Cancel' to stop. 'OK' to delete.", 'gravityforms' );
 
 		$gf_vars['conditionalLogicDependency']           = __( "Warning! This form contains conditional logic dependent upon this field. Deleting this field will deactivate those conditional logic rules and also delete all entry data associated with the field. 'OK' to delete, 'Cancel' to abort.", 'gravityforms' );
 		$gf_vars['conditionalLogicDependencyChoice']     = __( "This form contains conditional logic dependent upon this choice. Are you sure you want to delete this choice? 'OK' to delete, 'Cancel' to abort.", 'gravityforms' );
@@ -5347,6 +5356,9 @@ Content-Type: text/html;
 		if ( $value === false ) {
 			$value = '';
 		}
+
+		// Clear merge tag modifiers from the field object.
+		$field->set_modifiers( array() );
 
 		if ( $match[0][0] != '{' ) {
 			// Replace the merge tag in the conditional shortcode merge_tag attr.

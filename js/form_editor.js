@@ -441,13 +441,13 @@ function InitializeForm(form){
 		jQuery( '#no-fields').detach().appendTo( '#no-fields-stash');
 	}
 
-    if(form.lastPageButton && form.lastPageButton.type == "image")
-        jQuery("#last_page_button_image").prop("checked", true);
-    else if(!form.lastPageButton || form.lastPageButton.type != "image")
-        jQuery("#last_page_button_text").prop("checked", true);
+    if(form.lastPageButton && form.lastPageButton.type === 'image')
+        jQuery('#last_page_button_image').prop('checked', true);
+    else if(!form.lastPageButton || form.lastPageButton.type !== 'image')
+        jQuery('#last_page_button_text').prop('checked', true);
 
-    jQuery("#last_page_button_text_input").val(form.lastPageButton ? form.lastPageButton.text : gf_vars["previousLabel"]);
-    jQuery("#last_page_button_image_url").val(form.lastPageButton ? form.lastPageButton.imageUrl : "");
+    jQuery('#last_page_button_text_input').val(form.lastPageButton ? form.lastPageButton.text : gf_vars['previousLabel']);
+    jQuery('#last_page_button_image_url').val(form.lastPageButton ? form.lastPageButton.imageUrl : '');
     TogglePageButton('last_page', true);
 
     if(form.postStatus)
@@ -457,7 +457,7 @@ function InitializeForm(form){
         jQuery('#field_post_author').val(form.postAuthor);
 
     //default to checked
-    if(form.useCurrentUserAsAuthor == undefined)
+    if(form.useCurrentUserAsAuthor === undefined)
         form.useCurrentUserAsAuthor = true;
 
     jQuery('#gfield_current_user_as_author').prop('checked', form.useCurrentUserAsAuthor ? true : false);
@@ -469,44 +469,44 @@ function InitializeForm(form){
         jQuery('#field_post_format').val(form.postFormat);
 
     if(form.postContentTemplateEnabled){
-        jQuery('#gfield_post_content_enabled').prop("checked", true);
+        jQuery('#gfield_post_content_enabled').prop('checked', true);
         jQuery('#field_post_content_template').val(form.postContentTemplate);
     }
     else{
-        jQuery('#gfield_post_content_enabled').prop("checked", false);
-        jQuery('#field_post_content_template').val("");
+        jQuery('#gfield_post_content_enabled').prop('checked', false);
+        jQuery('#field_post_content_template').val('');
     }
     TogglePostContentTemplate(true);
 
     if(form.postTitleTemplateEnabled){
-        jQuery('#gfield_post_title_enabled').prop("checked", true);
+        jQuery('#gfield_post_title_enabled').prop('checked', true);
         jQuery('#field_post_title_template').val(form.postTitleTemplate);
     }
     else{
-        jQuery('#gfield_post_title_enabled').prop("checked", false);
-        jQuery('#field_post_title_template').val("");
+        jQuery('#gfield_post_title_enabled').prop('checked', false);
+        jQuery('#field_post_title_template').val('');
     }
     TogglePostTitleTemplate(true);
 
-    jQuery("#gform_last_page_settings").bind("click", function(){FieldClick(this);});
-    jQuery("#gform_pagination").bind("click", function(){FieldClick(this);});
-    jQuery(".gfield").bind("click", function(){FieldClick(this);});
+    jQuery('#gform_last_page_settings').click(function () {FieldClick(this);});
+    jQuery('#gform_pagination').click(function () {FieldClick(this);});
+    jQuery('#gform_fields').on('click', '.gfield', function () {FieldClick(this);});
 
-    var paginationType = form["pagination"] && form["pagination"]["type"] ? form["pagination"]["type"] : "percentage";
-    var paginationSteps = paginationType == "steps" ? true : false;
-    var paginationPercentage = paginationType == "percentage" ? true : false;
-    var paginationNone = paginationType == "none" ? true : false;
+    var paginationType = form['pagination'] && form['pagination']['type'] ? form['pagination']['type'] : 'percentage';
+    var paginationSteps = paginationType === 'steps' ? true : false;
+    var paginationPercentage = paginationType === 'percentage' ? true : false;
+    var paginationNone = paginationType === 'none' ? true : false;
 
     if(paginationSteps)
-        jQuery("#pagination_type_steps").prop("checked", true);
+        jQuery('#pagination_type_steps').prop('checked', true);
     else if(paginationPercentage)
-        jQuery("#pagination_type_percentage").prop("checked", true);
+        jQuery('#pagination_type_percentage').prop('checked', true);
     else if(paginationNone)
-        jQuery("#pagination_type_none").prop("checked", true);
+        jQuery('#pagination_type_none').prop('checked', true);
 
-    jQuery("#first_page_css_class").val(form["firstPageCssClass"]);
+    jQuery('#first_page_css_class').val(form['firstPageCssClass']);
 
-    jQuery("#field_settings, #last_page_settings, #pagination_settings").tabs({selected:0});
+    jQuery('#field_settings, #last_page_settings, #pagination_settings').tabs({selected:0});
 
     TogglePageBreakSettings();
     InitPaginationOptions(true);
@@ -2069,17 +2069,15 @@ function EndDuplicateField(field, fieldString, sourceFieldId) {
 
     //sets up DOM for new field
     jQuery('#gform_fields li#field_' + sourceFieldId).after(fieldString);
-    var newFieldElement = jQuery("#field_" + field.id);
+    var newFieldElement = jQuery('#field_' + field.id);
 
     //highlighting animation
-    newFieldElement.animate({ backgroundColor: '#FFFBCC' }, 'fast', function(){jQuery(this).animate({backgroundColor: '#FFF'}, 'fast', function(){jQuery(this).css('background-color', '');})})
-
-    newFieldElement.bind("click", function(){FieldClick(this);});
+    newFieldElement.animate({ backgroundColor: '#FFFBCC' }, 'fast', function(){jQuery(this).animate({backgroundColor: '#FFF'}, 'fast', function(){jQuery(this).css('background-color', '');})});
 
     //Closing editors
-    HideSettings("field_settings");
-    HideSettings("form_settings");
-    HideSettings("last_page_settings");
+    HideSettings('field_settings');
+    HideSettings('form_settings');
+    HideSettings('last_page_settings');
 
     TogglePageBreakSettings();
 
@@ -2115,7 +2113,7 @@ function GetNextFieldId(){
 
 function EndAddField(field, fieldString, index){
 
-    gf_vars["currentlyAddingField"] = false;
+    gf_vars['currentlyAddingField'] = false;
 
     jQuery('#gform_adding_field_spinner').remove();
 
@@ -2123,19 +2121,18 @@ function EndAddField(field, fieldString, index){
     if(typeof index != 'undefined'){
         form.fields.splice(index, 0, field);
         if (index === 0) {
-            jQuery("#gform_fields").prepend(fieldString);
+            jQuery('#gform_fields').prepend(fieldString);
         } else {
-            jQuery("#gform_fields").children().eq(index - 1).after(fieldString);
+            jQuery('#gform_fields').children().eq(index - 1).after(fieldString);
         }
     } else {
-        jQuery("#gform_fields").append(fieldString);
+        jQuery('#gform_fields').append(fieldString);
         //creates new javascript field
         form.fields.push(field);
     }
 
-    var newFieldElement = jQuery("#field_" + field.id);
+    var newFieldElement = jQuery('#field_' + field.id);
     newFieldElement.animate({ backgroundColor: '#FFFBCC' }, 'fast', function(){jQuery(this).animate({backgroundColor: '#FFF'}, 'fast', function(){jQuery(this).css('background-color', '');})})
-    newFieldElement.bind("click", function(){FieldClick(this);});
 
 	if ( jQuery( '#no-fields-stash li').length === 0 ) {
 		// Stash the "no fields" placeholder away from the fields to avoid a sortable wobble.
@@ -2143,15 +2140,15 @@ function EndAddField(field, fieldString, index){
 	}
 
     //Unselects all fields
-    jQuery(".selectable").removeClass("field_selected");
+    jQuery('.selectable').removeClass('field_selected');
 
     //Closing editors
-    HideSettings("field_settings");
-    HideSettings("form_settings");
-    HideSettings("last_page_settings");
+    HideSettings('field_settings');
+    HideSettings('form_settings');
+    HideSettings('last_page_settings');
 
     //Select current field
-    newFieldElement.addClass("field_selected");
+    newFieldElement.addClass('field_selected');
 
     //initializes new field with default data
     SetFieldSize(field.size);
@@ -2160,7 +2157,7 @@ function EndAddField(field, fieldString, index){
 
     InitializeFields();
 
-    newFieldElement.removeClass("field_selected");
+    newFieldElement.removeClass('field_selected');
 
 	jQuery(document).trigger('gform_field_added', [form, field]);
 }
@@ -2254,21 +2251,21 @@ function EndChangeInputType(params){
 
 function InitializeFields(){
     //Border on/off logic on mouse over
-    jQuery(".selectable").hover(
+    jQuery('.selectable').hover(
       function () {
-        jQuery(this).addClass("field_hover");
+        jQuery(this).addClass('field_hover');
       },
       function () {
-        jQuery(this).removeClass("field_hover");
+        jQuery(this).removeClass('field_hover');
       }
     );
 
-    jQuery(".field_delete_icon, .field_duplicate_icon").bind("click", function(event){
+    jQuery('.field_delete_icon, .field_duplicate_icon').click(function(event){
         event.stopPropagation();
     });
 
 
-    jQuery("#field_settings, #form_settings, #last_page_settings, #pagination_settings, .captcha_message, .form_delete_icon, .all-merge-tags").bind("click", function(event){
+    jQuery('#field_settings, #form_settings, #last_page_settings, #pagination_settings, .captcha_message, .form_delete_icon, .all-merge-tags').click(function(event){
         event.stopPropagation();
     });
 

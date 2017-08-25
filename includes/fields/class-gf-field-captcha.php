@@ -196,8 +196,10 @@ class GF_Field_CAPTCHA extends GF_Field {
 					add_action( 'wp_footer', array( $this, 'ensure_recaptcha_js' ) );
 					add_action( 'gform_preview_footer', array( $this, 'ensure_recaptcha_js' ) );
 
+					$tabindex = GFCommon::$tab_index++;
+
 					$stoken = $this->use_stoken() ? sprintf( 'data-stoken=\'%s\'', esc_attr( $secure_token ) ) : '';
-					$output = "<div id='" . esc_attr( $field_id ) ."' class='ginput_container ginput_recaptcha' data-sitekey='" . esc_attr( $site_key ) . "' {$stoken} data-theme='" . esc_attr( $theme ) . "' ></div>";
+					$output = "<div id='" . esc_attr( $field_id ) ."' class='ginput_container ginput_recaptcha' data-sitekey='" . esc_attr( $site_key ) . "' {$stoken} data-theme='" . esc_attr( $theme ) . "' data-tabindex='{$tabindex}'></div>";
 
 					return $output;
 				}
