@@ -393,7 +393,6 @@ if ( ! class_exists( 'GFForms' ) ) {
 
 	function GetCurrentCurrency() {
 		<?php
-		require_once('currency.php');
 		$current_currency = RGCurrency::get_currency( GFCommon::get_currency() );
 		?>
 		var currency = new Currency(<?php echo GFCommon::json_encode( $current_currency )?>);

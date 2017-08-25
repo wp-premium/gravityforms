@@ -1,4 +1,52 @@
 ------------------------------------------------------------------------------------------------------------------
+Version 2.2.5
+	- Updated form view recording so that IP isn't included.
+	- Fixed an issue where the taxonomy returned in the $args by the gform_post_category_args filter is not used when populating the Category field choices.
+	- Fixed admin field labels being displayed when the form is embedded in an admin page or the front-end via Ajax.
+	- Fixed the Post Content field validation not checking the submitted value does not exceed the configured maximum characters.
+	- Fixed PHP notices in the form editor when creating a new form with quotes in the description.
+	- Fixed content templates being processed during post creation for fields hidden by conditional logic.
+	- Fixed the forms list views column displaying cached counts for a time after the views have been reset.
+	- Fixed missing dependency for form_admin.js on gravityforms.js (requires the gform object).
+	- Fixed JS error caused when 3rd party plugins include conditional_logic.js without genearting a gf_form_conditional_logic variable.
+	- Fixed a PHP notice which could occur if an array was passed to the rgblank helper function.
+	- Fixed dynamic population of the Multi Select field failing when multiple choices are passed in the query string.
+	- Fixed an issue with the redirect confirmation for Ajax enabled forms where the URL is encoded incorrectly.
+	- AF: Fixed js and css files registered with field enqueue conditions not being included in some situations.
+	- AF: Fixed js files registered with field enqueue conditions being included when the field is set to administrative which, in some situations, could cause JavaScript errors.
+
+------------------------------------------------------------------------------------------------------------------
+Version 2.2.4
+	- Added security enhancements.
+	- Added a period to the end of the string that warns when a field is deleted from a form. Done for consistency and translations.
+	- Added the 'gform_require_login_pre_download' filter allowing login to required to access files using the gf-download links.
+	- Added "gform_entry_list_action" action that fires after entry actions have been performed on the entry list.
+	- Added "gform_entry_list_bulk_actions" filter to modify bulk actions available in the entry list.
+	- Added entry object as fourth parameter to 'gform_pre_send_email' filter.
+	- Added 'gform_get_entries_args_entry_list' filter to allow filtering the arguments which will be used to fetch entries to display in the Entry List view.
+	- Added the gform_file_path_pre_delete_file filter allowing files stored outside the /wp-content/uploads/gravity_forms/ directory to be deleted.
+	- Added "gform_entry_detail_url" filter to modify entry detail URL when replacing entry URL merge tag.
+	- Updated reCAPTCHA string on Settings page for translations.
+	- Updated the text AJAX in strings to Ajax to match WordPress standard.
+	- Fixed a fatal error which could occur in some situations if the RGCurrency class had not been included.
+	- Fixed an issue with the submission time evaluation of greater/less than conditional logic rules based fields containing non-numeric values.
+	- Fixed a JavaScript error which could occur with the File Upload field when file selection is cancelled.
+	- Fixed an issue with the required validation of the other choice input for the Radio Buttons field.
+	- Fixed TinyMCE displaying an error message in Firefox when the confirmation message is displayed for an AJAX enabled form which includes a Rich Text Editor enabled Paragraph field.
+	- Fixed an issue where a calculation result could return NAN which would prevent the Save and Continue feature successfully saving the incomplete submission.
+	- Fixed an issue where merge tag modifiers can remain in the field object and impact display of the field value in other locations such as the entry detail page.
+	- Fixed an issue with the evaluation of conditional logic rules using the entry value of multi-select fields created with GF2.2+.
+	- Fixed an inconsistency between the front-end and validation character counts for the Rich Text Editor enabled Paragraph field when the value contains special characters.
+	- Fixed a PHP notice which can occur when enqueuing the form scripts if the WordPress pre_get_posts filter is being used.
+	- Fixed an issue where entering 0 in both the hours and minutes inputs of the Time field would result in the field value not being saved.
+	- Fixed an issue where clicking on a duplicated field in the form editor would not always open the field for editing.
+	- Fixed issue where email wasn't being sent because content type wasn't being set properly under certain scenarios.
+	- Fixed an issue with the tab index of the reCAPTCHA field.
+	- AF: Removed the add new button from the payment add-on feeds list page if the form requires a credit card field to be added before feeds can be configured.
+	- AF: Fixed the generic map field inserting new fields in the last position instead of the position after the button which was used.
+	- Reduced the maximum log file size from 100MB to 5MB.
+
+------------------------------------------------------------------------------------------------------------------
 Version 2.2.3
     - Added security enhancements. Credit: Gennady Kovshenin.
     - Added support for Mastercard 2-series number.

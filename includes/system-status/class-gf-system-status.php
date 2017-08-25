@@ -139,7 +139,7 @@ class GF_System_Status {
 							$query = array_merge( $query, $view['query'] );
 						?>
 						<li <?php echo self::get_current_subview() == $view['name'] ? 'class="active"' : '' ?>>
-							<a href="<?php echo add_query_arg( $query ); ?>"><?php echo $view['label'] ?></a>
+							<a href="<?php echo esc_url( add_query_arg( $query ) ); ?>"><?php echo $view['label'] ?></a>
 						</li>
 					<?php endforeach; ?>
 				</ul>

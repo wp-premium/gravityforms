@@ -640,11 +640,28 @@ final class GF_Entry_List_Table extends WP_List_Table {
 		$paging      = array( 'offset' => $first_item_index, 'page_size' => $page_size );
 		$total_count = 0;
 
-		$entries = GFAPI::get_entries( $form_id, $search_criteria, $sorting, $paging, $total_count );
+		/**
+		 * Filter the arguments that will be used to fetch entries for display on the Entry List view.
+		 *
+		 * @since 2.2.3.4
+		 *
+		 * @param array $args {
+		 *
+		 *     Array of arguments that will be passed to GFAPI::get_entries() to fetch the entries to be displayed.
+		 *
+		 *     @var int $form_id The form ID for which entries will be loaded.
+		 *     @var array $search_criteria An array of search critiera that will be used to filter entries.
+		 *     @var array $sorting An array containing properties that specify how the entries will be sorted.
+		 *     @var array $paging An array containing properties that specify how the entries will be paginated.
+		 * }
+		 */
+		$args = gf_apply_filters( array( 'gform_get_entries_args_entry_list', $form_id ), compact( 'form_id', 'search_criteria', 'sorting', 'paging' ) );
+
+		$entries = GFAPI::get_entries( $args['form_id'], $args['search_criteria'], $args['sorting'], $args['paging'], $total_count );
 
 		$this->set_pagination_args( array(
 			'total_items' => $total_count,
-			'per_page'    => $page_size,
+			'per_page'    => $args['paging']['page_size'],
 		) );
 
 		$this->items = $entries;
@@ -1166,6 +1183,7 @@ final class GF_Entry_List_Table extends WP_List_Table {
 	 * @return array
 	 */
 	function get_bulk_actions() {
+
 		$actions = array();
 
 		switch ( $this->filter ) {
@@ -1193,7 +1211,20 @@ final class GF_Entry_List_Table extends WP_List_Table {
 					$actions['trash'] = esc_html__( 'Trash', 'gravityforms' );
 				}
 		}
-		return $actions;
+
+		// Get the current form ID.
+		$form_id = $this->get_form_id();
+
+		/**
+		 * Modifies available bulk actions for the entries list.
+		 *
+		 * @since 2.2.3.12
+		 *
+		 * @param array $actions Bulk actions.
+		 * @param int   $form_id The ID of the current form.
+		 */
+		return gf_apply_filters( array( 'gform_entry_list_bulk_actions', $form_id ), $actions, $form_id );
+
 	}
 
 	/**
@@ -1262,6 +1293,16 @@ final class GF_Entry_List_Table extends WP_List_Table {
 					break;
 
 			}
+
+			/**
+			 * Fires after the default entry list actions have been processed.
+			 *
+			 * @param string $action  Action being performed.
+			 * @param array  $entries The entry IDs the action is being applied to.
+			 * @param int    $form_id The current form ID.
+			 */
+			gf_do_action( array( 'gform_entry_list_action', $single_action, $form_id ), $single_action, array( $entry_id ), $form_id );
+
 		} elseif ( $bulk_action ) {
 
 			$select_all  = rgpost( 'all_entries' );
@@ -1322,6 +1363,16 @@ final class GF_Entry_List_Table extends WP_List_Table {
 					break;
 
 			}
+
+			/**
+			 * Fires after the default entry list actions have been processed.
+			 *
+			 * @param string $action  Action being performed.
+			 * @param array  $entries The entry IDs the action is being applied to.
+			 * @param int    $form_id The current form ID.
+			 */
+			gf_do_action( array( 'gform_entry_list_action', $bulk_action, $form_id ), $bulk_action, $entries, $form_id );
+
 		}
 
 		if ( ! empty( $message ) ) {

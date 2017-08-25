@@ -1041,7 +1041,7 @@ abstract class GFFeedAddOn extends GFAddOn {
 	}
 
 	public function form_settings_title() {
-		return sprintf( esc_html__( '%s Feeds', 'gravityforms' ), $this->_title );
+		return sprintf( esc_html__( '%s Feeds', 'gravityforms' ), $this->get_short_title() );
 	}
 
 	public function feed_edit_page( $form, $feed_id ) {
@@ -1164,12 +1164,13 @@ abstract class GFFeedAddOn extends GFAddOn {
 
 	public function feed_list_title() {
 		if ( ! $this->can_create_feed() ) {
-			return sprintf( __( '%s Feeds', 'gravityforms' ), $this->get_short_title() );
+			return $this->form_settings_title();
 		}
 
 		$url = add_query_arg( array( 'fid' => '0' ) );
 		$url = esc_url( $url );
-		return sprintf( esc_html__( '%s Feeds', 'gravityforms' ), $this->get_short_title() ) . " <a class='add-new-h2' href='{$url}'>" . esc_html__( 'Add New' , 'gravityforms' ) . '</a>';
+
+		return $this->form_settings_title() . " <a class='add-new-h2' href='{$url}'>" . esc_html__( 'Add New', 'gravityforms' ) . '</a>';
 	}
 
 	public function maybe_save_feed_settings( $feed_id, $form_id ) {
