@@ -108,7 +108,6 @@ class GF_Field_Calculation extends GF_Field {
 		// ignore submitted value and recalculate price in backend
 		list( $prefix, $field_id, $input_id ) = rgexplode( '_', $input_name, 3 );
 		if ( $input_id == 2 ) {
-			require_once( GFCommon::get_base_path() . '/currency.php' );
 			$currency = new RGCurrency( GFCommon::get_currency() );
 			$lead     = empty( $lead ) ? RGFormsModel::get_lead( $lead_id ) : $lead;
 			$value    = $currency->to_money( GFCommon::calculate( $this, $form, $lead ) );

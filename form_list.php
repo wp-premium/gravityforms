@@ -248,9 +248,9 @@ class GFFormList {
 
 		require_once( GFCommon::get_base_path() . '/form_detail.php' );
 
-		$form_json = rgpost( 'form' );
+		$form_json = rgpost( 'form', false );
 
-		$form = json_decode( $form_json, true );
+		$form = json_decode( stripslashes( $form_json ), true );
 
 		if ( empty( $form['title'] ) ) {
 			$result = array( 'error' => __( 'Please enter a form title.', 'gravityforms' ) );
@@ -806,6 +806,7 @@ class GF_Form_List_Table extends WP_List_Table {
 					foreach ( $form_ids as $form_id ) {
 						GFFormsModel::delete_views( $form_id );
 					}
+					GFCache::delete( 'get_view_count_per_form' );
 					$message = _n( 'Views for %s form have been reset.', 'Views for %s forms have been reset.', $form_count, 'gravityforms' );
 					break;
 				case 'delete_entries':
