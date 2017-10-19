@@ -44,7 +44,6 @@ class GF_Field_Number extends GF_Field {
 		$value = $this->get_input_value_submission( 'input_' . $this->id, $this->inputName, $field_values, $get_from_post_global_var );
 		$value = trim( $value );
 		if ( $this->numberFormat == 'currency' ) {
-			require_once( GFCommon::get_base_path() . '/currency.php' );
 			$currency = new RGCurrency( GFCommon::get_currency() );
 			$value    = $currency->to_number( $value );
 		} elseif ( $this->numberFormat == 'decimal_comma' ) {

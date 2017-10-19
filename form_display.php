@@ -1030,7 +1030,7 @@ class GFFormDisplay {
 				$iframe_title = $is_html5 ? " title='Ajax Frame'" : '';
 
 				$form_string .= "
-                <iframe style='{$iframe_style}' src='about:blank' name='gform_ajax_frame_{$form_id}' id='gform_ajax_frame_{$form_id}'" . $iframe_title . ">" . esc_html__( 'This iframe contains the logic required to handle AJAX powered Gravity Forms.', 'gravityforms' ) . "</iframe>
+                <iframe style='{$iframe_style}' src='about:blank' name='gform_ajax_frame_{$form_id}' id='gform_ajax_frame_{$form_id}'" . $iframe_title . ">" . esc_html__( 'This iframe contains the logic required to handle Ajax powered Gravity Forms.', 'gravityforms' ) . "</iframe>
                 <script type='text/javascript'>" . apply_filters( 'gform_cdata_open', '' ) . '' .
 					'jQuery(document).ready(function($){' .
 						"gformInitSpinner( {$form_id}, '{$spinner_url}' );" .
@@ -1598,6 +1598,7 @@ class GFFormDisplay {
 	}
 
 	private static function get_js_redirect_confirmation( $url, $ajax ) {
+		$url = esc_url_raw( $url );
 		$confirmation = "<script type=\"text/javascript\">" . apply_filters( 'gform_cdata_open', '' ) . " function gformRedirect(){document.location.href='$url';}";
 		if ( ! $ajax ) {
 			$confirmation .= 'gformRedirect();';
@@ -1803,6 +1804,10 @@ class GFFormDisplay {
 		global $wp_query;
 		if ( isset( $wp_query->posts ) && is_array( $wp_query->posts ) ) {
 			foreach ( $wp_query->posts as $post ) {
+				if ( ! $post instanceof WP_Post ) {
+					continue;
+				}
+
 				$forms = self::get_embedded_forms( $post->post_content, $ajax );
 				foreach ( $forms as $form ) {
 					if ( isset( $form['id'] ) ) {
@@ -2469,10 +2474,6 @@ class GFFormDisplay {
 
 	public static function get_pricing_init_script( $form ) {
 
-		if ( ! class_exists( 'RGCurrency' ) ) {
-			require_once( 'currency.php' );
-		}
-
 		return "if(window[\"gformInitPriceFields\"]) jQuery(document).ready(function(){gformInitPriceFields();} );";
 	}
 
@@ -2514,8 +2515,6 @@ class GFFormDisplay {
 	}
 
 	public static function get_calculations_init_script( $form ) {
-		require_once( GFCommon::get_base_path() . '/currency.php' );
-
 		$formula_fields = array();
 
 		foreach ( $form['fields'] as $field ) {
@@ -2551,9 +2550,6 @@ class GFFormDisplay {
 	 * @return string
 	 */
 	public static function get_number_formats_script( $form ) {
-
-		require_once ( GFCommon::get_base_path() . '/currency.php' );
-
 		$number_formats = array();
 		$currency       = RGCurrency::get_currency( GFCommon::get_currency() );
 
@@ -2936,14 +2932,14 @@ class GFFormDisplay {
 	 */
 	public static function get_field_content( $field, $value = '', $force_frontend_label = false, $form_id = 0, $form = null ) {
 
-		$field_label = $field->get_field_label( $form, $value );
+		$field_label   = $field->get_field_label( $force_frontend_label, $value );
 		$admin_buttons = $field->get_admin_buttons();
 
 		$input_type = GFFormsModel::get_input_type( $field );
 
-		$is_form_editor = GFCommon::is_form_editor();
+		$is_form_editor  = GFCommon::is_form_editor();
 		$is_entry_detail = GFCommon::is_entry_detail();
-		$is_admin = $is_form_editor || $is_entry_detail;
+		$is_admin        = $is_form_editor || $is_entry_detail;
 
 		if ( $input_type == 'adminonly_hidden' ) {
 			$field_content = ! $is_admin ? '{FIELD}' : sprintf( "%s<label class='gfield_label' >%s</label>{FIELD}", $admin_buttons, esc_html( $field_label ) );

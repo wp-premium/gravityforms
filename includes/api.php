@@ -1467,7 +1467,7 @@ class GFAPI {
 	 *
 	 * @uses GFFormsModel::get_fields_by_type()
 	 *
-	 * @return object GF_Field
+	 * @return GF_Field[]
 	 */
 	public static function get_fields_by_type( $form, $types, $use_input_type = false ) {
 		return GFFormsModel::get_fields_by_type( $form, $types, $use_input_type );

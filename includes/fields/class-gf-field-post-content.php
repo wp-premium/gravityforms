@@ -53,6 +53,26 @@ class GF_Field_Post_Content extends GF_Field {
 		return $field->get_field_input( $form, $value, $entry );
 	}
 
+	public function validate( $value, $form ) {
+		if ( ! is_numeric( $this->maxLength ) ) {
+			return;
+		}
+
+		if ( $this->useRichTextEditor ) {
+			$value = wp_specialchars_decode( $value );
+		}
+
+		// Clean the string of characters not counted by the textareaCounter plugin.
+		$value = strip_tags( $value );
+		$value = str_replace( "\r", '', $value );
+		$value = trim( $value );
+
+		if ( GFCommon::safe_strlen( $value ) > $this->maxLength ) {
+			$this->failed_validation  = true;
+			$this->validation_message = empty( $this->errorMessage ) ? esc_html__( 'The text entered exceeds the maximum number of characters.', 'gravityforms' ) : $this->errorMessage;
+		}
+	}
+
 	public function allow_html() {
 		return true;
 	}

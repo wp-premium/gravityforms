@@ -304,6 +304,7 @@ abstract class GFAddOn {
 		// No conflict scripts
 		add_filter( 'gform_noconflict_scripts', array( $this, 'register_noconflict_scripts' ) );
 		add_filter( 'gform_noconflict_styles', array( $this, 'register_noconflict_styles' ) );
+		add_action( 'gform_enqueue_scripts', array( $this, 'enqueue_scripts' ), 10, 2 );
 
 	}
 
@@ -945,7 +946,7 @@ abstract class GFAddOn {
 				}
 			} else {
 				$query_matches      = isset( $condition['query'] ) ? $this->_request_condition_matches( $_GET, $condition['query'] ) : true;
-				$post_matches       = isset( $condition['post'] ) ? $this->_request_condition_matches( $_POST, $condition['query'] ) : true;
+				$post_matches       = isset( $condition['post'] ) ? $this->_request_condition_matches( $_POST, $condition['post'] ) : true;
 				$admin_page_matches = isset( $condition['admin_page'] ) ? $this->_page_condition_matches( $condition['admin_page'], rgar( $condition, 'tab' ) ) : true;
 				$field_type_matches = isset( $condition['field_types'] ) ? $this->_field_condition_matches( $condition['field_types'], $form ) : true;
 
@@ -1080,9 +1081,16 @@ abstract class GFAddOn {
 			$field_types = array( $field_types );
 		}
 
+		/* @var GF_Field[] $fields */
 		$fields = GFAPI::get_fields_by_type( $form, $field_types );
 		if ( count( $fields ) > 0 ) {
-			return true;
+			foreach ( $fields as $field ) {
+				if ( $field->is_administrative() && ! $field->allowsPrepopulate && ! GFForms::get_page() ) {
+					continue;
+				}
+
+				return true;
+			}
 		}
 
 		return false;
@@ -4642,7 +4650,7 @@ abstract class GFAddOn {
 	 *
 	 * @param $form
 	 *
-	 * @return string
+	 * @return array
 	 */
 	public function get_form_settings( $form ) {
 		return rgar( $form, $this->_slug );

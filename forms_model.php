@@ -1406,12 +1406,11 @@ class GFFormsModel {
 		$wpdb->query( $sql );
 	}
 
-
-
-
-
-
-
+	/**
+	 * Delete the views for the specified form.
+	 *
+	 * @param int $form_id The form ID.
+	 */
 	public static function delete_views( $form_id ) {
 		global $wpdb;
 
@@ -1421,7 +1420,7 @@ class GFFormsModel {
 		$sql = $wpdb->prepare( "DELETE FROM $form_view_table WHERE form_id=%d", $form_id );
 		$wpdb->query( $sql );
 
-        /**
+		/**
          * Fires after form views are deleted
          *
          * @param int $form_id The ID of the form that views were deleted from
@@ -1784,6 +1783,16 @@ class GFFormsModel {
 		}
 
 		$file_path = self::get_physical_file_path( $url );
+
+		/**
+		 * Allow the file path to be overridden so files stored outside the /wp-content/uploads/gravity_forms/ directory can be deleted.
+		 *
+		 * @since 2.2.3.1
+		 *
+		 * @param string $file_path The path of the file to be deleted.
+		 * @param string $url       The URL of the file to be deleted.
+		 */
+		$file_path = apply_filters( 'gform_file_path_pre_delete_file', $file_path, $url );
 
 		if ( file_exists( $file_path ) ) {
 			unlink( $file_path );
@@ -2439,6 +2448,18 @@ class GFFormsModel {
 		return null;
 	}
 
+    /**
+	 * Determines if the field value matches the conditional logic rule value.
+	 *
+	 * @param mixed         $field_value  The field value to be checked.
+	 * @param mixed         $target_value The conditional logic rule value.
+	 * @param string        $operation    The conditional logic rule operator.
+	 * @param null|GF_Field $source_field The field the rule is based on.
+	 * @param null|array    $rule         The conditional logic rule properties.
+	 * @param null|array    $form         The current form.
+	 *
+	 * @return bool
+	 */
 	public static function is_value_match( $field_value, $target_value, $operation = 'is', $source_field = null, $rule = null, $form = null ) {
 
 		$is_match = false;
@@ -2448,7 +2469,7 @@ class GFFormsModel {
 				$field_value = GFCommon::prepare_post_category_value( $field_value, $source_field, 'conditional_logic' );
 			} elseif ( $source_field->type == 'multiselect' && ! empty( $field_value ) && ! is_array( $field_value ) ) {
 				// Convert the comma-delimited string into an array.
-				$field_value = explode( ',', $field_value );
+				$field_value = $source_field->to_array( $field_value );
 			} elseif ( $source_field->get_input_type() != 'checkbox' && is_array( $field_value ) && $source_field->id != $rule['fieldId'] && is_array( $source_field->get_entry_inputs() ) ) {
 				// Get the specific input value from the full field value.
 				$field_value = rgar( $field_value, $rule['fieldId'] );
@@ -2496,7 +2517,7 @@ class GFFormsModel {
 			return GFCommon::clean_number( $text, $number_format );
 		}
 
-		return $text;
+		return 0;
 	}
 
 	public static function matches_operation( $val1, $val2, $operation ) {
@@ -2990,6 +3011,9 @@ class GFFormsModel {
 		$images                          = array();
 
 		foreach ( $form['fields'] as $field ) {
+			if ( self::is_field_hidden( $form, $field, array(), $lead ) ) {
+				continue;
+			}
 
 			if ( $field->type == 'post_category' ) {
 				$field = GFCommon::add_categories_as_choices( $field, '' );
@@ -4089,7 +4113,7 @@ class GFFormsModel {
 		$id = $wpdb->get_var( $sql, 0, 0 );
 
 		if ( empty( $id ) ) {
-			$wpdb->query( $wpdb->prepare( "INSERT INTO $table_name(form_id, date_created, ip) values(%d, utc_timestamp(), %s)", $form_id, $ip ) );
+			$wpdb->query( $wpdb->prepare( "INSERT INTO $table_name(form_id, date_created, ip) values(%d, utc_timestamp(), %s)", $form_id, '' ) );
 		} else {
 			$wpdb->query( $wpdb->prepare( "UPDATE $table_name SET count = count+1 WHERE id=%d", $id ) );
 		}
@@ -4723,7 +4747,7 @@ class GFFormsModel {
 		if ( ! $field instanceof GF_Field ) {
 			$field = GF_Fields::create( $field );
 		}
-		$field_label = ( IS_ADMIN || RG_CURRENT_PAGE == 'select_columns.php' || RG_CURRENT_PAGE == 'print-entry.php' || rgget( 'gf_page', $_GET ) == 'select_columns' || rgget( 'gf_page', $_GET ) == 'print-entry' ) && ! empty( $field->adminLabel ) && $allow_admin_label ? $field->adminLabel : $field->label;
+		$field_label = ( GFForms::get_page() || RG_CURRENT_PAGE == 'select_columns.php' || RG_CURRENT_PAGE == 'print-entry.php' || rgget( 'gf_page', $_GET ) == 'select_columns' || rgget( 'gf_page', $_GET ) == 'print-entry' ) && ! empty( $field->adminLabel ) && $allow_admin_label ? $field->adminLabel : $field->label;
 		$input       = self::get_input( $field, $input_id );
 		if ( self::get_input_type( $field ) == 'checkbox' && $input != null ) {
 			return $input['label'];

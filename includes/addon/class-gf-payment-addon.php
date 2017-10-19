@@ -208,6 +208,12 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		add_filter( 'gform_validation', array( $this, 'maybe_validate' ), 20 );
 		add_filter( 'gform_entry_post_save', array( $this, 'entry_post_save' ), 10, 2 );
 
+		if ( $this->_requires_credit_card ) {
+			add_filter( 'gform_register_init_scripts', array( $this, 'register_creditcard_token_script' ), 10, 3 );
+			add_filter( 'gform_field_content', array( $this, 'add_creditcard_token_input' ), 10, 5 );
+			add_filter( 'gform_form_args', array( $this, 'force_ajax_for_creditcard_tokens' ), 10, 1 );
+		}
+
 	}
 
 	/**
@@ -241,30 +247,6 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		if ( rgget( 'page' ) == 'gf_entries' ) {
 			add_action( 'gform_payment_details', array( $this, 'entry_info' ), 10, 2 );
 		}
-	}
-
-	/**
-	 * Runs only when the payment add-on is initialized on the frontend.
-	 *
-	 * @since  Unknown
-	 * @access public
-	 *
-	 * @used-by GFAddOn::init_frontend()
-	 * @uses    GFAddOn::init_frontend()
-	 * @uses    GFPaymentAddOn::register_creditcard_token_script()
-	 * @uses    GFPaymentAddOn::add_creditcard_token_input()
-	 * @uses    GFPaymentAddOn::force_ajax_for_creditcard_tokens()
-	 *
-	 * @return void
-	 */
-	public function init_frontend() {
-
-		parent::init_frontend();
-
-		add_filter( 'gform_register_init_scripts', array( $this, 'register_creditcard_token_script' ), 10, 3 );
-		add_filter( 'gform_field_content', array( $this, 'add_creditcard_token_input' ), 10, 5 );
-		add_filter( 'gform_form_args', array( $this, 'force_ajax_for_creditcard_tokens' ), 10, 1 );
-
 	}
 
 	/**
@@ -2152,6 +2134,19 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
 	//--------- Feed Settings ----------------
 
+	/**
+	 * Remove the add new button from the title if the form requires a credit card field.
+	 *
+	 * @return string
+	 */
+	public function feed_list_title() {
+		if ( $this->_requires_credit_card && ! $this->has_credit_card_field( $this->get_current_form() ) ) {
+			return $this->form_settings_title();
+		}
+
+		return parent::feed_list_title();
+	}
+
 	public function feed_list_message() {
 
 		if ( $this->_requires_credit_card && ! $this->has_credit_card_field( $this->get_current_form() ) ) {
@@ -3193,7 +3188,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 	 * @access public
 	 *
 	 * @param string $content
-	 * @param array $field
+	 * @param GF_Field $field
 	 * @param string $value
 	 * @param string $entry_id
 	 * @param string $form_id
@@ -3330,10 +3325,6 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 	 * @return RGCurrency
 	 */
 	public function get_currency( $currency_code = '' ) {
-		if ( ! class_exists( 'RGCurrency' ) ) {
-			require_once( GFCommon::get_base_path() . '/currency.php' );
-		}
-
 		if ( empty( $currency_code ) ) {
 			$currency_code = GFCommon::get_currency();
 		}
