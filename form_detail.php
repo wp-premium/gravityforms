@@ -36,8 +36,6 @@ class GFFormDetail {
 			$update_result = self::save_form_info( $form_id, rgpost( 'gform_meta', false ) );
 		}
 
-		require_once( GFCommon::get_base_path() . '/currency.php' );
-
 		wp_print_styles( array( 'thickbox' ) );
 
 		/* @var GF_Field_Address $gf_address_field  */

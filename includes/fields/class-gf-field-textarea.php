@@ -144,6 +144,10 @@ class GF_Field_Textarea extends GF_Field {
 			return;
 		}
 
+		if ( $this->useRichTextEditor ) {
+			$value = wp_specialchars_decode( $value );
+		}
+
 		// Clean the string of characters not counted by the textareaCounter plugin.
 		$value = strip_tags( $value );
 		$value = str_replace( "\r", '', $value );
@@ -171,8 +175,8 @@ class GF_Field_Textarea extends GF_Field {
 
 			list( $search, $open_tag, $guts, $close_tag ) = $match;
 
-			$custom  = 'for( var id in tinymce.editors ) { tinymce.EditorManager.remove( tinymce.editors[id] ); }';
-			$replace = sprintf( "%s\njQuery( document ).bind( 'gform_post_render', function() { \n%s\n%s } );\n%s", $open_tag, $custom, $guts, $close_tag );
+			$custom  = "if ( typeof current_page === 'undefined' ) { return; }\nfor( var id in tinymce.editors ) { tinymce.EditorManager.remove( tinymce.editors[id] ); }";
+			$replace = sprintf( "%s\njQuery( document ).bind( 'gform_post_render', function( event, form_id, current_page ) { \n%s\n%s } );\n%s", $open_tag, $custom, $guts, $close_tag );
 			$script  = str_replace( $search, $replace, $script );
 
 		}

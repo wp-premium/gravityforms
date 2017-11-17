@@ -35,10 +35,6 @@ class GF_Field_Donation extends GF_Field {
 	}
 
 	public function validate( $value, $form ) {
-		if ( ! class_exists( 'RGCurrency' ) ) {
-			require_once( GFCommon::get_base_path() . '/currency.php' );
-		}
-
 		$price = GFCommon::to_number( $value );
 		if ( ! rgblank( $value ) && ( $price === false || $price < 0 ) ) {
 			$this->failed_validation  = true;

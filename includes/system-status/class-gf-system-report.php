@@ -69,30 +69,26 @@ class GF_System_Report {
 
 			});
 
+			function gfDoAction(actionCode, confirmMessage) {
+
+				if (confirmMessage && !confirm(confirmMessage)) {
+					// User canceled action;
+					return;
+				}
+
+				jQuery('#gf_action').val(actionCode);
+				jQuery('#gf_system_report_form').submit();
+			}
 		</script>
+
+		<form method="post" id="gf_system_report_form">
+			<input type="hidden" name="gf_action" id="gf_action"/>
 		<?php
+
+		wp_nonce_field( 'gf_sytem_report_action', 'gf_sytem_report_action' );
 
 		// Loop through system report sections.
 		foreach ( $sections as $i => $section ) {
-			?>
-			<script type="text/javascript">
-
-				function gfDoAction(actionCode, confirmMessage) {
-
-					if ( confirmMessage && ! confirm( confirmMessage ) ){
-						// User canceled action;
-						return;
-					}
-
-					jQuery('#gf_action').val(actionCode);
-					jQuery('#gf_system_report_form').submit();
-				}
-
-			</script>
-			<form method="post" id="gf_system_report_form">
-				<input type="hidden" name="gf_action" id="gf_action" />
-			<?php
-			wp_nonce_field( 'gf_sytem_report_action', 'gf_sytem_report_action' );
 
 			// Display section title.
 			echo '<h3><span>' . $section['title'] . '</span></h3>';
@@ -138,10 +134,10 @@ class GF_System_Report {
 			// Add horizontal divider.
 			echo $i !== count( $sections ) - 1 ? '<div class="hr-divider"></div>' : '';
 
-			// Close form.
-			echo '</form>';
-
 		}
+
+		// Close form.
+		echo '</form>';
 
 		// Display page footer.
 		GF_System_Status::page_footer();
@@ -189,7 +185,7 @@ class GF_System_Report {
 
 		}
 
-		$system_report_text = str_replace( '()', '', $system_report_text );
+		$system_report_text = str_replace( array( '()', '../' ), array( '', '[DT]' ), $system_report_text );
 
 		return $system_report_text;
 
@@ -265,6 +261,8 @@ class GF_System_Report {
 
 		global $wpdb, $wp_version;
 
+		$wp_cron_disabled  = defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON;
+		$alternate_wp_cron = defined( 'ALTERNATE_WP_CRON' ) && ALTERNATE_WP_CRON;
 
 		// Prepare system report.
 		$system_report = array(
@@ -358,6 +356,24 @@ class GF_System_Report {
 								'label_export' => 'WordPress Debug Log',
 								'value'        => WP_DEBUG_LOG ? __( 'Yes', 'gravityforms' ) : __( 'No', 'gravityforms' ),
 								'value_export' => WP_DEBUG_LOG ? 'Yes' : 'No',
+							),
+							array(
+								'label'        => esc_html__( 'WordPress Script Debug Mode', 'gravityforms' ),
+								'label_export' => 'WordPress Script Debug Mode',
+								'value'        => SCRIPT_DEBUG ? __( 'Yes', 'gravityforms' ) : __( 'No', 'gravityforms' ),
+								'value_export' => SCRIPT_DEBUG ? 'Yes' : 'No',
+							),
+							array(
+								'label'        => esc_html__( 'WordPress Cron', 'gravityforms' ),
+								'label_export' => 'WordPress Cron',
+								'value'        => ! $wp_cron_disabled ? __( 'Yes', 'gravityforms' ) : __( 'No', 'gravityforms' ),
+								'value_export' => ! $wp_cron_disabled ? 'Yes' : 'No',
+							),
+							array(
+								'label'        => esc_html__( 'WordPress Alternate Cron', 'gravityforms' ),
+								'label_export' => 'WordPress Alternate Cron',
+								'value'        => $alternate_wp_cron ? __( 'Yes', 'gravityforms' ) : __( 'No', 'gravityforms' ),
+								'value_export' => $alternate_wp_cron ? 'Yes' : 'No',
 							),
 						),
 					),

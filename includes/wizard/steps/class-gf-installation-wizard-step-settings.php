@@ -27,7 +27,6 @@ class GF_Installation_Wizard_Step_Settings extends GF_Installation_Wizard_Step {
 					<select id="gforms_currency" name="currency" <?php echo $disabled ?>>
 						<option value=""><?php esc_html_e( 'Select a Currency', 'gravityforms' ) ?></option>
 						<?php
-						require_once( GFCommon::get_base_path() . '/currency.php' );
 						$current_currency = $this->currency;
 
 						foreach ( RGCurrency::get_currencies() as $code => $currency ) {
