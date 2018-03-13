@@ -32,6 +32,7 @@ function Field(id, type){
     this.isRequired = false;
     this.size = "medium";
     this.errorMessage = "";
+    this.visibility = "visible";
     //NOTE: other properties will be added dynamically using associative array syntax
 }
 

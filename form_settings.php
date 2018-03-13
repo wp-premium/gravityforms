@@ -1262,9 +1262,9 @@ class GFFormSettings {
 
 				<?php if ( $is_duplicate ) :?>
 				$('#confirmation_conditional_logic_container').pointer({
-					content     : '<h3><?php _e( 'Important', 'gravityforms' ) ?></h3><p><?php _e( 'Ensure that the conditional logic for this confirmation is different from all the other confirmations for this form and then press save to create the new confirmation.', 'gravityforms' ) ?></p>',
-					position    : {
-						edge : 'bottom', // arrow direction
+					content: <?php echo json_encode( sprintf( '<h3>%s</h3><p>%s</p>', __( 'Important', 'gravityforms' ), __( 'Ensure that the conditional logic for this confirmation is different from all the other confirmations for this form and then press save to create the new confirmation.', 'gravityforms' ) ) ); ?>,
+					position: {
+						edge: 'bottom', // arrow direction
 						align: 'center' // vertical alignment
 					},
 					pointerWidth: 300
@@ -1273,16 +1273,16 @@ class GFFormSettings {
 			});
 
 
-			gform.addFilter("gform_merge_tags", "MaybeAddSaveMergeTags");
-			function MaybeAddSaveMergeTags(mergeTags, elementId, hideAllFields, excludeFieldTypes, isPrepop, option){
+			gform.addFilter('gform_merge_tags', 'MaybeAddSaveMergeTags');
+			function MaybeAddSaveMergeTags(mergeTags, elementId, hideAllFields, excludeFieldTypes, isPrepop, option) {
 				var event = confirmation.event;
-				if ( event == 'form_saved' || event == 'form_save_email_sent' ) {
-					mergeTags["other"].tags.push({ tag: '{save_link}', label: '<?php _e( 'Save &amp; Continue Link', 'gravityforms' ) ?>' });
-					mergeTags["other"].tags.push({ tag: '{save_token}', label: '<?php _e( 'Save &amp; Continue Token', 'gravityforms' ) ?>' });
+				if ( event === 'form_saved' || event === 'form_save_email_sent' ) {
+					mergeTags['other'].tags.push({ tag: '{save_link}', label: <?php echo json_encode( __( 'Save &amp; Continue Link', 'gravityforms' ) ) ?> });
+					mergeTags['other'].tags.push({ tag: '{save_token}', label: <?php echo json_encode( __( 'Save &amp; Continue Token', 'gravityforms' ) ) ?> });
 				}
 
-				if( event == 'form_saved' ) {
-					mergeTags["other"].tags.push({ tag: '{save_email_input}', label: '<?php _e( 'Save &amp; Continue Email Input', 'gravityforms' ) ?>' });
+				if ( event === 'form_saved' ) {
+					mergeTags['other'].tags.push({ tag: '{save_email_input}', label: <?php echo json_encode( __( 'Save &amp; Continue Email Input', 'gravityforms' ) ) ?> });
 				}
 
 				return mergeTags;

@@ -330,7 +330,7 @@ class GFFormDisplay {
 			}
 
 			if ( empty( $_FILES[ $input_name ]['name'] ) ) {
-				GFCommon::log_debug( "GFFormDisplay::upload_files(): Skipping field because " . $_FILES[ $input_name ]['name'] . " could not be found: {$field->label}({$field->id} - {$field->type})." );
+				GFCommon::log_debug( "GFFormDisplay::upload_files(): Skipping field because a file could not be found: {$field->label}({$field->id} - {$field->type})." );
 				continue;
 			}
 
@@ -793,7 +793,7 @@ class GFFormDisplay {
 					}
 				}
 			} elseif ( ! current_user_can( 'administrator' ) && ! $view_counter_disabled ) {
-				RGFormsModel::insert_form_view( $form_id, $_SERVER['REMOTE_ADDR'] );
+				RGFormsModel::insert_form_view( $form_id );
 			}
 		}
 
@@ -805,7 +805,15 @@ class GFFormDisplay {
 		$form = gf_apply_filters( array( 'gform_pre_render', $form_id ), $form, $ajax, $field_values );
 
 		if ( $form == null ) {
-			return '<p class="gform_not_found">' . esc_html__( 'Oops! We could not locate your form.', 'gravityforms' ) . '</p>';
+			/**
+			 * Filter the form not found message that will be displayed
+			 *
+			 * @since
+			 *
+			 * @param string                The default form not found message
+			 * @param int|string $form_id   The ID of the form we tried to retrieve
+			 */
+			return apply_filters( 'gform_form_not_found_message', '<p class="gform_not_found">' . esc_html__( 'Oops! We could not locate your form.', 'gravityforms' ) . '</p>', $form_id );
 		}
 
 		$has_pages = self::has_pages( $form );
@@ -1081,8 +1089,9 @@ class GFFormDisplay {
 				self::register_form_init_scripts( $form, $field_values, $ajax );
 
 				if ( apply_filters( 'gform_init_scripts_footer', false ) ) {
-					add_action( 'wp_footer', create_function( '', 'GFFormDisplay::footer_init_scripts(' . $form['id'] . ');' ), 20 );
-					add_action( 'gform_preview_footer', create_function( '', 'GFFormDisplay::footer_init_scripts(' . $form['id'] . ');' ) );
+					$callback = array( new GF_Late_Static_Binding( array( 'form_id' => $form['id'] ) ), 'GFFormDisplay_footer_init_scripts' );
+					add_action( 'wp_footer', $callback, 20 );
+					add_action( 'gform_preview_footer', $callback );
 				} else {
 					$form_string .= self::get_form_init_scripts( $form );
 					$form_string .= "<script type='text/javascript'>" . apply_filters( 'gform_cdata_open', '' ) . " jQuery(document).ready(function(){jQuery(document).trigger('gform_post_render', [{$form_id}, {$current_page}]) } ); " . apply_filters( 'gform_cdata_close', '' ) . '</script>';
@@ -2443,17 +2452,19 @@ class GFFormDisplay {
 	}
 
 	public static function get_counter_init_script( $form ) {
-
 		$script = '';
+
+		/** @var GF_Field $field */
 		foreach ( $form['fields'] as $field ) {
 
 			$max_length = $field->maxLength;
 			$input_id   = "input_{$form['id']}_{$field->id}";
 
 			if ( ! empty( $max_length ) && ! $field->is_administrative() ) {
-				$truncate = 		$field->useRichTextEditor === true ? 'false' : 'true' ;
-				$tinymce_style = 	$field->useRichTextEditor === true ? ' ginput_counter_tinymce' : '' ;
-				$error_style = 		$field->useRichTextEditor === true ? ' ginput_counter_error' : '' ;
+				$rte_enabled   = $field instanceof GF_Field_Textarea && $field->is_rich_edit_enabled();
+				$truncate      = $rte_enabled ? 'false' : 'true';
+				$tinymce_style = $rte_enabled ? ' ginput_counter_tinymce' : '';
+				$error_style   = $rte_enabled ? ' ginput_counter_error' : '';
 
 				$field_script =
 					"jQuery('#{$input_id}').textareaCount(" .
@@ -2530,7 +2541,7 @@ class GFFormDisplay {
 			return '';
 		}
 
-		$script = 'new GFCalc(' . $form['id'] . ', ' . GFCommon::json_encode( $formula_fields ) . ');';
+		$script = 'if( typeof window.gf_global["gfcalc"] == "undefined" ) { window.gf_global["gfcalc"] = {}; } window.gf_global["gfcalc"][' . $form['id'] . '] = new GFCalc(' . $form['id'] . ', ' . GFCommon::json_encode( $formula_fields ) . ');';
 
 		return $script;
 	}
@@ -2771,7 +2782,7 @@ class GFFormDisplay {
 			//adding fields with next button logic
 			if ( ! empty( $field->nextButton['conditionalLogic'] ) ) {
 				foreach ( $field->nextButton['conditionalLogic']['rules'] as $rule ) {
-					if ( $rule['fieldId'] == $fieldId && ! in_array( $fieldId, $fields ) ) {
+					if ( intval( $rule['fieldId'] ) == $fieldId && ! in_array( $fieldId, $fields ) ) {
 						$fields[] = floatval( $field->id );
 						break;
 					}
@@ -2848,7 +2859,7 @@ class GFFormDisplay {
 
 		$error_class      = $field->failed_validation ? 'gfield_error' : '';
 		$admin_only_class = $field->visibility == 'administrative' ? 'field_admin_only' : ''; // maintain for backwards compat
-		$visibility_class = sprintf( 'gfield_visibility_%s', $field->visibility );
+		$visibility_class = sprintf( 'gfield_visibility_%s', ( $field->visibility ? $field->visibility : 'visible' ) );
 		$selectable_class = $is_admin ? 'selectable' : '';
 		$hidden_class     = in_array( $input_type, array( 'hidden', 'hiddenproduct' ) ) ? 'gform_hidden' : '';
 

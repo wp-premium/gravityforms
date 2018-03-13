@@ -3188,7 +3188,7 @@ abstract class GFAddOn {
 				continue;
 			}
 
-			if ( ! empty( $args['property'] ) && ( ! isset( $field->$args['property'] ) || $field->$args['property'] != $args['property_value'] ) ) {
+			if ( ! empty( $args['property'] ) && ( ! isset( $field->{$args['property']} ) || $field->{$args['property']} != $args['property_value'] ) ) {
 				continue;
 			}
 
@@ -3396,8 +3396,9 @@ abstract class GFAddOn {
 			'gaddon_no_output_field_properties',
 			array(
 				'default_value', 'label', 'choices', 'feedback_callback', 'checked', 'checkbox_label', 'value', 'type',
-				'validation_callback', 'required', 'hidden', 'tooltip', 'dependency', 'messages', 'name', 'args', 'exclude_field_types',
-				'field_type', 'after_input', 'input_type', 'icon', 'save_callback', 'enable_custom_value', 'enable_custom_key', 'merge_tags', 'key_field', 'value_field',
+				'validation_callback', 'required', 'hidden', 'tooltip', 'dependency', 'messages', 'name', 'args',
+				'exclude_field_types', 'field_type', 'after_input', 'input_type', 'icon', 'save_callback',
+				'enable_custom_value', 'enable_custom_key', 'merge_tags', 'key_field', 'value_field', 'callback',
 			), $field
 		);
 
@@ -6145,6 +6146,26 @@ abstract class GFAddOn {
 	 */
 	public function get_path() {
 		return $this->_path;
+	}
+
+	/**
+	 * Get all or a specific capability for Add-On.
+	 *
+	 * @since  2.2.5.27
+	 * @access public
+	 *
+	 * @param string $capability Capability to return.
+	 *
+	 * @return string|array
+	 */
+	public function get_capabilities( $capability = '' ) {
+
+		if ( rgblank( $capability ) ) {
+			return $this->_capabilities;
+		}
+
+		return isset( $this->{'_capabilities_' . $capability} ) ? $this->{'_capabilities_' . $capability} : array();
+
 	}
 
 	/**

@@ -613,7 +613,7 @@ class GF_Field extends stdClass implements ArrayAccess {
 
 		$placeholder_value = GFCommon::replace_variables_prepopulate( $this->placeholder );
 
-		return ! empty( $placeholder_value ) ? sprintf( "placeholder='%s'", esc_attr( $placeholder_value ) ) : '';
+		return ! rgblank( $placeholder_value ) ? sprintf( "placeholder='%s'", esc_attr( $placeholder_value ) ) : '';
 	}
 
 	/**
@@ -627,7 +627,7 @@ class GF_Field extends stdClass implements ArrayAccess {
 
 		$placeholder_value = $this->get_input_placeholder_value( $input );
 
-		return ! empty( $placeholder_value ) ? sprintf( "placeholder='%s'", esc_attr( $placeholder_value ) ) : '';
+		return ! rgblank( $placeholder_value ) ? sprintf( "placeholder='%s'", esc_attr( $placeholder_value ) ) : '';
 	}
 
 	/**
@@ -641,7 +641,7 @@ class GF_Field extends stdClass implements ArrayAccess {
 
 		$placeholder = rgar( $input, 'placeholder' );
 
-		return empty( $placeholder ) ? '' : GFCommon::replace_variables_prepopulate( $placeholder );
+		return rgblank( $placeholder ) ? '' : GFCommon::replace_variables_prepopulate( $placeholder );
 	}
 
 
