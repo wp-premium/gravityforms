@@ -2573,6 +2573,13 @@ class GFFormDetail {
 				'value'     => GFCommon::get_field_type_title( 'creditcard' )
 			);
 		}
+		
+		/**
+		 * Modify the field groups before fields are added
+	         *
+        	 * @param array $field_groups The field groups, including group name, label and fields.
+		 */
+		$field_groups = apply_filters( 'gform_field_groups_form_editor', $field_groups );
 
 		// Remove array keys from field groups array.
 		$field_groups = array_values( $field_groups );

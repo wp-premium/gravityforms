@@ -679,6 +679,7 @@ class GF_Field_List extends GF_Field {
 		if ( ! $this->enableColumns ) {
 			return $value;
 		} else {
+			$value     = empty( $value ) ? array() : $value;
 			$col_count = count( $this->choices );
 			$rows      = array();
 

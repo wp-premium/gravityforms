@@ -769,6 +769,9 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 			return $entry;
 		}
 
+		// Saving which gateway was used to process this entry.
+		gform_update_meta( $entry['id'], 'payment_gateway', $this->_slug );
+
 		$feed = $this->current_feed;
 
 		if ( ! empty( $this->authorization ) ) {
@@ -800,9 +803,6 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 			$entry['payment_status']   = 'Processing';
 
 		}
-
-		// Saving which gateway was used to process this entry.
-		gform_update_meta( $entry['id'], 'payment_gateway', $this->_slug );
 
 		return $entry;
 	}

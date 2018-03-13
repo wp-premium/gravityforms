@@ -70,7 +70,7 @@ class GF_Field_Textarea extends GF_Field {
 		}
 
 		//see if the field is set to use the rich text editor
-		if ( $this->useRichTextEditor && ! $is_admin ) {
+		if ( ! $is_admin && $this->is_rich_edit_enabled() ) {
 			//placeholders cannot be used with the rte; message displayed in admin when this occurs
 			//field cannot be used in conditional logic by another field; message displayed in admin and field removed from conditional logic drop down
 			$tabindex = GFCommon::$tab_index > 0 ? GFCommon::$tab_index ++ : '';
@@ -284,6 +284,41 @@ class GF_Field_Textarea extends GF_Field {
 		}
 
 		return $return;
+	}
+
+	/**
+	 * Determines if the RTE can be enabled for the current field and user.
+	 *
+	 * @since 2.2.5.14
+	 *
+	 * @return bool
+	 */
+	public function is_rich_edit_enabled() {
+		if ( ! $this->useRichTextEditor ) {
+			return false;
+		}
+
+		global $wp_rich_edit;
+		$wp_rich_edit = null;
+
+		add_filter( 'get_user_option_rich_editing', array( $this, 'filter_user_option_rich_editing' ) );
+		$user_can_rich_edit = user_can_richedit();
+		remove_filter( 'get_user_option_rich_editing', array( $this, 'filter_user_option_rich_editing' ) );
+
+		return $user_can_rich_edit;
+	}
+
+	/**
+	 * Filter the rich_editing option for the current user.
+	 *
+	 * @since 2.2.5.14
+	 *
+	 * @param string $value The value of the rich_editing option for the current user.
+	 *
+	 * @return string
+	 */
+	public function filter_user_option_rich_editing( $value ) {
+		return 'true';
 	}
 }
 
