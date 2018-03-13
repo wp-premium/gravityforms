@@ -611,7 +611,7 @@ class GF_Upgrade {
 
 		// The format the version info changed to JSON. Make sure the old format is not cached.
 		if ( version_compare( $versions['current_version'], '1.8.0.3', '<' ) ) {
-			delete_transient( 'gform_update_info' );
+			delete_option( 'gform_version_info' );
 		}
 
 		// dropping meta_key and form_id_meta_key (if they exist) to prevent duplicate keys error on upgrade

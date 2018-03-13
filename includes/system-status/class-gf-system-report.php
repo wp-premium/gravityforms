@@ -378,6 +378,11 @@ class GF_System_Report {
 						),
 					),
 					array(
+						'title'        => esc_html__( 'Active Theme', 'gravityforms' ),
+						'title_export' => 'Active Theme',
+						'items'        => self::get_theme(),
+					),
+					array(
 						'title'        => esc_html__( 'Active Plugins', 'gravityforms' ),
 						'title_export' => 'Active Plugins',
 						'items'        => self::get_active_plugins( false, false, true ),
@@ -645,8 +650,11 @@ class GF_System_Report {
 	 */
 	public static function get_gravityforms() {
 
-		// Get Gravity Forms version info.
+		// Get Gravity Forms version info, clearing cache
 		$version_info = GFCommon::get_version_info( false );
+
+		// Re-caches remote message.
+		GFCommon::cache_remote_message();
 
 		// Determine if upload folder is writable.
 		$upload_path = GFFormsModel::get_upload_root();
@@ -660,6 +668,8 @@ class GF_System_Report {
 		$enable_html5     = get_option( 'rg_gforms_enable_html5' );
 		$no_conflict_mode = get_option( 'gform_enable_noconflict' );
 		$updates          = get_option( 'gform_enable_background_updates' );
+
+		$locale = apply_filters( 'plugin_locale', get_locale(), 'gravityforms' );
 
 		// Prepare versions array.
 		$gravityforms = array(
@@ -716,6 +726,12 @@ class GF_System_Report {
 				'label_export' => 'Background updates',
 				'value'        => $updates ? __( 'Yes', 'gravityforms' ) : __( 'No', 'gravityforms' ),
 				'value_export' => $updates ? 'Yes' : 'No',
+			),
+			array(
+				'label'        => esc_html__( 'Locale', 'gravityforms' ),
+				'label_export' => 'Locale',
+				'value'        => $locale,
+				'value_export' => $locale,
 			),
 		);
 
@@ -1221,6 +1237,54 @@ class GF_System_Report {
 		}
 
 		return false;
+
+	}
+
+	/**
+	 * Get the theme info.
+	 *
+	 * @since  2.2.5.9
+	 * @access public
+	 *
+	 * @return array
+	 */
+	public static function get_theme() {
+
+		wp_update_themes();
+		$update_themes = get_site_transient( 'update_themes' );
+
+		$active_theme     = wp_get_theme();
+		$theme_name       = wp_strip_all_tags( $active_theme->get( 'Name' ) );
+		$theme_version    = wp_strip_all_tags( $active_theme->get( 'Version' ) );
+		$theme_author     = wp_strip_all_tags( $active_theme->get( 'Author' ) );
+		$theme_author_uri = esc_url( $active_theme->get( 'AuthorURI' ) );
+
+		$theme_details = array(
+			array(
+				'label'        => $theme_name,
+				'value'        => sprintf( 'by <a href="%s">%s</a> - %s', $theme_author_uri, $theme_author, $theme_version ),
+				'value_export' => sprintf( 'by %s (%s) - %s', $theme_author, $theme_author_uri, $theme_version ),
+				'is_valid'     => version_compare( $theme_version, rgar( $update_themes->checked, $active_theme->get_stylesheet() ), '>=' )
+			),
+		);
+
+		if ( is_child_theme() ) {
+			$parent_theme      = wp_get_theme( $active_theme->get( 'Template' ) );
+			$parent_name       = wp_strip_all_tags( $parent_theme->get( 'Name' ) );
+			$parent_version    = wp_strip_all_tags( $parent_theme->get( 'Version' ) );
+			$parent_author     = wp_strip_all_tags( $parent_theme->get( 'Author' ) );
+			$parent_author_uri = esc_url( $parent_theme->get( 'AuthorURI' ) );
+
+			$theme_details[] = array(
+				'label'        => sprintf( '%s (%s)', $parent_name, esc_html__( 'Parent', 'gravityforms' ) ),
+				'label_export' => $parent_name . ' (Parent)',
+				'value'        => sprintf( 'by <a href="%s">%s</a> - %s', $parent_author_uri, $parent_author, $parent_version ),
+				'value_export' => sprintf( 'by %s (%s) - %s', $parent_author, $parent_author_uri, $parent_version ),
+				'is_valid'     => version_compare( $parent_version, rgar( $update_themes->checked, $parent_theme->get_stylesheet() ), '>=' )
+			);
+		}
+
+		return $theme_details;
 
 	}
 

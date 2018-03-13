@@ -1,16 +1,17 @@
 <?php
 /*
 Plugin Name: Gravity Forms
-Plugin URI: http://www.gravityforms.com
+Plugin URI: https://www.gravityforms.com
 Description: Easily create web forms and manage form entries within the WordPress admin.
-Version: 2.2.5
+Version: 2.2.6
 Author: rocketgenius
-Author URI: http://www.rocketgenius.com
+Author URI: https://www.rocketgenius.com
+License: GPL-2.0+
 Text Domain: gravityforms
 Domain Path: /languages
 
 ------------------------------------------------------------------------
-Copyright 2009-2017 Rocketgenius, Inc.
+Copyright 2009-2018 Rocketgenius, Inc.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -132,7 +133,7 @@ define( 'GF_SUPPORTED_WP_VERSION', version_compare( get_bloginfo( 'version' ), G
  *
  * @var string GF_MIN_WP_VERSION_SUPPORT_TERMS The version number
  */
-define( 'GF_MIN_WP_VERSION_SUPPORT_TERMS', '4.7' );
+define( 'GF_MIN_WP_VERSION_SUPPORT_TERMS', '4.8' );
 
 
 if ( ! defined( 'GRAVITY_MANAGER_URL' ) ) {
@@ -209,7 +210,7 @@ class GFForms {
 	 *
 	 * @var string $version The version number.
 	 */
-	public static $version = '2.2.5';
+  public static $version = '2.2.6';
 
 	/**
 	 * Runs after Gravity Forms is loaded.
@@ -416,6 +417,7 @@ class GFForms {
 
 					add_filter( 'plugins_api', array( 'GFForms', 'get_addon_info' ), 100, 3 );
 					add_action( 'after_plugin_row_gravityforms/gravityforms.php', array( 'GFForms', 'plugin_row' ) );
+					add_action( 'in_plugin_update_message-gravityforms/gravityforms.php', array( 'GFForms', 'in_plugin_update_message' ), 10, 2 );
 					add_action( 'install_plugins_pre_plugin-information', array( 'GFForms', 'display_changelog' ), 9 );
 					add_filter( 'plugin_action_links', array( 'GFForms', 'plugin_settings_link' ), 10, 2 );
 				}
@@ -480,7 +482,7 @@ class GFForms {
 	 */
 	public static function load_first() {
 		$plugin_path    = basename( dirname( __FILE__ ) ) . '/gravityforms.php';
-		$active_plugins = get_option( 'active_plugins' );
+		$active_plugins = array_values( maybe_unserialize( self::get_wp_option( 'active_plugins' ) ) );
 		$key            = array_search( $plugin_path, $active_plugins );
 		if ( $key > 0 ) {
 			array_splice( $active_plugins, $key, 1 );
@@ -708,7 +710,7 @@ class GFForms {
 		}
 
 		// Ignores all errors
-		set_error_handler( create_function( '', 'return 0;' ), E_ALL );
+		set_error_handler( '__return_false', E_ALL );
 
 		while ( false !== ( $file = readdir( $dir_handle ) ) ) {
 			if ( is_dir( $dir . DIRECTORY_SEPARATOR . $file ) && $file != '.' && $file != '..' ) {
@@ -748,7 +750,7 @@ class GFForms {
 		}
 
 		// ignores all errors
-		set_error_handler( create_function( '', 'return 0;' ), E_ALL );
+		set_error_handler( '__return_false', E_ALL );
 
 		foreach ( glob( $wp_upload_path . DIRECTORY_SEPARATOR . '*_input_*.{php,php5}', GLOB_BRACE ) as $filename ) {
 			$mini_hash = substr( wp_hash( $filename ), 0, 6 );
@@ -1730,6 +1732,48 @@ class GFForms {
 	}
 
 	/**
+	 * Hooks into in_plugin_update_message-gravityforms/gravityforms.php and displays an update message specifically for Gravity Forms 2.3.
+	 *
+	 * @param $args
+	 * @param $response
+	 */
+	public static function in_plugin_update_message( $args, $response ) {
+		if ( empty( $args['update'] ) ) {
+			return;
+		}
+
+		if ( version_compare( $args['new_version'], '2.3', '>=' ) && version_compare( GFForms::$version, '2.3', '<' ) ) {
+
+			$message = esc_html__( 'IMPORTANT: As this is a major update, we strongly recommend creating a backup of your site before updating.', 'gravityforms' );
+
+			require_once( GFCommon::get_base_path() . '/includes/system-status/class-gf-update.php' );
+
+			$updates = GF_Update::available_updates();
+
+			$addons_requiring_updates = array();
+
+			foreach ( $updates as $update ) {
+				if ( $update['slug'] == 'gravityforms' ) {
+					continue;
+				}
+				$update_available = version_compare( $update['installed_version'], $update['latest_version'], '<' );
+				if ( $update_available ) {
+					$addons_requiring_updates[] = $update['name'] . ' ' . $update['installed_version'];
+				}
+			}
+
+			if ( count( $addons_requiring_updates ) > 0 ) {
+				/* translators: %s: version number */
+				$message .= '<br />' . sprintf( esc_html__( "The versions of the following add-ons you're running haven't been tested with Gravity Forms %s. Please update them or confirm compatibility before updating Gravity Forms, or you may experience issues:", 'gravityforms' ), $args['new_version'] );
+				$message .= ' ' . join( ', ', $addons_requiring_updates );
+			}
+
+			echo sprintf( '<br /><br /><span style="display:inline-block;background-color: #d54e21; padding: 10px; color: #f9f9f9;">%s</span><br /><br />', $message );
+		}
+
+	}
+
+	/**
 	 * Displays current version details on Plugins page
 	 *
 	 * @since  Unknown
@@ -2245,6 +2289,10 @@ class GFForms {
 			return 'notification_list';
 		}
 
+		if ( rgget( 'page' ) == 'gf_edit_forms' && rgget( 'view' ) == 'settings' && rgget( 'subview' ) ) {
+			return 'form_settings_' . rgget( 'subview' );
+		}
+
 		if ( rgget( 'page' ) == 'gf_entries' && ( ! rgget( 'view' ) || rgget( 'view' ) == 'entries' ) ) {
 			return 'entry_list';
 		}
@@ -2279,6 +2327,10 @@ class GFForms {
 
 		if ( rgget( 'page' ) == 'gf_system_status' ) {
 			return rgget( 'subview' ) === 'updates' ? 'updates' : 'system_status';
+		}
+
+		if ( defined( 'DOING_AJAX' ) && DOING_AJAX && ( ( isset( $_POST['form_id'] ) && rgpost( 'action' ) === 'rg_select_export_form' ) || ( isset( $_POST['export_form'] ) && rgpost( 'action' ) === 'gf_process_export' ) ) ) {
+			return 'export_entry_ajax';
 		}
 
 		return false;

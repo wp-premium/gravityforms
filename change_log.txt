@@ -1,4 +1,51 @@
 ------------------------------------------------------------------------------------------------------------------
+Version 2.2.6
+	- Added security enhancements.
+	- Added a message in the plugins page to remind users to take a backup of the database and update all Gravity Forms add-ons before updating to 2.3.
+	- Added GPL to plugin header.
+	- Added the gform_field_groups_form_editor filter.
+	- Added the "gform_recaptcha_callback" JS filter allowing a custom callback function to be executed when the user successfully submits the captcha.
+	- Added the "gform_form_not_found_message" filter allowing the form not found message to be overridden. Credit: Naomi C. Bush.
+	- Added the theme to the system report.
+	- Added the locale to the system report.
+	- Added the "gform_validation_error_form_editor" JS filter allowing the form editor validation error to be overridden.
+	- Added the "gform_field_choice_selected_type_form_editor" JS filter allowing the choice selected input type to be overridden.
+
+	- Updated field creation to set visibility to visible.
+	- Updated Plugin URI and Author URI to use https.
+	- Updated the minimum version of WordPress required for support to 4.8.
+	- Updated remote message caching so that it gets cleared when user navigates to System Status page.
+
+	- Fixed a PHP warning when no values have been submitted to a multiple column List field.
+	- Fixed incorrect field CSS class when field visibility is set to visible.
+	- Fixed issue where input-specific conditional logic on the next button was not evaluated correctly.
+	- Fixed product quantity calculation not evalulating conditional logic.
+	- Fixed a JavaScript error which occurred when clicking cancel for a file being uploaded via the multi-file enabled file upload field.
+	- Fixed a rare infinite loop issue where the new and previous value comparison is always different for pricing fields.
+	- Fixed an issue where a calculation result could return INF which would prevent the Save and Continue feature successfully saving the incomplete submission.
+	- Fixed the payment date not being formatted to the local timezone in the entry export.
+	- Fixed multi-select type Post Category fields created with GF2.2+ not saving the entry value correctly.
+	- Fixed a JavaScript error on form display when the "Disable the visual editor when writing" setting is enabled for the current user and the "Use the Rich Text Editor" setting is enabled on a Paragraph or Post Body field.
+	- Fixed dynamic population of administrative Date and Time fields.
+	- Fixed PHP notice during submission with WordPress 4.8.3+ when the no duplicates setting was enabled on a field.
+	- Fixed GFCommon::is_valid_email_list() returning false when commas were followed by a space.
+	- Fixed the $form_id passed to the gform_custom_merge_tags filter for new forms and when getting the merge tags for calculation fields.
+	- Fixed the placeholder attribute not being added when the field or input placeholder is set to 0.
+	- Fixed notices on WP 4.8.3 while performing entry searches with certain field filters.
+	- Fixed entry exports from the Forms > Import/Export page not using the field admin labels since v2.2.5.
+	- Fixed a PHP notice related to a file upload field logging statement.
+	- Fixed JavaScript errors preventing conditional logic settings being displayed for new or duplicate confirmations with the Hebrew translation.
+	- Fixed the Multi Select field not using the choice isSelected property when determining which choices are selected on display.
+	- Fixed required Number field with a min range setting of 1 passing validation when a value of 0 is submitted.
+	- Fixed an issue during post creation where the value from multi-select type custom fields, created with GF2.2+, were not processed correctly.
+	- Fixed an issue on some sites where a outdated version of the active_plugins option could be used when updating the option so the plugin loads first.
+
+	- AF: Fixed a PHP warning when using the args property of the field_select setting.
+	- AF: Fixed "callback" property being output as a settings field attribute.
+	- AF: Fixed the payment_gateway entry meta item not being set for some add-ons when using the gform_post_payment_completed hook.
+ 	- AF: Add GFAddOn::get_capabilities() to get registered capabilities.
+  
+------------------------------------------------------------------------------------------------------------------
 Version 2.2.5
 	- Updated form view recording so that IP isn't included.
 	- Fixed an issue where the taxonomy returned in the $args by the gform_post_category_args filter is not used when populating the Category field choices.

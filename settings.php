@@ -159,6 +159,7 @@ class GFSettings {
 			delete_option( 'gform_enable_toolbar_menu' );
 			delete_option( 'gform_enable_logging' );
 			delete_option( 'gform_pending_installation' );
+			delete_option( 'gform_version_info' );
 
 			// Removing gravity forms upload folder
 			GFCommon::delete_directory( RGFormsModel::get_upload_root() );
