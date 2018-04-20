@@ -865,6 +865,10 @@ ul.gfield_checkbox, ul.gfield_radio {
 	vertical-align: top
 }
 
+.gchoice_select_all {
+	font-weight: 700;
+}
+
 .gfield_checkbox li input[type="checkbox"],
 .gfield_radio li input[type="radio"],
 .gfield_checkbox li input {
@@ -1286,15 +1290,21 @@ ol.field_type {
 	padding: 0;
 }
 
-div.push-alert-gold {
+div.push-alert-gold,
+div.push-alert-green,
+div.push-alert-blue,
+div.push-alert-red {
 	padding: 10px 6px;
 	margin: 30px 0 10px;
 	text-align: center;
-	line-height: 1.5;
-	display: block !important;
-	visibility: visible !important;
 	min-width: 800px;
+	visibility: visible !important;
+	display: block !important;
+	line-height: 1.5;
 	font-size: 1.1rem;
+}
+
+div.push-alert-gold {
 	background-color: #FFFBCC;
 	border-top: 1px solid #E6DB55;
 	border-bottom: 1px solid #E6DB55;
@@ -1304,42 +1314,18 @@ div.push-alert-green {
 	background-color: #ECFCDE;
 	border-bottom: 1px solid #A7C886;
 	border-top: 1px solid #A7C886;
-	display: block !important;
-	font-size: 1.1rem;
-	line-height: 1.5;
-	margin: 30px 0 10px;
-	min-width: 800px;
-	padding: 10px 6px;
-	text-align: center;
-	visibility: visible !important;
 }
 
 div.push-alert-blue {
 	background-color: #E2EDFF;
 	border-bottom: 1px solid #D2E0EB;
 	border-top: 1px solid #D2E0EB;
-	display: block !important;
-	font-size: 1.1rem;
-	line-height: 1.5;
-	margin: 30px 0 10px;
-	min-width: 800px;
-	padding: 10px 6px;
-	text-align: center;
-	visibility: visible !important;
 }
 
 div.push-alert-red {
 	background-color: #FFE1E1;
 	border-bottom: 1px solid #EAAEAD;
 	border-top: 1px solid #EAAEAD;
-	display: block !important;
-	font-size: 1.1rem;
-	line-height: 1.5;
-	margin: 30px 0 10px;
-	min-width: 800px;
-	padding: 10px 6px;
-	text-align: center;
-	visibility: visible !important;
 }
 
 #gfield_settings_category_container,
@@ -4770,6 +4756,15 @@ div.wrap.gf_browser_chrome .gfield_checkbox li input {
 	width:500px;*/
 }
 
+#gform_register_site {
+	display:none;
+}
+
+#gform_license_key {
+	font-size: 19px !important;
+	width: 90% !important;
+}
+
 /* Form List and Entry List */
 
 #entry_list_form .column-is_starred,
@@ -4782,7 +4777,7 @@ div.wrap.gf_browser_chrome .gfield_checkbox li input {
 
 #form_list_form .column-id,
 #form_list_form .column-conversion,
-#form_list_form .column-lead_count,
+#form_list_form .column-entry_count,
 #form_list_form .column-view_count{
 	width:10%;
 }

@@ -63,7 +63,7 @@ class GF_Installation_Wizard_Step_Background_Updates extends GF_Installation_Wiz
 			</div>
 			<label>
 				<input type="checkbox" id="accept_terms" value="1" <?php checked( 1, $this->accept_terms ); ?> name="accept_terms"/>
-				<?php esc_html_e( 'I Understand and Accept the Risk', 'gravityforms' ); ?> <span class="gfield_required">*</span>
+				<?php esc_html_e( 'I understand and accept the risk of not enabling background updates.', 'gravityforms' ); ?> <span class="gfield_required">*</span>
 			</label>
 
 			<?php $this->validation_message( 'accept_terms' ); ?>

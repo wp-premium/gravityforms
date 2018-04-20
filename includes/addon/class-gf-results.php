@@ -177,7 +177,6 @@ if ( ! class_exists( 'GFResults' ) ) {
 				$form_id = absint( $form_id );
 				GFResults::results_page( $form_id, $this->_title, 'gf_entries', $view );
 			}
-
 		}
 
 		public function results_page( $form_id, $page_title, $gf_page, $gf_view ) {
@@ -191,9 +190,9 @@ if ( ! class_exists( 'GFResults' ) ) {
 			$form = GFFormsModel::get_form_meta( $form_id );
 			$form = gf_apply_filters( array( 'gform_form_pre_results', $form_id ), $form );
 
-			// set up filter vars
-			$start_date = rgget( 'start' );
-			$end_date   = rgget( 'end' );
+			// Set up filter vars
+			$start_date = preg_replace( '/[^0-9-]/', '', rgget( 'start' ) );
+			$end_date   = preg_replace( '/[^0-9-]/', '', rgget( 'end' ) );
 
 			$all_fields = $form['fields'];
 
@@ -245,6 +244,7 @@ if ( ! class_exists( 'GFResults' ) ) {
 
 								<div id="gresults-results-filter-content">
 									<form id="gresults-results-filter-form" action="" method="GET">
+										<?php wp_nonce_field( 'gf_results', '_gf_results_nonce' );  ?>
 										<input type="hidden" id="gresults-page-slug" name="page"
 										       value="<?php echo esc_attr( $gf_page ); ?>">
 										<input type="hidden" id="gresults-view-slug" name="view"
@@ -270,7 +270,7 @@ if ( ! class_exists( 'GFResults' ) ) {
 																	<input type="text" id="gresults-results-filter-date-start" name="start"
 																		   style="width:80px"
 																		   class="gresults-datepicker"
-																		   value="' . $start_date . '"/>
+																		   value="' . esc_attr( $start_date ) . '"/>
 																</div>
 																<div style="width:90px; float:left; ">
 																	<label
@@ -278,7 +278,7 @@ if ( ! class_exists( 'GFResults' ) ) {
 																	<input type="text" id="gresults-results-filter-date-end" name="end"
 																		   style="width:80px"
 																		   class="gresults-datepicker"
-																		   value="' . $end_date . '"/>
+																		   value="' . esc_attr( $end_date ) . '"/>
 																</div>'
 											)
 
@@ -355,6 +355,12 @@ if ( ! class_exists( 'GFResults' ) ) {
 
 		public function ajax_get_results() {
 
+			check_ajax_referer( 'gf_results', '_gf_results_nonce' );
+
+			if ( ! GFAPI::current_user_can_any( $this->_capabilities ) ) {
+				wp_die( 'Not allowed' );
+			}
+
 			// tooltips
 			require_once( GFCommon::get_base_path() . '/tooltips.php' );
 			add_filter( 'gform_tooltips', array( $this, 'add_tooltips' ) );
@@ -374,8 +380,9 @@ if ( ! class_exists( 'GFResults' ) ) {
 				$search_criteria                  = array();
 				$search_criteria['field_filters'] = GFCommon::get_field_filters_from_post( $form );
 
-				$start_date = rgpost( 'start' );
-				$end_date   = rgpost( 'end' );
+				$start_date = preg_replace( '/[^0-9-]/', '', rgpost( 'start' ) );
+				$end_date   = preg_replace( '/[^0-9-]/', '', rgpost( 'end' ) );
+
 				if ( $start_date ) {
 					$search_criteria['start_date'] = $start_date;
 				}
@@ -436,7 +443,14 @@ if ( ! class_exists( 'GFResults' ) ) {
 		}
 
 
-		public static function ajax_get_more_results() {
+		public function ajax_get_more_results() {
+
+			check_ajax_referer( 'gf_results', '_gf_results_nonce' );
+
+			if ( ! GFAPI::current_user_can_any( $this->_capabilities ) ) {
+				wp_die( 'Not allowed' );
+			}
+
 			$form_id         = rgpost( 'form_id' );
 			$field_id        = rgpost( 'field_id' );
 			$offset          = rgpost( 'offset' );

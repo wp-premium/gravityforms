@@ -1,4 +1,9 @@
 <?php
+
+if ( ! class_exists( 'GFForms' ) ) {
+	die();
+}
+
 /*
  * NOTE: To add upgrade logic to a new version,
  * look into the post_upgrade_schema() function for a sample and instructions on how to do it.
@@ -13,6 +18,7 @@ class GF_Upgrade {
 
 	/**
 	 * Contains all DB versions that require a manual upgrade via the upgrade wizard.
+	 *
 	 * @var array
 	 */
 	private $manual_upgrade_versions = array();
@@ -58,6 +64,7 @@ class GF_Upgrade {
 
 	/**
 	 * Decides to execute a fresh install of Gravity Forms, upgrade an existing installation, or do nothing if versions are up-to-date.
+	 *
 	 * @since  2.2
 	 */
 	public function maybe_upgrade() {
@@ -65,7 +72,6 @@ class GF_Upgrade {
 		$versions = $this->get_versions();
 
 		if ( $this->requires_install() ) {
-
 			// First time install
 			$this->install();
 
@@ -73,7 +79,18 @@ class GF_Upgrade {
 			if ( ! get_option( 'rg_gforms_key' ) ) {
 				update_option( 'gform_pending_installation', true );
 			}
+		} elseif ( $this->is_downgrading() ) {
+
+			GFForms::$background_upgrader->clear_queue( true );
+			$this->clear_previous_upgrade();
+
+			$this->update_db_version();
+
+			update_option( 'rg_form_version', GFForms::$version );
+
 		} elseif ( $this->requires_upgrade() && ! $this->requires_upgrade_wizard() ) {
+
+			$this->maybe_clear_previous_upgrade();
 
 			// An upgrade is required, and it can be done automatically.
 			// If upgrading to this version requires the Upgrade Wizard, nothing will be done here. Instead, the upgrade will happen via the Upgrade Wizard.
@@ -82,74 +99,88 @@ class GF_Upgrade {
 
 		}
 
-		// Updating current Gravity Forms version.
-		if ( $versions['current_version'] != $versions['version'] ) {
-			update_option( 'rg_form_version', $versions['version'] );
-			$this->flush_versions();
-		}
+	}
 
+	/**
+	 * Is currently downgrading?
+	 *
+	 * @since 2.2
+	 *
+	 * @return mixed
+	 */
+	public function is_downgrading() {
+		$versions         = $this->get_versions();
+		$is_downgrading = version_compare( $versions['version'], $versions['current_version'], '<' );
+
+		if ( $is_downgrading ) {
+
+			// Making sure version has really changed. Gets around aggressive caching issue on some sites that cause setup to run multiple times.
+			$versions['current_version'] = $this->get_wp_option( 'rg_form_version' );
+
+			$is_downgrading = version_compare( $versions['version'], $versions['current_version'], '<' );
+		}
+		return $is_downgrading;
 	}
 
 	/**
 	 * Performs an upgrade of Gravity Forms.
 	 *
-	 * @since 2.2.1.14 Update cached remote message.
-	 * @since 2.2
+	 * @since  2.2
+	 *
+	 * @param bool|null $from_db_version
+	 * @param bool $force_upgrade
+	 *
+	 * @return bool
 	 */
 	public function upgrade( $from_db_version = null, $force_upgrade = false ) {
 
-		if ( ! $this->set_upgrade_started( $force_upgrade ) ) {
-			// Upgrade can't be started. Abort.
-			return false;
+		if ( $force_upgrade ) {
+			$this->clear_previous_upgrade();
 		}
 
 		$versions = $this->get_versions();
 
 		if ( $from_db_version === null ) {
-			$from_db_version = empty( $versions['current_db_version'] ) ? 0 : $versions['current_db_version'];
+			$from_db_version = empty( $versions['current_db_version'] ) ? $versions['current_version'] : $versions['current_db_version'];
+			if ( $from_db_version != $versions['previous_db_version'] ) {
+				// Updating previous DB version ( used when upgrade process is re-run )
+				update_option( 'gf_previous_db_version', $from_db_version );
+				$this->flush_versions();
+			}
 		}
 
-		// Actions before uprading schema
+		if ( ! $this->set_upgrade_started( $from_db_version, $force_upgrade ) ) {
+
+			// Upgrade can't be started. Abort.
+			return false;
+		}
+
+		// Actions before upgrading schema
 		$this->pre_upgrade_schema( $from_db_version );
 
 		// Upgrading schema
 		$this->upgrade_schema();
 
 		// Start upgrade routine
-		$this->post_upgrade_schema( $from_db_version );
-
-		// Updating previous DB version ( used when upgrade process is re-run )
-		if ( $from_db_version != $versions['version'] ) {
-			update_option( 'gf_previous_db_version', $from_db_version );
+		if ( $force_upgrade || ! ( defined( 'GFORM_AUTO_DB_MIGRATION_DISABLED' ) && GFORM_AUTO_DB_MIGRATION_DISABLED ) ) {
+			$this->post_upgrade_schema( $from_db_version );
 		}
 
-		// Updating DB version
-		update_option( 'gf_db_version', $versions['version'] );
-
-		/**
-		 * Fires after Gravity Forms is fully upgraded.
-		 *
-		 * @since 2.2
-		 *
-		 * @param int $version         The new $version.
-		 * @param int $current_version The old ( pre upgrade ) $version.
-		 */
-		do_action( 'gform_post_upgrade', $versions['version'], $from_db_version, $force_upgrade );
-
-		$this->set_upgrade_ended();
-
-		$this->flush_versions();
-
-		// Updating cached message so the extremely outdated version message is removed.
-		GFCommon::cache_remote_message();
-
+		return true;
 	}
 
 	/**
-	 * Performs initial install of Gravity Forms
+	 * Performs initial install of Gravity Forms.
+	 *
 	 * @since  2.2
 	 */
 	public function install() {
+		$this->flush_versions();
+
+		// Setting Database version
+		update_option( 'gf_db_version', GFForms::$version );
+
+		update_option( 'rg_form_version', GFForms::$version );
 
 		// Installing schema
 		$this->upgrade_schema();
@@ -164,9 +195,6 @@ class GF_Upgrade {
 		// Auto-importing forms based on GF_IMPORT_FILE AND GF_THEME_IMPORT_FILE
 		$this->maybe_import_forms();
 
-		// Setting Database version
-		update_option( 'gf_db_version', GFForms::$version );
-
 		/**
 		 * Fires after Gravity Forms is fully installed.
 		 *
@@ -178,59 +206,126 @@ class GF_Upgrade {
 
 	}
 
+	/**
+	 * Checks whether an upgrade is already in progress.
+	 *
+	 * @since 2.2
+	 *
+	 * @return bool
+	 */
 	public function is_upgrading() {
 		global $wpdb;
 
-		$is_upgrading = $wpdb->get_var( "SELECT option_value FROM {$wpdb->options} WHERE option_name='gf_is_upgrading'" );
+		$wpdb->flush();
+
+		$is_upgrading = $wpdb->get_var( "SELECT option_value FROM {$wpdb->options} WHERE option_name='gf_upgrade_lock'" );
 
 		return $is_upgrading ? true : false;
 	}
 
-	private function set_upgrade_started( $force_upgrade = false ) {
+	private function set_upgrade_started( $from_db_version = null, $force_upgrade = false ) {
 		global $wpdb;
 
-		$is_upgrading = $wpdb->get_var( "SELECT option_value FROM {$wpdb->options} WHERE option_name='gf_is_upgrading'" );
+		$lock_params = $this->get_upgrade_lock();
 
-		if ( $force_upgrade ) {
-			//force upgrading is set
-			$is_upgrading = $is_upgrading === null ? null : '0';
-		}
+		if ( $lock_params && ! $force_upgrade ) {
 
-		if ( $is_upgrading === '1' ) {
+			GFCommon::log_debug( __METHOD__ . '(): Upgrade in process. Aborting' );
 
-			GFCommon::log_debug( 'Upgrade in process. Aborting' );
-
-			//Abort. Upgrade already in process.
+			// Abort. Upgrade already in process.
 			return false;
 		}
 
-		if ( $is_upgrading === null ) {
+		$insert = $lock_params === null;
 
-			//Lock upgrade
-			$wpdb->query( "INSERT INTO {$wpdb->options}(option_name, option_value) VALUES('gf_is_upgrading', '1')" );
-			GFCommon::log_debug( 'Upgrade Locked' );
+		$versions = $this->get_versions();
+
+		$lock_params = array(
+			'from_gf_version' => $versions['current_version'],
+			'to_version' => $versions['version'],
+			'from_db_version' => $from_db_version,
+			'force_upgrade' => $force_upgrade,
+		);
+
+		$lock_params_serialized = serialize( $lock_params );
+
+		if ( $insert ) {
+
+			$lock_params_serialized = serialize( $lock_params );
+
+			$sql = $wpdb->prepare( "INSERT INTO {$wpdb->options}(option_name, option_value) VALUES('gf_upgrade_lock', %s) ON DUPLICATE KEY UPDATE `option_name` = VALUES(`option_name`), `option_value` = VALUES(`option_value`)", $lock_params_serialized );
+
+			// Lock upgrade
+			$wpdb->query( $sql );
+			GFCommon::log_debug( __METHOD__ . '(): Upgrade Locked.' );
 		} else {
 
-			//Lock upgrade
-			$wpdb->query( "UPDATE {$wpdb->options} SET option_value='1' WHERE option_name='gf_is_upgrading'" );
-			GFCommon::log_debug( 'Upgrade Locked.' );
+			$sql = $wpdb->prepare( "UPDATE {$wpdb->options} SET option_value=%s WHERE option_name='gf_upgrade_lock'", $lock_params_serialized );
+
+			// Lock upgrade
+			$wpdb->query( $sql );
+			GFCommon::log_debug( __METHOD__ . '(): Upgrade Locked.' );
 		}
+
+		$system_status_link_open  = sprintf( '<a href="%s">', admin_url( 'admin.php?page=gf_system_status' ) );
+		$system_status_link_close = '</a>';
+
+		/* translators: 1: version number 2: open link tag 3: closing link tag. */
+		$message = sprintf( esc_html__( 'Gravity Forms is currently upgrading the database to version %1$s. For sites with a large number of entries this may take a long time. Check the %2$sSystem Status%3$s page for further details.', 'gravityforms' ), GFForms::$version, $system_status_link_open, $system_status_link_close );
+
+		$key = sanitize_key( 'gravityforms_upgrading_' . $versions['version'] );
+
+		GFCommon::add_dismissible_message( $message, $key, 'warning', 'gform_full_access', true );
 
 		return true;
 	}
 
-	private function set_upgrade_ended() {
-		global $wpdb;
+	public function set_upgrade_ended() {
 
-		//Unlock upgrade
-		$wpdb->query( "UPDATE {$wpdb->options} SET option_value='0' WHERE option_name='gf_is_upgrading'" );
+		$lock_params = $this->get_upgrade_lock();
 
-		GFCommon::log_debug( 'Upgrade Completed.' );
+		// Unlock upgrade
+		$this->clear_upgrade_lock();
+
+		$version = GFForms::$version;
+
+		$force_upgrade = (bool) $lock_params['force_upgrade'];
+		$from_db_version = $lock_params['from_db_version'];
+
+		/**
+		 * Fires after Gravity Forms is fully upgraded.
+		 *
+		 * @since 2.2
+		 *
+		 * @param string $version         The new version.
+		 * @param string $from_db_version The old ( pre upgrade ) $version.
+		 * @param bool   $force_upgrade
+		 *
+		 */
+		do_action( 'gform_post_upgrade', $version, $from_db_version, $force_upgrade );
+
+		delete_option( 'gform_upgrade_status' );
+
+		// Updating current Gravity Forms version.
+		update_option( 'rg_form_version', $version );
+
+		$this->flush_versions();
+
+		$key = sanitize_key( 'gravityforms_upgrading_' . GFForms::$version );
+
+		GFCommon::remove_dismissible_message( $key );
+
+		$this->add_post_upgrade_admin_notices();
+
+		GFCommon::log_debug( __METHOD__ . '(): Upgrade Completed.' );
 	}
 
 	/**
 	 * Performs upgrade tasks needed to be done after the DB schema has been upgraded.
+	 *
 	 * @since  2.2
+	 *
+	 * @param $from_db_version
 	 */
 	protected function pre_upgrade_schema( $from_db_version ) {
 
@@ -275,25 +370,21 @@ class GF_Upgrade {
 
 		$tables = array();
 
-		if ( ! empty( $wpdb->charset ) ) {
-			$charset_collate = "DEFAULT CHARACTER SET $wpdb->charset";
-		}
-		if ( ! empty( $wpdb->collate ) ) {
-			$charset_collate .= " COLLATE $wpdb->collate";
-		}
+		$charset_collate = $wpdb->get_charset_collate();
 
-		$form_table_name            = RGFormsModel::get_form_table_name();
+		$form_table_name            = $wpdb->prefix . 'gf_form';
 		$tables[ $form_table_name ] =
 			'CREATE TABLE ' . $form_table_name . " (
               id mediumint(8) unsigned not null auto_increment,
               title varchar(150) not null,
               date_created datetime not null,
+              date_updated datetime,
               is_active tinyint(1) not null default 1,
               is_trash tinyint(1) not null default 0,
               PRIMARY KEY  (id)
             ) $charset_collate;";
 
-		$meta_table_name            = RGFormsModel::get_meta_table_name();
+		$meta_table_name            = $wpdb->prefix . 'gf_form_meta';
 		$tables[ $meta_table_name ] = 'CREATE TABLE ' . $meta_table_name . " (
               form_id mediumint(8) unsigned not null,
               display_meta longtext,
@@ -303,7 +394,7 @@ class GF_Upgrade {
               PRIMARY KEY  (form_id)
             ) $charset_collate;";
 
-		$form_view_table_name            = RGFormsModel::get_form_view_table_name();
+		$form_view_table_name            = $wpdb->prefix . 'gf_form_view';
 		$tables[ $form_view_table_name ] =
 			'CREATE TABLE ' . $form_view_table_name . " (
               id bigint(20) unsigned not null auto_increment,
@@ -316,12 +407,14 @@ class GF_Upgrade {
               KEY form_id (form_id)
             ) $charset_collate;";
 
-		$lead_table_name            = RGFormsModel::get_lead_table_name();
-		$tables[ $lead_table_name ] = 'CREATE TABLE ' . $lead_table_name . " (
+		$entry_table_name = GFFormsModel::get_entry_table_name();
+		$tables[ $entry_table_name ] =
+			'CREATE TABLE ' . $entry_table_name . " (
               id int(10) unsigned not null auto_increment,
               form_id mediumint(8) unsigned not null,
               post_id bigint(20) unsigned,
               date_created datetime not null,
+              date_updated datetime,
               is_starred tinyint(1) not null default 0,
               is_read tinyint(1) not null default 0,
               ip varchar(39) not null,
@@ -339,64 +432,42 @@ class GF_Upgrade {
               status varchar(20) not null default 'active',
               PRIMARY KEY  (id),
               KEY form_id (form_id),
-              KEY status (status)
+              KEY form_id_status (form_id,status)
             ) $charset_collate;";
 
-		$lead_notes_table_name            = RGFormsModel::get_lead_notes_table_name();
-		$tables[ $lead_notes_table_name ] =
-			'CREATE TABLE ' . $lead_notes_table_name . " (
+		$entry_notes_table_name = GFFormsModel::get_entry_notes_table_name();
+		$tables[ $entry_notes_table_name ] =
+			'CREATE TABLE ' . $entry_notes_table_name . " (
               id int(10) unsigned not null auto_increment,
-              lead_id int(10) unsigned not null,
+              entry_id int(10) unsigned not null,
               user_name varchar(250),
               user_id bigint(20),
               date_created datetime not null,
               value longtext,
               note_type varchar(50),
+              sub_type varchar(50),
               PRIMARY KEY  (id),
-              KEY lead_id (lead_id),
-              KEY lead_user_key (lead_id,user_id)
+              KEY entry_id (entry_id),
+              KEY entry_user_key (entry_id,user_id)
             ) $charset_collate;";
 
-		$lead_detail_table_name            = RGFormsModel::get_lead_details_table_name();
-		$tables[ $lead_detail_table_name ] =
-			'CREATE TABLE ' . $lead_detail_table_name . " (
-              id bigint(20) unsigned not null auto_increment,
-              lead_id int(10) unsigned not null,
-              form_id mediumint(8) unsigned not null,
-              field_number float not null,
-              value longtext,
-              PRIMARY KEY  (id),
-              KEY form_id (form_id),
-              KEY lead_id (lead_id),
-              KEY lead_field_number (lead_id,field_number),
-              KEY lead_field_value (value($max_index_length))
-            ) $charset_collate;";
-
-		$lead_detail_long_table_name            = RGFormsModel::get_lead_details_long_table_name();
-		$tables[ $lead_detail_long_table_name ] =
-			'CREATE TABLE ' . $lead_detail_long_table_name . " (
-              lead_detail_id bigint(20) unsigned not null,
-              value longtext,
-              PRIMARY KEY  (lead_detail_id)
-            ) $charset_collate;";
-
-		$lead_meta_table_name            = RGFormsModel::get_lead_meta_table_name();
-		$tables[ $lead_meta_table_name ] =
-			'CREATE TABLE ' . $lead_meta_table_name . " (
+		$entry_meta_table_name = GFFormsModel::get_entry_meta_table_name();
+		$tables[ $entry_meta_table_name ] =
+			'CREATE TABLE ' . $entry_meta_table_name . " (
               id bigint(20) unsigned not null auto_increment,
               form_id mediumint(8) unsigned not null default 0,
-              lead_id bigint(20) unsigned not null,
+              entry_id bigint(20) unsigned not null,
               meta_key varchar(255),
               meta_value longtext,
               PRIMARY KEY  (id),
               KEY meta_key (meta_key($max_index_length)),
-              KEY lead_id (lead_id),
-              KEY form_id_meta_key (form_id,meta_key($max_index_length))
+              KEY entry_id (entry_id),
+              KEY meta_value (meta_value($max_index_length))
             ) $charset_collate;";
 
-		$incomplete_submissions_table_name            = RGFormsModel::get_incomplete_submissions_table_name();
-		$tables[ $incomplete_submissions_table_name ] =
-			'CREATE TABLE ' . $incomplete_submissions_table_name . " (
+		$draft_submissions_table_name = GFFormsModel::get_draft_submissions_table_name();
+		$tables[ $draft_submissions_table_name ] =
+			'CREATE TABLE ' . $draft_submissions_table_name . " (
               uuid char(32) not null,
               email varchar(255),
               form_id mediumint(8) unsigned not null,
@@ -449,35 +520,457 @@ class GF_Upgrade {
 
 	/**
 	 * Performs upgrade tasks needed to be done after the DB schema has been upgraded.
+	 *
 	 * @since  2.2
+	 *
+	 * @param $from_db_version
 	 */
 	protected function post_upgrade_schema( $from_db_version ) {
 
 		$versions = $this->get_versions();
 
 		// If the version is not set in the DB, use 0
-		$current_db_version = empty( $from_db_version ) ? '0' : $from_db_version;
+		$current_db_version = empty( $from_db_version ) ? $versions['current_version'] : $from_db_version;
 
 		//-- Data Upgrade Process Start --//
 
-		if ( version_compare( $current_db_version, '2.2', '<' ) ) {
-			$this->post_upgrade_schema_220();
+		$this->update_upgrade_status( esc_html__( 'Queued for upgrade.', 'gravityforms' ) );
+
+		if ( version_compare( $current_db_version, '2.0.4.7', '<' ) ) {
+			$this->post_upgrade_schema_2047();
+		}
+
+		if ( version_compare( $current_db_version, '2.3-dev-1', '<' ) ) {
+			GFForms::$background_upgrader->push_to_queue( array( $this, 'gf_upgrade_block_submissions' ) );
+			GFForms::$background_upgrader->push_to_queue( array( $this, 'gf_upgrade_230_migrate_forms' ) );
+			GFForms::$background_upgrader->push_to_queue( array( $this, 'gf_upgrade_230_migrate_leads' ) );
+			GFForms::$background_upgrader->push_to_queue( array( $this, 'gf_upgrade_230_migrate_incomplete_submissions' ) );
+			GFForms::$background_upgrader->push_to_queue( array( $this, 'gf_upgrade_230_migrate_lead_notes' ) );
+			GFForms::$background_upgrader->push_to_queue( array( $this, 'gf_upgrade_release_submissions_block' ) );
 		}
 
 		/*
 		 * To add new upgrade logic, create a function formatted post_upgrade_schema_VERSION()
 		 * and add an if statement like the one below so that it gets executed when upgrading to the right version
 
-		if ( $current_db_version < 2 ) {
+		if ( version_compare( $current_db_version, '2.3', '<' )) {
 			$this->post_upgrade_schema_230();
 		}
-		if ( $current_db_version < 3 ) {
+		if ( version_compare( $current_db_version, '2.4', '<' ) ) {
 			$this->post_upgrade_schema_240();
 		}
 		*/
 
+		if ( GFForms::$background_upgrader->get_data() ) {
+			GFForms::$background_upgrader->push_to_queue( array( $this, 'post_background_upgrade' ) );
+			GFForms::$background_upgrader->save()->dispatch();
+		} else {
+			GFCommon::log_debug( __METHOD__ . '(): Background upgrade not necessary. Setting new version.' );
+			$this->update_db_version();
+			$this->set_upgrade_ended();
+		}
 	}
 
+	/**
+	 * Performs any final tasks after the background upgrade tasks have finished.
+	 *
+	 * @return false Return false to remove this final task from the queue.
+	 */
+	public function post_background_upgrade() {
+		// Return false to remove this final task from the background updates queue.
+		$this->update_db_version();
+
+		GFCommon::log_debug( __METHOD__ . '(): Background upgrade complete' );
+
+		$this->set_upgrade_ended();
+
+		return false;
+	}
+
+	/**
+	 * Updates the status of the upgrade process
+	 *
+	 * @param $new_status
+	 */
+	public function update_upgrade_status( $new_status ) {
+		update_option( 'gform_upgrade_status', $new_status );
+	}
+
+	/**
+	 * Upgrade task to block submissions.
+	 *
+	 * @return bool
+	 */
+	public function gf_upgrade_block_submissions() {
+		$this->set_submissions_block();
+		return false;
+	}
+
+	/**
+	 * Upgrade task to release the submissions block.
+	 *
+	 * @return bool
+	 */
+	public function gf_upgrade_release_submissions_block() {
+		$this->clear_submissions_block();
+		return false;
+	}
+
+	/**
+	 * Upgrade forms to 2.3
+	 *
+	 * @return bool
+	 */
+	public function gf_upgrade_230_migrate_forms() {
+		global $wpdb;
+		$this->update_upgrade_status( esc_html__( 'Migrating forms.', 'gravityforms' ) );
+
+		// Migrate form headers
+
+		$legacy_forms_table = $wpdb->prefix . 'rg_form';
+		$new_forms_table = $wpdb->prefix . 'gf_form';
+
+		$sql = "
+INSERT INTO {$new_forms_table}
+(id, title, date_created, date_updated, is_active, is_trash)
+SELECT
+id, title, date_created, null, is_active, is_trash
+FROM
+  {$legacy_forms_table} lf
+WHERE lf.id NOT IN
+      ( SELECT id
+      	FROM {$new_forms_table}
+      	)";
+
+		$wpdb->query( $sql );
+
+		// Migrate form meta
+
+		$legacy_form_meta_table = $wpdb->prefix . 'rg_form_meta';
+		$new_form_meta_table = $wpdb->prefix . 'gf_form_meta';
+
+		$sql = "
+INSERT INTO {$new_form_meta_table}
+(form_id, display_meta, entries_grid_meta, confirmations, notifications)
+SELECT
+form_id, display_meta, entries_grid_meta, confirmations, notifications
+FROM
+  {$legacy_form_meta_table} lfm
+WHERE lfm.form_id NOT IN
+      ( SELECT form_id
+      	FROM {$new_form_meta_table}
+      	)";
+
+		$wpdb->query( $sql );
+
+		// Migrate form view data
+
+		$legacy_form_view_table = $wpdb->prefix . 'rg_form_view';
+		$new_form_view_table = $wpdb->prefix . 'gf_form_view';
+
+		$sql = "
+INSERT INTO {$new_form_view_table}
+(id, form_id, date_created, ip, count)
+SELECT
+id, form_id, date_created, ip, count
+FROM
+  {$legacy_form_view_table} lfv
+WHERE lfv.id NOT IN
+      ( SELECT id
+      	FROM {$new_form_view_table}
+      	)";
+
+		$wpdb->query( $sql );
+
+		$this->update_upgrade_status( esc_html__( 'Forms migrated.', 'gravityforms' ) );
+		return false;
+	}
+
+	/**
+	 * Upgrade leads to 2.3
+	 *
+	 * @return bool
+	 */
+	public function gf_upgrade_230_migrate_leads() {
+		global $wpdb;
+
+		if ( defined( 'GFORM_DB_MIGRATION_BATCH_SIZE' ) ) {
+			$limit = GFORM_DB_MIGRATION_BATCH_SIZE;
+		} else {
+			$limit = 20000;
+		}
+
+		$lead_table = GFFormsModel::get_lead_table_name();
+		$entry_table = GFFormsModel::get_entry_table_name();
+		$time_start = microtime( true );
+
+		$lead_ids_sql = "SELECT l2.id
+FROM {$lead_table} l2
+WHERE l2.id NOT IN ( SELECT e.id FROM {$entry_table} e )
+LIMIT {$limit}";
+
+		do {
+
+			$lead_ids = $wpdb->get_col( $lead_ids_sql );
+
+			if ( $wpdb->last_error ) {
+				/* translators: %s: the database error */
+				$this->update_upgrade_status( sprintf( esc_html__( 'Error Migrating Entry Headers: %s', 'gravityforms' ), $wpdb->last_error ) );
+				// wp_die() is not used here because it would trigger another async task
+				exit;
+			}
+
+			if ( ! empty( $lead_ids ) ) {
+				$lead_ids = array_map( 'absint', $lead_ids );
+
+				$count_lead_ids = count( $lead_ids );
+
+				if ( ! empty( $count_lead_ids ) ) {
+					$lead_ids_in = join( ',', $lead_ids );
+					// Add the lead header to the data
+					$sql = "
+INSERT INTO $entry_table
+(id, form_id, post_id, date_created, date_updated, is_starred, is_read, ip, source_url, user_agent, currency, payment_status, payment_date, payment_amount, payment_method, transaction_id, is_fulfilled, created_by, transaction_type, status)
+SELECT
+id, form_id, post_id, date_created, null, is_starred, is_read, ip, source_url, user_agent, currency, payment_status, payment_date, payment_amount, payment_method, transaction_id, is_fulfilled, created_by, transaction_type, status
+FROM
+$lead_table l
+WHERE l.id IN ( {$lead_ids_in} )";
+
+					$wpdb->query( $sql );
+
+					if ( $wpdb->last_error ) {
+						/* translators: %s: the database error */
+						$this->update_upgrade_status( sprintf( esc_html__( 'Error Migrating Entry Headers: %s', 'gravityforms' ), $wpdb->last_error ) );
+						// wp_die() is not used here because it would trigger another async task
+						exit;
+					}
+
+					$current_time = microtime( true );
+					$execution_time = ( $current_time - $time_start );
+					if ( $execution_time > 15 ) {
+						$sql_remaining = "SELECT COUNT(l2.id)
+FROM {$lead_table} l2
+WHERE l2.id NOT IN ( SELECT e.id FROM {$entry_table} e )";
+						$remaining = $wpdb->get_var( $sql_remaining );
+						if ( $remaining > 0 ) {
+							$this->update_upgrade_status( sprintf( esc_html__( 'Migrating leads. Step 1/3 Migrating entry headers. %d rows remaining.', 'gravityforms' ), $remaining ) );
+							return true;
+						}
+					}
+				}
+			}
+		} while ( ! empty( $lead_ids ) );
+
+		// Lead details
+
+		$lead_details_table = GFFormsModel::get_lead_details_table_name();
+		$entry_meta_table = GFFormsModel::get_entry_meta_table_name();
+
+		$lead_detail_ids_sql = "
+SELECT ld.id
+FROM {$lead_details_table} ld
+WHERE ld.id NOT IN ( SELECT em.id FROM {$entry_meta_table} em )
+LIMIT {$limit}";
+
+		do {
+			$lead_detail_ids = $wpdb->get_col( $lead_detail_ids_sql );
+
+			if ( $wpdb->last_error ) {
+				error_log('error: ' . $wpdb->last_error );
+				/* translators: %s: the database error */
+				$this->update_upgrade_status( sprintf( esc_html__( 'Error Migrating Entry Details: %s', 'gravityforms' ), $wpdb->last_error ) );
+				// wp_die() is not used here because it would trigger another async task
+				exit;
+			}
+
+			if ( ! empty( $lead_detail_ids ) ) {
+				$lead_detail_ids = array_map( 'absint', $lead_detail_ids );
+
+				$lead_detail_ids_in = join( ',', $lead_detail_ids );
+
+				// Add the lead header to the data
+				$sql = "
+INSERT INTO {$entry_meta_table}
+  (id, entry_id, form_id, meta_key, meta_value)
+SELECT
+  id, lead_id, form_id, CAST(field_number AS CHAR), value
+FROM
+  {$lead_details_table} ld
+WHERE ld.id IN ( {$lead_detail_ids_in} )";
+
+				$wpdb->query( $sql );
+
+				if ( $wpdb->last_error ) {
+					error_log('error: ' . $wpdb->last_error );
+					/* translators: %s: the database error */
+					$this->update_upgrade_status( sprintf( esc_html__( 'Error Migrating Entry Details: %s', 'gravityforms' ), $wpdb->last_error ) );
+					// wp_die() is not used here because it would trigger another async task
+					exit;
+				}
+
+				$current_time = microtime( true );
+				$execution_time = ( $current_time - $time_start );
+				if ( $execution_time > 15 ) {
+					$sql_remaining = "
+SELECT COUNT(ld.id)
+FROM {$lead_details_table} ld
+WHERE ld.id NOT IN ( SELECT em.id FROM {$entry_meta_table} em )";
+					$remaining = $wpdb->get_var( $sql_remaining );
+					if ( $remaining > 0 ) {
+						$this->update_upgrade_status( sprintf( esc_html__( 'Migrating leads. Step 2/3 Migrating entry details. %d rows remaining.', 'gravityforms' ), $remaining ) );
+						return true;
+					}
+				}
+			}
+		} while ( ! empty( $lead_detail_ids ) );
+
+		// Lead meta
+
+		$lead_meta_table = GFFormsModel::get_lead_meta_table_name();
+		$entry_meta_table = GFFormsModel::get_entry_meta_table_name();
+
+		$charset_db = empty( $wpdb->charset ) ? 'utf8mb4' : $wpdb->charset;
+
+		$collate = ! empty( $wpdb->collate ) ? " COLLATE {$wpdb->collate}" : '';
+
+		$lead_meta_ids_sql = "
+SELECT
+  id
+FROM
+  {$lead_meta_table} lm
+WHERE NOT EXISTS
+      (SELECT * FROM {$entry_meta_table} em WHERE em.entry_id = lm.lead_id AND CONVERT(em.meta_key USING {$charset_db}) = CONVERT(lm.meta_key USING {$charset_db}) {$collate})
+LIMIT {$limit}";
+
+		do {
+			$lead_meta_ids = $wpdb->get_col( $lead_meta_ids_sql );
+
+			if ( $wpdb->last_error ) {
+				/* translators: %s: the database error */
+				$this->update_upgrade_status( sprintf( esc_html__( 'Error Migrating Entry Meta: %s', 'gravityforms' ), $wpdb->last_error ) );
+				// wp_die() is not used here because it would trigger another async task
+				exit;
+			}
+
+			if ( ! empty( $lead_meta_ids ) ) {
+				$lead_meta_ids = array_map( 'absint', $lead_meta_ids );
+
+				$lead_meta_ids_in = join( ',', $lead_meta_ids );
+
+				// Add the lead header to the data
+				$sql = "
+INSERT INTO {$entry_meta_table}
+  (entry_id, form_id, meta_key, meta_value)
+SELECT
+  lead_id, form_id, meta_key, meta_value
+FROM
+  {$lead_meta_table} lm
+WHERE lm.id IN ( {$lead_meta_ids_in} )";
+
+				$wpdb->query( $sql );
+
+				if ( $wpdb->last_error ) {
+					/* translators: %s: the database error */
+					$this->update_upgrade_status( sprintf( esc_html__( 'Error Migrating Entry Meta: %s', 'gravityforms' ), $wpdb->last_error ) );
+					// wp_die() is not used here because it would trigger another async task
+					exit;
+				}
+
+				$current_time = microtime( true );
+				$execution_time = ( $current_time - $time_start );
+				if ( $execution_time > 15 ) {
+					$sql_remaining = "
+SELECT COUNT(id)
+FROM
+  {$lead_meta_table} lm
+WHERE NOT EXISTS
+      (SELECT * FROM {$entry_meta_table} em WHERE em.entry_id = lm.lead_id AND CONVERT(em.meta_key USING {$charset_db}) = CONVERT(lm.meta_key USING {$charset_db}) {$collate})";
+					$remaining = $wpdb->get_var( $sql_remaining );
+					if ( $remaining > 0 ) {
+						$this->update_upgrade_status( sprintf( esc_html__( 'Migrating leads. Step 3/3 Migrating entry meta. %d rows remaining.', 'gravityforms' ), $remaining ) );
+						return true;
+					}
+				}
+			}
+		} while ( ! empty( $lead_meta_ids ) );
+
+		$this->update_upgrade_status( esc_html__( 'Entry details migrated.', 'gravityforms' ) );
+		return false;
+	}
+
+	/**
+	 * Upgrade incomplete submissions
+	 *
+	 * @return bool
+	 */
+	public function gf_upgrade_230_migrate_incomplete_submissions() {
+		global $wpdb;
+
+		$this->update_upgrade_status( esc_html__( 'Migrating incomplete submissions.', 'gravityforms' ) );
+
+		$incomplete_submissions_table = GFFormsModel::get_incomplete_submissions_table_name();
+
+		$table_check_query = $wpdb->prepare( "SHOW TABLES LIKE %s", $wpdb->esc_like( $incomplete_submissions_table ) );
+
+		if ( $wpdb->get_var( $table_check_query ) != $incomplete_submissions_table ) {
+			// The table doesn't exist. Maybe an upgrade from a very early version.
+			return false;
+		}
+
+		$draft_submissions_table = GFFormsModel::get_draft_submissions_table_name();
+
+		$charset_db = empty( $wpdb->charset ) ? 'utf8mb4' : $wpdb->charset;
+
+		$collate = ! empty( $wpdb->collate ) ? " COLLATE {$wpdb->collate}" : '';
+
+		$sql = "
+INSERT INTO {$draft_submissions_table}
+SELECT *
+FROM
+  {$incomplete_submissions_table} insub
+WHERE CONVERT(insub.uuid USING {$charset_db}) {$collate} NOT IN
+      ( SELECT uuid FROM {$draft_submissions_table} )";
+
+		$wpdb->query( $sql );
+
+		if ( $wpdb->last_error ) {
+			/* translators: %s: the database error */
+			$this->update_upgrade_status( sprintf( esc_html__( 'Error Migrating incomplete submissions: %s', 'gravityforms' ), $wpdb->last_error ) );
+			// wp_die() is not used here because it would trigger another async task
+			exit;
+		}
+		return false;
+	}
+
+	/**
+	 * Upgrade lead notes to 2.3
+	 *
+	 * @return bool
+	 */
+	public function gf_upgrade_230_migrate_lead_notes() {
+		global $wpdb;
+
+		$this->update_upgrade_status( esc_html__( 'Migrating entry notes.', 'gravityforms' ) );
+
+		$lead_notes_details_table = GFFormsModel::get_lead_notes_table_name();
+		$entry_notes_table = GFFormsModel::get_entry_notes_table_name();
+
+		$sql = "
+INSERT INTO {$entry_notes_table}
+  (id, entry_id, user_name, user_id, date_created, value, note_type )
+SELECT
+  id, lead_id, user_name, user_id, date_created, value, note_type
+FROM
+  {$lead_notes_details_table} ln
+WHERE ln.id NOT IN
+      ( SELECT id
+      	FROM {$entry_notes_table}
+      	)";
+
+		$wpdb->query( $sql );
+		return false;
+	}
 
 	/**
 	 * Imports Gravity Forms license keys, and reCAPTCHA keys from global variables.
@@ -584,16 +1077,17 @@ class GF_Upgrade {
 	 * @return string The option value, if found.
 	 */
 	public function get_wp_option( $option_name ) {
-		global $wpdb;
 
-		return $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->prefix}options WHERE option_name=%s", $option_name ) );
+		wp_cache_delete( $option_name );
+
+		return get_option( $option_name );
 	}
 
 
 	/**
-	 * Upgrade routine from gravity forms version 2.2 and below
+	 * Upgrade routine from gravity forms version 2.0.4.7 and below
 	 */
-	protected function post_upgrade_schema_220() {
+	protected function post_upgrade_schema_2047() {
 
 		global $wpdb;
 
@@ -603,15 +1097,30 @@ class GF_Upgrade {
 		$meta_table_name      = RGFormsModel::get_meta_table_name();
 		$lead_meta_table_name = RGFormsModel::get_lead_meta_table_name();
 
-		// droping table that was created by mistake in version 1.6.3.2
+		// dropping table that was created by mistake in version 1.6.3.2
 		$wpdb->query( 'DROP TABLE IF EXISTS A' . $form_table_name );
 
-		// droping outdated form_id index (if one exists)
+		// dropping outdated form_id index (if one exists)
 		$this->drop_index( $meta_table_name, 'form_id' );
 
 		// The format the version info changed to JSON. Make sure the old format is not cached.
 		if ( version_compare( $versions['current_version'], '1.8.0.3', '<' ) ) {
 			delete_option( 'gform_version_info' );
+		}
+
+		//fix leading and trailing spaces in Form objects and entry values
+		if ( version_compare( $versions['current_version'], '1.8.3.1', '<' ) ) {
+			$this->fix_leading_and_trailing_spaces();
+		}
+
+		// The rest only needs to run if the lead tables exist.
+
+		$long_table_name = GFFormsModel::get_lead_details_long_table_name();
+
+		$result = $wpdb->query( "SHOW TABLES LIKE '{$long_table_name}'" );
+
+		if ( $wpdb->num_rows !== 1 ) {
+			return;
 		}
 
 		// dropping meta_key and form_id_meta_key (if they exist) to prevent duplicate keys error on upgrade
@@ -625,11 +1134,6 @@ class GF_Upgrade {
 
 		//fix checkbox value. needed for version 1.0 and below but won't hurt for higher versions
 		$this->fix_checkbox_value();
-
-		//fix leading and trailing spaces in Form objects and entry values
-		if ( version_compare( $versions['current_version'], '1.8.3.1', '<' ) ) {
-			$this->fix_leading_and_trailing_spaces();
-		}
 
 		$this->maybe_upgrade_lead_detail_table();
 
@@ -931,6 +1435,15 @@ SET d.value = l.value"
 		if ( ! $is_longtext ) {
 			if ( $col_type == '252' || $col_type == 'blob' ) {
 				$is_longtext = true;
+			} else {
+				$lead_detail_table = GFFormsModel::get_lead_details_table_name();
+
+				$result = $wpdb->query( "ALTER TABLE {$lead_detail_table} MODIFY `value` LONGTEXT;" );
+				if ( empty( $wpdb->last_error ) ) {
+					$is_longtext = true;
+				} else {
+					$wpdb->show_errors();
+				}
 			}
 		}
 
@@ -1061,7 +1574,7 @@ HAVING count(*) > 1;" );
 
 		$this->versions = array(
 			'version'             => GFForms::$version,
-			'current_version'     => get_option( 'rg_form_version' ),
+			'current_version'     => $this->get_wp_option( 'rg_form_version' ),
 			'current_db_version'  => GFFormsModel::get_database_version(),
 			'previous_db_version' => empty( $previous_db_version ) ? '0' : $previous_db_version,
 		);
@@ -1074,6 +1587,7 @@ HAVING count(*) > 1;" );
 	 */
 	public function flush_versions() {
 		$this->versions = null;
+		wp_cache_flush();
 	}
 
 	/**
@@ -1105,14 +1619,14 @@ HAVING count(*) > 1;" );
 		}
 
 		$versions         = $this->get_versions();
-		$upgrade_required = $versions['version'] != $versions['current_version'];
+		$upgrade_required = version_compare( $versions['version'], $versions['current_version'], '>' );
 
 		if ( $upgrade_required ) {
 
 			// Making sure version has really changed. Gets around aggressive caching issue on some sites that cause setup to run multiple times.
 			$versions['current_version'] = $this->get_wp_option( 'rg_form_version' );
 
-			$upgrade_required = $versions['version'] != $versions['current_version'];
+			$upgrade_required = version_compare( $versions['version'], $versions['current_version'], '>' );
 		}
 
 		return $upgrade_required;
@@ -1142,6 +1656,7 @@ HAVING count(*) > 1;" );
 	 * Returns true if the upgrade wizard should be displayed. False otherwise.
 	 *
 	 * @since 2.2
+	 *
 	 * @return bool
 	 */
 	public function requires_upgrade_wizard() {
@@ -1162,5 +1677,236 @@ HAVING count(*) > 1;" );
 		}
 
 		return false;
+	}
+
+	/**
+	 * Update DB version to current.
+	 *
+	 * @since 2.2
+	 *
+	 * @param string $version
+	 */
+	public function update_db_version( $version = null ) {
+		delete_option( 'gf_db_version' );
+		add_option( 'gf_db_version', is_null( $version ) ? GFForms::$version : $version );
+	}
+
+	/**
+	 * Checks whether the previous upgrade can be cleared and then clears it.
+	 *
+	 * @since 2.3
+	 */
+	public function maybe_clear_previous_upgrade() {
+
+		$lock_params = $this->get_upgrade_lock();
+
+		if ( $lock_params ) {
+			$to_version = rgar( $lock_params, 'to_version' );
+
+			$versions = $this->get_versions();
+
+			if ( $to_version != $versions['version'] ) {
+				$this->clear_previous_upgrade();
+			}
+		}
+
+	}
+
+	/**
+	 * Clears the previous upgrade.
+	 *
+	 * @since 2.3
+	 */
+	public function clear_previous_upgrade() {
+
+		// Clear the queue for this blog.
+		GFForms::$background_upgrader->clear_queue();
+
+		// Remove the status update
+		update_option( 'gform_upgrade_status', false );
+
+		// Remove dismissible messages
+		$lock_params = $this->get_upgrade_lock();
+		if ( $lock_params ) {
+			$to_version = rgar( $lock_params, 'to_gf_version' );
+			$key        = sanitize_key( 'gravityforms_upgrading_' . $to_version );
+			GFCommon::remove_dismissible_message( $key );
+		}
+
+		// Clear the upgrade lock
+		$this->clear_upgrade_lock();
+
+		$this->clear_submissions_block();
+	}
+
+	/**
+	 * Clears the upgrade lock.
+	 *
+	 * @since 2.3
+	 *
+	 * @return int|false Number of rows affected/selected or false on error
+	 */
+	public function clear_upgrade_lock() {
+		global $wpdb;
+
+		$result = $wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name='gf_upgrade_lock'" );
+
+		return $result;
+	}
+
+	/**
+	 * Returns the upgrade lock.
+	 *
+	 * @since 2.3
+	 *
+	 * @return array|null
+	 */
+	public function get_upgrade_lock() {
+		global $wpdb;
+
+		$lock_params_serialized = $wpdb->get_var( "SELECT option_value FROM {$wpdb->options} WHERE option_name='gf_upgrade_lock'" );
+
+		$lock_params = maybe_unserialize( $lock_params_serialized );
+
+		return $lock_params;
+	}
+
+	/**
+	 * Blocks submissions.
+	 *
+	 * @since 2.3
+	 *
+	 * @return int|false Number of rows affected/selected or false on error
+	 */
+	public function set_submissions_block() {
+		global $wpdb;
+
+		$sql = $wpdb->prepare( "INSERT INTO {$wpdb->options}(option_name, option_value) VALUES('gf_submissions_block', %s)", time() );
+
+		$result = $wpdb->query( $sql );
+
+		return $result;
+	}
+
+	/**
+	 * Clears the submissions block.
+	 *
+	 * @since 2.3
+	 *
+	 * @return int|false Number of rows affected/selected or false on error
+	 */
+	public function clear_submissions_block() {
+		global $wpdb;
+
+		$result = $wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name='gf_submissions_block'" );
+
+		return $result;
+	}
+
+	/**
+	 * Returns the timestamp of the submissions block or null if not locked.
+	 *
+	 * @since 2.3
+	 *
+	 * @return string|null
+	 */
+	public function get_submissions_block() {
+		global $wpdb;
+
+		$timestamp = $wpdb->get_var( "SELECT option_value FROM {$wpdb->options} WHERE option_name='gf_submissions_block'" );
+
+		return $timestamp;
+	}
+
+	/**
+	 * Adds dismissible admin notices.
+	 *
+	 * @since 2.3
+	 */
+	public function add_post_upgrade_admin_notices() {
+
+		$previous_db_version = get_option( 'gf_previous_db_version' );
+
+		$key = sanitize_key( 'gravityforms_outdated_addons_2.3' );
+
+		if ( version_compare( $previous_db_version, '2.3-beta-1', '>' ) ) {
+			GFCommon::remove_dismissible_message( $key );
+			return;
+		}
+
+		$add_ons = $this->get_min_addon_requirements();
+
+		$outdated = array();
+
+		foreach ( $add_ons as $plugin_slug => $add_on ) {
+			$plugin_path = WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . $plugin_slug;
+			if ( ! file_exists( $plugin_path ) ) {
+				continue;
+			}
+			$plugin_data     = get_plugin_data( $plugin_path, false, false );
+			$current_version = $plugin_data['Version'];
+			$add_on          = $add_ons[ $plugin_slug ];
+			$min_version     = $add_on['min_version'];
+			if ( version_compare( $current_version, $min_version, '<' ) ) {
+				$name       = $add_on['name'];
+				$outdated[] = $name;
+			}
+		}
+
+		if ( empty( $outdated ) ) {
+			return;
+		}
+
+		$number_outdated = count( $outdated );
+
+		if ( $number_outdated == 1 ) {
+			/* translators: %s: the add-on name */
+			$message = sprintf( esc_html__( 'The %s is not compatible with version of this version of Gravity Forms. See the plugins list for further details.', 'gravityforms' ), $outdated[0] );
+		} else {
+			/* translators: %d: the number of outdated add-ons */
+			$message = sprintf( esc_html__( 'There are %d add-ons installed that are not compatible with version of this version of Gravity Forms. See the plugins list for further details.', 'gravityforms' ), $number_outdated );
+		}
+
+		GFCommon::add_dismissible_message( $message, $key, 'error', 'gform_full_access', true, 'site-wide' );
+	}
+
+	/**
+	 * Returns an array of add-ons with the minimum version required for this version of Gravity Forms.
+	 *
+	 * @since 2.3
+	 *
+	 * @return array
+	 */
+	public function get_min_addon_requirements() {
+		return array(
+			'gravityformspaypal/paypal.php'                       => array(
+				'name'        => 'Gravity Forms PayPal Add-On',
+				'min_version' => '2.9',
+			),
+			'gravityformsauthorizenet/authorizenet.php'           => array(
+				'name'        => 'Gravity Forms Authorize.Net Add-On',
+				'min_version' => '2.4',
+			),
+			'gravityformspartialentries/partialentries.php'       => array(
+				'name'        => 'Gravity Forms Partial Entries Add-On',
+				'min_version' => '1.1',
+			),
+			'gravityformspaypalpaymentspro/paypalpaymentspro.php' => array(
+				'name'        => 'Gravity Forms PayPal Payments Pro Add-On',
+				'min_version' => '2.3',
+			),
+			'gravityformssignature/signature.php'                 => array(
+				'name'        => 'Gravity Forms Signature Add-On',
+				'min_version' => '3.4',
+			),
+			'gravityformsuserregistration/userregistration.php'   => array(
+				'name'        => 'Gravity Forms User Registration Add-On',
+				'min_version' => '3.9',
+			),
+			'gravityformspaypalpro/paypalpro.php'                 => array(
+				'name'        => 'Gravity Forms PayPal Pro Add-On',
+				'min_version' => '1.8',
+			),
+		);
 	}
 }

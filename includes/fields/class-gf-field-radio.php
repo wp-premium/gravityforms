@@ -36,9 +36,7 @@ class GF_Field_Radio extends GF_Field {
 	}
 
 	public function validate( $value, $form ) {
-		if ( $this->isRequired && $this->enableOtherChoice && $value == 'gf_other_choice' ) {
-			$value = rgpost( "input_{$this->id}_other" );
-
+		if ( $this->isRequired && $this->enableOtherChoice && rgpost( "input_{$this->id}" ) == 'gf_other_choice' ) {
 			if ( empty( $value ) || strtolower( $value ) == strtolower( GFCommon::get_other_choice_value( $this ) ) ) {
 				$this->failed_validation  = true;
 				$this->validation_message = empty( $this->errorMessage ) ? esc_html__( 'This field is required.', 'gravityforms' ) : $this->errorMessage;

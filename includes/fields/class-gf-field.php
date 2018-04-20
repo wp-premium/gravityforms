@@ -28,6 +28,18 @@ class GF_Field extends stdClass implements ArrayAccess {
 	private $_is_entry_detail = null;
 
 	/**
+	 * An array of properties used to help define and determine the context for the field.
+	 * As this is private, it won't be available in any json_encode() output and consequently not saved in the Form array.
+	 *
+	 * @since 2.3
+	 *
+	 * @private
+	 *
+	 * @var array
+	 */
+	private $_context_properties = array();
+
+	/**
 	 * @var array $_merge_tag_modifiers An array of modifiers specified on the field or all_fields merge tag being processed.
 	 */
 	private $_merge_tag_modifiers = array();
@@ -104,8 +116,11 @@ class GF_Field extends stdClass implements ArrayAccess {
 
 	public function __set( $key, $value ) {
 		switch( $key ) {
-			// intercept 3rd parties trying to set the adminOnly property and convert to visibility property
+			case '_context_properties' :
+				_doing_it_wrong( '$field->_context_properties', 'Use $field->get_context_property() instead.', '2.3' );
+				break;
 			case 'adminOnly':
+				// intercept 3rd parties trying to set the adminOnly property and convert to visibility property
 				$this->visibility = $value ? 'administrative' : 'visible';
 				break;
 			default:
@@ -116,8 +131,11 @@ class GF_Field extends stdClass implements ArrayAccess {
 	public function &__get( $key ) {
 
 		switch( $key ) {
-			// intercept 3rd parties trying to get the adminOnly property and fetch visibility property instead
-			case 'adminOnly':
+			case '_context_properties' :
+				_doing_it_wrong( '$field->_context_properties', 'Use $field->get_context_property() instead.', '2.3' );
+				return false;
+			case 'adminOnly' :
+				// intercept 3rd parties trying to get the adminOnly property and fetch visibility property instead
 				$value = $this->visibility == 'administrative'; // set and return variable to avoid notice
 				return $value;
 			default:
@@ -131,6 +149,14 @@ class GF_Field extends stdClass implements ArrayAccess {
 
 	public function __unset( $key ) {
 		unset( $this->$key );
+	}
+
+	public function set_context_property( $property_key, $value ) {
+		$this->_context_properties[ $property_key ] = $value;
+	}
+
+	public function get_context_property( $property_key ) {
+		return isset( $this->_context_properties[ $property_key ] ) ? $this->_context_properties[ $property_key ] : null;
 	}
 
 
@@ -550,12 +576,14 @@ class GF_Field extends stdClass implements ArrayAccess {
 	/**
 	 * Format the entry value before it is used in entry exports and by framework add-ons using GFAddOn::get_field_value().
 	 *
+	 * For CSV export return a string or array.
+	 *
 	 * @param array      $entry    The entry currently being processed.
 	 * @param string     $input_id The field or input ID.
 	 * @param bool|false $use_text When processing choice based fields should the choice text be returned instead of the value.
 	 * @param bool|false $is_csv   Is the value going to be used in the .csv entries export?
 	 *
-	 * @return string
+	 * @return string|array
 	 */
 	public function get_value_export( $entry, $input_id = '', $use_text = false, $is_csv = false ) {
 		if ( empty( $input_id ) ) {
@@ -824,7 +852,7 @@ class GF_Field extends stdClass implements ArrayAccess {
 		$is_entry_detail = $this->is_entry_detail();
 		$is_admin        = $is_form_editor || $is_entry_detail;
 
-		$admin_buttons = $is_admin ? "<div class='gfield_admin_icons'><div class='gfield_admin_header_title'>{$field_type_title} : " . esc_html__( 'Field ID', 'gravityforms' ) . " {$this->id}</div>" . $delete_field_link . $duplicate_field_link . "<a class='field_edit_icon edit_icon_collapsed' title='" . esc_attr__( 'click to expand and edit the options for this field', 'gravityforms' ) . "'><i class='fa fa-caret-down fa-lg'></i></a></div>" : '';
+		$admin_buttons = $is_admin ? "<div class='gfield_admin_icons'><div class='gfield_admin_header_title'>{$field_type_title} : " . esc_html__( 'Field ID', 'gravityforms' ) . " {$this->id}</div>" . $delete_field_link . $duplicate_field_link . "<a href='javascript:void(0);' class='field_edit_icon edit_icon_collapsed' aria-expanded='false' title='" . esc_attr__( 'click to expand and edit the options for this field', 'gravityforms' ) . "'><i class='fa fa-caret-down fa-lg'></i></a></div>" : '';
 
 		return $admin_buttons;
 	}

@@ -34,9 +34,9 @@ class GFHelp {
 
 			<div style="margin-top:10px;">
 
-				<div class="gf_admin_notice"><?php printf( esc_html__( '%sIMPORTANT NOTICE:%s We do not provide support via telephone or e-mail. Please %sopen a support ticket%s.', 'gravityforms' ), '<strong>', '</strong>', '<a href="https://www.gravityhelp.com/support/" target="_blank">', '</a>' )  ?></div>
+				<div class="gf_admin_notice"><?php printf( esc_html__( '%sIMPORTANT NOTICE:%s We do not provide support via telephone or e-mail. Please %sopen a support ticket%s.', 'gravityforms' ), '<strong>', '</strong>', '<a href="https://www.gravityforms.com/support/" target="_blank">', '</a>' )  ?></div>
 
-				<div class="gf_help_content"><p><?php printf( esc_html__( "Please review the plugin documentation and %sfrequently asked questions (FAQ)%s first. If you still can't find the answer %sopen a support ticket%s and we will be happy to answer your questions and assist you with any problems. %sPlease note:%s If you have not %spurchased a license%s from us, you will not have access to these help resources.", 'gravityforms' ), '<a href="https://www.gravityhelp.com/frequently-asked-questions/">', '</a>', '<a href="https://www.gravityhelp.com/support/" target="_blank">', '</a>', '<strong>', '</strong>', '<a href="http://www.gravityforms.com/purchase-gravity-forms/">', '</a>' ); ?></p></div>
+				<div class="gf_help_content"><p><?php printf( esc_html__( "Please review the plugin documentation and %sfrequently asked questions (FAQ)%s first. If you still can't find the answer %sopen a support ticket%s and we will be happy to answer your questions and assist you with any problems. %sPlease note:%s If you have not %spurchased a license%s from us, you will not have access to these help resources.", 'gravityforms' ), '<a href="https://docs.gravityforms.com/category/knowledge-base/faqs/">', '</a>', '<a href="https://www.gravityforms.com/support/" target="_blank">', '</a>', '<strong>', '</strong>', '<a href="https://www.gravityforms.com/pricing/">', '</a>' ); ?></p></div>
 
 
 				<div class="hr-divider"></div>

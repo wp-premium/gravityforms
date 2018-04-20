@@ -53,7 +53,7 @@ class GFAutoUpgrade {
 	public function rg_plugin_row() {
 
 		if ( ! $this->_is_gravityforms_supported ) {
-			$message = sprintf( esc_html__( 'Gravity Forms %s is required. Activate it now or %spurchase it today!%s', 'gravityforms' ), $this->_min_gravityforms_version, "<a href='http://www.gravityforms.com'>", '</a>' );
+			$message = sprintf( esc_html__( 'Gravity Forms %s is required. Activate it now or %spurchase it today!%s', 'gravityforms' ), $this->_min_gravityforms_version, "<a href='https://www.gravityforms.com'>", '</a>' );
 			GFAddOn::display_plugin_message( $message, true );
 		} else {
 			$version_info = $this->get_version_info( $this->_slug );
@@ -65,7 +65,7 @@ class GFAutoUpgrade {
 				} else {
 					$new_version = '';
 				}
-				$message = $new_version . sprintf( esc_html__( '%sRegister%s your copy of Gravity Forms to receive access to automatic upgrades and support. Need a license key? %sPurchase one now%s.', 'gravityforms' ), '<a href="admin.php?page=gf_settings">', '</a>', '<a href="http://www.gravityforms.com">', '</a>' ) . '</div></td>';
+				$message = $new_version . sprintf( esc_html__( '%sRegister%s your copy of Gravity Forms to receive access to automatic upgrades and support. Need a license key? %sPurchase one now%s.', 'gravityforms' ), '<a href="admin.php?page=gf_settings">', '</a>', '<a href="https://www.gravityforms.com">', '</a>' ) . '</div></td>';
 				GFAddOn::display_plugin_message( $message );
 			}
 		}
@@ -179,7 +179,7 @@ class GFAutoUpgrade {
 		$raw_response = GFCommon::post_to_manager( 'changelog.php', $this->get_remote_request_params( $this->_slug, $key, $this->_version ), $options );
 
 		if ( is_wp_error( $raw_response ) || 200 != $raw_response['response']['code'] ) {
-			$text = sprintf( esc_html__( 'Oops!! Something went wrong.%sPlease try again or %scontact us%s.', 'gravityforms' ), '<br/>', "<a href='http://www.gravityforms.com'>", '</a>' );
+			$text = sprintf( esc_html__( 'Oops!! Something went wrong.%sPlease try again or %scontact us%s.', 'gravityforms' ), '<br/>', "<a href='https://www.gravityforms.com/support/'>", '</a>' );
 		} else {
 			$text = $raw_response['body'];
 			if ( substr( $text, 0, 10 ) != '<!--GFM-->' ) {
@@ -231,7 +231,7 @@ class GFAutoUpgrade {
 					esc_html( '%sRegister%s your copy of Gravity Forms to receive access to automatic updates and support. Need a license key? %sPurchase one now%s.', 'gravityforms' ),
 					'<a href="admin.php?page=gf_settings">',
 					'</a>',
-					'<a href="http://www.gravityforms.com">',
+					'<a href="https://www.gravityforms.com">',
 					'</a>'
 				)
 			);
@@ -281,7 +281,7 @@ class GFAutoUpgrade {
 			if ( ! rgar( $version_info, 'is_valid_key' ) ) {
 				?>
 				<div class="gf_update_expired alert_red">
-					<?php printf( esc_html__( '%sRegister%s your copy of Gravity Forms to receive access to automatic updates and support. Need a license key? %sPurchase one now%s.', 'gravityforms' ), '<a href="admin.php?page=gf_settings">','</a>','<a href="http://www.gravityforms.com">', '</a>' ); ?>
+					<?php printf( esc_html__( '%sRegister%s your copy of Gravity Forms to receive access to automatic updates and support. Need a license key? %sPurchase one now%s.', 'gravityforms' ), '<a href="admin.php?page=gf_settings">','</a>','<a href="https://www.gravityforms.com">', '</a>' ); ?>
 				</div>
 
 			<?php
