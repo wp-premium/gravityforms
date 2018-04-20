@@ -554,61 +554,29 @@ abstract class GFAddOn {
 	 * @uses RGForms::add_settings_page()
 	 */
 	public function failed_requirements_init() {
-		
-		// Get subview.
-		$subview = rgget( 'subview' );
-		
-		// Add settings page.
-		RGForms::add_settings_page(
-			array(
-				'name'      => $this->_slug,
-				'tab_label' => $this->get_short_title(),
-				'title'     => $this->plugin_settings_title(),
-				'handler'   => array( $this, 'failed_requirements_page' ),
-			)
-		);
-		
-		// Require tooltips.
-		if ( rgget( 'page' ) == 'gf_settings' && $subview == $this->_slug && $this->current_user_can_any( $this->_capabilities_settings_page ) ) {
-			require_once( GFCommon::get_base_path() . '/tooltips.php' );
-		}
 
-		// Add plugin action settings link.
-		add_filter( 'plugin_action_links', array( $this, 'plugin_settings_link' ), 10, 2 );
-
-	}
-
-	/**
-	 * Failed requirements page.
-	 *
-	 * @since  2.2
-	 * @access public
-	 *
-	 * @uses GFAddOn::meets_minimum_requirements()
-	 * @uses GFAddOn::plugin_settings_icon()
-	 * @uses GFAddOn::plugin_settings_title()
-	 */
-	public function failed_requirements_page() {
-		
 		// Get failed requirements.
 		$failed_requirements = $this->meets_minimum_requirements();
-		
-		// Get plugin settings page icon.
-		$icon = $this->plugin_settings_icon();
-		if ( empty( $icon ) ) {
-			$icon = '<i class="fa fa-cogs"></i>';
+
+		// Prepare errors list.
+		$errors = '';
+		foreach ( $failed_requirements['errors'] as $error ) {
+			$errors .= sprintf( '<li>%s</li>', esc_html( $error ) );
 		}
-		?>
 
-		<h3><span><?php echo $icon ?> <?php echo $this->plugin_settings_title() ?></span></h3>
+		// Prepare error message.
+		$error_message = sprintf(
+			'%s<br />%s<ol>%s</ol>',
+			sprintf( esc_html__( '%s is not able to run because your WordPress environment has not met the minimum requirements.', 'gravityforms' ), $this->_title ),
+			sprintf( esc_html__( 'Please resolve the following issues to use %s:', 'gravityforms' ), $this->get_short_title() ),
+			$errors
+		);
 
-		<p><?php echo sprintf( esc_html__( '%s is not able to run because your WordPress environment has not met the minimum requirements. Please resolve the following issues to use %s.', 'gravityforms' ), $this->_title, $this->_title ); ?></p>
+		// Add error message.
+		if ( $this->is_form_list() || $this->is_entry_list() || $this->is_form_settings() || $this->is_plugin_settings() ) {
+			GFCommon::add_error_message( $error_message );
+		}
 
-		<ol>
-			<?php foreach ( $failed_requirements['errors'] as $error ) { echo '<li>' . esc_html( $error ) . '</li>'; } ?>
-		</ol>
-
-<?php
 	}
 
 	//--------------  Setup  ---------------
@@ -1621,13 +1589,13 @@ abstract class GFAddOn {
 	public function get_save_success_message( $sections ) {
 		$save_button = $this->get_save_button( $sections );
 
-		return isset( $save_button['messages']['success'] ) ? $save_button['messages']['success'] : esc_html__( 'Settings updated', 'gravityforms' );
+		return isset( $save_button['messages']['success'] ) ? $save_button['messages']['success'] : sprintf( esc_html__( '%s settings updated.', 'gravityforms' ), $this->get_short_title() );
 	}
 
 	public function get_save_error_message( $sections ) {
 		$save_button = $this->get_save_button( $sections );
 
-		return isset( $save_button['messages']['error'] ) ? $save_button['messages']['error'] : esc_html__( 'There was an error while saving your settings', 'gravityforms' );
+		return isset( $save_button['messages']['error'] ) ? $save_button['messages']['error'] : esc_html__( 'There was an error while saving your settings.', 'gravityforms' );
 	}
 
 	public function get_save_button( $sections ) {
@@ -5336,7 +5304,7 @@ abstract class GFAddOn {
 	 * Override this method to display a custom message.
 	 */
 	public function plugin_message() {
-		$message = sprintf( esc_html__( 'Gravity Forms %s is required. Activate it now or %spurchase it today!%s', 'gravityforms' ), $this->_min_gravityforms_version, "<a href='http://www.gravityforms.com'>", '</a>' );
+		$message = sprintf( esc_html__( 'Gravity Forms %s is required. Activate it now or %spurchase it today!%s', 'gravityforms' ), $this->_min_gravityforms_version, "<a href='https://www.gravityforms.com'>", '</a>' );
 
 		return $message;
 	}

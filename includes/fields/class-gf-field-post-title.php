@@ -73,6 +73,22 @@ class GF_Field_Post_Title extends GF_Field {
 	public function allow_html() {
 		return true;
 	}
+
+	/**
+	 * Sanitizes the field value before saving to the entry.
+	 *
+	 * @since 2.2.6.4 Switched to wp_strip_all_tags.
+	 * @see   https://developer.wordpress.org/reference/functions/wp_insert_post/#security
+	 *
+	 * @param string $value   The field value to be processed.
+	 * @param int    $form_id The ID of the form currently being processed.
+	 *
+	 * @return string
+	 */
+	public function sanitize_entry_value( $value, $form_id ) {
+		return wp_strip_all_tags( $value );
+	}
+
 }
 
 GF_Fields::register( new GF_Field_Post_Title() );

@@ -133,12 +133,12 @@ if ( ! class_exists( 'GFForms' ) ) {
 	}
 
 	function ShowSettings(element_id) {
-		jQuery(".field_selected .field_edit_icon, .field_selected .form_edit_icon").removeClass("edit_icon_collapsed").addClass("edit_icon_expanded").html('<i class="fa fa-caret-up fa-lg"></i>');
+		jQuery(".field_selected .field_edit_icon, .field_selected .form_edit_icon").removeClass("edit_icon_collapsed").addClass("edit_icon_expanded").html('<i class="fa fa-caret-up fa-lg"></i>').closest('li').attr('aria-expanded', 'true');
 		jQuery("#" + element_id).slideDown();
 	}
 
 	function HideSettings(element_id) {
-		jQuery(".field_edit_icon, .form_edit_icon").removeClass("edit_icon_expanded").addClass("edit_icon_collapsed").html('<i class="fa fa-caret-down fa-lg"></i>');
+		jQuery(".field_edit_icon, .form_edit_icon").removeClass("edit_icon_expanded").addClass("edit_icon_collapsed").html('<i class="fa fa-caret-down fa-lg"></i>').focus().closest('li').attr('aria-expanded', 'false');
 		jQuery("#" + element_id).hide();
 	}
 

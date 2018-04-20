@@ -2042,14 +2042,10 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 	public function get_entry_by_transaction_id( $transaction_id ) {
 		global $wpdb;
 
-		$sql      = $wpdb->prepare( "SELECT id FROM {$wpdb->prefix}rg_lead WHERE transaction_id = %s", $transaction_id );
-		$entry_id = $wpdb->get_var( $sql );
+		$entry_table_name = self::get_entry_table_name();
 
-		//        //Try transaction table
-		//        if( empty($entry_id) ){
-		//            $sql = $wpdb->prepare( "SELECT lead_id FROM {$wpdb->prefix}gf_addon_payment_transaction WHERE transaction_id = %s", $transaction_id );
-		//            $entry_id = $wpdb->get_var( $sql );
-		//        }
+		$sql      = $wpdb->prepare( "SELECT id FROM {$entry_table_name} WHERE transaction_id = %s", $transaction_id );
+		$entry_id = $wpdb->get_var( $sql );
 
 		return $entry_id ? $entry_id : false;
 	}
@@ -2810,13 +2806,15 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		$current_page = rgempty( 'paged' ) ? 1 : absint( rgpost( 'paged' ) );
 		$offset       = $page_size * ( $current_page - 1 );
 
+		$entry_table_name = self::get_entry_table_name();
+
 		$sql = $wpdb->prepare(
 			" SELECT SQL_CALC_FOUND_ROWS {$select}, lead.orders, lead.subscriptions, transaction.refunds, transaction.recurring_payments, transaction.revenue
                                 FROM (
                                   SELECT  {$select_inner1},
                                           sum( if(transaction_type = 1,1,0) ) as orders,
                                           sum( if(transaction_type = 2,1,0) ) as subscriptions
-                                  FROM {$wpdb->prefix}rg_lead l
+                                  FROM {$entry_table_name} l
                                   WHERE l.status='active' AND form_id=%d {$lead_date_filter} {$payment_method_filter}
                                   GROUP BY {$group_by}
                                 ) AS lead
@@ -2827,7 +2825,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
                                           sum( if(t.transaction_type = 'refund', 1, 0) ) as refunds,
                                           sum( if(t.transaction_type = 'payment' AND t.is_recurring = 1, 1, 0) ) as recurring_payments
                                   FROM {$wpdb->prefix}gf_addon_payment_transaction t
-                                  INNER JOIN {$wpdb->prefix}rg_lead l ON l.id = t.lead_id
+                                  INNER JOIN {$entry_table_name} l ON l.id = t.lead_id
                                   WHERE l.status='active' AND l.form_id=%d {$lead_date_filter} {$transaction_date_filter} {$payment_method_filter}
                                   GROUP BY {$group_by}
 
@@ -2950,6 +2948,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		global $wpdb;
 
 		$tz_offset = $this->get_mysql_tz_offset();
+		$entry_table_name = self::get_entry_table_name();
 
 		$summary = $wpdb->get_results(
 			$wpdb->prepare(
@@ -2959,7 +2958,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
                        SELECT  date( CONVERT_TZ(payment_date, '+00:00', '" . $tz_offset . "') ) as date,
                                sum( if(transaction_type = 1,1,0) ) as orders,
                                sum( if(transaction_type = 2,1,0) ) as subscriptions
-                       FROM {$wpdb->prefix}rg_lead
+                       FROM {$entry_table_name}
                        WHERE status='active' AND form_id = %d AND datediff(now(), CONVERT_TZ(payment_date, '+00:00', '" . $tz_offset . "') ) <= 30
                        GROUP BY date
                      ) AS lead
@@ -2968,7 +2967,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
                        SELECT  date( CONVERT_TZ(t.date_created, '+00:00', '" . $tz_offset . "') ) as date,
                                sum( if(t.transaction_type = 'refund', abs(t.amount) * -1, t.amount) ) as revenue
                        FROM {$wpdb->prefix}gf_addon_payment_transaction t
-                         INNER JOIN {$wpdb->prefix}rg_lead l ON l.id = t.lead_id
+                         INNER JOIN {$entry_table_name} l ON l.id = t.lead_id
                        WHERE l.form_id=%d AND l.status='active'
                        GROUP BY date
                      ) AS transaction on lead.date = transaction.date
@@ -2981,7 +2980,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 				"
                     SELECT sum( if(transaction_type = 1,1,0) ) as orders,
                            sum( if(transaction_type = 2,1,0) ) as subscriptions
-                    FROM {$wpdb->prefix}rg_lead
+                    FROM {$entry_table_name}
                     WHERE form_id=%d AND status='active'", $form_id
 			), ARRAY_A
 		);
@@ -2991,7 +2990,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 				"
                     SELECT sum( if(t.transaction_type = 'refund', abs(t.amount) * -1, t.amount) ) as revenue
                     FROM {$wpdb->prefix}gf_addon_payment_transaction t
-                    INNER JOIN {$wpdb->prefix}rg_lead l ON l.id = t.lead_id
+                    INNER JOIN {$entry_table_name} l ON l.id = t.lead_id
                     WHERE l.form_id=%d AND status='active'", $form_id
 			)
 		);
@@ -3089,7 +3088,9 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 	public function get_payment_methods( $form_id ) {
 		global $wpdb;
 
-		$payment_methods = $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT payment_method FROM {$wpdb->prefix}rg_lead WHERE form_id=%d", $form_id ) );
+		$entry_table_name = self::get_entry_table_name();
+
+		$payment_methods = $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT payment_method FROM {$entry_table_name} WHERE form_id=%d", $form_id ) );
 
 		return array_filter( $payment_methods, array( $this, 'array_filter_non_blank' ) );
 	}
@@ -3102,16 +3103,69 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		return true;
 	}
 
+	/**
+	 * Get name for entry table.
+	 *
+	 * @since  2.3
+	 * @access public
+	 *
+	 * @uses   GFFormsModel::get_entry_table_name()
+	 * @uses   GFFormsModel::get_lead_table_name()
+	 * @uses   GFPayPalPaymentsPro::get_gravityforms_db_version()
+	 *
+	 * @return string
+	 */
+	public static function get_entry_table_name() {
+
+		return version_compare( self::get_gravityforms_db_version(), '2.3-dev-1', '<' ) ? GFFormsModel::get_lead_table_name() : GFFormsModel::get_entry_table_name();
+
+	}
+
+	/**
+	 * Get name for entry meta table.
+	 *
+	 * @since  2.3
+	 * @access public
+	 *
+	 * @uses   GFFormsModel::get_entry_meta_table_name()
+	 * @uses   GFFormsModel::get_lead_meta_table_name()
+	 * @uses   GFPayPalPaymentsPro::get_gravityforms_db_version()
+	 *
+	 * @return string
+	 */
+	public static function get_entry_meta_table_name() {
+
+		return version_compare( self::get_gravityforms_db_version(), '2.3-dev-1', '<' ) ? GFFormsModel::get_lead_meta_table_name() : GFFormsModel::get_entry_meta_table_name();
+
+	}
+
+	/**
+	 * Get version of Gravity Forms database.
+	 *
+	 * @since  2.3
+	 * @access public
+	 *
+	 * @uses   GFFormsModel::get_database_version()
+	 *
+	 * @return string
+	 */
+	public static function get_gravityforms_db_version() {
+
+		return method_exists( 'GFFormsModel', 'get_database_version' ) ? GFFormsModel::get_database_version() : GFForms::$version;
+
+	}
 
 	//-------- Uninstall ---------------------
 	public function uninstall() {
 		global $wpdb;
 
+		$entry_meta_table_name = self::get_entry_meta_table_name();
+
 		// deleting transactions
 		$sql = $wpdb->prepare(
 			"DELETE FROM {$wpdb->prefix}gf_addon_payment_transaction
                                 WHERE lead_id IN
-                                   (SELECT lead_id FROM {$wpdb->prefix}rg_lead_meta WHERE meta_key='payment_gateway' AND meta_value=%s)", $this->_slug
+                                   (SELECT lead_id FROM {$entry_meta_table_name} WHERE meta_key='payment_gateway' AND meta_value=%s)", $this->_slug
 		);
 		$wpdb->query( $sql );
 

@@ -18,7 +18,7 @@ class GF_Installation_Wizard_Step_License_Key extends GF_Installation_Wizard_Ste
 
 		?>
 		<p>
-			<?php echo sprintf( esc_html__( 'Enter your Gravity Forms License Key below.  Your key unlocks access to automatic updates, the add-on installer, and support.  You can find your key on the My Account page on the %sGravity Forms%s site.', 'gravityforms' ), '<a href="http://www.gravityforms.com">', '</a>' ); ?>
+			<?php echo sprintf( esc_html__( 'Enter your Gravity Forms License Key below.  Your key unlocks access to automatic updates, the add-on installer, and support.  You can find your key on the My Account page on the %sGravity Forms%s site.', 'gravityforms' ), '<a href="https://www.gravityforms.com">', '</a>' ); ?>
 
 		</p>
 		<div>
@@ -41,7 +41,7 @@ class GF_Installation_Wizard_Step_License_Key extends GF_Installation_Wizard_Ste
 			<div>
 				<label>
 					<input type="checkbox" id="accept_terms" value="1" <?php checked( 1, $this->accept_terms ); ?> name="accept_terms" />
-					<?php esc_html_e( 'I understand the risks', 'gravityforms' ); ?> <span class="gfield_required">*</span>
+					<?php esc_html_e( 'I understand the risks of not providing a valid license key.', 'gravityforms' ); ?> <span class="gfield_required">*</span>
 				</label>
 				<?php echo $message ?>
 			</div>
@@ -49,7 +49,7 @@ class GF_Installation_Wizard_Step_License_Key extends GF_Installation_Wizard_Ste
 		}
 	}
 
-	function get_title(){
+	function get_title() {
 		return esc_html__( 'License Key', 'gravityforms' );
 	}
 
@@ -79,16 +79,16 @@ class GF_Installation_Wizard_Step_License_Key extends GF_Installation_Wizard_Ste
 		return $valid;
 	}
 
-	function install(){
+	function install() {
 		if ( $this->license_key ) {
-			$key = trim( $this->license_key );
-			update_option( 'rg_gforms_key', md5( $key ) );
+
+			GFFormsModel::save_key( $this->license_key );
 
 			$version_info = GFCommon::get_version_info( false );
 		}
 	}
 
-	function get_previous_button_text(){
+	function get_previous_button_text() {
 		return '';
 	}
 

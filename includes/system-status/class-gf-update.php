@@ -109,7 +109,7 @@ class GF_Update {
 											esc_html( ' %sRegister%s your copy of Gravity Forms to receive access to automatic updates and support. Need a license key? %sPurchase one now%s.', 'gravityforms' ),
 											'<a href="admin.php?page=gf_settings">',
 											'</a>',
-											'<a href="http://www.gravityforms.com">',
+											'<a href="https://www.gravityforms.com">',
 											'</a>'
 										);
 	
@@ -184,7 +184,7 @@ class GF_Update {
 						esc_html( '%sRegister%s your copy of Gravity Forms to receive access to automatic updates and support. Need a license key? %sPurchase one now%s.', 'gravityforms' ),
 						'<a href="admin.php?page=gf_settings">',
 						'</a>',
-						'<a href="http://www.gravityforms.com">',
+						'<a href="https://www.gravityforms.com">',
 						'</a>'
 					)
 				);

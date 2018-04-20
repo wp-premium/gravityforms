@@ -212,6 +212,7 @@ class GFFormList {
 
 		<?php
 
+		GFCommon::display_admin_message();
 		GFCommon::display_dismissible_message();
 
 		$table = new GF_Form_List_Table();
@@ -420,7 +421,7 @@ class GF_Form_List_Table extends WP_List_Table {
 		return array(
 			'title' => array( 'title', false ),
 			'id'    => array( 'id', false ),
-			'lead_count'    => array( 'lead_count', false ),
+			'entry_count'    => array( 'entry_count', false ),
 			'view_count'    => array( 'view_count', false ),
 			'conversion'    => array( 'conversion', false ),
 		);
@@ -428,6 +429,16 @@ class GF_Form_List_Table extends WP_List_Table {
 
 	function get_views() {
 		$form_count = RGFormsModel::get_form_count();
+
+		/**
+		 * Allow for form count filtering.
+		 * Useful when form list is being filtered.
+		 *
+		 * @since 2.3-beta-3
+		 *
+		 * @param array $form_count The form count by filter name.
+		 */
+		$form_count = apply_filters( 'gform_form_list_count', $form_count );
 
 		$all_class = ( $this->filter == '' ) ? 'current' : '';
 
@@ -481,6 +492,20 @@ class GF_Form_List_Table extends WP_List_Table {
 			$forms = GFFormsModel::search_forms( $search_query, $active, $sort_column, $sort_direction, $trash );
 		}
 
+		/**
+		 * Allow form list filtering.
+		 *
+		 * @since 2.3-beta-3
+		 *
+		 * @param array  $forms          The complete list of forms.
+		 * @param string $search_query   The search query string if set.
+		 * @param bool   $active         If inactive forms should be displayed.
+		 * @param string $sort_column    List column being sorted.
+		 * @param string $sort_direction Direction of column sorting.
+		 * @param bool   $trash          If trash items should be displayed.
+		 */
+		$forms = apply_filters( 'gform_form_list_forms', $forms, $search_query, $active, $sort_column, $sort_direction, $trash );
+
 		$per_page = $this->get_items_per_page( 'gform_forms_per_page', 20 );
 
 		$per_page = apply_filters( 'gform_page_size_form_list', $per_page );
@@ -490,8 +515,9 @@ class GF_Form_List_Table extends WP_List_Table {
 			'per_page'    => $per_page,
 		) );
 
-		if ( in_array( $sort_column, array( 'view_count', 'lead_count', 'conversion' ) ) ) {
-			usort( $forms, array( $this, 'compare_' . $sort_column . '_'  . $sort_direction ) );
+
+		if ( in_array( $sort_column, array( 'view_count', 'entry_count', 'conversion' ) ) ) {
+			usort( $forms, array( $this, 'compare_' . $sort_column . '_' . $sort_direction ) );
 		}
 
 		$offset = ( $this->get_pagenum() - 1 ) * $per_page;
@@ -524,7 +550,7 @@ class GF_Form_List_Table extends WP_List_Table {
 			'is_active'  => '',
 			'title'      => esc_html__( 'Title', 'gravityforms' ),
 			'id'         => esc_html__( 'ID', 'gravityforms' ),
-			'lead_count' => esc_html__( 'Entries', 'gravityforms' ),
+			'entry_count' => esc_html__( 'Entries', 'gravityforms' ),
 			'view_count' => esc_html__( 'Views', 'gravityforms' ),
 			'conversion' => esc_html__( 'Conversion', 'gravityforms' ),
 		);
@@ -611,14 +637,14 @@ class GF_Form_List_Table extends WP_List_Table {
 		echo absint( $form->view_count );
 	}
 
-	function column_lead_count( $form ) {
-		echo '<a href="?page=gf_entries&id='. absint( $form->id ) .'">' . absint( $form->lead_count ) . '</a>';
+	function column_entry_count( $form ) {
+		echo '<a href="?page=gf_entries&id='. absint( $form->id ) .'">' . absint( $form->entry_count ) . '</a>';
 	}
 
 	function column_conversion( $form ) {
 		$conversion = '0%';
 		if ( $form->view_count > 0 ) {
-			$conversion = ( number_format( $form->lead_count / $form->view_count, 3 ) * 100 ) . '%';
+			$conversion = ( (float) number_format( $form->entry_count / $form->view_count, 3 ) * 100 ) . '%';
 		}
 		echo $conversion;
 	}
@@ -737,24 +763,29 @@ class GF_Form_List_Table extends WP_List_Table {
 			$form_id = rgpost( 'single_action_argument' );
 			switch ( $single_action ) {
 				case 'trash' :
-					RGFormsModel::trash_form( $form_id );
-					$message = __( 'Form moved to the trash.', 'gravityforms' );
+					$trashed = RGFormsModel::trash_form( $form_id );
+					$message = is_wp_error( $trashed ) ? $trashed->get_error_message() : __( 'Form moved to the trash.', 'gravityforms' );
+					$message_class = is_wp_error( $trashed ) ? 'error' : 'updated';
 					break;
 				case 'restore' :
-					RGFormsModel::restore_form( $form_id );
-					$message = __( 'Form restored.', 'gravityforms' );
+					$restored = RGFormsModel::restore_form( $form_id );
+					$message = is_wp_error( $restored ) ? $restored->get_error_message() : __( 'Form restored.', 'gravityforms' );
+					$message_class = is_wp_error( $restored ) ? 'error' : 'updated';
 					break;
 				case 'delete' :
 					if ( GFCommon::current_user_can_any( 'gravityforms_delete_forms' ) ) {
-						RGFormsModel::delete_form( $form_id );
-						$message = __( 'Form deleted.', 'gravityforms' );
+						$deleted = RGFormsModel::delete_form( $form_id );
+					    $message = is_wp_error( $deleted ) ? $deleted->get_error_message() : __( 'Form deleted.', 'gravityforms' );
+					    $message_class = is_wp_error( $deleted ) ? 'error' : 'updated';
 					} else {
 						$message = __( "You don't have adequate permission to delete forms.", 'gravityforms' );
+						$message_class = 'error';
 					}
 					break;
 				case 'duplicate' :
-					RGFormsModel::duplicate_form( $form_id );
-					$message = __( 'Form duplicated.', 'gravityforms' );
+					$duplicated = RGFormsModel::duplicate_form( $form_id );
+					$message = is_wp_error( $duplicated ) ? $duplicated->get_error_message() : __( 'Form duplicated.', 'gravityforms' );
+					$message_class = is_wp_error( $duplicated ) ? 'error' : 'updated';
 					break;
 
 			}
@@ -766,13 +797,15 @@ class GF_Form_List_Table extends WP_List_Table {
 
 					check_admin_referer( "gf_delete_form_{$form_id}" );
 
-					RGFormsModel::trash_form( $form_id );
-					$message = __( 'Form moved to the trash.', 'gravityforms' );
+					$trashed = RGFormsModel::trash_form( $form_id );
+					$message = is_wp_error( $trashed ) ? $trashed->get_error_message() : __( 'Form moved to the trash.', 'gravityforms' );
+					$message_class = is_wp_error( $trashed ) ? 'error' : 'updated';
 					break;				
 				case 'duplicate' :
 					check_ajax_referer( "gf_duplicate_form_{$form_id}" );
-					RGFormsModel::duplicate_form( $form_id );
-					$message = __( 'Form duplicated.', 'gravityforms' );
+					$duplicated = RGFormsModel::duplicate_form( $form_id );
+					$message = is_wp_error( $duplicated ) ? $duplicated->get_error_message() : __( 'Form duplicated.', 'gravityforms' );
+					$message_class = is_wp_error( $duplicated ) ? 'error' : 'updated';
 					break;
 
 			}
@@ -842,7 +875,7 @@ class GF_Form_List_Table extends WP_List_Table {
 
 		if ( ! empty( $message ) ) {
 
-			echo '<div id="message" class="updated notice is-dismissible"><p>' . $message . '</p></div>';
+			echo '<div id="message" class="' . ( isset( $message_class ) ? $message_class : 'updated' ) . ' notice is-dismissible"><p>' . $message . '</p></div>';
 		};
 	}
 
@@ -871,23 +904,23 @@ class GF_Form_List_Table extends WP_List_Table {
 	    return $a->view_count < $b->view_count;
 	}
 
-	public static function compare_lead_count_asc( $a, $b ) {
-	    return $a->lead_count > $b->lead_count;
+	public static function compare_entry_count_asc( $a, $b ) {
+	    return $a->entry_count > $b->entry_count;
 	}
 
-	public static function compare_lead_count_desc( $a, $b ) {
-	    return $a->lead_count < $b->lead_count;
+	public static function compare_entry_count_desc( $a, $b ) {
+	    return $a->entry_count < $b->entry_count;
 	}
 
 	public static function compare_conversion_asc( $a, $b ) {
-		$a_conversion = $a->view_count > 0 ? $a->lead_count / $a->view_count : 0;
-		$b_conversion = $b->view_count > 0 ? $b->lead_count / $b->view_count : 0;
+		$a_conversion = $a->view_count > 0 ? $a->entry_count / $a->view_count : 0;
+		$b_conversion = $b->view_count > 0 ? $b->entry_count / $b->view_count : 0;
 	    return $a_conversion > $b_conversion;
 	}
 
 	public static function compare_conversion_desc( $a, $b ) {
-	    $a_conversion = $a->view_count > 0 ? $a->lead_count / $a->view_count : 0;
-		$b_conversion = $b->view_count > 0 ? $b->lead_count / $b->view_count : 0;
+	    $a_conversion = $a->view_count > 0 ? $a->entry_count / $a->view_count : 0;
+		$b_conversion = $b->view_count > 0 ? $b->entry_count / $b->view_count : 0;
 	    return $a_conversion < $b_conversion;
 	}
 }

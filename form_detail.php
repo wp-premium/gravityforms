@@ -163,7 +163,7 @@ class GFFormDetail {
 				?>
 				<div class="error_base gform_editor_status" id="after_update_error_dialog">
 					<?php esc_html_e( 'There was an error while saving your form.', 'gravityforms' ) ?>
-					<?php printf( __( 'Please %scontact our support team%s.', 'gravityforms' ), '<a href="http://www.gravityhelp.com">', '</a>' ) ?>
+					<?php printf( __( 'Please %scontact our support team%s.', 'gravityforms' ), '<a href="https://www.gravityforms.com/support/">', '</a>' ) ?>
 				</div>
 				<?php
 				break;
@@ -1348,7 +1348,7 @@ class GFFormDetail {
 			<input type="text" id="field_max_file_size" size="10" placeholder="<?php $max_upload_size = wp_max_upload_size() / 1048576;
 			echo $max_upload_size; ?>MB" />
 
-			<div>
+			<div id="gform_server_max_file_size_notice">
 				<small><?php printf( esc_html__( 'Maximum allowed on this server: %sMB', 'gravityforms' ),  $max_upload_size ); ?></small>
 			</div>
 		</li>
@@ -1519,6 +1519,19 @@ class GFFormDetail {
 
 				</div>
 			</div>
+		</li>
+		<?php
+		do_action( 'gform_field_standard_settings', 1360, $form_id );
+		?>
+
+		<li class="select_all_choices_setting field_setting">
+
+			<input type="checkbox" id="field_select_all_choices" onclick="var value = jQuery(this).is(':checked'); SetFieldProperty('enableSelectAll', value); RefreshSelectedFieldPreview();" onkeypress="var value = jQuery(this).is(':checked'); SetFieldProperty('enableSelectAll', value); RefreshSelectedFieldPreview();" />
+			<label for="field_select_all_choices" class="inline">
+				<?php esc_html_e( 'Enable "Select All" choice', 'gravityforms' ); ?>
+				<?php gform_tooltip( 'form_field_select_all_choices' ) ?>
+			</label>
+
 		</li>
 		<?php
 		do_action( 'gform_field_standard_settings', 1362, $form_id );
@@ -2037,6 +2050,11 @@ class GFFormDetail {
 						<option value="large"><?php esc_html_e( 'Large', 'gravityforms' ); ?></option>
 					</select>
 				</li>
+
+	            <?php
+	            do_action( 'gform_field_appearance_settings', 500, $form_id );
+	            ?>
+
             </ul>
         </div>
 
@@ -2434,7 +2452,7 @@ class GFFormDetail {
 					</div>
 					<div class="error_base" id="after_update_error_dialog" style="padding:10px 10px 16px 10px; display:none;">
 						<?php esc_html_e( 'There was an error while saving your form.', 'gravityforms' ) ?>
-						<?php printf( __( 'Please %scontact our support team%s.', 'gravityforms' ), '<a href="http://www.gravityhelp.com">', '</a>' ) ?>
+						<?php printf( __( 'Please %scontact our support team%s.', 'gravityforms' ), '<a href="https://www.gravityforms.com/support/">', '</a>' ) ?>
 					</div>
 
 					<!-- this field allows us to force onblur events for field setting inputs that are otherwise not triggered
@@ -2575,9 +2593,11 @@ class GFFormDetail {
 		}
 		
 		/**
-		 * Modify the field groups before fields are added
-	         *
-        	 * @param array $field_groups The field groups, including group name, label and fields.
+		 * Modify the field groups before fields are added.
+		 *
+		 * @since 2.2.6
+		 *
+		 * @param array $field_groups The field groups, including group name, label and fields.
 		 */
 		$field_groups = apply_filters( 'gform_field_groups_form_editor', $field_groups );
 

@@ -44,7 +44,7 @@ class GF_Feed_Processor extends GF_Background_Process {
 	 * @access public
 	 * @static
 	 *
-	 * @return GFLogging
+	 * @return GF_Feed_Processor
 	 */
 	public static function get_instance() {
 
@@ -54,72 +54,6 @@ class GF_Feed_Processor extends GF_Background_Process {
 
 		return self::$_instance;
 
-	}
-
-	/**
-	 * Dispatch Feed Processor.
-	 *
-	 * Processor will still run via cron job if this fails for any reason.
-	 *
-	 * @since  2.2
-	 * @access public
-	 *
-	 * @return void
-	 */
-	public function dispatch() {
-		$dispatched = parent::dispatch();
-
-		if ( is_wp_error( $dispatched ) ) {
-			GFCommon::log_debug( sprintf( 'Unable to dispatch background feed processor: %s', $dispatched->get_error_message() ) );
-		}
-	}
-
-	/**
-	 * Handle cron healthcheck
-	 *
-	 * Restart the background process if not already running and data exists in the queue.
-	 *
-	 * @since  2.2
-	 * @access public
-	 *
-	 * @uses \GF_Feed_Processor::handle_cron_healthcheck()
-	 * @uses \GF_Feed_Processor::is_queue_empty()
-	 * @uses \GF_Feed_Processor::clear_scheduled_event()
-	 * @uses \GF_Feed_Processor::handle()
-	 *
-	 * @return void
-	 */
-	public function handle_cron_healthcheck() {
-		if ( $this->is_process_running() ) {
-			// Background process already running.
-			return;
-		}
-
-		if ( $this->is_queue_empty() ) {
-			// No data to process.
-			$this->clear_scheduled_event();
-
-			return;
-		}
-
-		$this->handle();
-	}
-
-	/**
-	 * Schedule fallback event.
-	 *
-	 * @since  2.2
-	 * @access protected
-	 *
-	 * @uses \GF_Feed_Processor::$cron_hook_identifier
-	 * @uses \GF_Feed_Processor::$cron_interval_identifier
-	 *
-	 * @return void
-	 */
-	protected function schedule_event() {
-		if ( ! wp_next_scheduled( $this->cron_hook_identifier ) ) {
-			wp_schedule_event( time() + 10, $this->cron_interval_identifier, $this->cron_hook_identifier );
-		}
 	}
 
 	/**
@@ -133,9 +67,9 @@ class GF_Feed_Processor extends GF_Background_Process {
 	 * in the next pass through. Or, return false to remove the
 	 * item from the queue.
 	 *
-	 * @param string $item Update callback function
+	 * @param array $item The task arguments: addon, feed, entry_id, and form_id.
 	 *
-	 * @return mixed
+	 * @return bool
 	 */
 	protected function task( $item ) {
 
@@ -144,6 +78,18 @@ class GF_Feed_Processor extends GF_Background_Process {
 		$feed  = $item['feed'];
 		$entry = GFAPI::get_entry( $item['entry_id'] );
 		$form  = GFAPI::get_form( $item['form_id'] );
+
+		// Remove task if entry cannot be found.
+		if ( is_wp_error( $entry ) ) {
+
+			call_user_func( array(
+				$addon,
+				'log_debug',
+			), __METHOD__ . "(): attempted feed (#{$feed['id']} - {$feed_name}) for entry #{$item['entry_id']} for {$addon->get_slug()} but entry could not be found. Bailing." );
+
+			return false;
+
+		}
 
 		// Get feed name.
 		$feed_name = rgars( $feed, 'meta/feed_name' ) ? $feed['meta']['feed_name'] : rgars( $feed, 'meta/feedName' );

@@ -257,7 +257,7 @@ class GF_Field_Phone extends GF_Field {
 		$phone_format = $this->get_phone_format();
 
 		if ( rgar( $phone_format, 'mask' ) ) {
-			$script = "if(!/(android)/i.test(navigator.userAgent)){jQuery('#input_{$form['id']}_{$this->id}').mask('{$phone_format['mask']}').bind('keypress', function(e){if(e.which == 13){jQuery(this).blur();} } );}";
+			$script = "jQuery('#input_{$form['id']}_{$this->id}').mask('{$phone_format['mask']}').bind('keypress', function(e){if(e.which == 13){jQuery(this).blur();} } );";
 		}
 		return $script;
 	}

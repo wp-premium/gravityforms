@@ -594,6 +594,7 @@ function LoadFieldSettings(){
 
     jQuery("#field_phone_format").val(field.phoneFormat);
     jQuery("#field_error_message").val(field.errorMessage);
+    jQuery('#field_select_all_choices').prop('checked', field.enableSelectAll ? true : false);
     jQuery('#field_other_choice').prop('checked', field.enableOtherChoice ? true : false);
     jQuery('#field_add_icon_url').val(field.addIconUrl ? field.addIconUrl : "");
     jQuery('#field_delete_icon_url').val(field.deleteIconUrl ? field.deleteIconUrl : "");
@@ -1595,6 +1596,11 @@ function ToggleMultiFile(isInit){
 
     if(jQuery("#field_multiple_files").prop("checked")){
         jQuery("#gform_multiple_files_options").show(speed);
+		var $uploadField = jQuery('.gform_fileupload_multifile');
+		var pluploadSettings = $uploadField.data('settings');
+		if ( pluploadSettings && typeof pluploadSettings.chunk_size != 'undefined' ) {
+			jQuery('#gform_server_max_file_size_notice').hide();
+		}
         SetFieldProperty('multipleFiles', true);
     }
     else{
@@ -2258,7 +2264,12 @@ function InitializeFields(){
       function () {
         jQuery(this).removeClass('field_hover');
       }
-    );
+    ).focus(
+		function () {
+			jQuery('.field_hover').removeClass('field_hover');
+			jQuery(this).addClass('field_hover');
+		}
+	);
 
     jQuery('.field_delete_icon, .field_duplicate_icon').click(function(event){
         event.stopPropagation();
@@ -2453,6 +2464,7 @@ function LoadBulkChoices(field){
 
     var choices = new Array();
     var choice;
+
     for(var i=0; i<field.choices.length; i++){
         choice = field.choices[i].text == field.choices[i].value ? field.choices[i].text : field.choices[i].text + "|" + field.choices[i].value;
         if(field.enablePrice && field.choices[i]["price"] != "")
@@ -2460,6 +2472,18 @@ function LoadBulkChoices(field){
 
         choices.push(choice);
     }
+
+	/**
+	 * Filter bulk loaded choices *after* they've been formatted for the bulk UI.
+	 *
+	 * This filter is useful if you would like to format the choices to provide additional parameters for choice-based settings.
+	 *
+	 * @since 2.3
+	 *
+	 * @param array bulkChoices The formatted choices.
+	 * @param array choices     The choice objects from the current field.
+	 */
+	choices = gform.applyFilters( 'gform_choices_post_bulk_load', choices, field.choices );
 
     jQuery("#gfield_bulk_add_input").val(choices.join("\n"));
 }
@@ -2555,6 +2579,17 @@ function InsertBulkChoices(choices){
         if(text_value.length > 1)
             enableValue = true;
     }
+
+	/**
+	 * Fires after bulk choices have been added to the field object and before the UI has been re-rendered.
+	 *
+	 * This action is useful if you need to alter other field settings based on the choices.
+	 *
+	 * @since 2.3
+	 *
+	 * @param array field The currently selected field object.
+	 */
+	gform.doAction( 'gform_bulk_insert_choices', field );
 
     if(enableValue){
         field["enableChoiceValue"] = true;

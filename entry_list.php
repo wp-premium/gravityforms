@@ -15,6 +15,66 @@ class GFEntryList {
 		$forms   = RGFormsModel::get_forms( null, 'title' );
 		$form_id = RGForms::get( 'id' );
 
+		// Restore entry.
+		if ( rgget( 'restore' ) ) {
+
+			// Verify nonce.
+			check_admin_referer( 'gf_restore_entry' );
+
+			// Restore entry.
+			GFFormsModel::update_entry_property( rgget( 'restore' ), 'status', 'active' );
+			$admin_url = admin_url( 'admin.php?page=gf_entries&view=entries&id=' . absint( $form_id ) . '&restored=' . absint( rgget( 'restore' ) ) );
+			wp_safe_redirect( $admin_url );
+			exit();
+		}
+
+		// Display restored entry message.
+		if ( rgget( 'restored' ) ) {
+
+			// Add message.
+			GFCommon::add_dismissible_message(
+				sprintf(
+					esc_html__( '%s restored from the Trash.', 'gravityforms' ),
+					esc_html__( '1 entry', 'gravityforms' )
+				),
+				'success'
+			);
+
+		}
+
+		// Display deleted entry message.
+		if ( rgget( 'deleted' ) ) {
+
+			// Add message.
+			GFCommon::add_dismissible_message(
+				sprintf(
+					esc_html__( '%s permanently deleted.', 'gravityforms' ),
+					esc_html__( '1 entry', 'gravityforms' )
+				),
+				'success'
+			);
+
+		}
+
+		// Add message for trashed entry.
+		if ( rgget( 'trashed_entry' ) ) {
+
+			// Prepare URL.
+			$restore_url = add_query_arg( 'restore', rgget( 'trashed_entry' ) );
+			$restore_url = remove_query_arg( 'trashed_entry', $restore_url );
+			$restore_url = wp_nonce_url( $restore_url, 'gf_restore_entry' );
+
+			GFCommon::add_dismissible_message(
+				sprintf(
+					esc_html__( '1 entry moved to the Trash. %sUndo%s', 'gravityforms' ),
+					'<a href="' . esc_url( $restore_url ) . '">',
+					'</a>'
+				),
+				'success'
+			);
+
+		}
+
 		if ( sizeof( $forms ) == 0 ) {
 			?>
 			<div style="margin:50px 0 0 10px;">
@@ -213,9 +273,11 @@ class GFEntryList {
 
 		<div class="wrap <?php echo GFCommon::get_browser_class() ?>">
 
-			<?php GFCommon::form_page_title( $form ); ?>
-
-			<?php GFCommon::display_dismissible_message(); ?>
+			<?php
+				GFCommon::form_page_title( $form );
+				GFCommon::display_admin_message();
+				GFCommon::display_dismissible_message();
+			?>
 
 			<?php
 			GFForms::top_toolbar();
@@ -448,6 +510,13 @@ final class GF_Entry_List_Table extends WP_List_Table {
 	public $locking_info;
 
 	/**
+	 * Tracks the cuurent row during output.
+	 *
+	 * @var int
+	 */
+	public $row_index = 0;
+
+	/**
 	 * The Form array.
 	 *
 	 * @var array
@@ -455,11 +524,10 @@ final class GF_Entry_List_Table extends WP_List_Table {
 	private $_form;
 
 	/**
-	 * Tracks the cuurent row during output.
-	 *
-	 * @var int
+	 * The columns to display on the entry list for this form.
+	 * @var array
 	 */
-	public $row_index = 0;
+	private $_grid_columns = null;
 
 	/**
 	 * GF_Entry_List constructor.
@@ -750,7 +818,7 @@ final class GF_Entry_List_Table extends WP_List_Table {
 			$table_columns['is_starred'] = '';
 		}
 		$form_id = $this->get_form_id();
-		$columns = GFFormsModel::get_grid_columns( $form_id, true );
+		$columns = $this->get_grid_columns();
 		foreach ( $columns as $key => $column_info ) {
 			$table_columns[ 'field_id-' . $key ] = $column_info['label'];
 		}
@@ -780,8 +848,7 @@ final class GF_Entry_List_Table extends WP_List_Table {
 	 * @return array
 	 */
 	function get_sortable_columns() {
-		$form_id = $this->get_form_id();
-		$columns = GFFormsModel::get_grid_columns( $form_id, true );
+		$columns = $this->get_grid_columns();
 		$table_columns = array();
 		foreach ( $columns as $key => $column_info ) {
 			$table_columns[ 'field_id-' . (string) $key ] = array( (string) $key, false );
@@ -836,14 +903,14 @@ final class GF_Entry_List_Table extends WP_List_Table {
 	 * Displays the entry value.
 	 *
 	 * @param object $entry
-	 * @param string $field_id
+	 * @param string $column_id
 	 */
 	function column_default( $entry, $column_id ) {
 		$field_id = (string) str_replace( 'field_id-', '', $column_id );
 		$form     = $this->get_form();
 		$form_id  = $this->get_form_id();
 		$field    = GFFormsModel::get_field( $form, $field_id );
-		$columns  = GFFormsModel::get_grid_columns( $form_id, true );
+		$columns  = $this->get_grid_columns();
 		$value    = rgar( $entry, $field_id );
 
 		if ( ! empty( $field ) && $field->type == 'post_category' ) {
@@ -1279,7 +1346,7 @@ final class GF_Entry_List_Table extends WP_List_Table {
 			switch ( $single_action ) {
 				case 'delete' :
 					if ( GFCommon::current_user_can_any( 'gravityforms_delete_entries' ) ) {
-						RGFormsModel::delete_lead( $entry_id );
+						RGFormsModel::delete_entry( $entry_id );
 						$message = esc_html__( 'Entry deleted.', 'gravityforms' );
 					} else {
 						$message = esc_html__( "You don't have adequate permission to delete entries.", 'gravityforms' );
@@ -1289,6 +1356,7 @@ final class GF_Entry_List_Table extends WP_List_Table {
 				case 'change_columns':
 					$columns = GFCommon::json_decode( stripslashes( $_POST['grid_columns'] ), true );
 					RGFormsModel::update_grid_column_meta( $form_id, $columns );
+					$this->_grid_columns = null;
 					$this->set_columns();
 					break;
 
@@ -1308,7 +1376,7 @@ final class GF_Entry_List_Table extends WP_List_Table {
 			$select_all  = rgpost( 'all_entries' );
 			$search_criteria = $this->get_search_criteria();
 
-			$entries       = empty( $select_all ) ? $_POST['entry'] : GFFormsModel::search_lead_ids( $form_id, $search_criteria );
+			$entries = empty( $select_all ) ? $_POST['entry'] : GFAPI::get_entry_ids( $form_id, $search_criteria );
 
 			$entry_count = count( $entries ) > 1 ? sprintf( esc_html__( '%d entries', 'gravityforms' ), count( $entries ) ) : esc_html__( '1 entry', 'gravityforms' );
 
@@ -1323,42 +1391,42 @@ final class GF_Entry_List_Table extends WP_List_Table {
 					break;
 
 				case 'trash':
-					RGFormsModel::update_leads_property( $entries, 'status', 'trash' );
+					RGFormsModel::update_entries_property( $entries, 'status', 'trash' );
 					$message = sprintf( esc_html__( '%s moved to Trash.', 'gravityforms' ), $entry_count );
 					break;
 
 				case 'restore':
-					RGFormsModel::update_leads_property( $entries, 'status', 'active' );
+					RGFormsModel::update_entries_property( $entries, 'status', 'active' );
 					$message = sprintf( esc_html__( '%s restored from the Trash.', 'gravityforms' ), $entry_count );
 					break;
 
 				case 'unspam':
-					RGFormsModel::update_leads_property( $entries, 'status', 'active' );
+					RGFormsModel::update_entries_property( $entries, 'status', 'active' );
 					$message = sprintf( esc_html__( '%s restored from the spam.', 'gravityforms' ), $entry_count );
 					break;
 
 				case 'spam':
-					RGFormsModel::update_leads_property( $entries, 'status', 'spam' );
+					RGFormsModel::update_entries_property( $entries, 'status', 'spam' );
 					$message = sprintf( esc_html__( '%s marked as spam.', 'gravityforms' ), $entry_count );
 					break;
 
 				case 'mark_read':
-					RGFormsModel::update_leads_property( $entries, 'is_read', 1 );
+					RGFormsModel::update_entries_property( $entries, 'is_read', 1 );
 					$message = sprintf( esc_html__( '%s marked as read.', 'gravityforms' ), $entry_count );
 					break;
 
 				case 'mark_unread':
-					RGFormsModel::update_leads_property( $entries, 'is_read', 0 );
+					RGFormsModel::update_entries_property( $entries, 'is_read', 0 );
 					$message = sprintf( esc_html__( '%s marked as unread.', 'gravityforms' ), $entry_count );
 					break;
 
 				case 'add_star':
-					RGFormsModel::update_leads_property( $entries, 'is_starred', 1 );
+					RGFormsModel::update_entries_property( $entries, 'is_starred', 1 );
 					$message = sprintf( esc_html__( '%s starred.', 'gravityforms' ), $entry_count );
 					break;
 
 				case 'remove_star':
-					RGFormsModel::update_leads_property( $entries, 'is_starred', 0 );
+					RGFormsModel::update_entries_property( $entries, 'is_starred', 0 );
 					$message = sprintf( esc_html__( '%s unstarred.', 'gravityforms' ), $entry_count );
 					break;
 
@@ -1664,22 +1732,38 @@ final class GF_Entry_List_Table extends WP_List_Table {
 
 			function BulkPrint() {
 
-				var leadIds = getLeadIds();
-				if (leadIds != 0)
-					leadIds = leadIds.join(',');
-				var leadsQS = '&lid=' + leadIds;
-				var notesQS = jQuery('#gform_print_notes').is(':checked') ? '&notes=1' : '';
-				var pageBreakQS = jQuery('#gform_print_page_break').is(':checked') ? '&page_break=1' : '';
-				var filterQS = '&filter=' + <?php echo json_encode( rgget( 'filter' ) ) ?>;
-				var searchQS = '&s=' + <?php echo json_encode( rgget( 's' ) ) ?>;
-				var searchFieldIdQS = '&field_id=' + <?php echo json_encode( rgget( 'field_id' ) ) ?>;
-				var searchOperatorQS = '&operator=' + <?php echo json_encode( rgget( 'operator' ) ) ?>;
+				// Get selected entry IDs.
+				var entryIDs = getLeadIds();
 
-				var url = '<?php echo trailingslashit( site_url() ) ?>?gf_page=print-entry&fid=<?php echo absint( $form['id'] ) ?>' + leadsQS + notesQS + pageBreakQS + filterQS + searchQS + searchFieldIdQS + searchOperatorQS;
-				window.open(url, 'printwindow');
+				// If entry IDs were found, convert to string.
+				if ( entryIDs != 0 ) {
+					entryIDs = entryIDs.join(',');
+				}
 
-				closeModal(true);
-				hideMessage('#entry_list_form', false);
+				// Build query string parameters.
+				var queryParams = {
+					'gf_page':    'print-entry',
+					'fid':        <?php echo json_encode( $form['id'] ); ?>,
+					'lid':        entryIDs,
+					'notes':      jQuery( '#gform_print_notes' ).is( ':checked' ) ? '1' : '',
+					'page_break': jQuery( '#gform_print_page_break' ).is( ':checked' ) ? '1' : '',
+					'filter':     <?php echo json_encode( rgget( 'filter' ) ) ?>,
+					's':          <?php echo json_encode( rgget( 's' ) ) ?>,
+					'field_id':   <?php echo json_encode( rgget( 'field_id' ) ) ?>,
+					'operator':   <?php echo json_encode( rgget( 'operator' ) ) ?>,
+					'orderby':    <?php echo json_encode( rgget( 'orderby' ) ) ?>,
+					'order':      <?php echo json_encode( rgget( 'order' ) ) ?>,
+				};
+
+				// Build print entry page URL.
+				var url = '<?php echo trailingslashit( site_url() ) ?>?' + jQuery.param( queryParams );
+
+				// Open print entry page.
+				window.open( url, 'printwindow' );
+
+				closeModal( true );
+				hideMessage( '#entry_list_form', false );
+
 			}
 
 			function resetPrintUI() {
@@ -2025,5 +2109,13 @@ final class GF_Entry_List_Table extends WP_List_Table {
 		</div>
 		<!-- / Print -->
 		<?php
+	}
+
+	function get_grid_columns() {
+		if ( ! isset( $this->_grid_columns ) ) {
+			$this->_grid_columns = GFFormsModel::get_grid_columns( $this->get_form_id(), true );
+
+		}
+		return $this->_grid_columns;
 	}
 }
