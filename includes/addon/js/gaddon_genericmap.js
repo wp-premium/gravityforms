@@ -110,54 +110,6 @@ var GFGenericMap = function( options ) {
 		
 	}
 	
-	self.setupMergeTags = function( $elem ) {
-		
-		$elem.bind( 'keydown', function( e ) {
-			var menuActive = jQuery( this ).data( "autocomplete" ) && jQuery( this ).data( "autocomplete" ).menu ? jQuery( this ).data( "autocomplete" ).menu.active : false;
-			if ( e.keyCode === jQuery.ui.keyCode.TAB && menuActive ) {
-				e.preventDefault();
-			}
-		} );
-				
-		$elem.autocomplete( {
-			minLength: 1,
-			source: function( request, response ) {
-			
-				// delegate back to autocomplete, but extract the last term
-				var term = gfMergeTags.extractLast( request.term );
-				
-				if( term.length < $elem.autocomplete( 'option', 'minLength' ) ) {
-					response( [] );
-					return;
-				}
-				
-				var tags = jQuery.map( gfMergeTags.getAutoCompleteMergeTags( $elem ), function( item ) {
-					return gfMergeTags.startsWith( item, term ) ? item : null;
-				} );
-				
-				response( tags );
-			},
-			focus: function() {
-				// prevent value inserted on focus
-				return false;
-			},
-			select: function( event, ui ) {
-				var terms = gfMergeTags.split( this.value );
-				
-				// remove the current input
-				terms.pop();
-				
-				// add the selected item
-				terms.push( ui.item.value );
-				
-				this.value = terms.join( " " );
-				$elem.trigger( 'input' ).trigger( 'propertychange') ;
-				return false;
-			}
-		} );
-
-	}
-	
 	self.setupRepeater = function() {
 
 		var limit = self.options.limit > 0 ? self.options.limit : 0;
@@ -188,7 +140,7 @@ var GFGenericMap = function( options ) {
 					}
 
 					if ( self.options.mergeTags ) {
-						self.setupMergeTags( $elem.find( '.custom-value-container input' ) );
+						new gfMergeTagsObj( form, $elem.find( '.custom-value-container input' ) );
 					}
 
 					if ( window.hasOwnProperty( 'gform' ) ) {

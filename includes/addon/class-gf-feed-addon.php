@@ -56,7 +56,7 @@ abstract class GFFeedAddOn extends GFAddOn {
 	/**
 	 * @var string Version number of the Add-On Framework
 	 */
-	private $_feed_version = '0.13';
+	private $_feed_version = '0.14';
 	private $_feed_settings_fields = array();
 	private $_current_feed_id = false;
 
@@ -68,6 +68,7 @@ abstract class GFFeedAddOn extends GFAddOn {
 		parent::init();
 
 		add_filter( 'gform_entry_post_save', array( $this, 'maybe_process_feed' ), 10, 2 );
+		add_action( 'gform_after_delete_form', array( $this, 'delete_feeds' ) );
 
 	}
 
@@ -128,6 +129,7 @@ abstract class GFFeedAddOn extends GFAddOn {
                   feed_order mediumint(8) unsigned not null default 0,
                   meta longtext,
                   addon_slug varchar(50),
+                  event_type varchar(20),
                   PRIMARY KEY  (id),
                   KEY addon_form (addon_slug,form_id)
                 ) $charset_collate;";
@@ -877,40 +879,59 @@ abstract class GFFeedAddOn extends GFAddOn {
 	public function delete_feeds( $form_id = null ) {
 		global $wpdb;
 
-		$where  = is_numeric( $form_id ) ? array( 'addon_slug' => $this->_slug, 'form_id' => $form_id ) : array( 'addon_slug' => $this->_slug );
-		$format = is_numeric( $form_id ) ? array( '%s', '%d' ) : array( '%s' );
+		$form_filter = is_numeric( $form_id ) ? $wpdb->prepare( 'AND form_id=%d', absint( $form_id ) ) : '';
 
-		$wpdb->delete( "{$wpdb->prefix}gf_addon_feed", $where, $format );
+		$sql = $wpdb->prepare(
+			"SELECT id FROM {$wpdb->prefix}gf_addon_feed
+                               WHERE addon_slug=%s {$form_filter} ORDER BY `feed_order`, `id` ASC", $this->_slug
+		);
+
+		$feed_ids = $wpdb->get_col( $sql );
+
+		if ( ! empty( $feed_ids ) ) {
+			array_map( array( $this, 'delete_feed' ), $feed_ids );
+		}
+
 	}
 
 	/**
 	 * Duplicates the feed.
 	 *
-	 * @param int|array $id The ID of the feed to be duplicated or the feed object when duplicating a form.
-	 * @param mixed $new_form_id False when using feed actions or the ID of the new form when duplicating a form.
+	 * @since  1.9.15
+	 * @access public
+	 *
+	 * @param int|array $id          The ID of the feed to be duplicated or the feed object when duplicating a form.
+	 * @param mixed     $new_form_id False when using feed actions or the ID of the new form when duplicating a form.
+	 *
+	 * @uses   GFFeedAddOn::can_duplicate_feed()
+	 * @uses   GFFeedAddOn::get_feed()
+	 * @uses   GFFeedAddOn::insert_feed()
+	 * @uses   GFFeedAddOn::is_unique_feed_name()
+	 *
+	 * @return int New feed ID.
 	 */
 	public function duplicate_feed( $id, $new_form_id = false ) {
 
-		/* Get original feed. */
+		// Get original feed.
 		$original_feed = is_array( $id ) ? $id : $this->get_feed( $id );
 
-		/* If feed doesn't exist, exit. */
+		// If feed doesn't exist, exit.
 		if ( ! $original_feed || ! $this->can_duplicate_feed( $original_feed ) ) {
 			return;
 		}
 
-		/* Get feed name key. */
+		// Get feed name key.
 		$feed_name_key = rgars( $original_feed, 'meta/feed_name' ) ? 'feed_name' : 'feedName';
 
-		/* Make sure the new feed name is unique. */
-		$count = 2;
+		// Make sure the new feed name is unique.
+		$count     = 2;
 		$feed_name = rgars( $original_feed, 'meta/' . $feed_name_key ) . ' - ' . esc_html__( 'Copy 1', 'gravityforms' );
 		while ( ! $this->is_unique_feed_name( $feed_name, $original_feed['form_id'] ) ) {
 			$feed_name = rgars( $original_feed, 'meta/' . $feed_name_key ) . ' - ' . sprintf( esc_html__( 'Copy %d', 'gravityforms' ), $count );
-			$count ++;
+			$count++;
 		}
 
-		/* Copy the feed meta. */
+		// Copy the feed meta.
 		$meta                   = $original_feed['meta'];
 		$meta[ $feed_name_key ] = $feed_name;
 
@@ -918,8 +939,8 @@ abstract class GFFeedAddOn extends GFAddOn {
 			$new_form_id = $original_feed['form_id'];
 		}
 
-		/* Create the new feed. */
-		$this->insert_feed( $new_form_id, $original_feed['is_active'], $meta );
+		// Create the new feed.
+		return $this->insert_feed( $new_form_id, $original_feed['is_active'], $meta );
 
 	}
 
@@ -1622,8 +1643,8 @@ abstract class GFFeedAddOn extends GFAddOn {
 
 		$this->log_debug( 'GFFeedAddOn::paypal_fulfillment(): Checking PayPal fulfillment for transaction ' . $transaction_id . ' for ' . $this->_slug );
 		$is_fulfilled = gform_get_meta( $entry['id'], "{$this->_slug}_is_fulfilled" );
-		if ( $is_fulfilled ) {
-			$this->log_debug( 'GFFeedAddOn::paypal_fulfillment(): Entry ' . $entry['id'] . ' is already fulfilled for ' . $this->_slug . '. No action necessary.' );
+		if ( $is_fulfilled || ! $this->is_delayed( $paypal_config ) ) {
+			$this->log_debug( 'GFFeedAddOn::paypal_fulfillment(): Entry ' . $entry['id'] . ' is already fulfilled or feeds are not delayed. No action necessary.' );
 			return false;
 		}
 

@@ -90,7 +90,7 @@ class GF_Download {
 			$content_disposition = rgget( 'dl' ) ? 'attachment' : 'inline';
 
 			nocache_headers();
-			header( 'Robots: none' );
+			header( 'X-Robots-Tag: noindex', true );
 			header( 'Content-Type: ' . $content_type );
 			header( 'Content-Description: File Transfer' );
 			header( 'Content-Disposition: ' . $content_disposition . '; filename="' . basename( $file ) . '"' );

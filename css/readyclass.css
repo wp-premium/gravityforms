@@ -4,7 +4,7 @@
 readyclass.css
 Gravity Forms Ready Class Pre-Set Helper Styles
 http://www.gravityforms.com
-updated: January 12, 2017 04:17 PM (GMT-05:00) US Eastern Time
+updated: August 02, 2017 12:10 PM (GMT-05:00) US Eastern Time
 
 Gravity Forms is a Rocketgenius project
 copyright 2008-2017 Rocketgenius Inc.
@@ -111,8 +111,8 @@ to no.
         float: none;
     }
 
-    .gform_wrapper .top_label li.gfield.gf_left_half .ginput_container:not(.gfield_time_hour):not(.gfield_time_minute):not(.gfield_time_ampm):not(.ginput_container_date):not(.ginput_quantity):not(ul.gfield_radio li input):not(ul.gfield_checkbox li input):not(.datepicker),
-    .gform_wrapper .top_label li.gfield.gf_right_half .ginput_container:not(.gfield_time_hour):not(.gfield_time_minute):not(.gfield_time_ampm):not(.ginput_container_date):not(.ginput_quantity):not(ul.gfield_radio li input):not(ul.gfield_checkbox li input):not(.datepicker) {
+    .gform_wrapper .top_label li.gfield.gf_left_half .ginput_container:not(.gfield_time_hour):not(.gfield_time_minute):not(.gfield_time_ampm):not(.ginput_container_date):not(.ginput_quantity):not(.datepicker),
+    .gform_wrapper .top_label li.gfield.gf_right_half .ginput_container:not(.gfield_time_hour):not(.gfield_time_minute):not(.gfield_time_ampm):not(.ginput_container_date):not(.ginput_quantity):not(.datepicker) {
         width: 100% !important;
         margin: 8px 0 0 0;
         padding-left: 0;
@@ -233,9 +233,9 @@ to no.
         width: 100%;
     }
 
-    .gform_wrapper .top_label li.gfield.gf_left_third div:not(.ginput_container_date) input:not([type='radio']):not([type='checkbox']):not(.ginput_quantity):not(ul.gfield_radio li input):not(ul.gfield_checkbox li input),
-    .gform_wrapper .top_label li.gfield.gf_middle_third div:not(.ginput_container_date) input:not([type='radio']):not([type='checkbox']):not(.ginput_quantity):not(ul.gfield_radio li input):not(ul.gfield_checkbox li input),
-    .gform_wrapper .top_label li.gfield.gf_right_third div:not(.ginput_container_date) input:not([type='radio']):not([type='checkbox']):not(.ginput_quantity):not(ul.gfield_radio li input):not(ul.gfield_checkbox li input),
+    .gform_wrapper .top_label li.gfield.gf_left_third div:not(.ginput_container_date) input:not([type='radio']):not([type='checkbox']):not(.ginput_quantity),
+    .gform_wrapper .top_label li.gfield.gf_middle_third div:not(.ginput_container_date) input:not([type='radio']):not([type='checkbox']):not(.ginput_quantity),
+    .gform_wrapper .top_label li.gfield.gf_right_third div:not(.ginput_container_date) input:not([type='radio']):not([type='checkbox']):not(.ginput_quantity),
     .gform_wrapper .top_label li.gfield.gf_left_third div:not(.ginput_container_date) select,
     .gform_wrapper .top_label li.gfield.gf_middle_third div:not(.ginput_container_date) select,
     .gform_wrapper .top_label li.gfield.gf_right_third div:not(.ginput_container_date) select {
@@ -359,7 +359,7 @@ to no.
     }
 
     .gform_wrapper ul.gform_fields:not(.top_label) li ul.gfield_checkbox,
-    .gform_wrapper ul.gform_fields:not(.top_label)li ul.gfield_radio {
+    .gform_wrapper ul.gform_fields:not(.top_label) li ul.gfield_radio {
         width: calc(70% + 16px);
     }
 
@@ -546,14 +546,10 @@ to no.
         display: inline-block;
     }
 
-    html:not[dir="rtl"] .gform_wrapper li.gf_list_inline ul.gfield_checkbox li,
-    html:not[dir="rtl"] .gform_wrapper li.gf_list_inline ul.gfield_radio li {
-        padding-right: 16px !important;
-    }
-
     html[dir="rtl"] .gform_wrapper li.gf_list_inline ul.gfield_checkbox li,
     html[dir="rtl"] .gform_wrapper li.gf_list_inline ul.gfield_radio li {
         padding-left: 16px !important;
+        padding-right: 0 !important;
     }
 
     .gform_wrapper li.gf_hide_ampm div.gfield_time_ampm {
@@ -810,7 +806,7 @@ to no.
     }
 
     .gform_wrapper form.gf_simple_horizontal {
-        width: calc(100% -16px);
+        width: calc(100% - 16px);
         margin: 0 auto;
     }
 
@@ -864,7 +860,7 @@ to no.
         overflow: hidden;
         position: absolute;
         top: 0;
-        left: - 9000px;
+        left: -9000px;
     }
 
     .gform_wrapper form.gf_simple_horizontal div.gform_body ul.top_label.form_sublabel_below li.gfield {

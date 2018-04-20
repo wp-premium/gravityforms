@@ -303,7 +303,7 @@ if ( class_exists( 'GFForms' ) ) {
 
 					<div>
 						Please read through the <a target="_blank"
-						                           href="http://www.gravityhelp.com/documentation/page/Gravity_Forms_API">Gravity
+						                           href="https://docs.gravityforms.com/gravity-forms-api/">Gravity
 							Forms API Documentation</a> before attempting to use the API.
 					</div>
 					<h4>URL Generator</h4>

@@ -184,19 +184,41 @@ class GFLogging extends GFAddOn {
 	 */
 	public function plugin_settings_page() {
 
-		// If the delete_log parameter is set, delete the log file and display a message.
+
+		// If the delete_log parameter is set, delete the log file and redirect.
 		$plugin_slug = rgget( 'delete_log' );
 		if ( $plugin_slug ) {
+
 			$supported_plugins = $this->get_supported_plugins();
+
 			if ( isset( $supported_plugins[ $plugin_slug ] ) ) {
-				if ( wp_verify_nonce( rgget( $this->_nonce_action ), $this->_nonce_action ) && $this->delete_log_file( rgget( 'delete_log' ) ) ) {
-					GFCommon::add_message( esc_html__( 'Log file was successfully deleted.', 'gravityforms' ) );
+				if ( wp_verify_nonce( rgget( $this->_nonce_action ), $this->_nonce_action ) && $this->delete_log_file( $plugin_slug ) ) {
+
+					// Prepare redirect URL.
+					$redirect_url = remove_query_arg( array( 'delete_log', 'gform_delete_log' ) );
+					$redirect_url = add_query_arg( array( 'deleted' => '1' ), $redirect_url );
+					$redirect_url = esc_url_raw( $redirect_url );
+
+					?>
+					<script type="text/javascript">
+						document.location.href = <?php echo json_encode( $redirect_url ); ?>;
+					</script>
+					<?php
+					die();
+
 				} else {
+
+					// Display error message.
 					GFCommon::add_error_message( esc_html__( 'Log file could not be deleted.', 'gravityforms' ) );
 				}
 			} else {
 				GFCommon::add_error_message( esc_html__( 'Invalid log file.', 'gravityforms' ) );
 			}
+		}
+
+		// If a log file was deleted, display message.
+		if ( '1' === rgget( 'deleted' ) ) {
+			GFCommon::add_message( esc_html__( 'Log file was successfully deleted.', 'gravityforms' ) );
 		}
 
 		parent::plugin_settings_page();
@@ -411,10 +433,11 @@ class GFLogging extends GFAddOn {
 				),
 			);
 
+			$random = function_exists( 'random_bytes' ) ? random_bytes( 12 ) : wp_generate_password( 24, true, true );
 			$plugin_fields[] = array(
 				'name'          => $plugin_slug . '[file_name]',
 				'type'          => 'hidden',
-				'default_value' => sha1( $plugin_slug . time() ),
+				'default_value' => sha1( $plugin_slug . $random ),
 			);
 
 		}
@@ -780,10 +803,11 @@ class GFLogging extends GFAddOn {
 
 		$settings = array();
 		foreach ( $supported_plugins as $plugin_slug => $plugin_name ) {
+			$random = function_exists( 'random_bytes' ) ? random_bytes( 12 ) : wp_generate_password( 24, true, true );
 			$settings[ $plugin_slug ] = array(
 				'log_level' => '1',
 				'enable'    => '1',
-				'file_name' => sha1( $plugin_slug . time() ),
+				'file_name' => sha1( $plugin_slug . $random ),
 			);
 		}
 		$this->update_plugin_settings( $settings );
@@ -847,9 +871,10 @@ class GFLogging extends GFAddOn {
 				$new_settings = array();
 
 				foreach ( $old_settings as $plugin_slug => $log_level ) {
+					$random = function_exists( 'random_bytes' ) ? random_bytes( 12 ) : wp_generate_password( 24, true, true );
 					$new_settings[ $plugin_slug ] = array(
 						'log_level' => $log_level,
-						'file_name' => sha1( $plugin_slug . time() ),
+						'file_name' => sha1( $plugin_slug . $random ),
 					);
 				}
 
@@ -875,9 +900,10 @@ class GFLogging extends GFAddOn {
 			$new_settings = array();
 
 			foreach ( $old_settings as $plugin_slug => $log_level ) {
+				$random = function_exists( 'random_bytes' ) ? random_bytes( 12 ) : wp_generate_password( 24, true, true );
 				$new_settings[ $plugin_slug ] = array(
 					'log_level' => $log_level,
-					'file_name' => sha1( $plugin_slug . time() ),
+					'file_name' => sha1( $plugin_slug . $random ),
 				);
 			}
 

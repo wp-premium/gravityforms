@@ -156,8 +156,8 @@ class GF_Field_Password extends GF_Field {
 		 */
 		$encrypt_password = apply_filters( 'gform_encrypt_password', false, $this, $form );
 		if ( $encrypt_password ) {
-			$value = GFCommon::encrypt( $value );
-			GFFormsModel::set_encrypted_fields( $lead_id, $this->id );
+			$value = GFCommon::openssl_encrypt( $value );
+			GFFormsModel::set_openssl_encrypted_fields( $lead_id, $this->id );
 		}
 
 		return $value;
@@ -165,11 +165,26 @@ class GF_Field_Password extends GF_Field {
 
 
 	public static function delete_passwords( $entry, $form ) {
-
 		$password_fields = GFAPI::get_fields_by_type( $form, array( 'password' ) );
 
+		$field_ids = array();
+
+		$encrypted_fields = GFFormsModel::get_openssl_encrypted_fields( $entry['id'] );
+
 		foreach ( $password_fields as $password_field ) {
+			$field_ids[] = $password_field->id;
 			GFAPI::update_entry_field( $entry['id'], $password_field->id, '' );
+
+			$key = array_search( $password_field->id, $encrypted_fields );
+			if ( $key !== false ) {
+				unset( $encrypted_fields[ $key ] );
+			}
+		}
+
+		if ( empty( $encrypted_fields ) ) {
+			gform_delete_meta( $entry['id'], '_openssl_encrypted_fields' );
+		} else {
+			gform_update_meta( $entry['id'], '_openssl_encrypted_fields', $encrypted_fields );
 		}
 
 	}

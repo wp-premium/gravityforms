@@ -1,4 +1,85 @@
 ------------------------------------------------------------------------------------------------------------------
+Version 2.3.0.2
+    - Fixed a potential fatal error that can occur during or before the database upgrade.
+
+------------------------------------------------------------------------------------------------------------------
+Version 2.3.0.1
+    - Fixed an issue retrieving the entry before the entry migration has completed successfully.
+    - Fixed an issue preventing the entry limit feature from limiting entries.
+    - Fixed an issue preventing the upgrade process from completing when the incomplete submissions table does not exist.
+
+------------------------------------------------------------------------------------------------------------------
+Version 2.3
+    - Added security enhancements.
+    - Added accessibility enhancements: Updated the field markup to suppress the tabindex attribute by default unless it's set explicitly via the shortcode or the gform_tabindex filter.
+    - Added the X-Robots-Tag header to the .htaccess file protecting the downloads and to the download request response.
+    - Added support for chunking file uploads via the gform_plupload_settings filter. This enables much larger files to be uploaded than the server would ordinarily accept. Example:
+        add_filter( 'gform_plupload_settings', function( $plupload_init ) {
+                $plupload_init['chunk_size'] = '1mb';
+                return $plupload_init;
+            }, 10, 3 );
+    - Added support for OpenSSL encryption.
+    - Added checkbox to select all forms for export.
+    - Added "gform_notification_enable_cc" filter to enable CC notification settings field.
+    - Added "Select All" choice to Checkbox field.
+    - Added a dismissible admin message while upgrading.
+    - Added the gform_form_list_count filter for overriding the filter counts on the forms list page. Credit: Randall-Reilly and 10up.
+    - Added the gform_form_list_forms filter for overriding the forms included on the forms list page. Credit: Randall-Reilly and 10up.
+    - Added a PHP notice which triggers if a legacy table is accessed in a db query from an outdated add-on or custom code.
+	- Added Saint Martin with country code MF to country list
+
+    - Updated wording in installation wizard.
+    - Updated behavior when deleting an entry to match WordPress deletion behavior.
+    - Updated Import Forms page to allow for importing multiple files at once.
+    - Updated Import Forms page verbiage.
+    - Updated the database schema. Entries will be migrated in the background unless GFORM_AUTO_DB_MIGRATION_DISABLED constant is true. Database rows will be migrated in batches of 10000 or by the number defined by the GFORM_DB_MIGRATION_BATCH_SIZE constant.
+    - Upgraded included Chosen jQuery library to version 1.7.
+    - Updated the upgrade process to fail form validation while upgrading. The form is now displayed.
+    - Updated the System Report to indicate whether background tasks are possible.
+
+    - Fixed submitting a form with keyboard navigation when the submit or next page button is hidden.
+    - Fixed an issue with the input mask on Android devices.
+    - Fixed error message appearing when updating logging settings after deleting a log.
+    - Fixed PHP notice when receiving an invalid response when registering site.
+    - Fixed redirection issue when permanently deleting or trashing an entry from the entry detail view.
+    - Fixed an issue with HTML5 elements where browser validation can fail if the field is hidden by conditional logic.
+    - Fixed merge tag UI tooltip not appearing when with a visual editor.
+    - Fixed security index files not getting created in custom file upload locations.
+	- Fixed an issue with the form submission process where notifications may be sent with blank field values when WordPress is using certain database cluster configurations.
+	- Fixed an issue with the form editor preventing screen readers from editing field settings.
+	- Fixed debug warnings when activating using the WP CLI.
+	- Fixed an issue with logging in the background processor.
+	- Fixed a notice in the conversions column of the forms list for some forms with PHP 7.1.
+	- Fixed a PHP 7.2 deprecation notice which occurred when processing an Ajax enabled form submission.
+	- Fixed an issue with entry searching on PHP 7.2.
+    - Fixed an issue with the nl_BE translations.
+    - Fixed a PHP 7.2 warning which occurred when deleting fields for a form where the entry list columns have not been customised.
+	- Fixed the HTML for the Forms menu item on the admin toolbar containing an extra closing a tag.
+	- Fixed evaluation of conditional logic rules using the entry value of multi-select type post custom fields created with GF2.2+.
+	- Fixed required validation of the Radio Button field "other" choice value.
+	- Fixed ampersands in the Post Title field value being replaced by HTML entities.
+
+    - API: Updated CSV entry export not to unserialize values. GF_Field::get_value_export() and the gform_export_field_value filter must return either a string or an array, not a serialized value.
+    - API: Fixed handling of confirmation redirects.
+    - API: Added multisite support to GF_Background_Process.
+    - API: Deprecated GFCommon::encrypt() and GFCommon::decrypt().
+    - API: Fixed a performance issue while clearing the transients.
+    - API: Added GF_Query. One query to rule them all. Credit: The team at GravityView.
+    - API: Added GF_Field::get_context_property() and GF_Field::set_context_property() to help define and determine the context for the field.
+    - API: Removed support for duplicate keys for checkbox fields in search criteria field filters - use array values with IN or NOT IN instead.
+    - API: Added GFAPI::get_field() for retrieving the field object for the requested field or input ID from the supplied form or form ID.
+    - API: Fixed an issue with the result of GFAPI::update_feed() where a not_found error is returned when no changes are made to the feed meta. The result now returns the number of rows updated or a WP_Error in the case of an error.
+
+    - AF: Updated settings saved text to include Add-On short title.
+    - AF: Added "no_choices" property to select settings field to display message when no choices exist.
+	- AF: Updated GFFeedAddOn::duplicate_feed() to return new feed ID.
+	- AF: Fixed results page processing of Multi Select fields created with GF2.2+.
+	- AF: Fixed an issue with the entry array during form submission where the values for multi-input fields are not registered properly in the entry array.
+	- AF: Fixed a JavaScript error which can occur when deleting a form in the form editor and an add-on has included a script with "gform_form_editor" as a dependency.
+	- AF: Added feed deletion when a form is deleted.
+	- AF: Fixed an issue where feeds for add-ons not selected as delayed on the PayPal feed could, in some situations, be processed following PayPal payment.
+
+------------------------------------------------------------------------------------------------------------------
 Version 2.2.6
 	- Added security enhancements.
 	- Added a message in the plugins page to remind users to take a backup of the database and update all Gravity Forms add-ons before updating to 2.3.

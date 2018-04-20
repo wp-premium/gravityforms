@@ -305,6 +305,7 @@ function gf_do_action(action, targetId, useAnimation, defaultValues, isInit, cal
 
 		if(useAnimation && !isInit){
 			if($target.length > 0){
+				$target.find('input:hidden').prop( 'disabled', false );
 				$target.slideDown(callback);
 			} else if(callback){
 				callback();
@@ -318,7 +319,7 @@ function gf_do_action(action, targetId, useAnimation, defaultValues, isInit, cal
 			if ( display == '' || display == 'none' ){
 				display = 'list-item';
 			}
-
+			$target.find('input:hidden').prop( 'disabled', false );
 			$target.css('display', display);
 
 			if(callback){
@@ -357,6 +358,7 @@ function gf_do_action(action, targetId, useAnimation, defaultValues, isInit, cal
 			}
 		} else{
 			$target.hide();
+			$target.find('input:hidden').prop( 'disabled', true );
 			if(callback){
 				callback();
 			}

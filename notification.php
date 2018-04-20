@@ -147,6 +147,7 @@ Class GFNotification {
 			}
 			$notification['toType']            = $to_type;
 
+			$notification['cc']                = rgpost( 'gform_notification_cc' );
 			$notification['bcc']               = rgpost( 'gform_notification_bcc' );
 			$notification['subject']           = sanitize_text_field( rgpost( 'gform_notification_subject' ) );
 
@@ -1007,6 +1008,47 @@ Class GFNotification {
 		ob_clean(); ?>
 
 		<?php
+
+		/**
+		 * Enable the CC Notification field.
+		 *
+		 * @since 2.3
+		 *
+		 * @param bool  $enable_cc     Should the CC field be enabled?
+		 * @param array $notification The current notification object.
+		 * @param array $from         The current form object.
+		 */
+		$enable_cc = gf_apply_filters( array( 'gform_notification_enable_cc', $form['id'], rgar( $notification, 'id' ) ), false, $notification, $form );
+
+		$cc_value      = rgar( $notification, 'cc' );
+		$is_invalid_cc = ! $is_valid && $cc_value && ! self::is_valid_notification_email( $cc_value );
+		$class         = $is_invalid_cc ? "class='gfield_error'" : '';
+		?>
+		<tr valign="top" <?php echo $class ?>>
+			<th scope="row">
+				<label for="gform_notification_ccc">
+					<?php esc_html_e( 'CC', 'gravityforms' ); ?>
+					<?php gform_tooltip( 'notification_cc' ) ?>
+				</label>
+			</th>
+			<td>
+				<input type="text" name="gform_notification_cc" id="gform_notification_cc" value="<?php echo esc_attr( $cc_value ) ?>" class="merge-tag-support mt-hide_all_fields fieldwidth-2" />
+				<?php
+				if ( $is_invalid_cc ) {
+					?>
+					<br><span class="validation_message"><?php esc_html_e( 'Please enter a valid email address or merge tag in the CC field.', 'gravityforms' ) ?></span><?php
+				}
+				?>
+			</td>
+		</tr> <!-- / cc -->
+		<?php
+		if ( $enable_cc ) {
+			$ui_settings['notification_cc'] = ob_get_contents();
+		}
+		ob_clean();
+		?>
+
+		<?php
 		$bcc_value      = rgar( $notification, 'bcc' );
 		$is_invalid_bcc = ! $is_valid && $bcc_value && ! self::is_valid_notification_email( $bcc_value );
 		$class          = $is_invalid_bcc ? "class='gfield_error'" : '';
@@ -1090,7 +1132,7 @@ Class GFNotification {
 			</th>
 			<td>
 				<input type="checkbox" name="gform_notification_disable_autoformat" id="gform_notification_disable_autoformat" value="1" <?php echo empty( $notification['disableAutoformat'] ) ? '' : "checked='checked'" ?>/>
-				<label for="form_notification_disable_autoformat" class="inline">
+				<label for="gform_notification_disable_autoformat" class="inline">
 					<?php esc_html_e( 'Disable auto-formatting', 'gravityforms' ); ?>
 					<?php gform_tooltip( 'notification_autoformat' ) ?>
 				</label>
@@ -1211,6 +1253,11 @@ Class GFNotification {
 	 */
 	private static function validate_notification() {
 		$is_valid = self::is_valid_notification_to() && ! rgempty( 'gform_notification_subject' ) && ! rgempty( 'gform_notification_message' );
+
+		$cc = rgpost( 'gform_notification_cc' );
+		if ( ! empty( $cc ) && ! self::is_valid_notification_email( $cc ) ) {
+			$is_valid = false;
+		}
 
 		$bcc = rgpost( 'gform_notification_bcc' );
 		if ( ! empty( $bcc ) && ! self::is_valid_notification_email( $bcc ) ) {
