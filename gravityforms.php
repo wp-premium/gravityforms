@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms
 Plugin URI: https://www.gravityforms.com
 Description: Easily create web forms and manage form entries within the WordPress admin.
-Version: 2.3.0.2
+Version: 2.3.2
 Author: rocketgenius
 Author URI: https://www.rocketgenius.com
 License: GPL-2.0+
@@ -215,7 +215,7 @@ class GFForms {
 	 *
 	 * @var string $version The version number.
 	 */
-	public static $version = '2.3.0.2';
+	public static $version = '2.3.2';
 
 	/**
 	 * Handles background upgrade tasks.
@@ -427,6 +427,10 @@ class GFForms {
 
 						// Check background tasks for the system report
 						add_action( 'wp_ajax_gf_check_background_tasks', array( 'GFForms', 'check_background_tasks' ) );
+
+						// Check status of upgrade
+						add_action( 'wp_ajax_gf_force_upgrade', array( 'GFForms', 'ajax_force_upgrade' ) );
+
 					}
 
 					add_filter( 'plugins_api', array( 'GFForms', 'get_addon_info' ), 100, 3 );
@@ -1220,7 +1224,8 @@ class GFForms {
 			'gf_save_confirmation',
 			'gf_process_export',
 			'gf_download_export',
-			'gf_dismiss_message'
+			'gf_dismiss_message',
+			'gf_force_upgrade',
 		);
 
 		if ( defined( 'DOING_AJAX' ) && DOING_AJAX && in_array( $current_action, $gf_ajax_actions ) ) {
@@ -2084,6 +2089,13 @@ class GFForms {
 		wp_register_style( 'gform_shortcode_ui', $base_url . "/css/shortcode-ui{$min}.css", array(), $version );
 		wp_register_style( 'gform_font_awesome', $base_url . "/css/font-awesome{$min}.css", null, $version );
 		wp_register_style( 'gform_tooltip', $base_url . "/css/tooltip{$min}.css", array( 'gform_font_awesome' ), $version );
+		
+		wp_register_style( 'gforms_reset_css', $base_url . "/css/formreset{$min}.css", null, $version );
+		wp_register_style( 'gforms_datepicker_css', $base_url . "/css/datepicker{$min}.css", null, $version );
+		wp_register_style( 'gforms_formsmain_css', $base_url . "/css/formsmain{$min}.css", null, $version );
+		wp_register_style( 'gforms_ready_class_css', $base_url . "/css/readyclass{$min}.css", null, $version );
+		wp_register_style( 'gforms_browsers_css', $base_url . "/css/browsers{$min}.css", null, $version );
+		wp_register_style( 'gforms_rtl_css', $base_url . "/css/rtl{$min}.css", null, $version );
 
 	}
 
@@ -2589,6 +2601,48 @@ class GFForms {
 
 
 		GFCommon::dismiss_message( $key );
+	}
+
+	/**
+	 * Target for the wp_ajax_gf_force_upgrade ajax action requested from the System Status page.
+	 *
+	 * Outputs a JSON string with the status and then triggers the background upgrader usually handled byt the cron healthcheck.
+	 *
+	 * @since 2.3.0.4
+	 */
+	public static function ajax_force_upgrade() {
+
+		check_ajax_referer( 'gf_force_upgrade', 'nonce' );
+
+		$status_label = get_option( 'gform_upgrade_status' );
+
+		if ( empty( $status_label ) ) {
+			$status = 'complete';
+			$status_label =  __( 'Finished', 'gravityforms' );
+			$percent_complete = 100;
+		} else {
+			$status = 'in_progress';
+			require_once( GFCommon::get_base_path() . '/includes/system-status/class-gf-system-report.php' );
+			$percent_complete = GF_System_Report::get_upgrade_percent_complete();
+		}
+
+		$response = json_encode(
+			array(
+				'status' => $status,
+				'status_label' => $status_label,
+			    'percent' => (string) $percent_complete,
+			)
+		);
+
+		echo $response;
+
+		ob_end_flush();
+
+		// Simuate the healthcheck cron.
+		GFForms::$background_upgrader->handle_cron_healthcheck();
+
+		// The healthcheck task will terminate anyway but exit just in case.
+		exit;
 	}
 
 	/**
@@ -4939,6 +4993,11 @@ class GFForms {
 	 */
 	public static function delete_orphaned_entries() {
 		global $wpdb;
+
+		if ( version_compare( GFFormsModel::get_database_version(), '2.3-beta-1', '<' ) ) {
+			return;
+		}
+
 		GFCommon::log_debug( __METHOD__ . '(): Starting to delete orphaned entries' );
 		$entry_table         = GFFormsModel::get_entry_table_name();
 		$entry_meta_table = GFFormsModel::get_entry_meta_table_name();
@@ -5413,7 +5472,7 @@ if ( ! function_exists( 'gf_do_action' ) ) {
 	 * @since  1.9.12
 	 * @access public
 	 *
-	 * @param string $action The action.
+	 * @param string|array $action The action.
 	 */
 	function gf_do_action( $action ) {
 

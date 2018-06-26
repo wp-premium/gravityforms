@@ -113,13 +113,13 @@ class GF_Query {
 	/**
 	 * GF_Query constructor.
 	 *
-	 * @param int|array $form_ids
-	 * @param array     $search_criteria
-	 * @param null      $sorting
-	 * @param null      $paging
+	 * @param null|int|array $form_ids
+	 * @param null|array     $search_criteria
+	 * @param null|array     $sorting
+	 * @param null|array     $paging
 	 */
-	public function __construct( $form_ids = array(), $search_criteria = array(), $sorting = null, $paging = null ) {
-		if ( ! empty( $search_criteria ) || ! empty( $form_ids ) || ! empty( $sorting ) || ! empty( $paging ) ) {
+	public function __construct( $form_ids = null, $search_criteria = null, $sorting = null, $paging = null ) {
+		if ( ! is_null( $search_criteria ) || ! is_null( $form_ids ) || ! empty( $sorting ) || ! empty( $paging ) ) {
 			$this->parse( $form_ids, $search_criteria, $sorting, $paging );
 		}
 	}
@@ -396,7 +396,7 @@ class GF_Query {
 		if ( $form_ids == 0 ) {
 			$forms = GFAPI::get_forms();
 		} elseif ( is_array( $form_ids ) ) {
-			foreach ( $form_ids as $id ){
+			foreach ( $form_ids as $id ) {
 				$forms[] = GFAPI::get_form( $id );
 			}
 		} else {
@@ -407,14 +407,28 @@ class GF_Query {
 
 		switch ( $original_operator ) {
 			case 'CONTAINS':
-				$operator = 'LIKE';
+				$operator = GF_Query_Condition::LIKE;
 				break;
-			case '<>':
+			case 'IS NOT':
 			case 'ISNOT':
-				$operator = '!=';
+			case '<>':
+				$operator = GF_Query_Condition::NEQ;
 				break;
-			default :
-				$operator = empty( $original_operator ) ? '=' : $original_operator;
+			case 'IS':
+			case '=':
+				$operator = GF_Query_Condition::EQ;
+				break;
+			case 'LIKE':
+				$operator = GF_Query_Condition::LIKE;
+				break;
+			case 'NOT IN':
+				$operator = GF_Query_Condition::NIN;
+				break;
+			case 'IN':
+				$operator = GF_Query_Condition::IN;
+				break;
+			default:
+				$operator = empty( $original_operator ) ? GF_Query_Condition::EQ : $original_operator;
 		}
 
 		$val = $filter['value'];
@@ -448,23 +462,37 @@ class GF_Query {
 			}
 		}
 
-		if ( ! empty( $choice_filters ) ) {
-			if ( count( $choice_filters ) > 1 ) {
-				$condition = call_user_func_array( array( 'GF_Query_Condition', '_or' ), $choice_filters );
-			} else {
-				$condition = $choice_filters[0];
+		if ( is_array( $val ) ) {
+			foreach ( $val as &$v ) {
+				$v = new GF_Query_Literal( $v );
 			}
+			$val = new GF_Query_Series( $val );
 
+			$choice_filters[] = new GF_Query_Condition(
+				new GF_Query_Column( GF_Query_Column::META, 0 ),
+				$operator,
+				$val
+			);
 		} else {
 			if ( $original_operator == 'CONTAINS' ) {
 				$val = '%' . $val . '%';
 			}
-			$condition = new GF_Query_Condition(
+			$choice_filters[] = new GF_Query_Condition(
 				new GF_Query_Column( GF_Query_Column::META, $form_ids ),
 				$operator,
 				new GF_Query_Literal( $val )
 			);
 		}
+
+		if ( count( $choice_filters ) > 1 ) {
+
+			$combine_operator = in_array( $operator, array( GF_Query_Condition::NEQ, GF_Query_Condition::NIN ) ) ? '_and' : '_or';
+
+			$condition = call_user_func_array( array( 'GF_Query_Condition', $combine_operator ), $choice_filters );
+		} else {
+			$condition = $choice_filters[0];
+		}
+
 		return $condition;
 	}
 

@@ -294,7 +294,18 @@ function gf_do_next_button_action(formId, action, fieldId, isInit){
 }
 
 function gf_do_action(action, targetId, useAnimation, defaultValues, isInit, callback, formId){
-	var $target = jQuery(targetId);
+
+	var $target = jQuery( targetId );
+
+	/**
+	 * Do not re-enable inputs that are disabled by default. Check if field's inputs have been assessed. If not, add
+	 * designator class so these inputs are exempted below.
+	 */
+	if( ! $target.data( 'gf-disabled-assessed' ) ) {
+		$target.find( 'input:hidden:disabled' ).addClass( 'gf-default-disabled' );
+		$target.data( 'gf-disabled-assessed', true );
+	}
+
 	if(action == "show"){
 
 		// reset tabindex for selects
@@ -305,7 +316,7 @@ function gf_do_action(action, targetId, useAnimation, defaultValues, isInit, cal
 
 		if(useAnimation && !isInit){
 			if($target.length > 0){
-				$target.find('input:hidden').prop( 'disabled', false );
+				$target.find('input:hidden:not(.gf-default-disabled)').prop( 'disabled', false );
 				$target.slideDown(callback);
 			} else if(callback){
 				callback();
@@ -319,7 +330,7 @@ function gf_do_action(action, targetId, useAnimation, defaultValues, isInit, cal
 			if ( display == '' || display == 'none' ){
 				display = 'list-item';
 			}
-			$target.find('input:hidden').prop( 'disabled', false );
+			$target.find('input:hidden:not(.gf-default-disabled)').prop( 'disabled', false );
 			$target.css('display', display);
 
 			if(callback){

@@ -163,7 +163,7 @@ class GF_Upgrade {
 
 		// Start upgrade routine
 		if ( $force_upgrade || ! ( defined( 'GFORM_AUTO_DB_MIGRATION_DISABLED' ) && GFORM_AUTO_DB_MIGRATION_DISABLED ) ) {
-			$this->post_upgrade_schema( $from_db_version );
+			$this->post_upgrade_schema( $from_db_version, $force_upgrade );
 		}
 
 		return true;
@@ -314,6 +314,9 @@ class GF_Upgrade {
 		$key = sanitize_key( 'gravityforms_upgrading_' . GFForms::$version );
 
 		GFCommon::remove_dismissible_message( $key );
+
+		// Clear all transients to make sure the new version doesn't use cached results.
+		GFCache::flush( true );
 
 		$this->add_post_upgrade_admin_notices();
 
@@ -523,9 +526,10 @@ class GF_Upgrade {
 	 *
 	 * @since  2.2
 	 *
-	 * @param $from_db_version
+	 * @param string $from_db_version
+	 * @param bool   $force_upgrade
 	 */
-	protected function post_upgrade_schema( $from_db_version ) {
+	protected function post_upgrade_schema( $from_db_version, $force_upgrade ) {
 
 		$versions = $this->get_versions();
 
@@ -563,7 +567,13 @@ class GF_Upgrade {
 
 		if ( GFForms::$background_upgrader->get_data() ) {
 			GFForms::$background_upgrader->push_to_queue( array( $this, 'post_background_upgrade' ) );
-			GFForms::$background_upgrader->save()->dispatch();
+			GFForms::$background_upgrader->save();
+			if ( $force_upgrade ) {
+				// Simulate triggering the cron task
+				GFForms::$background_upgrader->handle_cron_healthcheck();
+			} else {
+				GFForms::$background_upgrader->dispatch();
+			}
 		} else {
 			GFCommon::log_debug( __METHOD__ . '(): Background upgrade not necessary. Setting new version.' );
 			$this->update_db_version();
@@ -911,9 +921,7 @@ WHERE NOT EXISTS
 
 		$incomplete_submissions_table = GFFormsModel::get_incomplete_submissions_table_name();
 
-		$table_check_query = $wpdb->prepare( "SHOW TABLES LIKE %s", $wpdb->esc_like( $incomplete_submissions_table ) );
-
-		if ( $wpdb->get_var( $table_check_query ) != $incomplete_submissions_table ) {
+		if ( ! GFCommon::table_exists( $incomplete_submissions_table ) ) {
 			// The table doesn't exist. Maybe an upgrade from a very early version.
 			return false;
 		}
@@ -1066,7 +1074,10 @@ WHERE ln.id NOT IN
 	}
 
 	/**
-	 * Gets the value of an option from the wp_options table.
+	 * Gets the value of an option directly from the wp_options table. This is useful for double checking the value of
+	 * autoload options returned by get_option().
+	 *
+	 * The result is cached by wpdb so this is only really useful once per request.
 	 *
 	 * @since  Unknown
 	 * @access public
@@ -1074,13 +1085,11 @@ WHERE ln.id NOT IN
 	 *
 	 * @param string $option_name The option to find.
 	 *
-	 * @return string The option value, if found.
+	 * @return string|null The option value, if found.
 	 */
 	public function get_wp_option( $option_name ) {
-
-		wp_cache_delete( $option_name );
-
-		return get_option( $option_name );
+		global $wpdb;
+		return $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->prefix}options WHERE option_name=%s", $option_name ) );
 	}
 
 
@@ -1574,7 +1583,7 @@ HAVING count(*) > 1;" );
 
 		$this->versions = array(
 			'version'             => GFForms::$version,
-			'current_version'     => $this->get_wp_option( 'rg_form_version' ),
+			'current_version'     => get_option( 'rg_form_version' ),
 			'current_db_version'  => GFFormsModel::get_database_version(),
 			'previous_db_version' => empty( $previous_db_version ) ? '0' : $previous_db_version,
 		);
@@ -1744,13 +1753,10 @@ HAVING count(*) > 1;" );
 	 *
 	 * @since 2.3
 	 *
-	 * @return int|false Number of rows affected/selected or false on error
+	 * @return bool False if value was not updated and true if value was updated.
 	 */
 	public function clear_upgrade_lock() {
-		global $wpdb;
-
-		$result = $wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name='gf_upgrade_lock'" );
-
+		$result = update_option( 'gf_upgrade_lock', false );
 		return $result;
 	}
 
@@ -1776,15 +1782,10 @@ HAVING count(*) > 1;" );
 	 *
 	 * @since 2.3
 	 *
-	 * @return int|false Number of rows affected/selected or false on error
+	 * @return bool False if value was not updated and true if value was updated.
 	 */
 	public function set_submissions_block() {
-		global $wpdb;
-
-		$sql = $wpdb->prepare( "INSERT INTO {$wpdb->options}(option_name, option_value) VALUES('gf_submissions_block', %s)", time() );
-
-		$result = $wpdb->query( $sql );
-
+		$result = update_option( 'gf_submissions_block', time() );
 		return $result;
 	}
 
@@ -1793,13 +1794,10 @@ HAVING count(*) > 1;" );
 	 *
 	 * @since 2.3
 	 *
-	 * @return int|false Number of rows affected/selected or false on error
+	 * @return bool False if value was not updated and true if value was updated.
 	 */
 	public function clear_submissions_block() {
-		global $wpdb;
-
-		$result = $wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name='gf_submissions_block'" );
-
+		$result = update_option( 'gf_submissions_block', false );
 		return $result;
 	}
 
@@ -1861,10 +1859,10 @@ HAVING count(*) > 1;" );
 
 		if ( $number_outdated == 1 ) {
 			/* translators: %s: the add-on name */
-			$message = sprintf( esc_html__( 'The %s is not compatible with version of this version of Gravity Forms. See the plugins list for further details.', 'gravityforms' ), $outdated[0] );
+			$message = sprintf( esc_html__( 'The %s is not compatible with this version of Gravity Forms. See the plugins list for further details.', 'gravityforms' ), $outdated[0] );
 		} else {
 			/* translators: %d: the number of outdated add-ons */
-			$message = sprintf( esc_html__( 'There are %d add-ons installed that are not compatible with version of this version of Gravity Forms. See the plugins list for further details.', 'gravityforms' ), $number_outdated );
+			$message = sprintf( esc_html__( 'There are %d add-ons installed that are not compatible with this version of Gravity Forms. See the plugins list for further details.', 'gravityforms' ), $number_outdated );
 		}
 
 		GFCommon::add_dismissible_message( $message, $key, 'error', 'gform_full_access', true, 'site-wide' );

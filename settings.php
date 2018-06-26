@@ -131,8 +131,21 @@ class GFSettings {
 
 			check_admin_referer( 'gform_uninstall', 'gform_uninstall_nonce' );
 
-			if ( ! GFCommon::current_user_can_any( 'gravityforms_uninstall' ) || ( function_exists( 'is_multisite' ) && is_multisite() && ! is_super_admin() ) ) {
+			if ( ! GFCommon::current_user_can_uninstall() ) {
 				die( esc_html__( "You don't have adequate permission to uninstall Gravity Forms.", 'gravityforms' ) );
+			}
+
+			// Removing background tasks.
+			$processors = array(
+				GFForms::$background_upgrader,
+				gf_feed_processor()
+			);
+
+			/** @var GF_Background_Process $processor The background task processor. */
+			foreach ( $processors as $processor ) {
+				$processor->clear_scheduled_events();
+				$processor->clear_queue( true );
+				$processor->unlock_process();
 			}
 
 			// Removing cron task
@@ -148,17 +161,30 @@ class GFSettings {
 			delete_option( 'rg_gforms_captcha_public_key' );
 			delete_option( 'rg_gforms_captcha_private_key' );
 			delete_option( 'rg_gforms_message' );
-			delete_option( 'gform_enable_noconflict' );
-			delete_option( 'gform_enable_background_updates' );
-			delete_option( 'gform_sticky_admin_messages' );
-			delete_option( 'gf_dismissed_upgrades' );
 			delete_option( 'rg_gforms_currency' );
+			delete_option( 'rg_gforms_enable_akismet' );
+
+			delete_option( 'gf_dismissed_upgrades' );
+			delete_option( 'gf_db_version' );
+			delete_option( 'gf_previous_db_version' );
+			delete_option( 'gf_upgrade_lock' );
+			delete_option( 'gf_submissions_block' );
+			delete_option( 'gf_imported_file' );
+			delete_option( 'gf_imported_theme_file' );
+
 			delete_option( 'gform_api_count' );
 			delete_option( 'gform_email_count' );
 			delete_option( 'gform_enable_toolbar_menu' );
 			delete_option( 'gform_enable_logging' );
 			delete_option( 'gform_pending_installation' );
 			delete_option( 'gform_version_info' );
+			delete_option( 'gform_enable_noconflict' );
+			delete_option( 'gform_enable_background_updates' );
+			delete_option( 'gform_sticky_admin_messages' );
+			delete_option( 'gform_upgrade_status' );
+			delete_option( 'gform_custom_choices' );
+			delete_option( 'gform_recaptcha_keys_status' );
+			delete_option( 'gform_upload_page_slug' );
 
 			// Removes license key
 			GFFormsModel::save_key( '' );
@@ -183,7 +209,7 @@ class GFSettings {
 		?>
 
 		<form action="" method="post">
-			<?php if ( GFCommon::current_user_can_any( 'gravityforms_uninstall' ) && ( ! function_exists( 'is_multisite' ) || ! is_multisite() || is_super_admin() ) ) {
+			<?php if ( GFCommon::current_user_can_uninstall() ) {
 
 				wp_nonce_field( 'gform_uninstall', 'gform_uninstall_nonce' );
 				?>
@@ -723,7 +749,7 @@ class GFSettings {
 		}
 
 		// Prevent Uninstall tab from being added for users that don't have gravityforms_uninstall capability.
-		if ( GFCommon::current_user_can_any( 'gravityforms_uninstall' ) ) {
+		if ( GFCommon::current_user_can_uninstall() ) {
 			$setting_tabs[] = array( 'name' => 'uninstall', 'label' => __( 'Uninstall', 'gravityforms' ) );
 		}
 
@@ -800,13 +826,6 @@ class GFSettings {
 
 	</div> <!-- / wrap -->
 
-	<script type="text/javascript">
-		// JS fix for keep content contained on tabs with less content
-		jQuery(document).ready(function ($) {
-			$('#gform_tab_container').css('minHeight', jQuery('#gform_tabs').height() + 100);
-		});
-	</script>
-
 	<?php
 	}
 
@@ -856,7 +875,5 @@ class GFSettings {
 
 		return $akismet_setting;
 	}
-
-
 
 }
