@@ -3,7 +3,7 @@
 
 Gravity Forms Front End Form Styles
 http: //www.gravityforms.com
-updated: August 04, 2017 04:03 PM (GMT-05:00) US Eastern Time
+updated: May 01, 2018 10:46 AM US Eastern Time
 
 Gravity Forms is a Rocketgenius project
 copyright 2008-2017 Rocketgenius Inc.
@@ -3003,11 +3003,11 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
         margin-right: 0;
     }
 
-    html:not([dir="rtl"]) .gform_wrapper ul.gform_fields:not(.top_label) .ginput_container:not(.ginput_container_time),
+    html:not([dir="rtl"]) .gform_wrapper ul.gform_fields:not(.top_label) .ginput_container:not(.ginput_container_time):not(.ginput_container_date),
     html:not([dir="rtl"]) .gform_wrapper ul.gform_fields:not(.top_label) .clear-multi,
     html:not([dir="rtl"]) .gform_wrapper ul.gform_fields:not(.top_label) .gfield_description {
         width: 70%;
-        margin-left: 29% !important;
+        margin-left: 29%;
     }
 
     .gform_wrapper .gf_progressbar {

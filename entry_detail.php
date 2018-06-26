@@ -1005,7 +1005,7 @@ class GFEntryDetail {
 
 			$products = array();
 			if ( $has_product_fields ) {
-				$products = GFCommon::get_product_fields( $form, $lead );
+				$products = GFCommon::get_product_fields( $form, $lead, false, true );
 				if ( ! empty( $products['products'] ) ) {
 				    ob_start();
 					?>

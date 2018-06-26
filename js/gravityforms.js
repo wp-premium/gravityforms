@@ -1841,10 +1841,12 @@ function gformExtractInputIndex( inputId ) {
 }
 
 jQuery( document ).on( 'submit.gravityforms', '.gform_wrapper form', function( event ) {
-	
+
 	var formWrapper = jQuery( this ).closest( '.gform_wrapper' ),
-	    formID      = formWrapper.attr( 'id' ).split( '_' )[2],
-	    hasPages    = formWrapper.find( '.gform_page' ).length > 0;
+		formID = formWrapper.attr( 'id' ).split( '_' )[ 2 ],
+		hasPages = formWrapper.find( '.gform_page' ).length > 0,
+		sourcePage = formWrapper.find( 'input[name^="gform_source_page_number_"]' ).val(),
+		targetPage = formWrapper.find( 'input[name^="gform_target_page_number_"]' ).val();
 	
 	// If this is a single page form, return.
 	if ( ! hasPages ) {
@@ -1859,8 +1861,9 @@ jQuery( document ).on( 'submit.gravityforms', '.gform_wrapper form', function( e
 	if ( submitButton.length === 0 ) {
 		submitButton = visiblePage.find( '.gform_page_footer .gform_button' )
 	}
-	// If submit button is not visible, do not submit.
-	if ( ! submitButton.is( ':visible' ) ) {
+
+	// If submit button is not visible and target page is the next/final page, do not submit.
+	if ( ! submitButton.is( ':visible' ) && targetPage > sourcePage ) {
 		window[ 'gf_submitting_' + formID ] = false;
 		event.preventDefault();
 	}

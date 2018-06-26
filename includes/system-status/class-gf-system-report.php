@@ -14,6 +14,15 @@ if ( ! class_exists( 'GFForms' ) ) {
 class GF_System_Report {
 
 	/**
+	 * Whether background tasks are enabled.
+	 *
+	 * @since 2.3.0.3
+	 *
+	 * @var null|bool
+	 */
+	public static $background_tasks = null;
+
+	/**
 	 * Display system report page.
 	 *
 	 * @since  2.2
@@ -256,16 +265,68 @@ class GF_System_Report {
 		switch ( rgpost( 'gf_action' ) ) {
 
 			case 'upgrade_database':
-
 				check_admin_referer( 'gf_sytem_report_action', 'gf_sytem_report_action' );
 
 				$versions = gf_upgrade()->get_versions();
 
-				gf_upgrade()->upgrade( $versions['previous_db_version'], true );
+				$previous_db_version = $versions['previous_db_version'];
+
+				if ( version_compare( $previous_db_version, '2.3-beta-1', '<' ) ) {
+
+					$status = get_option( 'gform_upgrade_status' );
+
+					$percent = self::get_upgrade_percent_complete();
+
+					$percent_label = sprintf( esc_html__( 'complete.', 'gravityforms' ), $percent );
+
+					$status = sprintf( '<span id="gf-upgrade-status">%s</span> <span id="gf-upgrade-precent">%s</span>%% %s', $status, $percent, $percent_label );
+
+					$message = sprintf( esc_html__( 'Current status: %s', 'gravityforms' ), $status );
+
+					$message .= ' ' . sprintf( '<img id="gf-spinner" src="%s" />', GFCommon::get_base_url() . '/images/spinner.gif' );
+
+					$ajax_url = admin_url( 'admin-ajax.php' );
+
+					$args = array(
+						'action' => 'gf_force_upgrade',
+						'nonce'  => wp_create_nonce( 'gf_force_upgrade' ),
+					);
+
+					$ajax_url = add_query_arg( $args, $ajax_url	);
+
+					echo '<h2>' . esc_html__( 'Upgrading Gravity Forms', 'gravityforms' ) . '</h2>';
+
+					$warning = esc_html__( 'Do not close or navigate away from this page until the upgrade is 100% complete.', 'gravityfroms' );
+
+					printf( '<p>%s</p>', $warning );
+					printf( '<p>%s</p>', $message );
+					?>
+					<script>
+						jQuery(document).ready(function ($) {
+							var timer = setInterval(function(){ getStatus() }, 30000);
+
+							function getStatus() {
+								$.post( "<?php echo esc_url_raw( $ajax_url ); ?>", function( data ) {
+									var response = jQuery.parseJSON( data );
+									$('#gf-upgrade-status').text( response.status_label );
+									$('#gf-upgrade-precent').text( response.percent );
+									if ( response.status == 'complete' ) {
+										$('#gf-spinner').hide();
+										clearInterval( timer );
+									}
+								});
+							}
+						});
+					</script>
+					<?php
+					ob_end_flush();
+				}
+
+				gf_upgrade()->upgrade( $previous_db_version, true );
 
 				break;
 
-			case 'register_site' :
+			case 'register_site':
 				GFForms::include_gravity_api();
 
 				$new_key = rgpost( 'gf_arg' );
@@ -328,7 +389,8 @@ class GF_System_Report {
 
 		$response = wp_remote_post( $url, $args );
 
-		$background_tasks              = wp_remote_retrieve_body( $response ) == 'ok';
+		$background_tasks = wp_remote_retrieve_body( $response ) == 'ok';
+
 		$background_validation_message = '';
 		if ( is_wp_error( $response ) ) {
 			$background_validation_message = $response->get_error_message();
@@ -340,6 +402,7 @@ class GF_System_Report {
 				$background_validation_message = sprintf( esc_html__( 'Response code: %s', 'gravityforms' ), $response_code );
 			}
 		}
+		self::$background_tasks = $background_tasks;
 
 		// Prepare system report.
 		$system_report = array(
@@ -944,12 +1007,17 @@ class GF_System_Report {
 			if ( gf_upgrade()->is_upgrading() ) {
 				$status = get_option( 'gform_upgrade_status' );
 				$status = empty( $status ) ? '' : sprintf( __( 'Current Status: %s', 'gravityforms' ), $status );
-
+				$percent = self::get_upgrade_percent_complete();
+				$percent_label = sprintf( esc_html__( '%s%% complete.', 'gravityforms' ), $percent );
+				$status .= ' ' . $percent_label;
 				if ( defined( 'GFORM_AUTO_DB_MIGRATION_DISABLED' ) && GFORM_AUTO_DB_MIGRATION_DISABLED ) {
 					$message = sprintf( __( 'Automatic background migration is disabled but the database needs to be upgraded to version %s. %s', 'gravityforms' ), GFForms::$version, $status );
 					$action_label = __( 'Force the migration manually', 'gravityforms' );
 				} else {
 					$message = sprintf( __( 'The database is currently being upgraded to version %s. %s', 'gravityforms' ), GFForms::$version, $status );
+					if ( ! self::$background_tasks ) {
+						$message .= ' ' . __( "As this site doesn't support background tasks the upgrade process will take longer than usual and the status will change infrequently.", 'gravityforms' );
+					}
 					$action_label = __( 'Force the upgrade', 'gravityforms' );
 				}
 
@@ -1423,6 +1491,61 @@ class GF_System_Report {
 
 		return $theme_details;
 
+	}
+
+	/**
+	* Returns the percent complete of the migration from the legacy rg_ tables to the gf_ tables.
+	*
+	* @since 2.3.0.4
+	*
+	* @return float
+	*/
+	public static function get_upgrade_percent_complete() {
+		global $wpdb;
+
+		$form_table = $wpdb->prefix . 'gf_form';
+		$form_meta_table = $wpdb->prefix . 'gf_form_meta';
+		$form_view = $wpdb->prefix . 'gf_form_view';
+		$entry_table = GFFormsModel::get_entry_table_name();
+		$entry_meta_table = GFFormsModel::get_entry_meta_table_name();
+		$entry_notes_table = GFFormsModel::get_entry_notes_table_name();
+
+		$legacy_form_table = $wpdb->prefix . 'rg_form';
+		$legacy_form_meta_table = $wpdb->prefix . 'rg_form_meta';
+		$legacy_form_view_table = $wpdb->prefix . 'rg_form_view';
+		$lead_table = GFFormsModel::get_lead_table_name();
+		$lead_detail_table = GFFormsModel::get_lead_details_table_name();
+		$lead_meta_table = GFFormsModel::get_lead_meta_table_name();
+		$lead_notes_table = GFFormsModel::get_lead_notes_table_name();
+
+		$query = "
+			select
+			(select count(1) from {$form_table}) as form_count,
+			(select count(1) from {$form_meta_table}) as form_meta_count,
+			(select count(1) from {$form_view}) as form_view_count,
+			(select count(1) from {$entry_table}) as entry_count,
+			(select count(1) from {$entry_meta_table}) as entry_meta_count,
+			(select count(1) from {$entry_notes_table}) as entry_notes_count,
+
+			(select count(1) from {$legacy_form_table}) as legacy_form_count,
+			(select count(1) from {$legacy_form_meta_table}) as legacy_form_meta_count,
+			(select count(1) from {$legacy_form_view_table}) as legacy_form_view_count,
+			(select count(1) from {$lead_table}) as lead_count,
+			(select count(1) from {$lead_detail_table}) as lead_detail_count,
+			(select count(1) from {$lead_meta_table}) as lead_meta_count,
+			(select count(1) from {$lead_notes_table}) as lead_notes_count";
+
+		$results = $wpdb->get_results( $query );
+
+		$c = $results[0];
+
+		$count = $c->form_count + $c->form_meta_count + $c->form_view_count + $c->entry_count + $c->entry_meta_count + $c->entry_notes_count;
+
+		$legacy_count = $c->legacy_form_count + $c->legacy_form_meta_count + $c->legacy_form_view_count + $c->lead_count + $c->lead_detail_count + $c->lead_meta_count + $c->lead_notes_count;
+
+		$percent_complete = round( $count / $legacy_count * 100, 2 );
+
+		return $percent_complete;
 	}
 
 }

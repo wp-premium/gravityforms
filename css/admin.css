@@ -3617,17 +3617,18 @@ ul#gf_merge_tag_list a:hover {
 	-webkit-box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
 	-moz-box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
 	box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.1);
-	display: block;
+	display: flex;
 }
 
 .gform_tabs {
 	width: 150px;
-	float: left;
+	flex-grow: 0;
+	flex-shrink: 0;
 	margin-top: 10px;
 }
 
 .gform_tab_container {
-	margin-left: 150px;
+	flex-grow: 1;
 	padding: 20px;
 	min-height: 370px;
 	background-color: #F6FBFD;
@@ -3657,10 +3658,6 @@ ul#gf_merge_tag_list a:hover {
 
 .gform_tabs li:last-child {
 	margin-bottom: 16px;
-}
-
-.gform_tab_content {
-	overflow: hidden;
 }
 
 .gform_tab_content h3 {

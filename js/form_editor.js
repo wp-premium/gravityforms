@@ -2291,6 +2291,9 @@ function FieldClick(field){
         return;
     }
 
+	// force focus to ensure onblur events fire for field setting inputs
+	jQuery('input#gform_force_focus').focus();
+
     if(jQuery(field).hasClass("field_selected")) {
 
         var element_id = "";
@@ -2312,9 +2315,6 @@ function FieldClick(field){
             default:
                 element_id = "#field_settings";
         }
-
-        // force focus to ensure onblur events fire for field setting inputs
-        jQuery('input#gform_force_focus').focus();
 
         jQuery(element_id).slideUp(function(){
             jQuery(field).removeClass("field_selected").addClass("field_hover");
