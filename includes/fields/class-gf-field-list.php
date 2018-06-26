@@ -657,7 +657,16 @@ class GF_Field_List extends GF_Field {
 	 * @return string The processed merge tag.
 	 */
 	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {
-		$output_format = in_array( $modifier, array( 'text', 'html', 'url' ) ) ? $modifier : $format;
+		
+		$modifiers = $this->get_modifiers();
+
+		$allowed_modifiers = array( 'text', 'html', 'url' );
+
+		if( $found_modifiers = array_intersect( $modifiers, $allowed_modifiers ) ) {
+			$output_format = $found_modifiers[0];
+		} else {
+			$output_format = $format;
+		}
 
 		return GFCommon::get_lead_field_display( $this, $raw_value, $entry['currency'], true, $output_format );
 	}
