@@ -253,17 +253,19 @@ class GF_Field_CAPTCHA extends GF_Field {
 	public function ensure_recaptcha_js(){
 		?>
 		<script type="text/javascript">
-			( function( $ ) {
-				$( document ).bind( 'gform_post_render', function() {
-					var gfRecaptchaPoller = setInterval( function() {
-						if( ! window.grecaptcha || ! window.grecaptcha.render ) {
-							return;
-						}
-						renderRecaptcha();
-						clearInterval( gfRecaptchaPoller );
-					}, 100 );
-				} );
-			} )( jQuery );
+			document.addEventListener("DOMContentLoaded", function () {
+				( function( $ ) {
+					$( document ).bind( 'gform_post_render', function() {
+						var gfRecaptchaPoller = setInterval( function() {
+							if( ! window.grecaptcha ) {
+								return;
+							}
+							renderRecaptcha();
+							clearInterval( gfRecaptchaPoller );
+						}, 100 );
+					} );
+				} )( jQuery );
+			});
 		</script>
 
 		<?php
