@@ -2,7 +2,7 @@
   "name": "wp-premium/gravityforms",
   "type": "wordpress-plugin",
   "description": "Gravity Forms, composer-ified",
-  "version": "2.2.5",
+  "version": "2.2.6.6",
   "minimum-stability": "stable",
   "require": {
     "composer/installers": "~1.0"
