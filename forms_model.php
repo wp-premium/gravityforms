@@ -965,21 +965,22 @@ class GFFormsModel {
 		}
 
 		$results = $wpdb->get_results(
-			" SELECT display_meta, confirmations, notifications FROM {$form_table_name} f
+			" SELECT id, display_meta, confirmations, notifications FROM {$form_table_name} f
                                         INNER JOIN {$meta_table_name} m ON f.id = m.form_id
                                         WHERE id in({$ids})", ARRAY_A
 		);
 
+		$forms = array();
 		foreach ( $results as &$result ) {
 			$form                  = self::unserialize( $result['display_meta'] );
 			$form['confirmations'] = self::unserialize( $result['confirmations'] );
 			$form['notifications'] = self::unserialize( $result['notifications'] );
 			// Creating field objects and copying some form variables down to fields for easier access
 			$form   = self::convert_field_objects( $form );
-			$result = $form;
+			$forms[ $result['id'] ] = $form;
 		}
 
-		return $results;
+		return $forms;
 
 	}
 
