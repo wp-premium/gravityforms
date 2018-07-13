@@ -1740,12 +1740,18 @@ class GFFormsModel {
 		}
 	}
 
-	public static function insert_form( $form_title ) {
+	public static function insert_form( $form_title, $desired_id = FALSE ) {
 		global $wpdb;
 		$form_table_name = self::get_form_table_name();
 
 		//creating new form
-		$wpdb->query( $wpdb->prepare( "INSERT INTO $form_table_name(title, date_created) VALUES(%s, utc_timestamp())", $form_title ) );
+		//test whether a specific id is desired *and* available
+		if ( $desired_id && !self::get_form( $desired_id, true ) ) {
+			$wpdb->query( $wpdb->prepare( "INSERT INTO $form_table_name(id, title, date_created) VALUES(%d, %s, utc_timestamp())", $desired_id, $form_title ) );
+		}
+		else {
+			$wpdb->query( $wpdb->prepare( "INSERT INTO $form_table_name(title, date_created) VALUES(%s, utc_timestamp())", $form_title ) );
+		}
 
 		//returning newly created form id
 		return $wpdb->insert_id;
