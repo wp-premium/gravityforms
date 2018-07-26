@@ -2411,7 +2411,7 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
     }
 
     .gform_wrapper .chosen-container.chosen-container-single[style] {
-        width: 100% !important;
+        width: 100%;
     }
 
     .gform_wrapper .chosen-container-single .chosen-single {
@@ -2425,7 +2425,7 @@ body .gform_wrapper div.gform_body ul.gform_fields li.gfield.gfield_html dl dd {
     }
 
     .gform_wrapper div.chosen-container.chosen-container-multi[style] {
-        width: 100% !important;
+        width: 100%;
     }
 
     .gform_wrapper .chosen-container.chosen-container-multi ul.chosen-choices li.search-choice,
