@@ -1,5 +1,5 @@
 {
-  "name": "Samsonator/wp-gravityforms",
+  "name": "Samsonator/gravityforms",
   "description": "Fork of GravityForms repo so we can use it as WP Plugin.",
   "type": "wordpress-plugin",
   "license": "GPL-3.0",
