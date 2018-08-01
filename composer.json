@@ -1,8 +1,15 @@
 {
-    "name": "wp-premium/gravityforms",
-    "autoload": {
-        "classmap": [
-            "."
-        ]
-    }
+  "name": "Samsonator/wp-gravityforms",
+  "description": "Fork of GravityForms repo so we can use it as WP Plugin.",
+  "type": "wordpress-plugin",
+  "license": "GPL-3.0",
+  "minimum-stability": "dev",
+  "require": {
+    "php": ">=5.3",
+    "composer/installers": "~1.0"
+  },
+  "dist": {
+    "url": "git@github.com:Samsonator/gravityforms.git",
+    "type": "git"
+  }
 }
