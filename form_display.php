@@ -1136,7 +1136,7 @@ class GFFormDisplay {
                 <script type='text/javascript'>" . apply_filters( 'gform_cdata_open', '' ) . '' .
 					'jQuery(document).ready(function($){' .
 						"gformInitSpinner( {$form_id}, '{$spinner_url}' );" .
-						"jQuery('#gform_ajax_frame_{$form_id}').on('load',function(){" .
+						"jQuery('#gform_ajax_frame_{$form_id}').on('load', function(){" .
 							"var contents = jQuery(this).contents().find('*').html();" .
 							"var is_postback = contents.indexOf('GF_AJAX_POSTBACK') >= 0;" .
 							'if(!is_postback){return;}' .
