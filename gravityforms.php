@@ -49,10 +49,11 @@ $gf_recaptcha_public_key  = '';
 
 //-- OR ---//
 
-// You can  also add the reCAPTCHA keys to your wp-config.php file to automatically populate on activation
+// Multi-Site specific option: Setting these options will automatically pre-populate your ReCAPTCHA public and 
+// private keys when a new site is created on your Multi-Site install.
 // Add the two lines of code in the comment below to your wp-config.php to do so:
-// define('GF_RECAPTCHA_SITE_KEY','YOUR_SITE_KEY_GOES_HERE');
-// define('GF_RECAPTCHA_SECRET_KEY','YOUR_SECRET_KEY_GOES_HERE');
+// define( 'GF_RECAPTCHA_PUBLIC_KEY', 'YOUR_KEY_GOES_HERE' );
+// define( 'GF_RECAPTCHA_PRIVATE_KEY', 'YOUR_KEY_GOES_HERE' );
 //------------------------------------------------------------------------------------------------------------------
 
 if ( ! defined( 'ABSPATH' ) ) {
