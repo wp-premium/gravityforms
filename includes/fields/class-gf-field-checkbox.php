@@ -584,13 +584,13 @@ class GF_Field_Checkbox extends GF_Field {
 				// Prepare input ID.
 				$input_id = $this->id . '.' . $choice_number;
 
-				if ( $is_entry_detail || $is_form_editor || $form_id == 0 ){
+				if ( $is_entry_detail || $is_form_editor || $form_id == 0 ) {
 					$id = $this->id . '_' . $choice_number ++;
 				} else {
 					$id = $form_id . '_' . $this->id . '_' . $choice_number ++;
 				}
 
-				if ( ! isset( $_GET['gf_token'] ) && empty( $_POST ) && rgar( $choice, 'isSelected' ) ) {
+				if ( ( $is_form_editor || ( ! isset( $_GET['gf_token'] ) && empty( $_POST ) ) ) && rgar( $choice, 'isSelected' ) ) {
 					$checked = "checked='checked'";
 				} elseif ( is_array( $value ) && GFFormsModel::choice_value_match( $this, $choice, rgget( $input_id, $value ) ) ) {
 					$checked = "checked='checked'";

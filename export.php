@@ -92,6 +92,15 @@ class GFExport {
 
 	public static function import_json( $forms_json, &$forms = null ) {
 
+		// Remove any whitespace from before and after the JSON.
+		$forms_json = trim( $forms_json );
+
+		// Remove any extra characters from before the JSON.
+		$json_start_position = strpos( $forms_json, '{' );
+		if ( $json_start_position !== 0 ) {
+			$forms_json = substr( $forms_json, $json_start_position );
+		}
+
 		$forms = json_decode( $forms_json, true );
 
 		if ( ! $forms ) {

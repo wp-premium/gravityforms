@@ -1656,12 +1656,6 @@ class GFFormSettings {
 
 		</div> <!-- / wrap -->
 
-		<script type="text/javascript">
-			jQuery(document).ready(function ($) {
-				$('.gform_tab_container').css('minHeight', jQuery('#gform_tabs').height() + 100);
-			});
-		</script>
-
 	<?php
 	}
 

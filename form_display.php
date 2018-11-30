@@ -1046,7 +1046,7 @@ class GFFormDisplay {
                 <script type='text/javascript'>" . apply_filters( 'gform_cdata_open', '' ) . '' .
 					'jQuery(document).ready(function($){' .
 						"gformInitSpinner( {$form_id}, '{$spinner_url}' );" .
-						"jQuery('#gform_ajax_frame_{$form_id}').load( function(){" .
+						"jQuery('#gform_ajax_frame_{$form_id}').on('load',function(){" .
 							"var contents = jQuery(this).contents().find('*').html();" .
 							"var is_postback = contents.indexOf('GF_AJAX_POSTBACK') >= 0;" .
 							'if(!is_postback){return;}' .
@@ -1876,18 +1876,18 @@ class GFFormDisplay {
 
 		if ( ! get_option( 'rg_gforms_disable_css' ) ) {
 
-			wp_enqueue_style( 'gforms_reset_css', GFCommon::get_base_url() . "/css/formreset{$min}.css", null, GFCommon::$version );
+			wp_enqueue_style( 'gforms_reset_css' );
 
 			if ( self::has_datepicker_field( $form ) ) {
-				wp_enqueue_style( 'gforms_datepicker_css', GFCommon::get_base_url() . "/css/datepicker{$min}.css", null, GFCommon::$version );
+				wp_enqueue_style( 'gforms_datepicker_css' );
 			}
 
-			wp_enqueue_style( 'gforms_formsmain_css', GFCommon::get_base_url() . "/css/formsmain{$min}.css", null, GFCommon::$version );
-			wp_enqueue_style( 'gforms_ready_class_css', GFCommon::get_base_url() . "/css/readyclass{$min}.css", null, GFCommon::$version );
-			wp_enqueue_style( 'gforms_browsers_css', GFCommon::get_base_url() . "/css/browsers{$min}.css", null, GFCommon::$version );
+			wp_enqueue_style( 'gforms_formsmain_css' );
+			wp_enqueue_style( 'gforms_ready_class_css' );
+			wp_enqueue_style( 'gforms_browsers_css' );
 
 			if ( is_rtl() ) {
-				wp_enqueue_style( 'gforms_rtl_css', GFCommon::get_base_url() . "/css/rtl{$min}.css", null, GFCommon::$version );
+				wp_enqueue_style( 'gforms_rtl_css' );
 			}
 		}
 
@@ -1965,25 +1965,25 @@ class GFFormDisplay {
 
 				$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] ) ? '' : '.min';
 
-				wp_enqueue_style( 'gforms_reset_css', GFCommon::get_base_url() . "/css/formreset{$min}.css", null, GFCommon::$version );
+				wp_enqueue_style( 'gforms_reset_css' );
 				wp_print_styles( array( 'gforms_reset_css' ) );
 
-				wp_enqueue_style( 'gforms_formsmain_css', GFCommon::get_base_url() . "/css/formsmain{$min}.css", null, GFCommon::$version );
+				wp_enqueue_style( 'gforms_formsmain_css' );
 				wp_print_styles( array( 'gforms_formsmain_css' ) );
 
-				wp_enqueue_style( 'gforms_ready_class_css', GFCommon::get_base_url() . "/css/readyclass{$min}.css", null, GFCommon::$version );
+				wp_enqueue_style( 'gforms_ready_class_css' );
 				wp_print_styles( array( 'gforms_ready_class_css' ) );
 
-				wp_enqueue_style( 'gforms_browsers_css', GFCommon::get_base_url() . "/css/browsers{$min}.css", null, GFCommon::$version );
+				wp_enqueue_style( 'gforms_browsers_css' );
 				wp_print_styles( array( 'gforms_browsers_css' ) );
 
 				if ( self::has_datepicker_field( $form ) ) {
-					wp_enqueue_style( 'gforms_datepicker_css', GFCommon::get_base_url() . "/css/datepicker{$min}.css", null, GFCommon::$version );
+					wp_enqueue_style( 'gforms_datepicker_css' );
 					wp_print_styles( array( 'gforms_datepicker_css' ) );
 				}
 
 				if ( is_rtl() ) {
-					wp_enqueue_style( 'gforms_rtl_css', GFCommon::get_base_url() . "/css/rtl{$min}.css", null, GFCommon::$version );
+					wp_enqueue_style( 'gforms_rtl_css' );
 					wp_print_styles( array( 'gforms_rtl_css' ) );
 				}
 			}
@@ -3288,6 +3288,7 @@ class GFFormDisplay {
 
 		$resume_submit_button_text       = esc_html__( 'Send Link', 'gravityforms' );
 		$resume_email_validation_message = esc_html__( 'Please enter a valid email address.', 'gravityforms' );
+		$email_input_placeholder         = esc_html__( 'email address', 'gravityforms' );
 
 		// The {save_email_input} accepts shortcode-style options button_text and validation_message. E.g.,
 		// {save_email_input: button_text="Send the link to my email address" validation_message="The link couldn't be sent because the email address is not valid."}
@@ -3301,6 +3302,9 @@ class GFFormDisplay {
 			}
 			if ( isset( $options['validation_message'] ) ) {
 				$resume_email_validation_message = $options['validation_message'];
+			}
+			if ( ! empty( $options['placeholder'] ) ) {
+				$email_input_placeholder = esc_attr( $options['placeholder'] );
 			}
 			$full_tag = $matches[0][0];
 			$text     = str_replace( $full_tag, '{save_email_input}', $text );
@@ -3337,7 +3341,7 @@ class GFFormDisplay {
 		$resume_form = "<div class='form_saved_message_emailform'>
 							<form action='{$action}' method='POST' id='gform_{$form_id}' {$target}>
 								{$ajax_fields}
-								<input type='{$html_input_type}' name='gform_resume_email' value='{$email_esc}' placeholder='email address'/>
+								<input type='{$html_input_type}' name='gform_resume_email' value='{$email_esc}' placeholder='{$email_input_placeholder}'/>
 								<input type='hidden' name='gform_resume_token' value='{$resume_token}' />
 								<input type='hidden' name='gform_send_resume_link' value='{$form_id}' />
 	                            <input type='submit' name='gform_send_resume_link_button' id='gform_send_resume_link_button_{$form_id}' value='{$resume_submit_button_text}' {$ajax_submit}/>

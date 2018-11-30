@@ -199,7 +199,7 @@ class GF_Field_CAPTCHA extends GF_Field {
 					// script is queued for the footer with the language property specified
 					wp_enqueue_script( 'gform_recaptcha', 'https://www.google.com/recaptcha/api.js?hl=' . $language . '&render=explicit', array(), false, true );
 
-					add_action( 'wp_footer', array( $this, 'ensure_recaptcha_js' ) );
+					add_action( 'wp_footer', array( $this, 'ensure_recaptcha_js' ), 21 );
 					add_action( 'gform_preview_footer', array( $this, 'ensure_recaptcha_js' ) );
 
 					$tabindex = GFCommon::$tab_index++;
@@ -241,7 +241,7 @@ class GF_Field_CAPTCHA extends GF_Field {
 			( function( $ ) {
 				$( document ).bind( 'gform_post_render', function() {
 					var gfRecaptchaPoller = setInterval( function() {
-						if( ! window.grecaptcha ) {
+						if( ! window.grecaptcha || ! window.grecaptcha.render ) {
 							return;
 						}
 						renderRecaptcha();

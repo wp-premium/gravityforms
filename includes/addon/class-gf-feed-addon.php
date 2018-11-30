@@ -699,7 +699,7 @@ abstract class GFFeedAddOn extends GFAddOn {
 
 		$feed = false;
 
-		if ( ! empty( $this->_single_submission_feed ) ) {
+		if ( ! empty( $this->_single_submission_feed ) && $this->_single_submission_feed['form_id'] == $form['id'] ) {
 
 			$feed = $this->_single_submission_feed;
 
