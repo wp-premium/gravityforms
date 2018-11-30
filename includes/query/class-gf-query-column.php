@@ -77,13 +77,35 @@ class GF_Query_Column {
 			return false;
 		}
 
-		static $entry_columns  = array();
+		static $entry_columns = array();
 		if ( empty( $entry_columns ) ) {
 			global $wpdb;
 			$entry_columns = wp_list_pluck( $wpdb->get_results( 'SHOW COLUMNS FROM ' . GFFormsModel::get_entry_table_name(), ARRAY_A ), 'Field' );
 		}
 		return in_array( $this->field_id, $entry_columns );
 	}
+
+	/**
+	 * Whether this field is a nullable entry column.
+	 *
+	 * @since 2.3.1.10
+	 *
+	 * @return boolean An entry column or not.
+	 */
+	public function is_nullable_entry_column() {
+		if ( ! $this->field_id ) {
+			return false;
+		}
+
+		static $nullable_entry_columns = array();
+		if ( empty( $nullable_entry_columns ) ) {
+			global $wpdb;
+			$nullable_entry_columns = wp_list_pluck( $wpdb->get_results( 'SHOW COLUMNS FROM ' . GFFormsModel::get_entry_table_name() . " WHERE `Null` = 'YES'", ARRAY_A ), 'Field' );
+		}
+		return in_array( $this->field_id, $nullable_entry_columns );
+	}
+
+
 
 	/**
 	 * Whether this field is a meta column.

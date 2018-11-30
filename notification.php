@@ -448,6 +448,11 @@ Class GFNotification {
 			else if (field.choices) {
 				// Create a drop down for fields that have choices (i.e. drop down, radio, checkboxes, etc...).
 				str = "<select class='gfield_routing_select gfield_routing_value_dropdown' id='routing_value_" + index + "'>";
+
+				if (field.placeholder) {
+					str += "<option value=''>" + field.placeholder + "</option>";
+				}
+
 				for (var i = 0; i < field.choices.length; i++) {
 					var choiceValue = field.choices[i].value ? field.choices[i].value : field.choices[i].text;
 					var isSelected = choiceValue == selectedValue;
@@ -1475,6 +1480,11 @@ Class GFNotification {
 			$str .= wp_dropdown_categories( array( 'class' => 'gfield_routing_select gfield_category_dropdown gfield_routing_value_dropdown', 'orderby' => 'name', 'id' => 'routing_value_' . $i, 'selected' => $selected_value, 'hierarchical' => true, 'hide_empty' => 0, 'echo' => false ) );
 		} elseif ( $field->choices ) {
 			$str .= "<select id='routing_value_" . $i . "' class='gfield_routing_select gfield_routing_value_dropdown'>";
+
+			if ( $field->placeholder ) {
+				$str .= "<option value=''>" . esc_html( $field->placeholder ) . '</option>';
+			}
+
 			foreach ( $field->choices as $choice ) {
 				$is_selected = $choice['value'] == $selected_value;
 				$selected    = $is_selected ? "selected='selected'" : '';

@@ -1,12 +1,64 @@
 ------------------------------------------------------------------------------------------------------------------
-Version 2.3.0.2
-    - Fixed a potential fatal error that can occur during or before the database upgrade.
+Version 2.3.2
+	- Added the "gform_field_filters" filter enabling the filter settings for the form fields, entry properties, and entry meta to be overridden.
+	- Added 'gform_use_post_value_for_conditional_logic_save_entry' to support fetching values from the $_POST when evaluating a field's conditional logic while re-saving an existing entry.
+	- Updated the routing rule value select on the edit notification page to include the field placeholder, if configured.
+	- Updated the {save_email_input} merge tag to support using the placeholder attribute to override the inputs placeholder e.g. {save_email_input:placeholder="Enter your email address"}
+	- Updated form stylesheets to be registered and enqueued instead of directly enqueued.
+	- Updated list of available languages for reCAPTCHA.
+	- Updated GFFeedAddon::get_single_submission_feed() method to only return cached feed if the same form object is provided.
+	- Fixed an issue on the field editor that caused the field UI to be duplicated in certain conditions.
+	- Fixed an issue with checkbox field where preview wasn't taking into account selected value.
+	- Fixed an issue with list field merge tag processing when a comma separated list of modifiers was used. Credit: The team at GravityView.
+	- Fixed a PHP notice which could occur when sending a notification which uses routing if a routing rule property is not defined.
+	- Fixed issue allowing site admins to uninstall network activated add-ons.
+	- Fixed the save email input placeholder not being translatable.
+	- Fixed a performance issue which forces the autoload options to reload on every request.
+	- Fixed a performance issue when checking the database version.
+	- Fixed an issue where elements could not escape content container in tabbed content sections.
+	- Fixed an issue with the entry search when searching for values in nullable columns in the entry table. For example, this fixes an issue when filtering entries for payment status is not 'Processing' where null values are ignored.
+	- Fixed JS errors which can occur when using the reCAPTCHA field if there is a slow network connection or jQuery is included in the page footer.
+	- Fixed an issue with the upgrade process where the table check for the incomplete submissions table may fail.
+	- Fixed a JavaScript error when sites use jQuery v3 on the front-end.
+	- Fixed bad text strings in messages regarding Add-Ons incompatible with the version of Gravity Formsx
+	- Fixed GFCommon::get_product_fields() interacting with option and shipping fields as arrays instead of using object notation.
+	- Fixed an issue with how the result from the gform_product_info_name_include_field_label filter was being used.
+	- Fixed the admin label not being used for the option and shipping fields when using the {all_fields:admin} merge tag.
+	- Fixed an issue where products with no options, no name, and no price could be included in the products info used to populate the summary table.
+	- Fixed some options remaining in the database on uninstall resulting in submissions being blocked or a failed database upgrade occurring on reinstall.
+	- Fixed issue where fields disabled by default were re-enabled via conditional logic.
+	- Fixed text format notifications being formatted to include HTML br tags.
+	- Fixed an issue with the Date field layout.
+	- Fixed an issue with the entry search where incorrect results are returned when searching for a meta value that is not empty.
+	- AF: Fixed an issue with the Ajax request for the "show more" link on the Results page which prevented additional results being displayed.
+	- API: Fixed an issue with the entry search where searching for an empty string meta value will return zero results.
+	- API: Fixed issue with GFAPI::count_entries( 0 ) where the result is always zero.
 
 ------------------------------------------------------------------------------------------------------------------
-Version 2.3.0.1
-    - Fixed an issue retrieving the entry before the entry migration has completed successfully.
-    - Fixed an issue preventing the entry limit feature from limiting entries.
-    - Fixed an issue preventing the upgrade process from completing when the incomplete submissions table does not exist.
+Version 2.3.1
+	- Added percentage complete to the System Status page when upgrading from 2.2.x.
+	- Added a message to the status report when background tasks are not enabled warning that the upgrade will take longer than usual.
+
+	- Updated the 'force the upgrade' link on the System Status page trigger the upgrade synchronously and then poll the cron task until complete when upgrading from 2.2.x. This provides a way to upgrade if neither background tasks nor the cron are working.
+    - Updated the way background tasks are handled on multisite. Tasks are processed for the current blog ID before processing tasks for other blog IDs.
+
+   	- Fixed an issue where form imports could fail if the file contain any extra characters before the JSON.
+   	- Fixed an issue where the previous button can not be clicked on multipage forms when the submit button is hidden by conditional logic.
+   	- Fixed an issue where URL is not be removed from entry value when deleting file.
+   	- Fixed an issue with the submissions block which may affect some systems under rare circumstances.
+   	- Fixed an issue on the entry list page when searching for the value of any field.
+   	- Fixed a database error during the daily cron task which can occur before the database has been upgraded.
+   	- Fixed the cron healthcheck when spawning a background task for a different blog ID on multisite.
+	- Fixed an issue which can cause merge tags to be blank while the database upgrade is queued.
+	- Fixed a potential fatal error that can occur during or before the database upgrade.
+   	- Fixed an issue retrieving the entry before the entry migration has completed successfully.
+	- Fixed an issue preventing the entry limit feature from limiting entries.
+	- Fixed an issue preventing the upgrade process from completing when the incomplete submissions table does not exist.
+
+   	- AF: Fixed an issue preventing field mapping from rendering when field labels contain HTML tags.
+
+   	- API: Fixed an issue searching entries with the != operator when combining clauses with multi-input fields.
+   	- API: Fixed an issue searching entries where the is operator is ignored.
 
 ------------------------------------------------------------------------------------------------------------------
 Version 2.3
@@ -125,7 +177,7 @@ Version 2.2.6
 	- AF: Fixed "callback" property being output as a settings field attribute.
 	- AF: Fixed the payment_gateway entry meta item not being set for some add-ons when using the gform_post_payment_completed hook.
  	- AF: Add GFAddOn::get_capabilities() to get registered capabilities.
-  
+
 ------------------------------------------------------------------------------------------------------------------
 Version 2.2.5
 	- Updated form view recording so that IP isn't included.

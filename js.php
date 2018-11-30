@@ -1063,9 +1063,14 @@ if ( ! class_exists( 'GFForms' ) ) {
 
 		jQuery.post(ajaxurl, data,
 			function (data) {
-				jQuery('.field_selected').children().not('#field_settings').remove();
-				jQuery("#field_" + fieldId).prepend(data.fieldString);
-
+				field   = GetSelectedField();
+				fieldId = field.id;
+				if ( data.fieldId == fieldId ) {
+					jQuery('.field_selected').children().not('#field_settings').remove();
+					jQuery("#field_" + fieldId).prepend(data.fieldString);
+				} else {
+					jQuery("#field_" + data.fieldId).html(data.fieldString);
+				}
 				SetFieldLabel(field.label);
 				SetFieldSize(field.size);
 				SetFieldDefaultValue(field.defaultValue);

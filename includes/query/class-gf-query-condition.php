@@ -278,7 +278,8 @@ class GF_Query_Condition {
 							 */
 						} else {
 							$operator = $this->operator;
-							if ( $is_negative = in_array( $operator, array( self::NLIKE, self::NBETWEEN ) ) ) {
+							$is_negative = in_array( $operator, array( self::NLIKE, self::NBETWEEN, self::NEQ ) );
+							if ( $is_negative ) {
 								/**
 								 * Convert operator to positive, since we're doing it the NOT EXISTS way.
 								 */
@@ -288,6 +289,9 @@ class GF_Query_Condition {
 										break;
 									case self::NBETWEEN:
 										$operator = self::BETWEEN;
+										break;
+									case self::NEQ:
+										$operator = self::EQ;
 										break;
 								}
 							}
@@ -299,6 +303,16 @@ class GF_Query_Condition {
 							return $compare_condition->sql( $query );
 						}
 					}
+				}
+
+				if ( $this->operator == self::EQ && $this->right->value == '' ) {
+					/**
+					 * Empty string comparisons need a NOT EXISTS clause to grab entries that don't have the value set.
+					 */
+					$subquery = $wpdb->prepare( sprintf( "SELECT 1 FROM `%s` WHERE `meta_key` = %%s AND `entry_id` = `%s`.`id`",
+						GFFormsModel::get_entry_meta_table_name(), $query->_alias( null, $this->left->source ) ), $this->left->field_id );
+					$not_exists = new self( new GF_Query_Call( 'NOT EXISTS', array( $subquery ) ) );
+					return $not_exists->sql( $query );
 				}
 
 				$compare_condition = self::_and(
@@ -314,7 +328,7 @@ class GF_Query_Condition {
 					)
 				);
 
-				if ( in_array( $this->operator, array( self::NIN, self::NBETWEEN, self::NEQ ) ) ) {
+				if ( in_array( $this->operator, array( self::NIN, self::NBETWEEN, self::NEQ ) ) && ! empty( $this->right ) ) {
 					/**
 					 * Negative comparisons need a NOT EXISTS clause to grab entries that
 					 *  don't have the value set in the first place.
@@ -331,6 +345,12 @@ class GF_Query_Condition {
 			if ( ( $left = $this->left_sql( $query ) ) && ( $right = $this->right_sql( $query ) ) ) {
 				if ( in_array( $this->operator, array( self::NBETWEEN, self::BETWEEN ) ) ) {
 					return "($left {$this->operator} $right)";
+				}
+
+				if ( $this->left instanceof GF_Query_Column && $this->left->is_nullable_entry_column() ) {
+					if ( ( $this->operator == self::EQ && empty ( $this->right->value ) ) || ( $this->operator == self::NEQ && ! empty ( $this->right->value ) ) ) {
+						$right .= ' OR ' . $left . ' IS NULL';
+					}
 				}
 
 				return "$left {$this->operator} $right";

@@ -915,7 +915,7 @@ class GFCommon {
 
 		$lead = $data['entry'];
 
-		$text = $nl2br ? nl2br( $text ) : $text;
+		$text = $format == 'html' && $nl2br ? nl2br( $text ) : $text;
 		$text = apply_filters( 'gform_pre_replace_merge_tags', $text, $form, $lead, $url_encode, $esc_html, $nl2br, $format );
 
 		if ( strpos( $text, '{' ) === false ) {
@@ -1738,11 +1738,15 @@ class GFCommon {
 		if ( empty( $email_to ) && rgar( $notification, 'toType' ) == 'routing' ) {
 			$email_to = array();
 			foreach ( $notification['routing'] as $routing ) {
+				if ( rgempty( 'email', $routing ) ) {
+					continue;
+				}
+
 				GFCommon::log_debug( __METHOD__ . '(): Evaluating Routing - rule => ' . print_r( $routing, 1 ) );
 
-				$source_field   = RGFormsModel::get_field( $form, $routing['fieldId'] );
+				$source_field   = RGFormsModel::get_field( $form, rgar( $routing, 'fieldId' ) );
 				$field_value    = RGFormsModel::get_lead_field_value( $lead, $source_field );
-				$is_value_match = RGFormsModel::is_value_match( $field_value, $routing['value'], $routing['operator'], $source_field, $routing, $form ) && ! RGFormsModel::is_field_hidden( $form, $source_field, array(), $lead );
+				$is_value_match = RGFormsModel::is_value_match( $field_value, rgar( $routing, 'value', '' ), rgar( $routing, 'operator', 'is' ), $source_field, $routing, $form ) && ! RGFormsModel::is_field_hidden( $form, $source_field, array(), $lead );
 
 				if ( $is_value_match ) {
 					$email_to[] = $routing['email'];
@@ -2309,6 +2313,33 @@ Content-Type: text/html;
 		}
 
 		return false;
+	}
+
+	/***
+	 * Determines if the current user has the proper cabalities to uninstall the plugin specified in $plugin_path.
+	 * Plugins that have been network activated can only be uninstalled by a network admin.
+	 *
+	 * @since 2.3.1.12
+	 * @access public
+	 *
+	 * @param string $caps Capabilities that current user must have to be able to uninstall the plugin.
+	 * @param string $plugin_path Path of the plugin to be checked, relative to the plugins folder. i.e. "gravityforms/gravityforms.php"
+	 *
+	 * @return bool True if current user can uninstall the plugin. False otherwise
+	 */
+	public static function current_user_can_uninstall( $caps = 'gravityforms_uninstall', $plugin_path = 'gravityforms/gravityforms.php' ) {
+
+		$is_multisite = function_exists( 'is_multisite' ) && is_multisite();
+		$is_network_activated = is_plugin_active_for_network( $plugin_path );
+
+
+		//If an addon is network activated, it can only be uninstalled by a super admin.
+		if ( $is_multisite && $is_network_activated ) {
+			return is_super_admin();
+		} else {
+			return self::current_user_can_any( $caps );
+		}
+
 	}
 
 	public static function current_user_can_any( $caps ) {
@@ -3512,11 +3543,11 @@ Content-Type: text/html;
 								continue;
 							}
 
-							if ( ! rgget( $id, $products ) ) {
+							if ( ! rgar( $products, $id ) ) {
 								$products[ $id ] = array();
 							}
 
-							$products[ $id ]['name']     = $use_admin_label && ! rgempty( 'adminLabel', $field ) ? $field->adminLabel : $lead_value[ $id . '.1' ];
+							$products[ $id ]['name']     = $use_admin_label && ! empty( $field->adminLabel ) ? $field->adminLabel : $lead_value[ $id . '.1' ];
 							$products[ $id ]['price']    = rgar( $lead_value, $id . '.2' );
 							$products[ $id ]['quantity'] = $product_quantity;
 						} elseif ( ! empty( $lead_value ) ) {
@@ -3529,35 +3560,48 @@ Content-Type: text/html;
 								$products[ $id ] = array();
 							}
 
+							$field_label = $use_admin_label && ! empty( $field->adminLabel ) ? $field->adminLabel : $field->label;
+
 							if ( $field->inputType == 'price' ) {
-								$name  = $field->label;
+								$name  = $field_label;
 								$price = $lead_value;
 							} else {
 								list( $name, $price ) = explode( '|', $lead_value );
+
+								if ( ! $use_choice_text ) {
+									$name = RGFormsModel::get_choice_text( $field, $name );
+								}
+
+								/**
+								 * Enables inclusion of the field label or admin label in the product name for choice based Product fields.
+								 *
+								 * @since 1.9.1
+								 *
+								 * @param bool $include_field_label Indicates if the label should be included in the product name. Default is false.
+								 */
+								$include_field_label = apply_filters( 'gform_product_info_name_include_field_label', true );
+								if ( $include_field_label ) {
+									$name = $field_label . " ({$name})";
+								}
 							}
 
-							$products[ $id ]['name'] = ! $use_choice_text ? $name : RGFormsModel::get_choice_text( $field, $name );
-							$include_field_label     = apply_filters( 'gform_product_info_name_include_field_label', false );
-							if ( $field->inputType == ( 'radio' || 'select' ) && $include_field_label ) {
-								$products[ $id ]['name'] = $field->label . " ({$products[$id]['name']})";
-							}
-
+							$products[ $id ]['name']     = $name;
 							$products[ $id ]['price']    = $price;
 							$products[ $id ]['quantity'] = $quantity;
 							$products[ $id ]['options']  = array();
 						}
 
 						if ( isset( $products[ $id ] ) ) {
-							$options = self::get_product_fields_by_type( $form, array( 'option' ), $id );
-							foreach ( $options as $option ) {
-								$option_value = RGFormsModel::get_lead_field_value( $lead, $option );
-								$option_label = empty( $option['adminLabel'] ) ? $option['label'] : $option['adminLabel'];
+							$option_fields = self::get_product_fields_by_type( $form, array( 'option' ), $id );
+							foreach ( $option_fields as $option_field ) {
+								$option_value = RGFormsModel::get_lead_field_value( $lead, $option_field );
+								$option_label = $use_admin_label && ! empty( $option_field->adminLabel ) ? $option_field->adminLabel : $option_field->label;
 								if ( is_array( $option_value ) ) {
 									foreach ( $option_value as $value ) {
-										$option_info = self::get_option_info( $value, $option, $use_choice_text );
+										$option_info = self::get_option_info( $value, $option_field, $use_choice_text );
 										if ( ! empty( $option_info ) ) {
 											$products[ $id ]['options'][] = array(
-												'field_label'  => rgar( $option, 'label' ),
+												'field_label'  => rgobj( $option_field, 'label' ),
 												'option_name'  => rgar( $option_info, 'name' ),
 												'option_label' => $option_label . ': ' . rgar( $option_info, 'name' ),
 												'price'        => rgar( $option_info, 'price' )
@@ -3565,32 +3609,38 @@ Content-Type: text/html;
 										}
 									}
 								} elseif ( ! empty( $option_value ) ) {
-									$option_info                  = self::get_option_info( $option_value, $option, $use_choice_text );
+									$option_info                  = self::get_option_info( $option_value, $option_field, $use_choice_text );
 									$products[ $id ]['options'][] = array(
-										'field_label'  => rgar( $option, 'label' ),
+										'field_label'  => rgobj( $option_field, 'label' ),
 										'option_name'  => rgar( $option_info, 'name' ),
 										'option_label' => $option_label . ': ' . rgar( $option_info, 'name' ),
 										'price'        => rgar( $option_info, 'price' )
 									);
 								}
 							}
+
+							if ( empty( $products[ $id ]['options'] ) && empty( $products[ $id ]['name'] ) && rgblank( $products[ $id ]['price'] ) ) {
+								self::log_debug( __METHOD__ . "(): Product field #{$id} has no options, name, or price; removing." );
+								unset( $products[ $id ] );
+							}
 						}
 						break;
 				}
 			}
 
-			$shipping_field    = GFAPI::get_fields_by_type( $form, array( 'shipping' ) );
-			$shipping_price    = $shipping_name = '';
-			$shipping_field_id = '';
-			if ( ! empty( $shipping_field ) && ! RGFormsModel::is_field_hidden( $form, $shipping_field[0], array(), $lead ) ) {
-				$shipping_price    = RGFormsModel::get_lead_field_value( $lead, $shipping_field[0] );
-				$shipping_name     = $shipping_field[0]['label'];
-				$shipping_field_id = $shipping_field[0]['id'];
-				if ( $shipping_field[0]['inputType'] != 'singleshipping' && ! empty( $shipping_price ) ) {
+			$shipping_fields = GFAPI::get_fields_by_type( $form, array( 'shipping' ) );
+			$shipping_price  = $shipping_name = $shipping_field_id = '';
+
+			if ( ! empty( $shipping_fields ) && ! RGFormsModel::is_field_hidden( $form, $shipping_fields[0], array(), $lead ) ) {
+				$shipping_price    = RGFormsModel::get_lead_field_value( $lead, $shipping_fields[0] );
+				$shipping_name     = $use_admin_label && ! empty( $shipping_fields[0]->adminLabel ) ? $shipping_fields[0]->adminLabel : $shipping_fields[0]->label;
+				$shipping_field_id = $shipping_fields[0]->id;
+				if ( $shipping_fields[0]->inputType != 'singleshipping' && ! empty( $shipping_price ) ) {
 					list( $shipping_method, $shipping_price ) = explode( '|', $shipping_price );
-					$shipping_name = $shipping_field[0]['label'] . " ($shipping_method)";
+					$shipping_name .= " ($shipping_method)";
 				}
 			}
+
 			$shipping_price = self::to_number( $shipping_price, $lead['currency'] );
 
 			$product_info = array(
@@ -3602,6 +3652,15 @@ Content-Type: text/html;
 				)
 			);
 
+			/**
+			 * Allows the product info used by add-ons and when generating the entry order summary table to be overridden.
+			 *
+			 * @since 1.5.2.8
+			 *
+			 * @param array $product_info The selected products, options, and shipping details for the current entry.
+			 * @param array $form         The form object used to generate the current entry.
+			 * @param array $lead         The current entry object.
+			 */
 			$product_info = gf_apply_filters( array( 'gform_product_info', $form['id'] ), $product_info, $form, $lead );
 
 			// save static copy of product info (only for 'real' entries)
@@ -4876,6 +4935,16 @@ Content-Type: text/html;
 		$info_filters       = self::get_entry_info_filter_settings();
 		$field_filters      = array_merge( $field_filters, $info_filters );
 		$field_filters      = array_values( $field_filters );
+
+		/**
+		 * Enables the filter settings for the form fields, entry properties, and entry meta to be overridden.
+		 *
+		 * @since 2.3.1.16
+		 *
+		 * @param array $field_filters The form field, entry properties, and entry meta filter settings.
+		 * @param array $form          The form object the filter settings have been prepared for.
+		 */
+		$field_filters = apply_filters( 'gform_field_filters', $field_filters, $form );
 
 		return $field_filters;
 	}
