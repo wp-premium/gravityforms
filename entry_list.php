@@ -681,26 +681,27 @@ final class GF_Entry_List_Table extends WP_List_Table {
 
 		$page_index = empty( $_GET['paged'] ) ? 0 : absint( $_GET['paged'] - 1 );
 
-		$form       = RGFormsModel::get_form_meta( $form_id );
-
 		$search_criteria = $this->get_search_criteria();
 
-		$sort_direction = $this->get_order();
-
-		$sort_field = $this->get_orderby();
-
-		$sort_field_meta = RGFormsModel::get_field( $form, $sort_field );
-
-		$is_numeric      = $sort_field_meta instanceof GF_Field ? $sort_field_meta->type == 'number' : $sort_field_meta['type'];
-
 		$screen_options = get_user_option( 'gform_entries_screen_options' );
-		$page_size = isset( $screen_options['per_page'] ) ? absint( $screen_options['per_page'] ) : 20;
+		$page_size      = isset( $screen_options['per_page'] ) ? absint( $screen_options['per_page'] ) : 20;
 
 		$page_size        = gf_apply_filters( array( 'gform_entry_page_size', $form_id ), $page_size, $form_id );
 		$first_item_index = $page_index * $page_size;
 
+		$sort_field = $this->get_orderby();
 		if ( ! empty( $sort_field ) ) {
-			$sorting = array( 'key' => $_GET['orderby'], 'direction' => $sort_direction, 'is_numeric' => $is_numeric );
+			$sort_direction  = $this->get_order();
+			$sort_field_meta = GFAPI::get_field( $form_id, $sort_field );
+
+			if ( $sort_field_meta instanceof GF_Field ) {
+				$is_numeric = $sort_field_meta->get_input_type() == 'number';
+			} else {
+				$entry_meta = GFFormsModel::get_entry_meta( $form_id );
+				$is_numeric = rgars( $entry_meta, $sort_field . '/is_numeric' );
+			}
+
+			$sorting = array( 'key' => $sort_field, 'direction' => $sort_direction, 'is_numeric' => $is_numeric );
 		} else {
 			$sorting = array();
 		}
@@ -933,6 +934,10 @@ final class GF_Entry_List_Table extends WP_List_Table {
 
 			case 'payment_amount' :
 				$value = GFCommon::to_money( $value, $entry['currency'] );
+				break;
+
+			case 'payment_status' :
+				$value = GFCommon::get_entry_payment_status_text( $entry['payment_status'] );
 				break;
 
 			case 'created_by' :

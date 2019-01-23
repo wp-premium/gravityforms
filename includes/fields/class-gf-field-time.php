@@ -194,19 +194,14 @@ class GF_Field_Time extends GF_Field {
 		if ( $is_form_editor || $this->timeFormat != '24' ) {
 			$am_text = esc_html__( 'AM', 'gravityforms' );
 			$pm_text = esc_html__( 'PM', 'gravityforms' );
-			$ampm_field = $is_sub_label_above ? "<div class='gfield_time_ampm ginput_container ginput_container_time' {$ampm_field_style}>
-                                                            <label for='{$field_id}_3'>&nbsp;</label>
-                                                            <select name='input_{$id}[]' id='{$field_id}_3' $ampm_tabindex {$disabled_text}>
-                                                                <option value='am' {$am_selected}>{$am_text}</option>
-                                                                <option value='pm' {$pm_selected}>{$pm_text}</option>
-                                                            </select>
-                                                          </div>"
-												: "<div class='gfield_time_ampm ginput_container ginput_container_time' {$ampm_field_style}>
-                                                            <select name='input_{$id}[]' id='{$field_id}_3' $ampm_tabindex {$disabled_text}>
-                                                                <option value='am' {$am_selected}>{$am_text}</option>
-                                                                <option value='pm' {$pm_selected}>{$pm_text}</option>
-                                                            </select>
-                                                          </div>";
+			$aria_label = esc_attr( 'AM/PM', 'gravityforms' );
+			$ampm_field = "<div class='gfield_time_ampm ginput_container ginput_container_time' {$ampm_field_style}>
+                                " . ( $is_sub_label_above ? "<div class='gfield_time_ampm_shim' aria-hidden='true'>&nbsp;</div>" : "" ). "
+                                <select name='input_{$id}[]' id='{$field_id}_3' $ampm_tabindex {$disabled_text} aria-label='{$aria_label}'>
+                                    <option value='am' {$am_selected}>{$am_text}</option>
+                                    <option value='pm' {$pm_selected}>{$pm_text}</option>
+                                </select>
+                           </div>";
 		} else {
 			$ampm_field = '';
 		}
@@ -256,6 +251,17 @@ class GF_Field_Time extends GF_Field {
 	}
 
 	/**
+	 * Whether this field expects an array during submission.
+	 *
+	 * @since 2.4
+	 *
+	 * @return bool
+	 */
+	public function is_value_submission_array() {
+		return true;
+	}
+
+	/**
 	 * Determines if any of the submission values are empty.
 	 *
 	 * @since  Unknown
@@ -281,6 +287,29 @@ class GF_Field_Time extends GF_Field {
 		} else {
 
 			// Date picker.
+			return strlen( trim( $value ) ) <= 0;
+		}
+	}
+
+	/**
+	 * Determines whether the given value is considered empty for this field.
+	 *
+	 * @since  2.4
+	 *
+	 * @param string|array $value The value.
+	 *
+	 * @return bool True if empty. False otherwise.
+	 */
+	public function is_value_empty( $value ) {
+		if ( is_array( $value ) ) {
+			foreach ( $value as $input ) {
+				if ( strlen( trim( $input ) ) <= 0 ) {
+					return true;
+				}
+			}
+
+			return false;
+		} else {
 			return strlen( trim( $value ) ) <= 0;
 		}
 	}
@@ -337,6 +366,24 @@ class GF_Field_Time extends GF_Field {
 	}
 
 	/**
+	 * Returns a JS script to be rendered in the front end of the form.
+	 *
+	 * @param array $form The Form Object
+	 *
+	 * @return string Returns a JS script to be processed in the front end.
+	 */
+	public function get_form_inline_script_on_page_render( $form ) {
+
+		//Only return merge tag script if form supports JS merge tags
+		if ( ! GFFormDisplay::has_js_merge_tag( $form ) ) {
+			return '';
+		}
+
+		return "gform.addFilter( 'gform_value_merge_tag_{$form['id']}_{$this->id}', function( value, input, modifier ) { if( modifier === 'label' ) { return false; } var ampm = input.length == 3 ? ' ' + jQuery(input[2]).val() : ''; return jQuery(input[0]).val() + ':' + jQuery(input[1]).val() + ' ' + ampm; } );";
+
+	}
+
+	/**
 	 * Overrides GF_Field to prevent the standard input ID from being used.
 	 *
 	 * @since  Unknown
@@ -350,26 +397,17 @@ class GF_Field_Time extends GF_Field {
 
 
 	/**
-	 * Support for legacy Time fields which did not have an inputs array.
+	 * Removes the "for" attribute in the field label. Inputs are only allowed one label (a11y) and the inputs already have labels.
 	 *
-	 * @since  Unknown
+	 * @since  2.4
 	 * @access public
 	 *
-	 * @used-by GF_Field::get_field_content()
-	 * @uses    GF_Field::get_first_input_id()
+	 * @param array $form The Form Object currently being processed.
 	 *
-	 * @param array $form The Form Object
-	 *
-	 * @return string The first input ID.
+	 * @return string
 	 */
 	public function get_first_input_id( $form ) {
-
-		// Legacy (< 1.9) Time fields did not have an inputs array.
-		if ( ! is_array( $this->inputs ) ){
-			return 'input_' . $form['id'] . '_' . $this->id . '_1';
-		}
-
-		return parent::get_first_input_id( $form );
+		return '';
 	}
 
 	/**

@@ -90,12 +90,16 @@ class GF_Query_Call {
 
 		list( $column, $type ) = $this->parameters;
 
-		if ( ! in_array( $type, array( GF_Query::TYPE_SIGNED, GF_Query::TYPE_UNSIGNED ) ) ) {
+		if ( ! in_array( $type, array( GF_Query::TYPE_SIGNED, GF_Query::TYPE_UNSIGNED, GF_Query::TYPE_DECIMAL ) ) ) {
 			return '';
 		}
 
 		if ( ! $column->field_id || ! $column->source ) {
 			return '';
+		}
+
+		if ( GF_Query::TYPE_DECIMAL === $type ) {
+			$type = 'DECIMAL(65, 6)'; // @todo make the decimal point configurable one day
 		}
 
 		$id = $column->is_entry_column() ? $column->field_id : 'meta_value';

@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms
 Plugin URI: https://www.gravityforms.com
 Description: Easily create web forms and manage form entries within the WordPress admin.
-Version: 2.3.2
+Version: 2.4.5
 Author: rocketgenius
 Author URI: https://www.rocketgenius.com
 License: GPL-2.0+
@@ -11,7 +11,7 @@ Text Domain: gravityforms
 Domain Path: /languages
 
 ------------------------------------------------------------------------
-Copyright 2009-2018 Rocketgenius, Inc.
+Copyright 2009-2019 Rocketgenius, Inc.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -133,7 +133,7 @@ define( 'GF_SUPPORTED_WP_VERSION', version_compare( get_bloginfo( 'version' ), G
  *
  * @var string GF_MIN_WP_VERSION_SUPPORT_TERMS The version number
  */
-define( 'GF_MIN_WP_VERSION_SUPPORT_TERMS', '4.8' );
+define( 'GF_MIN_WP_VERSION_SUPPORT_TERMS', '4.9' );
 
 
 if ( ! defined( 'GRAVITY_MANAGER_URL' ) ) {
@@ -215,7 +215,7 @@ class GFForms {
 	 *
 	 * @var string $version The version number.
 	 */
-	public static $version = '2.3.2';
+	public static $version = '2.4.5';
 
 	/**
 	 * Handles background upgrade tasks.
@@ -255,12 +255,21 @@ class GFForms {
 	 * Determines if the 3rd party Members plugin is active.
 	 *
 	 * @since  Unknown
-	 * @access public
+	 *
+	 * @param string $version Minimum version number of Members plugin to check for.
 	 *
 	 * @return boolean True if the Members plugin is active. False otherwise.
 	 */
-	public static function has_members_plugin() {
-		return function_exists( 'members_get_capabilities' );
+	public static function has_members_plugin( $min_version = '1.0' ) {
+
+		if ( version_compare( $min_version, '2.0', '>=' ) ) {
+			return function_exists( 'members_register_cap_group' );
+		} else if ( version_compare( $min_version, '1.0', '>=' ) ) {
+			return ! function_exists( 'members_register_cap_group' ) && function_exists( 'members_get_capabilities' );
+		}
+
+		return false;
+
 	}
 
 	/**
@@ -298,8 +307,8 @@ class GFForms {
 
 		gf_feed_processor();
 
-		// Maybe set up Gravity Forms: only on admin requests for single site installation and always for multisite
-		if ( ( IS_ADMIN && false === ( defined( 'DOING_AJAX' ) && true === DOING_AJAX ) ) || is_multisite() ) {
+		// Maybe set up Gravity Forms
+		if ( ( false === ( defined( 'DOING_AJAX' ) && true === DOING_AJAX ) ) ) {
 
 			gf_upgrade()->maybe_upgrade();
 
@@ -315,9 +324,16 @@ class GFForms {
 			global $current_user;
 
 			//Members plugin integration. Adding Gravity Forms roles to the checkbox list
-			if ( self::has_members_plugin() ) {
+			if ( self::has_members_plugin( '2.0' ) ) {
+				add_action( 'members_register_cap_groups', array( 'GFForms', 'members_register_cap_group' ) );
+				add_action( 'members_register_caps', array( 'GFForms', 'members_register_caps' ) );
+			} else if ( self::has_members_plugin( '1.0' ) ) {
 				add_filter( 'members_get_capabilities', array( 'GFForms', 'members_get_capabilities' ) );
 			}
+
+            // User Role Editor integration.
+            add_filter( 'ure_capabilities_groups_tree', array( 'GFForms', 'filter_ure_capabilities_groups_tree' ) );
+            add_filter( 'ure_custom_capability_groups', array( 'GFForms', 'filter_ure_custom_capability_groups' ), 10, 2 );
 
 			if ( is_multisite() ) {
 				add_filter( 'wpmu_drop_tables', array( 'GFFormsModel', 'mu_drop_tables' ) );
@@ -352,6 +368,8 @@ class GFForms {
 					// Support modifying the admin page title for settings
 					add_filter( 'admin_title', array( __class__, 'modify_admin_title' ), 10, 2 );
 
+					// Display admin notice if logging is enabled.
+					add_action( 'admin_notices', array( 'GFForms', 'maybe_display_logging_notice' ) );
 
 					require_once( GFCommon::get_base_path() . '/includes/locking/locking.php' );
 
@@ -461,6 +479,10 @@ class GFForms {
 			if ( $gf_page == 'form_list' ) {
 				add_filter( 'set-screen-option', array( 'GFForms', 'set_screen_options' ), 10, 3 );
 			}
+
+			add_filter(	'wp_privacy_personal_data_exporters', array( 'GFForms', 'register_data_exporter' ),	10 );
+			add_filter(	'wp_privacy_personal_data_erasers', array( 'GFForms', 'register_data_eraser' ),	10 );
+
 		} else {
 			add_action( 'wp_enqueue_scripts', array( 'GFForms', 'enqueue_scripts' ), 11 );
 			add_action( 'wp', array( 'GFForms', 'ajax_parse_request' ), 10 );
@@ -820,7 +842,7 @@ class GFForms {
 				'wp-pointer',
 				'gform_chosen',
 			),
-			'gf_edit_forms_notification' => array(
+			'gf_edit_forms_settings' => array(
 				'thickbox',
 				'editor-buttons',
 				'wp-jquery-ui-dialog',
@@ -895,7 +917,7 @@ class GFForms {
 				'wp-pointer',
 				'gform_chosen',
 			),
-			'gf_edit_forms_notification' => array(
+			'gf_edit_forms_settings' => array(
 				'editor',
 				'word-count',
 				'quicktags',
@@ -916,7 +938,16 @@ class GFForms {
 				'wp-plupload',
 				'gform_placeholder',
 				'gform_json',
+				'gform_gravityforms',
+				'gform_forms',
+				'gform_form_admin',
+				'jquery-ui-datepicker',
+				'gform_masked_input',
+				'sack',
 				'jquery-ui-autocomplete',
+				'wp-tinymce',
+				'wp-tinymce-root',
+				'wp-tinymce-lists',
 			),
 			'gf_new_form'                => array(
 				'thickbox',
@@ -1117,6 +1148,12 @@ class GFForms {
 		return gf_upgrade()->validate_upgrade( $do_upgrade, $hook_extra );
 	}
 
+
+
+
+
+	// # PERMISSIONS ---------------------------------------------------------------------------------------------------
+
 	/**
 	 * Determines if a user has a particular capability.
 	 *
@@ -1175,6 +1212,109 @@ class GFForms {
 	}
 
 	/**
+	 * Register the Gravity Forms capabilities group with the Members plugin.
+	 *
+	 * @since  2.4
+	 * @access public
+	 */
+	public static function members_register_cap_group() {
+
+		members_register_cap_group(
+			'gravityforms',
+			array(
+				'label' => esc_html__( 'Gravity Forms', 'gravityforms' ),
+				'icon'  => 'dashicons-gravityforms',
+				'caps'  => array(),
+			)
+		);
+
+	}
+
+	/**
+	 * Register the capabilities and their human readable labels with the Members plugin.
+	 *
+	 * @since  2.4
+	 * @access public
+	 */
+	public static function members_register_caps() {
+
+		$caps = array(
+			'gravityforms_create_form'      => esc_html__( 'Create Forms', 'gravityforms' ),
+			'gravityforms_delete_forms'     => esc_html__( 'Delete Forms', 'gravityforms' ),
+			'gravityforms_edit_forms'       => esc_html__( 'Edit Forms', 'gravityforms' ),
+			'gravityforms_preview_forms'    => esc_html__( 'Preview Forms', 'gravityforms' ),
+			'gravityforms_view_entries'     => esc_html__( 'View Entries', 'gravityforms' ),
+			'gravityforms_edit_entries'     => esc_html__( 'Edit Entries', 'gravityforms' ),
+			'gravityforms_delete_entries'   => esc_html__( 'Delete Entries', 'gravityforms' ),
+			'gravityforms_view_entry_notes' => esc_html__( 'View Entry Notes', 'gravityforms' ),
+			'gravityforms_edit_entry_notes' => esc_html__( 'Edit Entry Notes', 'gravityforms' ),
+			'gravityforms_export_entries'   => esc_html__( 'Import/Export', 'gravityforms' ),
+			'gravityforms_view_settings'    => esc_html__( 'View Plugin Settings', 'gravityforms' ),
+			'gravityforms_edit_settings'    => esc_html__( 'Edit Plugin Settings', 'gravityforms' ),
+			'gravityforms_view_updates'     => esc_html__( 'Manage Updates', 'gravityforms' ),
+			'gravityforms_view_addons'      => esc_html__( 'Manage Add-Ons', 'gravityforms' ),
+			'gravityforms_system_status'    => esc_html__( 'View System Status', 'gravityforms' ),
+			'gravityforms_uninstall'        => esc_html__( 'Uninstall Gravity Forms', 'gravityforms' ),
+		);
+
+		foreach ( $caps as $cap => $label ) {
+			members_register_cap(
+				$cap,
+				array(
+					'label' => $label,
+					'group' => 'gravityforms',
+				)
+			);
+		}
+
+	}
+
+	/**
+	 * Register Gravity Forms capabilities group with User Role Editor plugin.
+	 *
+	 * @since  2.4
+	 *
+	 * @param array $groups Existing capabilities groups.
+	 *
+	 * @return array
+	 */
+	public static function filter_ure_capabilities_groups_tree( $groups = array() ) {
+
+		$groups['gravityforms'] = array(
+			'caption' => esc_html__( 'Gravity Forms', 'gravityforms' ),
+			'parent'  => 'custom',
+			'level'   => 2,
+		);
+
+		return $groups;
+
+	}
+
+	/**
+	 * Register Gravity Forms capabilities with Gravity Forms group in User Role Editor plugin.
+	 *
+	 * @since  2.4
+	 *
+	 * @param array  $groups Current capability groups.
+	 * @param string $cap_id Capability identifier.
+	 *
+	 * @return array
+	 */
+	public static function filter_ure_custom_capability_groups( $groups = array(), $cap_id = '' ) {
+
+		// Get Gravity Forms capabilities.
+		$caps = GFCommon::all_caps();
+
+		// If capability belongs to Gravity Forms, register it to group.
+		if ( in_array( $cap_id, $caps, true ) ) {
+			$groups[] = 'gravityforms';
+		}
+
+		return $groups;
+
+	}
+
+	/**
 	 * Tests if the upload folder is writable and displays an error message if not.
 	 *
 	 * @since  Unknown
@@ -1186,7 +1326,7 @@ class GFForms {
 		// Check if upload folder is writable
 		$folder = RGFormsModel::get_upload_root();
 		if ( empty( $folder ) ) {
-			echo "<div class='error'>Upload folder is not writable. Export and file upload features will not be functional.</div>";
+			echo "<div class='error'>" . esc_html__( 'Upload folder is not writable. Export and file upload features will not be functional.', 'gravityforms' ) . '</div>';
 		}
 	}
 
@@ -1990,7 +2130,7 @@ class GFForms {
 		}
 
 		if ( version_compare( GFCommon::$version, $version_info['version'], '<' ) ) {
-			$message = sprintf( esc_html__( 'There is an update available for Gravity Forms. %sView Details%s', 'gravityforms' ), "<a href='admin.php?page=page=gf_system_status&subview=updates'>", '</a>' );
+			$message = sprintf( esc_html__( 'There is an update available for Gravity Forms. %sView Details%s', 'gravityforms' ), "<a href='admin.php?page=gf_system_status&subview=updates'>", '</a>' );
 			?>
 			<div class='updated' style='padding:15px; position:relative;' id='gf_dashboard_message'><?php echo $message ?>
 				<a href="javascript:void(0);" onclick="GFDismissUpgrade();" onkeypress="GFDismissUpgrade();" style='float:right;'><?php esc_html_e( 'Dismiss', 'gravityforms' ) ?></a>
@@ -2089,7 +2229,8 @@ class GFForms {
 		wp_register_style( 'gform_shortcode_ui', $base_url . "/css/shortcode-ui{$min}.css", array(), $version );
 		wp_register_style( 'gform_font_awesome', $base_url . "/css/font-awesome{$min}.css", null, $version );
 		wp_register_style( 'gform_tooltip', $base_url . "/css/tooltip{$min}.css", array( 'gform_font_awesome' ), $version );
-		
+		wp_register_style( 'gform_dashicons', $base_url . "/css/dashicons{$min}.css", array(), $version );
+
 		wp_register_style( 'gforms_reset_css', $base_url . "/css/formreset{$min}.css", null, $version );
 		wp_register_style( 'gforms_datepicker_css', $base_url . "/css/datepicker{$min}.css", null, $version );
 		wp_register_style( 'gforms_formsmain_css', $base_url . "/css/formsmain{$min}.css", null, $version );
@@ -2278,6 +2419,9 @@ class GFForms {
 			) );
 		}
 
+		if ( self::has_members_plugin( '2.0' ) && rgget( 'page' ) === 'roles' ) {
+		    wp_enqueue_style( 'gform_dashicons' );
+        }
 
 		if ( empty( $scripts ) ) {
 			return;
@@ -4800,6 +4944,35 @@ class GFForms {
 	}
 
 	/**
+	 * Display admin notice when logging is enabled.
+	 *
+	 * @since  2.4
+	 * @access public
+	 */
+	public static function maybe_display_logging_notice() {
+
+		$notice_disabled = defined( 'GF_LOGGING_DISABLE_NOTICE' ) && GF_LOGGING_DISABLE_NOTICE;
+		$logging_enabled = get_option( 'gform_enable_logging', false ) || is_plugin_active( 'gravityformslogging/logging.php' );
+
+		// If logging is disabled, return.
+		if ( $notice_disabled || ! $logging_enabled || ! GFCommon::current_user_can_any( 'gravityforms_edit_settings' ) ) {
+			return;
+		}
+
+		// Prepare message.
+		$message = sprintf(
+			esc_html__( "Gravity Forms logging is currently enabled. Log files can contain sensitive information so ensure that logging is only enabled for as long as is required for troubleshooting. %sClick here to disable logging.%s %sIf you're currently receiving support, do not disable logging until the issue is resolved.%s" ),
+			'<a href="' . esc_url( admin_url( 'admin.php?page=gf_settings' ) ) . '">',
+			'</a>',
+			'<strong>',
+			'</strong>'
+		);
+
+		printf( '<div class="notice notice-error"><p>%s</p></div>', $message );
+
+	}
+
+	/**
 	 * Sets the screen options for the entry list.
 	 *
 	 * @since   2.0
@@ -4916,6 +5089,13 @@ class GFForms {
 		self::do_self_healing();
 
 		self::delete_orphaned_entries();
+
+		if ( ! get_option( 'gform_enable_logging' ) ) {
+			gf_logging()->delete_log_files();
+		}
+
+		require_once( 'includes/class-personal-data.php' );
+		GF_Personal_Data::cron_task();
 
 		GFCommon::log_debug( __METHOD__ . '(): Done.' );
 	}
@@ -5165,6 +5345,74 @@ class GFForms {
 	 */
 	public static function action_admin_notices() {
 		GFCommon::display_dismissible_message( false, 'site-wide' );
+	}
+
+	/**
+	 * Registers the Gravity Forms data exporter.
+	 *
+	 * @since 2.4
+	 *
+	 * @param array $exporters
+	 *
+	 * @return array
+	 */
+	public static function register_data_exporter( $exporters ) {
+		$exporters['gravityforms'] = array(
+			'exporter_friendly_name' => __( 'Gravity Forms Exporter' ),
+			'callback' => array( 'GFForms', 'data_exporter' ),
+		);
+		return $exporters;
+	}
+
+	/**
+	 * Registers the Gravity Forms data eraser.
+	 *
+	 * @since 2.4
+	 *
+	 * @param array $erasers
+	 *
+	 * @return array
+	 */
+	public static function register_data_eraser( $erasers ) {
+		$erasers['gravityforms'] = array(
+			'eraser_friendly_name' => __( 'Gravity Forms Eraser' ),
+			'callback' => array( 'GFForms', 'data_eraser' ),
+		);
+		return $erasers;
+	}
+
+	/**
+	 * Callback for the WordPress data exporter.
+	 *
+	 * @since 2.4
+	 *
+	 * @param string $email_address
+	 * @param int    $page
+	 *
+	 * @return array
+	 */
+	public static function data_exporter( $email_address, $page = 1 ) {
+
+		require_once( 'includes/class-personal-data.php' );
+
+		return GF_Personal_Data::data_exporter( $email_address, $page );
+	}
+
+	/**
+	 * Callback for the WordPress data eraser.
+	 *
+	 * @since 2.4
+	 *
+	 * @param string $email_address
+	 * @param int    $page
+	 *
+	 * @return array
+	 */
+	public static function data_eraser( $email_address, $page = 1 ) {
+
+		require_once( 'includes/class-personal-data.php' );
+
+		return GF_Personal_Data::data_eraser( $email_address, $page );
 	}
 }
 
@@ -5453,7 +5701,7 @@ if ( ! function_exists( 'gf_apply_filters' ) ) {
 
 		// Apply modified versions of filter
 		foreach ( $modifiers as $modifier ) {
-			$modifier = empty( $modifier ) ? '' : sprintf( '_%s', $modifier );
+			$modifier = rgblank( $modifier ) ? '' : sprintf( '_%s', $modifier );
 			$filter .= $modifier;
 			$value = apply_filters( $filter, $value, $args[0], $args[1], $args[2], $args[3], $args[4], $args[5], $args[6], $args[7], $args[8], $args[9] );
 		}
@@ -5497,7 +5745,7 @@ if ( ! function_exists( 'gf_do_action' ) ) {
 
 		// Apply modified versions of filter
 		foreach ( $modifiers as $modifier ) {
-			$modifier = empty( $modifier ) ? '' : sprintf( '_%s', $modifier );
+			$modifier = rgblank( $modifier ) ? '' : sprintf( '_%s', $modifier );
 			$action .= $modifier;
 			do_action( $action, $args[0], $args[1], $args[2], $args[3], $args[4], $args[5], $args[6], $args[7], $args[8], $args[9] );
 		}

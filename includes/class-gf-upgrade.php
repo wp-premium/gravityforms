@@ -9,9 +9,6 @@ if ( ! class_exists( 'GFForms' ) ) {
  * look into the post_upgrade_schema() function for a sample and instructions on how to do it.
  */
 
-/** WordPress Upgrade Functions */
-require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-
 class GF_Upgrade {
 
 	private $versions = null;
@@ -410,6 +407,17 @@ class GF_Upgrade {
               KEY form_id (form_id)
             ) $charset_collate;";
 
+		$revisions_table_name            = GFFormsModel::get_form_revisions_table_name();
+		$tables[ $revisions_table_name ] = 'CREATE TABLE ' . $revisions_table_name . " (
+		      id bigint(20) unsigned not null auto_increment,
+              form_id mediumint(8) unsigned not null,
+              display_meta longtext,
+              date_created datetime not null,
+              PRIMARY KEY  (id),
+              KEY date_created (date_created),
+              KEY form_id (form_id)
+            ) $charset_collate;";
+
 		$entry_table_name = GFFormsModel::get_entry_table_name();
 		$tables[ $entry_table_name ] =
 			'CREATE TABLE ' . $entry_table_name . " (
@@ -462,6 +470,7 @@ class GF_Upgrade {
               entry_id bigint(20) unsigned not null,
               meta_key varchar(255),
               meta_value longtext,
+              item_index varchar(60),
               PRIMARY KEY  (id),
               KEY meta_key (meta_key($max_index_length)),
               KEY entry_id (entry_id),

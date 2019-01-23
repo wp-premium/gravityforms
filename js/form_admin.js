@@ -14,9 +14,9 @@ jQuery(document).ready(function($){
 	if ( typeof form != 'undefined' && jQuery( '.merge-tag-support' ).length >= 0 ) {
 
 		jQuery( '.merge-tag-support' ).each( function() {
-			
+
 			new gfMergeTagsObj( form, jQuery( this ) );
-			
+
 		} );
 
 	}
@@ -193,7 +193,7 @@ function GetRuleFields( objectType, ruleIndex, selectedFieldId ) {
         if( IsConditionalLogicField( field ) ) {
 
             // @todo: the inputType check will likely go away once we've figured out how we're going to manage inputs moving forward
-            if( field.inputs && jQuery.inArray( GetInputType( field ), [ 'checkbox', 'email' ] ) == -1 ) {
+            if( field.inputs && jQuery.inArray( GetInputType( field ), [ 'checkbox', 'email', 'consent' ] ) == -1 ) {
                 for( var j = 0; j < field.inputs.length; j++ ) {
                     var input = field.inputs[j];
                     if( ! input.isHidden ) {
@@ -872,10 +872,10 @@ var gfMergeTagsObj = function( form, element ) {
 
 		// Bind keydown event.
 		self.bindKeyDown();
-		
+
 		// Initialize autocomplete.
 		self.initAutocomplete();
-		
+
 		self.addMergeTagIcon();
 
 		self.mergeTagIcon.find( 'a.open-list' ).on( 'click.gravityforms', function() {
@@ -905,7 +905,7 @@ var gfMergeTagsObj = function( form, element ) {
 				self.mergeTagList.hide();
 			}
 		} );
-		
+
 		// Assign gfMergeTagsObj to element.
 		self.elem.data( 'mergeTags', self );
 
@@ -915,15 +915,15 @@ var gfMergeTagsObj = function( form, element ) {
 	* Destroy a merge tag object.
 	*/
 	self.destroy = function( element ) {
-		
+
 		// Get element.
 		element = self.elem ? self.elem : element;
-		
+
 		element.next( '.all-merge-tags' ).remove();
 		element.off( 'keydown.gravityforms' );
 		element.autocomplete( 'destroy' );
 		element.data( 'mergeTags', null );
-		
+
 	};
 
 
@@ -936,17 +936,17 @@ var gfMergeTagsObj = function( form, element ) {
 	* Bind keydown event to element.
 	*/
 	self.bindKeyDown = function() {
-		
+
 		self.elem.on( 'keydown.gravityforms', function( event ) {
-			
+
 			var menuActive = self.elem.data( 'autocomplete' ) && self.elem.data( 'autocomplete' ).menu ? self.elem.data( 'autocomplete' ).menu.active : false;
-			
+
 			if ( event.keyCode === jQuery.ui.keyCode.TAB && menuActive ) {
 				event.preventDefault();
 			}
-		
+
 		} );
-		
+
 	}
 
 	/**
@@ -1003,7 +1003,7 @@ var gfMergeTagsObj = function( form, element ) {
 	* Add merge tag drop down icon next to element.
 	*/
 	self.addMergeTagIcon = function() {
-		
+
 		var inputType     = self.elem.is( 'input' ) ? 'input' : 'textarea',
 		    positionClass = self.getClassProperty( self.elem, 'position' );
 
@@ -1029,7 +1029,7 @@ var gfMergeTagsObj = function( form, element ) {
 			show:    { delay:1250 },
 			content: function () { return jQuery( this ).prop( 'title' ); }
 		} );
-		
+
 	}
 
 	/**
@@ -1187,32 +1187,29 @@ var gfMergeTagsObj = function( form, element ) {
 
 		}
 
-		otherGroup.push( { tag: '{ip}', label: this.getMergeTagLabel('{ip}') });
-		otherGroup.push( { tag: '{date_mdy}', label: this.getMergeTagLabel('{date_mdy}') });
-		otherGroup.push( { tag: '{date_dmy}', label: this.getMergeTagLabel('{date_dmy}') });
-		otherGroup.push( { tag: '{embed_post:ID}', label: this.getMergeTagLabel('{embed_post:ID}') });
-		otherGroup.push( { tag: '{embed_post:post_title}', label: this.getMergeTagLabel('{embed_post:post_title}') });
-		otherGroup.push( { tag: '{embed_url}', label: this.getMergeTagLabel('{embed_url}') });
+        var otherTags = [
+            'ip', 'date_mdy', 'date_dmy', 'embed_post:ID', 'embed_post:post_title', 'embed_url', 'entry_id', 'entry_url', 'form_id', 'form_title', 'user_agent', 'referer', 'post_id', 'post_edit_url', 'user:display_name', 'user:user_email', 'user:user_login'
+        ];
 
-		// the form and entry objects are not available during replacement of pre-population merge tags
-		if (!isPrepop) {
-			otherGroup.push({tag: '{entry_id}', label: this.getMergeTagLabel('{entry_id}')});
-			otherGroup.push({tag: '{entry_url}', label: this.getMergeTagLabel('{entry_url}')});
-			otherGroup.push({tag: '{form_id}', label: this.getMergeTagLabel('{form_id}')});
-			otherGroup.push({tag: '{form_title}', label: this.getMergeTagLabel('{form_title}')});
-		}
+        // the form and entry objects are not available during replacement of pre-population merge tags
+        if (isPrepop) {
+            otherTags.splice(otherTags.indexOf('entry_id'), 1);
+            otherTags.splice(otherTags.indexOf('entry_url'), 1);
+            otherTags.splice(otherTags.indexOf('form_id'), 1);
+            otherTags.splice(otherTags.indexOf('form_title'), 1);
+        }
 
-		otherGroup.push( { tag: '{user_agent}', label: this.getMergeTagLabel('{user_agent}') });
-		otherGroup.push( { tag: '{referer}', label: this.getMergeTagLabel('{referer}') });
+        if(!HasPostField() || isPrepop) { // TODO: consider adding support for passing form object or fields array
+            otherTags.splice(otherTags.indexOf('post_id'), 1);
+            otherTags.splice(otherTags.indexOf('post_edit_url'), 1);
+        }
 
-		if(HasPostField() && !isPrepop) { // TODO: consider adding support for passing form object or fields array
-			otherGroup.push( { tag: '{post_id}', label: this.getMergeTagLabel('{post_id}') });
-			otherGroup.push( { tag: '{post_edit_url}', label: this.getMergeTagLabel('{post_edit_url}') });
-		}
+        for(var i in otherTags) {
+            if(jQuery.inArray(otherTags[i], excludeFieldTypes) != -1)
+                continue;
 
-		otherGroup.push( { tag: '{user:display_name}', label: this.getMergeTagLabel('{user:display_name}') });
-		otherGroup.push( { tag: '{user:user_email}', label: this.getMergeTagLabel('{user:user_email}') });
-		otherGroup.push( { tag: '{user:user_login}', label: this.getMergeTagLabel('{user:user_login}') });
+            otherGroup.push( { tag: '{'+ otherTags[i] +'}', label: this.getMergeTagLabel('{'+ otherTags[i] +'}') });
+        }
 
 		var customMergeTags = this.getCustomMergeTags();
 		if( customMergeTags.tags.length > 0 ) {
@@ -1342,7 +1339,7 @@ var gfMergeTagsObj = function( form, element ) {
 			if ( groupName == 'custom' ) {
 				return gf_vars.mergeTags[ groupName ];
 			}
-	
+
 		}
 
 		return [];
@@ -1420,10 +1417,10 @@ var gfMergeTagsObj = function( form, element ) {
 					continue;
 
 				var tag = tags[i];
-				
+
 				var tagHTML = jQuery( '<a class="" data-value="' + tag.tag + '">' + tag.label + '</a>' );
 				tagHTML.on( 'click.gravityforms', self.bindMergeTagListClick );
-								
+
 				optionsHTML.push( jQuery( '<li></li>' ).html( tagHTML ) );
 
 			}
@@ -1459,6 +1456,9 @@ var gfMergeTagsObj = function( form, element ) {
 	* You can pass multiple values for a property like so:
 	*	e.g. mt-{property}-{value1}-{value2}-{value3}
 	*
+    * Use the following values to support JS merge tags (because they are not available in front end forms):
+    *	mt-exclude-entry_id-entry_url-form_id-form_title
+    *
 	* Current classes:
 	*	mt-hide_all_fields
 	*	mt-exclude-{field_type}			e.g. mt-exlude-paragraph

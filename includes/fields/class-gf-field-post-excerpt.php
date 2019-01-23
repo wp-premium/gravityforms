@@ -57,13 +57,12 @@ class GF_Field_Post_Excerpt extends GF_Field {
 
 		$tabindex = $this->get_tabindex();
 
-		$logic_event           = $this->get_conditional_logic_event( 'keyup' );
 		$placeholder_attribute = $this->get_field_placeholder_attribute();
 		$required_attribute    = $this->isRequired ? 'aria-required="true"' : '';
 		$invalid_attribute     = $this->failed_validation ? 'aria-invalid="true"' : 'aria-invalid="false"';
 
 		return "<div class='ginput_container ginput_container_post_excerpt'>
-					<textarea name='input_{$id}' id='{$field_id}' class='textarea {$class}' {$tabindex} {$logic_event} {$placeholder_attribute} {$required_attribute} {$invalid_attribute} {$disabled_text} rows='10' cols='50'>{$value}</textarea>
+					<textarea name='input_{$id}' id='{$field_id}' class='textarea {$class}' {$tabindex} {$placeholder_attribute} {$required_attribute} {$invalid_attribute} {$disabled_text} rows='10' cols='50'>{$value}</textarea>
 				</div>";
 	}
 
@@ -119,6 +118,23 @@ class GF_Field_Post_Excerpt extends GF_Field {
 
 		return $return;
 	}
+
+	// # FIELD FILTER UI HELPERS ---------------------------------------------------------------------------------------
+
+	/**
+	 * Returns the filter operators for the current field.
+	 *
+	 * @since 2.4
+	 *
+	 * @return array
+	 */
+	public function get_filter_operators() {
+		$operators   = parent::get_filter_operators();
+		$operators[] = 'contains';
+
+		return $operators;
+	}
+
 }
 
 GF_Fields::register( new GF_Field_Post_Excerpt() );

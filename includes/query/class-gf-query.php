@@ -16,6 +16,10 @@ if ( ! class_exists( 'GF_Query_Literal' ) ) {
 	require_once( 'class-gf-query-literal.php' );
 }
 
+if ( ! class_exists( 'GF_Query_JSON_Literal' ) ) {
+	require_once( 'class-gf-query-json-literal.php' );
+}
+
 if ( ! class_exists( 'GF_Query_Series' ) ) {
 	require_once( 'class-gf-query-series.php' );
 }
@@ -111,6 +115,11 @@ class GF_Query {
 	const TYPE_UNSIGNED = 'UNSIGNED';
 
 	/**
+	 * @const string DECIMAL type.
+	 */
+	const TYPE_DECIMAL = 'DECIMAL';
+
+	/**
 	 * GF_Query constructor.
 	 *
 	 * @param null|int|array $form_ids
@@ -133,7 +142,6 @@ class GF_Query {
 	 * @param null      $paging
 	 */
 	public function parse( $form_id, $search_criteria = array(), $sorting = null, $paging = null ) {
-		global $wpdb;
 
 		$page_size = isset( $paging['page_size'] ) ? $paging['page_size'] : 20;
 		$offset = isset( $paging['offset'] ) ? $paging['offset'] : 0;
@@ -166,19 +174,22 @@ class GF_Query {
 
 		$force_order_numeric = false;
 		if ( ! $order->is_entry_column() ) {
-
-			$form = GFAPI::get_form( $form_id );
-			$field = GFFormsModel::get_field( $form, $sort_field );
-
-			if ( $field && $field->get_input_type() == 'number' ) {
-				$force_order_numeric = isset( $sorting['is_numeric'] ) ? $sorting['is_numeric'] : true;
+			if ( isset( $sorting['is_numeric'] ) ) {
+				$force_order_numeric = $sorting['is_numeric'];
 			} else {
-				$force_order_numeric = isset( $sorting['is_numeric'] ) ? $sorting['is_numeric'] : false;
+				$field = GFAPI::get_field( $form_id, $sort_field );
+
+				if ( $field instanceof GF_Field ) {
+					$force_order_numeric = $field->get_input_type() == 'number';
+				} else {
+					$entry_meta          = GFFormsModel::get_entry_meta( $form_id );
+					$force_order_numeric = rgars( $entry_meta, $sort_field . '/is_numeric' );
+				}
 			}
 		}
 
 		if ( $force_order_numeric ) {
-			$order = GF_Query_Call::CAST( $order, GF_Query::TYPE_SIGNED );
+			$order = GF_Query_Call::CAST( $order, GF_Query::TYPE_DECIMAL );
 		}
 
 		$this->from( $from );
@@ -198,7 +209,7 @@ class GF_Query {
 
 		if ( isset( $search_criteria['status'] ) ) {
 			$property_conditions[] = new GF_Query_Condition(
-				new GF_Query_Column( 'status', $form_id),
+				new GF_Query_Column( 'status' ),
 				GF_Query_Condition::EQ,
 				new GF_Query_Literal( $search_criteria['status'] )
 			);
@@ -207,7 +218,9 @@ class GF_Query {
 		$start_date = rgar( $search_criteria, 'start_date' );
 		$end_date = rgar( $search_criteria, 'end_date' );
 
-		if ( ! empty( $start_date ) || ! empty( $end_date ) ) {
+		$column = count( $from ) > 1 ? new GF_Query_Column( 'date_created' ) : new GF_Query_Column( 'date_created', $form_id );
+
+		if ( ! empty( $start_date ) ) {
 
 			$start_date           = new DateTime( $search_criteria['start_date'] );
 			$start_datetime_str = $start_date->format( 'Y-m-d H:i:s' );
@@ -220,7 +233,14 @@ class GF_Query {
 
 			$start_date_str_utc = get_gmt_from_date( $start_date_str );
 
+			$property_conditions[] = new GF_Query_Condition(
+				$column,
+				GF_Query_Condition::GTE,
+				new GF_Query_Literal( $start_date_str_utc )
+			);
+		}
 
+		if ( ! empty( $end_date ) ) {
 			$end_date         = new DateTime( $search_criteria['end_date'] );
 			$end_datetime_str = $end_date->format( 'Y-m-d H:i:s' );
 			$end_date_str     = $end_date->format( 'Y-m-d' );
@@ -234,16 +254,9 @@ class GF_Query {
 
 			$end_date_str_utc = get_gmt_from_date( $end_date_str );
 
-			if ( ! empty( $start_date ) ) {
-				$property_conditions[] = new GF_Query_Condition(
-					new GF_Query_Column( 'date_created', $form_id ),
-					GF_Query_Condition::GTE,
-					new GF_Query_Literal( $start_date_str_utc )
-				);
-			}
 			if ( ! empty( $end_date ) ) {
 				$property_conditions[] = new GF_Query_Condition(
-					new GF_Query_Column( 'date_created', $form_id ),
+					$column,
 					GF_Query_Condition::LTE,
 					new GF_Query_Literal( $end_date_str_utc )
 				);
@@ -263,7 +276,7 @@ class GF_Query {
 			$search_mode = isset( $field_filters['mode'] ) ? strtolower( $field_filters['mode'] ) : 'all';
 			unset( $field_filters['mode'] );
 
-			foreach( $field_filters as $filter ) {
+			foreach ( $field_filters as $filter ) {
 				$key = rgar( $filter, 'key' );
 
 				if ( empty( $key ) ) {
@@ -278,26 +291,26 @@ class GF_Query {
 				$operator = strtoupper( $operator );
 
 				switch ( $operator ) {
-					case 'CONTAINS' :
+					case 'CONTAINS':
 						$operator = GF_Query_Condition::LIKE;
 						$value    = '%' . $value . '%';
 						break;
-					case 'IS NOT' :
-					case 'ISNOT' :
-					case '<>' :
+					case 'IS NOT':
+					case 'ISNOT':
+					case '<>':
 						$operator = GF_Query_Condition::NEQ;
 						break;
-					case 'IS' :
-					case '=' :
+					case 'IS':
+					case '=':
 						$operator = GF_Query_Condition::EQ;
 						break;
-					case 'LIKE' :
+					case 'LIKE':
 						$operator = GF_Query_Condition::LIKE;
 						break;
-					case 'NOT IN' :
+					case 'NOT IN':
 						$operator = GF_Query_Condition::NIN;
 						break;
-					case 'IN' :
+					case 'IN':
 						$operator = GF_Query_Condition::IN;
 				}
 
@@ -308,7 +321,7 @@ class GF_Query {
 						$value = floatval( $value );
 					}
 					$filters[] = new GF_Query_Condition(
-						GF_Query_Call::CAST( new GF_Query_Column( $key, $form_id ), self::TYPE_SIGNED ),
+						GF_Query_Call::CAST( new GF_Query_Column( $key, $form_id ), self::TYPE_DECIMAL ),
 						$operator,
 						new GF_Query_Literal( $value )
 					);
@@ -317,16 +330,9 @@ class GF_Query {
 
 				if ( is_array( $value ) ) {
 					foreach ( $value as &$v ) {
-						$v = new GF_Query_Literal( $v );
+						$v = $field && $field->storageType == 'json' ? new GF_Query_JSON_Literal( (string) $v ) : new GF_Query_Literal( $v );
 					}
 					$value = new GF_Query_Series( $value );
-
-					if ( $operator == 'NOT IN' && ! $field ) {
-						$subquery = $wpdb->prepare( sprintf( "SELECT 1 FROM `%s` WHERE `meta_key` = %%s AND `entry_id` = `%s`.`id`",
-							GFFormsModel::get_entry_meta_table_name(), $this->_alias( null, $form_id ) ), $key );
-
-						$filters[] = new GF_Query_Condition( new GF_Query_Call( 'EXISTS', array( $subquery ) ) );
-					}
 
 					$filters[] = new GF_Query_Condition(
 						new GF_Query_Column( $key, $form_id ),
@@ -345,8 +351,10 @@ class GF_Query {
 					$date_created_end      = $search_date_str . ' 23:59:59';
 					$date_created_end_utc  = get_gmt_from_date( $date_created_end );
 
+					$column = count( $from ) > 1 ? new GF_Query_Column( $key ) : new GF_Query_Column( $key, $form_id );
+
 					$filters[] = new GF_Query_Condition(
-						new GF_Query_Column( $key, $form_id ),
+						$column,
 						GF_Query_Condition::BETWEEN,
 						new GF_Query_Series( array( new GF_Query_Literal( $date_create_start_utc ), new GF_Query_Literal( $date_created_end_utc ) ) )
 					);
@@ -354,10 +362,13 @@ class GF_Query {
 					continue;
 				}
 
+				$literal = $field && $field->storageType == 'json' ? new GF_Query_JSON_Literal( (string) $value ) : new GF_Query_Literal( (string) $value );
+
+				$column = count( $from ) > 1 ? new GF_Query_Column( $key ) : new GF_Query_Column( $key, $form_id );
 				$filters[] = new GF_Query_Condition(
-					new GF_Query_Column( $key, $form_id ),
+					$column,
 					$operator,
-					new GF_Query_Literal( (string) $value )
+					$literal
 				);
 
 			}
@@ -368,7 +379,6 @@ class GF_Query {
 			} elseif ( $filters ) {
 				$filters_condition = $filters[0];
 			}
-
 		}
 
 		if ( ! empty( $properties_condition ) && ! empty( $filters_condition ) ) {
@@ -640,37 +650,9 @@ class GF_Query {
 
 		$results = $this->query();
 
-		$this->total_found = $wpdb->get_var( 'SELECT FOUND_ROWS()' );
+		$this->total_found = (int) $wpdb->get_var( 'SELECT FOUND_ROWS()' );
 
-		/**
-		 * Inititalize them all.
-		 */
-		$_entry_cache = array();
-		foreach ( $results as $result ) {
-
-			if ( count( $result ) > 1 ) {
-				$joined_entries = array();
-				foreach ( $result as $entry_id ) {
-					if ( ( $entry = rgar( $_entry_cache, $entry_id ) ) || ( $entry = $this->get_entry( $entry_id ) ) && ! is_wp_error( $entry ) ) {
-						if ( ! rgar( $_entry_cache, $entry_id ) ) {
-							$_entry_cache[ $entry_id ] = $entry;
-						}
-						$joined_entries[ $entry['form_id'] ] = $entry;
-					}
-				}
-				$entries[] = $joined_entries;
-
-			} elseif ( count( $result ) == 1 ) {
-				if ( ( $entry = rgar( $_entry_cache, $result[0] ) ) || ( $entry = $this->get_entry( $result[0] ) ) ) {
-					if ( ! rgar( $_entry_cache, $result[0]  ) ) {
-						$_entry_cache[ $result[0] ] = &$entry;
-					}
-					$entries[] = $entry;
-				}
-			}
-		}
-
-		return $entries;
+		return $this->get_entries( $results );
 	}
 
 	/**
@@ -683,7 +665,7 @@ class GF_Query {
 
 		$results = $this->query();
 
-		$this->total_found = $wpdb->get_var( 'SELECT FOUND_ROWS()' );
+		$this->total_found = (int) $wpdb->get_var( 'SELECT FOUND_ROWS()' );
 
 		$ids = array();
 
@@ -780,11 +762,25 @@ class GF_Query {
 
 		$paginate = implode( ' ', array_filter( array( $limit, $offset ), 'strlen' ) );
 
-		$sql = implode( ' ', array_filter( array( $select, $from, $join, $where, $order, $paginate ), 'strlen' ) );
+		/**
+		 * Filter the SQL query fragments to allow low-level advanced analysis and modification before the query is run.
+		 *
+		 * @since 2.4.3
+		 *
+		 * @param array $sql An array with all the SQL fragments: select, from, join, where, order, paginate.
+		 */
+		$sql = apply_filters( 'gform_gf_query_sql', compact( 'select', 'from', 'join', 'where', 'order', 'paginate' ) );
+		$sql = implode( ' ', array_filter( $sql, 'strlen' ) );
+
+		GFCommon::log_debug( __METHOD__ . '(): sql => ' . $sql );
 
 		$this->timer_start();
 		$results = $wpdb->get_results( $sql, ARRAY_N );
 		$this->queries []= array( $this->timer_stop(), $sql );
+
+		if ( is_null( $results ) ) {
+			return array();
+		}
 
 		return $results;
 	}
@@ -987,15 +983,13 @@ class GF_Query {
 					GF_Query_Condition::_and( $this->where, $meta_condition )
 				);
 
-				if ( empty( $_joins ) ) {
-					/**
-					 * Make sure the initial join exists.
-					 */
-					$_joins = $this->_join_infer( $meta_condition );
-				}
+				/**
+				 * Make sure the initial join exists.
+				 */
+				$_joins = array_merge( $this->_join_infer( $meta_condition ), $_joins );
 			}
 
-			$_joins [] = sprintf( '`%s` AS `%s` ON `%s`.`%s` = `%s`.`%s`',
+			$_joins[] = sprintf( '`%s` AS `%s` ON `%s`.`%s` = `%s`.`%s`',
 				$table_on, $alias_on, $alias_on, $column_on, $equals_table, $equals_column );
 		}
 
@@ -1165,6 +1159,13 @@ class GF_Query {
 	 * @return string|null The alias.
 	 */
 	public function _alias( $field_id, $source = null, $prefix = 't' ) {
+		if ( 't' == $prefix && ( ! $source || empty ( $this->from ) || in_array( $source, $this->from ) ) ) {
+			if ( ! isset( $this->aliases['-'] ) ) {
+				$this->aliases['-'] = true;
+			}
+			return 't1';
+		}
+
 		if ( $source && is_array( $source ) ) {
 			$source = reset( $source );
 		}
@@ -1218,13 +1219,31 @@ class GF_Query {
 	 * @param string $field_id The field to cast.
 	 * @param string $type The type, one of self::TYPE_*
 	 *
+	 * @unused This seems to be a development artifact. Candidate for removal.
+	 *
 	 * @return array|$field The function name, args in order. Or the field if error.
 	 */
 	public function cast( $field_id, $type ) {
-		if ( ! in_array( $type, array( self::TYPE_SIGNED, self::TYPE_UNSIGNED ) ) ) {
+		if ( ! in_array( $type, array( self::TYPE_SIGNED, self::TYPE_UNSIGNED, self::TYPE_DECIMAL ) ) ) {
 			return $field_id;
 		}
+
+		if ( self::TYPE_DECIMAL === $type ) {
+			$type = 'DECIMAL(65, 6)';
+		}
+
 		return array( 'CAST', $field_id, 'AS', $type );
+	}
+
+	/**
+	 * Whether there are several forms that are being selected from or not.
+	 *
+	 * Does not return true for joins and unions.
+	 *
+	 * @return bool
+	 */
+	public function is_multisource() {
+		return is_array( $this->from ) && count( $this->from ) > 1;
 	}
 
 	/**
@@ -1276,71 +1295,180 @@ class GF_Query {
 	 * @return array|bool
 	 */
 	public function get_entry( $entry_id ) {
-		global $wpdb;
 
 		if ( empty( $entry_id ) ) {
 			return false;
 		}
 
-		$entry_table = GFFormsModel::get_entry_table_name();
-		$sql = "SELECT * from $entry_table WHERE id = %d";
-		$column_values = $wpdb->get_row( $wpdb->prepare( $sql, $entry_id ), ARRAY_A );
-		if ( empty( $column_values ) ) {
+		$entries = $this->get_entries( array( $entry_id ) );
+		if ( empty( $entries ) ) {
 			return false;
 		}
+		return array_pop( $entries );
+	}
 
-		$entry = array(
-			'id' => $entry_id
-		);
+	/**
+	 * Returns an array or array entries with the field values for the given entry IDs.
+	 *
+	 * @param int[]|int[][] $entry_ids A (nested) array of entry IDs to fetch. Invalid IDs are discarded.
+	 *
+	 * @return array[] An array of entry objects.
+	 */
+	public function get_entries( $entry_ids ) {
+		global $wpdb;
 
-		foreach ( $column_values as $column_key => $column_value ) {
-			$entry[ $column_key ] = $column_value;
-		}
-		$entry_meta_table = GFFormsModel::get_entry_meta_table_name();
-		$sql = "SELECT meta_key, meta_value from $entry_meta_table WHERE entry_id = %d";
-		$values = $wpdb->get_results( $wpdb->prepare( $sql, $entry_id ), ARRAY_A );
-		$db_values = array();
-		foreach ( $values as $value ) {
-			$db_values[ $value['meta_key'] ] = $value['meta_value'];
-		}
-		$form_id = $entry['form_id'];
-		$form = RGFormsModel::get_form_meta( $form_id );
-		
-		if( ! $form ) {
-			return false;
-		}
-		
-		// running entry through gform_get_field_value filter
-		foreach ( $form['fields'] as $field ) {
-			/* @var GF_Field $field */
-			$inputs = $field->get_entry_inputs();
-			// skip types html, page and section?
-			if ( is_array( $inputs ) ) {
-				foreach ( $inputs as $input ) {
-					$entry[ (string) $input['id'] ] = gf_apply_filters( array(
-						'gform_get_input_value',
-						$form['id'],
-						$field->id,
-						$input['id']
-					), rgar( $db_values, (string) $input['id'] ), $entry, $field, $input['id'] );
-				}
-			} else {
-				$value = rgar( $db_values, (string) $field->id );
-				if ( GFFormsModel::is_openssl_encrypted_field( $entry['id'], $field->id ) ) {
-					$value = GFCommon::openssl_decrypt( $value );
-				}
-				$entry[ $field->id ] = gf_apply_filters( array(
-					'gform_get_input_value',
-					$form['id'],
-					$field->id
-				), $value, $entry, $field, '' );
+		foreach ( $entry_ids as $i => $id ) {
+			if ( ! is_array( $id ) ) {
+				$entry_ids[ $i ] = array( $id );
 			}
 		}
-		$entry_meta = GFFormsModel::get_entry_meta( $form_id );
-		$meta_keys  = array_keys( $entry_meta );
-		foreach ( $meta_keys as $meta_key ) {
-			$entry[ $meta_key ] = isset( $db_values[ $meta_key ] ) ? maybe_unserialize( $db_values[ $meta_key ] ) : false;
+
+		$ids = array();
+		foreach ( $entry_ids as $entry_id ) {
+			$ids = array_merge( $ids, $entry_id );
 		}
-		return $entry;
+		$ids = array_unique( $ids );
+
+		if ( empty( $ids ) ) {
+			return array();
+		}
+
+		$entry_table = GFFormsModel::get_entry_table_name();
+		$sql = sprintf( "SELECT * from $entry_table WHERE id IN(%s)", $placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) ) );
+		$entryset = $wpdb->get_results( $wpdb->prepare( $sql, $ids ), ARRAY_A );
+
+		$entry_meta_table = GFFormsModel::get_entry_meta_table_name();
+
+		$entries = array();
+
+		foreach ( $entryset as $entry ) {
+			$entries[ $entry['id'] ] = $entry;
+		}
+
+		$cache = array(
+			'form_meta' => array(),
+			'form_entry_meta' => array(),
+		);
+
+		$meta_clauses = array();
+
+		foreach ( $entryset as $entry ) {
+			$form_id = absint( $entry['form_id'] );
+			if ( isset( $cache['form_entry_meta'][ $form_id ] ) ) {
+				$entry_meta = $cache['form_entry_meta'][ $form_id ];
+			} else {
+				$entry_meta = $cache['form_entry_meta'][ $form_id ] = RGFormsModel::get_entry_meta( $form_id );
+			}
+			if ( ! empty( $entry_meta ) ) {
+				$entry_meta_placeholders = implode( ',', array_fill( 0, count( $entry_meta ), '%s' ) );
+				$sql = sprintf( '( form_id = %d AND meta_key IN (%s) )', $form_id, $entry_meta_placeholders );
+				if ( ! isset( $meta_clauses[ $form_id ] ) ) {
+					$meta_clauses[ $form_id ] = $wpdb->prepare( $sql, array_keys( $entry_meta ) );
+				}
+			}
+		}
+
+		$meta_clauses_str =  empty ( $meta_clauses ) ?  '' : sprintf( 'OR (%s)', join( ' OR ', $meta_clauses ) );
+
+		$sql = sprintf( "
+SELECT entry_id, meta_key, meta_value, item_index 
+FROM $entry_meta_table 
+WHERE entry_id IN(%s) 
+AND ( meta_key REGEXP '^[0-9|.]+$'
+%s )
+", $placeholders, $meta_clauses_str );
+		$metaset = $wpdb->get_results( $wpdb->prepare( $sql, $ids ), ARRAY_A );
+
+
+		foreach ( $metaset as $meta ) {
+			$entries[ $meta['entry_id'] ][ $meta['meta_key'] . $meta['item_index'] ] = $meta['meta_value'];
+		}
+
+		foreach ( $entryset as $entry ) {
+			if ( isset( $cache['form_meta'][ $entry['form_id'] ] ) ) {
+				$form = $cache['form_meta'][ $entry['form_id'] ];
+			} else {
+				$form = $cache['form_meta'][ $entry['form_id'] ] = RGFormsModel::get_form_meta( $entry['form_id'] );
+			}
+
+			$openssl_encrypted_fields = GFFormsModel::get_openssl_encrypted_fields( $entry['id'] );
+
+			foreach ( $form['fields'] as $field ) {
+				/* @var GF_Field $field */
+
+				$inputs = $field->get_entry_inputs();
+				if ( is_array( $inputs ) ) {
+					foreach ( $inputs as $input ) {
+						$entries[ $entry['id'] ][ (string) $input['id'] ] = gf_apply_filters( array(
+							'gform_get_input_value',
+							$form['id'],
+							$field->id,
+							$input['id']
+						), rgar( $entries[ $entry['id'] ], (string) $input['id'] ), $entry, $field, $input['id'] );
+					}
+				} else {
+					$value = rgar( $entries[ $entry['id'] ], (string) $field->id );
+					if ( in_array( (string) $field->id, $openssl_encrypted_fields ) ) {
+						$value = GFCommon::openssl_decrypt( $value );
+					}
+					$entries[ $entry['id'] ][ $field->id ] = gf_apply_filters( array(
+						'gform_get_input_value',
+						$form['id'],
+						$field->id
+					), $value, $entry, $field, '' );
+				}
+			}
+
+			if ( isset( $cache['form_entry_meta'][ $entry['form_id'] ] ) ) {
+				$entry_meta = $cache['form_entry_meta'][ $entry['form_id'] ];
+			}
+
+			foreach ( array_keys( $entry_meta ) as $meta_key ) {
+				if ( isset( $entries[ $entry['id'] ][ $meta_key ] ) ) {
+					$entries[ $entry['id'] ][ $meta_key ] = maybe_unserialize( $entries[ $entry['id'] ][ $meta_key ] );
+				} else {
+					$entries[ $entry['id'] ][ $meta_key ] = false;
+				}
+			}
+
+			GFFormsModel::hydrate_repeaters( $entries[ $entry['id'] ], $form );
+		}
+
+		$results = array();
+
+		foreach ( $entry_ids as $entry_id ) {
+			if ( count( $entry_id ) > 1 ) {
+				$joined_entries = array();
+				foreach ( $entry_id as $id ) {
+					if ( ! isset( $entries[ $id ] ) ) {
+						continue;
+					}
+					$joined_entries[ $entries[ $id ][ 'form_id' ] ] = &$entries[ $id ];
+				}
+				$results[] = $joined_entries;
+			} elseif ( count( $entry_id ) == 1 ) {
+				if ( ! isset( $entries[ $entry_id[0] ] ) ) {
+					continue;
+				}
+				$results[] = &$entries[ $entry_id[0] ];
+			}
+		}
+
+		return $results;
+	}
+
+	private function set_sub_field_values( $field, $db_values, $sub_field_values, $form, &$entry ) {
+		if ( isset( $field->fields ) && is_array( $field->fields ) ) {
+			foreach ( $field->fields as $sub_field ) {
+				$this->set_sub_field_values( $sub_field, $db_values, $sub_field_values, $form, $entry );
+			}
+			return;
+		}
+		foreach( $db_values as $key => $db_value ) {
+			if ( $key == $field->id || preg_match( "/$field->id(\.|_)/", $key ) ) {
+				$entry[ $key ] = $db_value;
+			}
+		}
+		return;
 	}
 }

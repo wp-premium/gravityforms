@@ -41,6 +41,17 @@ class GF_Field_Email extends GF_Field {
 		return null;
 	}
 
+	/**
+	 * Whether this field expects an array during submission.
+	 *
+	 * @since 2.4
+	 *
+	 * @return bool
+	 */
+	public function is_value_submission_array() {
+		return (bool) $this->emailConfirmEnabled ;
+	}
+
 	public function validate( $value, $form ) {
 		$email = is_array( $value ) ? rgar( $value, 0 ) : $value; // Form objects created in 1.8 will supply a string as the value.
 		$is_blank = rgblank( $value ) || ( is_array( $value ) && rgempty( array_filter( $value ) ) );
@@ -136,7 +147,6 @@ class GF_Field_Email extends GF_Field {
                         </div>";
 			}
 		} else {
-			$logic_event = $this->get_conditional_logic_event( 'keyup' );
 
 			if ( $this->emailConfirmEnabled && ! $is_entry_detail ) {
 				$first_tabindex        = $this->get_tabindex();
@@ -150,7 +160,7 @@ class GF_Field_Email extends GF_Field {
 					return "<div class='ginput_complex ginput_container ginput_container_email' id='{$field_id}_container'>
                                 <span id='{$field_id}_1_container' class='ginput_left'>
                                     <label for='{$field_id}'>" . $enter_email_label . "</label>
-                                    <input class='{$class}' type='{$html_input_type}' name='input_{$id}' id='{$field_id}' value='{$email_value}' {$first_tabindex} {$logic_event} {$disabled_text} {$enter_email_placeholder_attribute} {$required_attribute} {$invalid_attribute}/>
+                                    <input class='{$class}' type='{$html_input_type}' name='input_{$id}' id='{$field_id}' value='{$email_value}' {$first_tabindex} {$disabled_text} {$enter_email_placeholder_attribute} {$required_attribute} {$invalid_attribute}/>
                                 </span>
                                 <span id='{$field_id}_2_container' class='ginput_right'>
                                     <label for='{$field_id}_2' {$sub_label_class_attribute}>{$confirm_email_label}</label>
@@ -161,7 +171,7 @@ class GF_Field_Email extends GF_Field {
 				} else {
 					return "<div class='ginput_complex ginput_container ginput_container_email' id='{$field_id}_container'>
                                 <span id='{$field_id}_1_container' class='ginput_left'>
-                                    <input class='{$class}' type='{$html_input_type}' name='input_{$id}' id='{$field_id}' value='{$email_value}' {$first_tabindex} {$logic_event} {$disabled_text} {$enter_email_placeholder_attribute} {$required_attribute} {$invalid_attribute}/>
+                                    <input class='{$class}' type='{$html_input_type}' name='input_{$id}' id='{$field_id}' value='{$email_value}' {$first_tabindex} {$disabled_text} {$enter_email_placeholder_attribute} {$required_attribute} {$invalid_attribute}/>
                                     <label for='{$field_id}' {$sub_label_class_attribute}>{$enter_email_label}</label>
                                 </span>
                                 <span id='{$field_id}_2_container' class='ginput_right'>
@@ -177,7 +187,7 @@ class GF_Field_Email extends GF_Field {
 				$class    = esc_attr( $class );
 
 				return "<div class='ginput_container ginput_container_email'>
-                            <input name='input_{$id}' id='{$field_id}' type='{$html_input_type}' value='$value' class='{$class}' {$tabindex} {$logic_event} {$disabled_text} {$single_placeholder_attribute} {$required_attribute} {$invalid_attribute}/>
+                            <input name='input_{$id}' id='{$field_id}' type='{$html_input_type}' value='$value' class='{$class}' {$tabindex} {$disabled_text} {$single_placeholder_attribute} {$required_attribute} {$invalid_attribute}/>
                         </div>";
 			}
 		}
@@ -202,6 +212,37 @@ class GF_Field_Email extends GF_Field {
 		}
 
 		return $value;
+	}
+
+	/**
+	 * Removes the "for" attribute in the field label when the confirmation input is enabled.
+	 * Inputs are only allowed one label (a11y) and the inputs already have labels.
+	 *
+	 * @since  2.4
+	 * @access public
+	 *
+	 * @param array $form The Form Object currently being processed.
+	 *
+	 * @return string
+	 */
+	public function get_first_input_id( $form ) {
+		return $this->emailConfirmEnabled ? '' : parent::get_first_input_id( $form );
+	}
+
+	// # FIELD FILTER UI HELPERS ---------------------------------------------------------------------------------------
+
+	/**
+	 * Returns the filter operators for the current field.
+	 *
+	 * @since 2.4
+	 *
+	 * @return array
+	 */
+	public function get_filter_operators() {
+		$operators   = parent::get_filter_operators();
+		$operators[] = 'contains';
+
+		return $operators;
 	}
 }
 

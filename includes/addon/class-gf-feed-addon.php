@@ -48,6 +48,15 @@ abstract class GFFeedAddOn extends GFAddOn {
 	protected $_async_feed_processing = false;
 
 	/**
+	 * If true, feeds w/ conditional logic will evaluated on the frontend and a JS event will be triggered when the feed
+	 * is applicable and inapplicable.
+	 *
+	 * @since 2.4
+	 * @var bool
+	 */
+	protected $_supports_frontend_feeds = false;
+
+	/**
 	 * If true, maybe_delay_feed() checks will be bypassed allowing the feeds to be processed.
 	 * @var bool
 	 */
@@ -61,6 +70,12 @@ abstract class GFFeedAddOn extends GFAddOn {
 	private $_current_feed_id = false;
 
 	/**
+	 * @since 2.4
+	 * @var array Feeds w/ conditional logic that impacts frontend form behavior.
+	 */
+	private static $_frontend_feeds = array();
+
+	/**
 	 * Plugin starting point. Handles hooks and loading of language files.
 	 */
 	public function init() {
@@ -69,6 +84,11 @@ abstract class GFFeedAddOn extends GFAddOn {
 
 		add_filter( 'gform_entry_post_save', array( $this, 'maybe_process_feed' ), 10, 2 );
 		add_action( 'gform_after_delete_form', array( $this, 'delete_feeds' ) );
+
+		// Register GFFrontendFeeds
+		if( $this->_supports_frontend_feeds && ! has_action( 'gform_register_init_scripts', array( __class__, 'register_frontend_feeds_init_script' ) ) ) {
+			add_action( 'gform_register_init_scripts', array( __class__, 'register_frontend_feeds_init_script' ) );
+		}
 
 	}
 
@@ -203,6 +223,16 @@ abstract class GFFeedAddOn extends GFAddOn {
 						'admin_page' => array( 'form_settings' )
 					),
 				),
+			);
+		}
+
+		if( $this->_supports_frontend_feeds ) {
+			$scripts[] = array(
+				'handle'  => 'gaddon_frontend',
+				'src'     => $this->get_gfaddon_base_url() . "/js/gaddon_frontend{$min}.js",
+				'deps'    => array( 'jquery', 'gform_conditional_logic' ),
+				'version' => GFCommon::$version,
+				'enqueue' => array( array( $this, 'has_frontend_feeds' ) ),
 			);
 		}
 
@@ -590,6 +620,15 @@ abstract class GFFeedAddOn extends GFAddOn {
 		return $results;
 	}
 
+	/***
+	 * Queries and returns all active feeds for this Add-On
+	 *
+	 * @since 2.4
+	 *
+	 * @param int $form_id The Form Id to get feeds from.
+	 *
+	 * @return array Returns an array with all active feeds associated with the specified form Id
+	 */
 	public function get_active_feeds( $form_id = null ) {
 		global $wpdb;
 
@@ -699,7 +738,7 @@ abstract class GFFeedAddOn extends GFAddOn {
 
 		$feed = false;
 
-		if ( ! empty( $this->_single_submission_feed ) && $this->_single_submission_feed['form_id'] == $form['id'] ) {
+		if ( ! empty( $this->_single_submission_feed ) && ( ! $form || $this->_single_submission_feed['form_id'] == $form['id'] ) ) {
 
 			$feed = $this->_single_submission_feed;
 
@@ -1804,6 +1843,123 @@ abstract class GFFeedAddOn extends GFAddOn {
 		}
 
 		return $total;
+	}
+
+
+
+	public function has_frontend_feeds( $form ) {
+		$result = $this->register_frontend_feeds( $form );
+		return ! empty( $result );
+	}
+
+	/***
+	 * Registers front end feeds with the private $_frontend_feeds array.
+	 *
+	 * @since 2.4
+	 *
+	 * @param array $form The current Form Object
+	 *
+	 * @return bool Returns true if one ore more feeds were registered, false if no feeds were registered
+	 */
+	public function register_frontend_feeds( $form ) {
+
+		if ( ! isset( self::$_frontend_feeds[ $form['id'] ] ) ) {
+			self::$_frontend_feeds[ $form['id'] ] = array();
+		}
+
+		$feeds = $this->get_frontend_feeds( $form );
+
+		$this->add_frontend_feeds( $form['id'], $feeds );
+
+		return ! empty( $feeds );
+	}
+
+	/***
+	 * Loads front end feeds into the private $_frontend_feeds array, making sure not to add duplicate feeds.
+	 *
+	 * @since 2.4
+	 *
+	 * @param int   $form_id The current Form Id
+	 * @param array $feeds   An array of all feeds to be loaded into the $_frontend_feeds variable
+	 */
+	public function add_frontend_feeds( $form_id, $feeds ) {
+
+		foreach ( $feeds as $feed ) {
+			$filter = array( 'feedId' => $feed['feedId'], 'addonSlug' => $feed['addonSlug'] );
+			$found = wp_list_filter( self::$_frontend_feeds[ $form_id ], $filter );
+
+			if ( empty( $found ) ) {
+				self::$_frontend_feeds[ $form_id ][] = $feed;
+			}
+		}
+	}
+
+	/***
+	 * Gets an array of all feeds eligible to be a Front End Feed.
+	 *
+	 * @since 2.4
+	 *
+	 * @param array $form The Form object to get Frontend Feeds from
+	 *
+	 * @return array An array with feeds eligible to be a Front End Feed. By default only feedId, addonSlug, conditionalLogic and isSingleFeed properties are returned in the array.
+	 */
+	public function get_frontend_feeds( $form ) {
+
+		if ( ! $this->_supports_frontend_feeds ) {
+			return array();
+		}
+
+		$feeds = $this->get_active_feeds( $form['id'] );
+		if ( empty( $feeds ) ) {
+			return array();
+		}
+
+		$frontend_feeds = array();
+
+		foreach ( $feeds as $feed ) {
+
+			$_feed = array(
+				'feedId'           => $feed['id'],
+				'addonSlug'        => $this->_slug,
+				'conditionalLogic' => rgars( $feed, 'meta/feed_condition_conditional_logic_object/conditionalLogic', false ),
+				'isSingleFeed'     => $this->_single_feed_submission,
+			);
+
+			$_feed = apply_filters( 'gform_addon_frontend_feed',                           $_feed, $form, $feed );
+			$_feed = apply_filters( "gform_addon_frontend_feed_{$form['id']}",             $_feed, $form, $feed );
+			$_feed = apply_filters( "gform_{$this->_slug}_frontend_feed",                  $_feed, $form, $feed );
+			$_feed = apply_filters( "gform_{$this->_slug}_frontend_feed_{$form['id']}",    $_feed, $form, $feed );
+
+			$frontend_feeds[] = $_feed;
+
+		}
+
+		return $frontend_feeds;
+	}
+
+	/***
+	 * Registers frontend feeds by rendering the GFFrontEndFeeds() JS object.
+	 *
+	 * @since 2.4
+	 *
+	 * @param array $form The current Form object
+	 */
+	public static function register_frontend_feeds_init_script( $form ) {
+
+		$feeds = rgar( self::$_frontend_feeds, $form['id'] );
+		if ( empty( $feeds ) ) {
+			return;
+		}
+
+		$args = array(
+			'formId' => $form['id'],
+			'feeds'  => $feeds,
+		);
+
+		$script = sprintf( '; new GFFrontendFeeds( %s );', json_encode( $args ) );
+
+		GFFormDisplay::add_init_script( $form['id'], 'gaddon_frontend_feeds', GFFormDisplay::ON_PAGE_RENDER, $script );
+
 	}
 
 }

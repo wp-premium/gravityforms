@@ -1818,7 +1818,7 @@ class GF_Forms_Model_Legacy {
                 $where
                 ";
 
-		return $wpdb->get_var( $sql );
+		return (int) $wpdb->get_var( $sql );
 	}
 
 	public static function get_entry_meta_counts() {

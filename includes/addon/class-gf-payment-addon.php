@@ -1438,6 +1438,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 			$action, array(
 				'type'             => false,
 				'amount'           => false,
+				'amount_formatted' => false,
 				'transaction_type' => false,
 				'transaction_id'   => false,
 				'subscription_id'  => false,
@@ -1457,6 +1458,8 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		if ( ! $entry || is_wp_error( $entry ) ) {
 			return $result;
 		}
+
+		$action = $this->maybe_add_action_amount_formatted( $action, $entry['currency'] );
 
 		/**
 		 * Performs actions before the the payment action callback is processed.
@@ -1611,9 +1614,10 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 			$action['payment_status'] = 'Pending';
 		}
 
+		$action = $this->maybe_add_action_amount_formatted( $action, $entry['currency'] );
+
 		if ( empty( $action['note'] ) ) {
-			$amount_formatted = GFCommon::to_money( $action['amount'], $entry['currency'] );
-			$action['note']   = sprintf( esc_html__( 'Payment is pending. Amount: %s. Transaction Id: %s.', 'gravityforms' ), $amount_formatted, $action['transaction_id'] );
+			$action['note'] = sprintf( esc_html__( 'Payment is pending. Amount: %s. Transaction Id: %s.', 'gravityforms' ), $action['amount_formatted'], $action['transaction_id'] );
 		}
 
 		GFAPI::update_entry_property( $entry['id'], 'payment_status', $action['payment_status'] );
@@ -1641,9 +1645,10 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		$entry['transaction_type'] = '1';
 		$entry['payment_status']   = $action['payment_status'];
 
+		$action = $this->maybe_add_action_amount_formatted( $action, $entry['currency'] );
+
 		if ( ! rgar( $action, 'note' ) ) {
-			$amount_formatted = GFCommon::to_money( $action['amount'], $entry['currency'] );
-			$action['note']   = sprintf( esc_html__( 'Payment has been authorized. Amount: %s. Transaction Id: %s.', 'gravityforms' ), $amount_formatted, $action['transaction_id'] );
+			$action['note'] = sprintf( esc_html__( 'Payment has been authorized. Amount: %s. Transaction Id: %s.', 'gravityforms' ), $action['amount_formatted'], $action['transaction_id'] );
 		}
 
 		GFAPI::update_entry( $entry );
@@ -1675,9 +1680,10 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		$entry['payment_date']     = $action['payment_date'];
 		$entry['payment_method']   = rgar( $action, 'payment_method' );
 
+		$action = $this->maybe_add_action_amount_formatted( $action, $entry['currency'] );
+
 		if ( ! rgar( $action, 'note' ) ) {
-			$amount_formatted = GFCommon::to_money( $action['amount'], $entry['currency'] );
-			$action['note']   = sprintf( esc_html__( 'Payment has been completed. Amount: %s. Transaction Id: %s.', 'gravityforms' ), $amount_formatted, $action['transaction_id'] );
+			$action['note'] = sprintf( esc_html__( 'Payment has been completed. Amount: %s. Transaction Id: %s.', 'gravityforms' ), $action['amount_formatted'], $action['transaction_id'] );
 		}
 
 		GFAPI::update_entry( $entry );
@@ -1732,9 +1738,10 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 			$action['transaction_type'] = 'refund';
 		}
 
+		$action = $this->maybe_add_action_amount_formatted( $action, $entry['currency'] );
+
 		if ( empty( $action['note'] ) ) {
-			$amount_formatted = GFCommon::to_money( $action['amount'], $entry['currency'] );
-			$action['note']   = sprintf( esc_html__( 'Payment has been refunded. Amount: %s. Transaction Id: %s.', 'gravityforms' ), $amount_formatted, $action['transaction_id'] );
+			$action['note'] = sprintf( esc_html__( 'Payment has been refunded. Amount: %s. Transaction Id: %s.', 'gravityforms' ), $action['amount_formatted'], $action['transaction_id'] );
 		}
 
 		GFAPI::update_entry_property( $entry['id'], 'payment_status', $action['payment_status'] );
@@ -1785,9 +1792,10 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 			$action['payment_status'] = 'Failed';
 		}
 
+		$action = $this->maybe_add_action_amount_formatted( $action, $entry['currency'] );
+
 		if ( empty( $action['note'] ) ) {
-			$amount_formatted = GFCommon::to_money( $action['amount'], $entry['currency'] );
-			$action['note']   = sprintf( esc_html__( 'Payment has failed. Amount: %s.', 'gravityforms' ), $amount_formatted );
+			$action['note'] = sprintf( esc_html__( 'Payment has failed. Amount: %s.', 'gravityforms' ), $action['amount_formatted'] );
 		}
 
 		GFAPI::update_entry_property( $entry['id'], 'payment_status', $action['payment_status'] );
@@ -1802,6 +1810,8 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		if ( empty( $action['payment_status'] ) ) {
 			$action['payment_status'] = 'Voided';
 		}
+
+		$action = $this->maybe_add_action_amount_formatted( $action, $entry['currency'] );
 
 		if ( empty( $action['note'] ) ) {
 			$action['note'] = sprintf( esc_html__( 'Authorization has been voided. Transaction Id: %s', 'gravityforms' ), $action['transaction_id'] );
@@ -1837,6 +1847,11 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 			$result = GFAPI::update_entry( $entry );
 			$this->add_note( $entry['id'], sprintf( esc_html__( 'Subscription has been created. Subscription Id: %s.', 'gravityforms' ), $subscription['subscription_id'] ), 'success' );
 
+			$subscription = $this->maybe_add_action_amount_formatted( $subscription, $entry['currency'] );
+
+			if ( empty( $subscription['payment_status'] ) ) {
+				$subscription['payment_status'] = 'Active';
+			}
 
 			/**
 			 * Fires when someone starts a subscription
@@ -1871,15 +1886,20 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 			$action['transaction_type'] = 'payment';
 		}
 
+		if ( empty( $action['payment_status'] ) ) {
+			$action['payment_status'] = 'Active';
+		}
+
 		// Set payment status back to active if a previous payment attempt failed.
 		if ( strtolower( $entry['payment_status'] ) != 'active' ) {
 			$entry['payment_status'] = 'Active';
 			GFAPI::update_entry_property( $entry['id'], 'payment_status', 'Active' );
 		}
 
+		$action = $this->maybe_add_action_amount_formatted( $action, $entry['currency'] );
+
 		if ( empty( $action['note'] ) ) {
-			$amount_formatted = GFCommon::to_money( $action['amount'], $entry['currency'] );
-			$action['note']   = sprintf( esc_html__( 'Subscription has been paid. Amount: %s. Subscription Id: %s', 'gravityforms' ), $amount_formatted, $action['subscription_id'] );
+			$action['note'] = sprintf( esc_html__( 'Subscription has been paid. Amount: %s. Subscription Id: %s', 'gravityforms' ), $action['amount_formatted'], $action['subscription_id'] );
 		}
 
 		$transaction_id = ! empty( $action['transaction_id'] ) ? $action['transaction_id'] : $action['subscription_id'];
@@ -1927,9 +1947,14 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
 	public function fail_subscription_payment( $entry, $action ) {
 		$this->log_debug( __METHOD__ . '(): Processing request.' );
+		if ( empty( $action['payment_status'] ) ) {
+			$action['payment_status'] = 'Failed';
+		}
+
+		$action = $this->maybe_add_action_amount_formatted( $action, $entry['currency'] );
+
 		if ( empty( $action['note'] ) ) {
-			$amount_formatted = GFCommon::to_money( $action['amount'], $entry['currency'] );
-			$action['note']   = sprintf( esc_html__( 'Subscription payment has failed. Amount: %s. Subscription Id: %s.', 'gravityforms' ), $amount_formatted, $action['subscription_id'] );
+			$action['note'] = sprintf( esc_html__( 'Subscription payment has failed. Amount: %s. Subscription Id: %s.', 'gravityforms' ), $action['amount_formatted'], $action['subscription_id'] );
 		}
 
 		GFAPI::update_entry_property( $entry['id'], 'payment_status', 'Failed' );
@@ -2020,6 +2045,10 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
 	public function expire_subscription( $entry, $action ) {
 		$this->log_debug( __METHOD__ . '(): Processing request.' );
+		if ( empty( $action['payment_status'] ) ) {
+			$action['payment_status'] = 'Expired';
+		}
+
 		if ( empty( $action['note'] ) ) {
 			$action['note'] = sprintf( esc_html__( 'Subscription has expired. Subscriber Id: %s', 'gravityforms' ), $action['subscription_id'] );
 		}
@@ -2039,6 +2068,16 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		}
 	}
 
+	/**
+	 * Retrieves the ID of the entry associated with the supplied subscription or transaction ID.
+	 *
+	 * @since 2.3.3.9 Updated to search the _gf_addon_payment_transaction table if the ID was not found in the entry table.
+	 * @since unknown
+	 *
+	 * @param string $transaction_id The subscription or transaction ID.
+	 *
+	 * @return bool|string
+	 */
 	public function get_entry_by_transaction_id( $transaction_id ) {
 		global $wpdb;
 
@@ -2047,11 +2086,19 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		$sql      = $wpdb->prepare( "SELECT id FROM {$entry_table_name} WHERE transaction_id = %s", $transaction_id );
 		$entry_id = $wpdb->get_var( $sql );
 
+		if ( ! $entry_id ) {
+			$sql      = $wpdb->prepare( "SELECT lead_id FROM {$wpdb->prefix}gf_addon_payment_transaction WHERE transaction_id = %s", $transaction_id );
+			$entry_id = $wpdb->get_var( $sql );
+		}
+
 		return $entry_id ? $entry_id : false;
 	}
 
 	/**
 	 * Helper for making the gform_post_payment_action hook available to the various payment interaction methods. Also handles sending notifications for payment events.
+	 *
+	 * @since 2.3.6.6 Added the $action to the GFAPI::send_notifications() $data param.
+	 * @since unknown
 	 *
 	 * @param array $entry
 	 * @param array $action
@@ -2065,7 +2112,10 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		$form             = GFAPI::get_form( $entry['form_id'] );
 		$supported_events = $this->supported_notification_events( $form );
 		if ( ! empty( $supported_events ) ) {
-			GFAPI::send_notifications( $form, $entry, rgar( $action, 'type' ) );
+			if ( ! empty( $action['payment_status'] ) ) {
+				$action['payment_status'] = GFCommon::get_entry_payment_status_text( $action['payment_status'] );
+			}
+			GFAPI::send_notifications( $form, $entry, rgar( $action, 'type' ), array( 'payment_action' => $action ) );
 		}
 	}
 
@@ -3401,7 +3451,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		$amount   = $currency->to_number( $amount );
 
 		if ( $this->_requires_smallest_unit && ! $currency->is_zero_decimal() ) {
-			return $amount * 100;
+			return (int) round( $amount * 100 );
 		}
 
 		return $amount;
@@ -3423,6 +3473,24 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		}
 
 		return $amount;
+	}
+
+	/**
+	 * If necessary formats the amount as currency and adds it to the action array.
+	 *
+	 * @since 2.3.6.6
+	 *
+	 * @param array  $action        The payment or subscription properties.
+	 * @param string $currency_code The currency code.
+	 *
+	 * @return array
+	 */
+	public function maybe_add_action_amount_formatted( $action, $currency_code = '' ) {
+		if ( ! empty( $action['amount'] ) && empty( $action['amount_formatted'] ) ) {
+			$action['amount_formatted'] = GFCommon::to_money( $action['amount'], $currency_code );
+		}
+
+		return $action;
 	}
 
 

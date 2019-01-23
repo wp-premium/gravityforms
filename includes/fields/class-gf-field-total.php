@@ -84,7 +84,7 @@ class GF_Field_Total extends GF_Field {
 	 * @return string The processed merge tag.
 	 */
 	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {
-		$format_numeric = $modifier == 'price';
+		$format_numeric = in_array( 'price', $this->get_modifiers() );
 
 		$value = $format_numeric ? GFCommon::to_number( $value ) : GFCommon::to_money( $value );
 

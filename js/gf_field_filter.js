@@ -92,33 +92,58 @@
     }
 
     function getFilterFields() {
-        var i, j, key, val, label, question, options, disabled = "", numRows,
-            select = [];
+        var i, select = [], optionsHTML;
         select.push("<select class='gform-filter-field' name='f[]' >");
         for (i = 0; i < settings.length; i++) {
-            key = settings[i].key;
-            if (settings[i].group) {
-                question = settings[i].text;
-                numRows = settings[i].filters.length;
-                options = [];
-                for (j = 0; j < numRows; j++) {
-                    label = settings[i].filters[j].text;
-                    val = settings[i].filters[j].key;
-                    disabled = isFieldSelected(val) ? 'disabled="disabled"' : "";
-                    options.push('<option {0} value="{1}">{2}</option>'.format(disabled, val, label));
-                }
-                select.push('<optgroup label="{0}">{1}</optgroup>'.format(question, options.join('')));
-            } else {
-                disabled = settings[i].preventMultiple && isFieldSelected(key) ? "disabled='disabled'" : "";
-                label = settings[i].text;
-                select.push('<option {0} value="{1}">{2}</option>'.format(disabled, key, label));
-            }
+			optionsHTML = getOptions( settings[i] );
+            select.push( optionsHTML );
 
         }
         select.push("</select>");
         select.push("<input type='hidden' class='gform-filter-type' name='t[]' value='' >");
         return select.join('');
     }
+
+    function getOptions(setting, depth) {
+    	if ( ! depth ) {
+			depth = 0;
+		}
+		var j, key, val, label, groupLabel, options, disabled = "", numRows,
+			select = [], subFilter, subFilterGroup, newDepth, indent, indentString = '&nbsp;&nbsp;&nbsp;&nbsp;';
+		key = setting.key;
+
+		if (setting.group) {
+			numRows = setting.filters.length;
+			options = [];
+			newDepth = setting.isNestable ? depth + 1 : depth;
+			for (j = 0; j < numRows; j++) {
+				subFilter = setting.filters[j];
+				if (subFilter.group) {
+					subFilterGroup = getOptions(subFilter, newDepth);
+					options.push(subFilterGroup);
+					continue;
+				}
+				indent = indentString.repeat(newDepth);
+				label = indent + subFilter.text;
+				val = subFilter.key;
+				disabled = isFieldSelected(val) ? 'disabled="disabled"' : "";
+				options.push('<option {0} value="{1}">{2}</option>'.format(disabled, val, label));
+			}
+			indent = indentString.repeat(depth);
+			groupLabel = indent + setting.text;
+			if ( setting.isNestable ) {
+				// Optgroups can't be nested so close the optgroup immediately and fake the nested options with indentation.
+				select.push('<optgroup label="{0}"></optgroup>{1}'.format(groupLabel, options.join('')));
+			} else {
+				select.push('<optgroup label="{0}">{1}</optgroup>'.format(groupLabel, options.join('')));
+			}
+		} else {
+			disabled = setting.preventMultiple && isFieldSelected(key) ? "disabled='disabled'" : "";
+			label = setting.text;
+			select.push('<option {0} value="{1}">{2}</option>'.format(disabled, key, label));
+		}
+		return select.join('');
+	}
 
     function changeOperator (operatorSelect) {
         var $select = $(operatorSelect);
@@ -198,19 +223,26 @@
     }
 
 
-    function getFilter (key) {
-        if (!key)
-            return;
-        for (var i = 0; i < settings.length; i++) {
-            if (key == settings[i].key)
-                return settings[i];
-            if (settings[i].group) {
-                for (var j = 0; j < settings[i].filters.length; j++) {
-                    if (key == settings[i].filters[j].key)
-                        return settings[i].filters[j];
-                }
-            }
+    function getFilter (key, group) {
+    	var f;
 
+        if (!key) {
+			return;
+		}
+
+        if (!group) {
+			group = settings;
+		}
+
+        for (var i = 0; i < group.length; i++) {
+            if (key == group[i].key) {
+				return group[i];
+			} else if (group[i].group) {
+				f = getFilter(key, group[i].filters);
+				if ( f ) {
+					return f;
+				}
+			}
         }
     }
 

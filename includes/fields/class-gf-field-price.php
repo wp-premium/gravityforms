@@ -44,7 +44,6 @@ class GF_Field_Price extends GF_Field {
 
 		$value = esc_attr( $value );
 
-		$logic_event           = $this->get_conditional_logic_event( 'keyup' );
 		$placeholder_attribute = $this->get_field_placeholder_attribute();
 
 		$size         = $this->size;
@@ -59,7 +58,7 @@ class GF_Field_Price extends GF_Field {
 		$tabindex = $this->get_tabindex();
 
 		return "<div class='ginput_container ginput_container_product_price'>
-					<input name='input_{$id}' id='{$field_id}' type='text' value='{$value}' class='{$class} ginput_amount' {$tabindex} {$logic_event} {$placeholder_attribute} {$required_attribute} {$invalid_attribute} {$disabled_text}/>
+					<input name='input_{$id}' id='{$field_id}' type='text' value='{$value}' class='{$class} ginput_amount' {$tabindex} {$placeholder_attribute} {$required_attribute} {$invalid_attribute} {$disabled_text}/>
 				</div>";
 
 

@@ -171,6 +171,7 @@ class GFSettings {
 			delete_option( 'gf_submissions_block' );
 			delete_option( 'gf_imported_file' );
 			delete_option( 'gf_imported_theme_file' );
+			delete_option( 'gf_rest_api_db_version' );
 
 			delete_option( 'gform_api_count' );
 			delete_option( 'gform_email_count' );
@@ -185,6 +186,9 @@ class GFSettings {
 			delete_option( 'gform_custom_choices' );
 			delete_option( 'gform_recaptcha_keys_status' );
 			delete_option( 'gform_upload_page_slug' );
+
+			delete_option( 'gravityformsaddon_gravityformswebapi_version' );
+			delete_option( 'gravityformsaddon_gravityformswebapi_settings' );
 
 			// Removes license key
 			GFFormsModel::save_key( '' );

@@ -25,7 +25,25 @@ class GF_Download {
 
 			$hash = rgget( 'hash' );
 			GFCommon::log_debug( __METHOD__ . "(): Starting file download process. file: {$file}, hash: {$hash}." );
-			if ( self::validate_download( $form_id, $field_id, $file, $hash ) ) {
+
+			$permission_granted = self::validate_download( $form_id, $field_id, $file, $hash );
+
+			if ( has_filter( 'gform_permission_granted_pre_download' ) ) {
+				GFCommon::log_debug( __METHOD__ . '(): Executing functions hooked to gform_permission_granted_pre_download.' );
+			}
+
+			/**
+			 * Allow custom logic to be used to determine if the file can be accessed.
+			 *
+			 * @since 2.4.3.2
+			 *
+			 * @param bool $permission_granted Indicates if access to the file has been granted. Default is the result of the hash validation.
+			 * @param int  $form_id            The ID of the form used to upload the requested file.
+			 * @param int  $field_id           The ID of the field used to upload the requested file.
+			 */
+			$permission_granted = apply_filters( 'gform_permission_granted_pre_download', $permission_granted, $form_id, $field_id );
+
+			if ( $permission_granted ) {
 				GFCommon::log_debug( __METHOD__ . '(): Download validated. Proceeding.' );
 				self::deliver( $form_id, $file );
 			} else {
@@ -48,6 +66,10 @@ class GF_Download {
 	private static function validate_download( $form_id, $field_id, $file, $hash ) {
 		if ( empty( $hash ) ) {
 			return false;
+		}
+
+		if ( has_filter( 'gform_require_login_pre_download' ) ) {
+			GFCommon::log_debug( __METHOD__ . '(): Executing functions hooked to gform_require_login_pre_download.' );
 		}
 
 		/**
