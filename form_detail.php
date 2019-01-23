@@ -531,6 +531,16 @@ class GFFormDetail {
 			<input type="text" id="field_label" class="fieldwidth-3" size="35" />
 		</li>
         <?php
+        do_action( 'gform_field_standard_settings', 5, $form_id );
+        ?>
+        <li class="checkbox_label_setting field_setting">
+            <label for="field_checkbox_label" class="section_label">
+                <?php esc_html_e( 'Checkbox Label', 'gravityforms' ); ?>
+                <?php gform_tooltip( 'form_field_checkbox_label' ) ?>
+            </label>
+            <input type="text" id="field_checkbox_label" class="fieldwidth-3" />
+        </li>
+        <?php
 		do_action( 'gform_field_standard_settings', 10, $form_id );
 		?>
 		<li class="description_setting field_setting">
@@ -1946,13 +1956,10 @@ class GFFormDetail {
 						$label_placement_form_setting_label = __( 'Top aligned', 'gravityforms' );
 				}
 
-				$enable_label_visiblity_settings = apply_filters( 'gform_enable_field_label_visibility_settings', false );
-
 				$description_placement_form_setting       = rgar( $form, 'descriptionPlacement' );
 				$description_placement_form_setting_label = $description_placement_form_setting == 'above' ? $description_placement_form_setting_label = __( 'Above inputs', 'gravityforms' ) : $description_placement_form_setting_label = __( 'Below inputs', 'gravityforms' );
 				?>
 				<li class="label_placement_setting field_setting">
-					<?php if ( $enable_label_visiblity_settings ) : ?>
 					<label for="field_label_placement" class="section_label">
 						<?php esc_html_e( 'Field Label Visibility', 'gravityforms' ); ?>
 						<?php gform_tooltip( 'form_field_label_placement' ) ?>
@@ -1961,7 +1968,6 @@ class GFFormDetail {
 						<option value=""><?php printf( __( 'Visible (%s)', 'gravityforms' ), esc_html( $label_placement_form_setting_label ) ); ?></option>
 						<option value="hidden_label"><?php esc_html_e( 'Hidden', 'gravityforms' ); ?></option>
 					</select>
-					<?php endif ?>
 					<div id="field_description_placement_container" style="display:none; padding-top:10px;">
 						<label for="field_description_placement" class="section_label">
 							<?php esc_html_e( 'Description Placement', 'gravityforms' ); ?>
@@ -1994,10 +2000,7 @@ class GFFormDetail {
 							value=""><?php printf( __( 'Use Form Setting (%s)', 'gravityforms' ), esc_html( $sub_label_placement_form_setting_label ) ); ?></option>
 						<option value="below"><?php esc_html_e( 'Below inputs', 'gravityforms' ); ?></option>
 						<option value="above"><?php esc_html_e( 'Above inputs', 'gravityforms' ); ?></option>
-						<?php if ( $enable_label_visiblity_settings ) : ?>
 						<option value="hidden_label"><?php esc_html_e( 'Hidden', 'gravityforms' ); ?></option>
-						<?php endif; ?>
-
 					</select>
 				</li>
 
@@ -2605,7 +2608,7 @@ class GFFormDetail {
 				'value'     => GFCommon::get_field_type_title( 'creditcard' )
 			);
 		}
-		
+
 		/**
 		 * Modify the field groups before fields are added.
 		 *

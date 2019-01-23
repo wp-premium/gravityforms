@@ -188,6 +188,21 @@ class GF_Field_Password extends GF_Field {
 		}
 
 	}
+
+	/**
+	 * Removes the "for" attribute in the field label.
+	 * Inputs are only allowed one label (a11y) and the inputs already have labels.
+	 *
+	 * @since  2.4
+	 * @access public
+	 *
+	 * @param array $form The Form Object currently being processed.
+	 *
+	 * @return string
+	 */
+	public function get_first_input_id( $form ) {
+		return '';
+	}
 }
 
 GF_Fields::register( new GF_Field_Password() );

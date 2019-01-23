@@ -16,6 +16,7 @@ class GF_Field_SingleProduct extends GF_Field {
 			'conditional_logic_field_setting',
 			'error_message_setting',
 			'label_setting',
+			'admin_label_setting',
 			'rules_setting',
 			'duplicate_setting',
 		);

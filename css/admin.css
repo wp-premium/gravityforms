@@ -524,7 +524,8 @@ img#gfield_input_datepicker_icon {
 .ginput_complex label,
 .gfield_time_hour label,
 .gfield_time_minute label,
-.gfield_time_ampm label {
+.gfield_time_ampm label,
+.gfield_time_ampm_shim {
 	display: block;
 	margin: 4px 0 8px 3px;
 	font-size: 90%;
@@ -644,7 +645,9 @@ div.ginput_complex.ginput_container.gf_name_has_5 span:first-child {
     padding-bottom:10px;
 }
 
-.gfield label.screen-reader-text, .gfield label.hidden_sub_label {
+.gfield label.screen-reader-text,
+.gfield label.hidden_sub_label,
+.ginput_container_consent button.screen-reader-text {
  	clip: rect(1px, 1px, 1px, 1px);
  	position: absolute !important;
  	height: 1px;
@@ -842,7 +845,6 @@ body .gform_wrapper table.gfield_list.gfield_list_container tbody tr.gfield_list
 	vertical-align: middle !important;
 }
 
-
 /* radio and checkbox styling - justifies lengthy labels */
 
 ul.gfield_checkbox, ul.gfield_radio {
@@ -884,6 +886,22 @@ ul.gfield_checkbox, ul.gfield_radio {
 	clear: both;
 	padding: 10px 0 0 0;
 	font-family: inherit;
+}
+
+.gfield_consent_description {
+	width: 100%;
+	max-height: 320px;
+	overflow-y: scroll;
+	border: 1px solid #ddd;
+	margin-top: 12px;
+	padding: 6px 8px;
+}
+.description_above .gfield_description.gfield_consent_description,
+.description_below .gfield_description.gfield_consent_description{
+	padding: 6px 8px;
+}
+.entry-view-field-value .gfield_consent_description {
+	width: calc(100% - 40px);
 }
 
 .description_above .gfield_description {
@@ -1632,8 +1650,12 @@ body.forms_page_gf_entries div.ginput_complex_admin .ginput_full_admin label {
 }
 
 body.forms_page_gf_entries table.entry-details input[type="text"],
-body.forms_page_gf_entries table.entry-details input {
+body.forms_page_gf_entries table.entry-details input,
+body.forms_page_gf_entries table.entry-details .gfield_consent_description {
 	width: 99%;
+}
+body.forms_page_gf_entries table.entry-details .ginput_container_consent input {
+	width: auto;
 }
 
 body.forms_page_gf_entries .ginput_complex_admin.ginput_container span.ginput_left,
@@ -3609,6 +3631,24 @@ ul#gf_merge_tag_list a:hover {
 	margin-top: 0;
 }
 
+#gf_personal_data_field_settings .gf_personal_data_field_label_title{
+    text-align:left;
+    padding:0;
+    font-weight:bold;
+}
+
+#gf_personal_data_field_settings .gf_personal_data_cb_title{
+    text-align:center;
+    padding:0;
+    width:50px;
+    font-weight:bold;
+}
+
+#gf_personal_data_field_settings .gf_personal_data_cb_cell{
+    text-align:center;
+    width:50px;
+}
+
 .gform_tab_group {
 	background-color: #FFF;
 	border: 1px solid #DEDEDE;
@@ -4934,6 +4974,10 @@ div.range_max input {
 		margin-left: 0;
 	}
 
+	.gforms_settings_wrap .gform_tab_group {
+		flex-flow: column;
+	}
+
 	.gforms_settings_wrap #gform_tabs{
 		float: none;
 		width:100%;
@@ -4967,7 +5011,7 @@ div.range_max input {
 	.gform_panel h3 {
 		line-height: 39px;
 	}
-  
+
 	.gform_panel h3 .add-new-h2 {
 		display: inline-block;
 		margin-left: 0;
@@ -4975,4 +5019,205 @@ div.range_max input {
 		vertical-align: top;
 	}
 
+}
+
+/* //////////////////////////////////////////////////////////////*/
+/* //////////////////   Repeaters Styling   /////////////////////*/
+/* //////////////////////////////////////////////////////////////*/
+
+
+/* Padding, Left Border, background color for nested repeaters */
+.gfield_repeater_cell  > .gfield_repeater_wrapper   {
+	border-left: 8px solid rgba(54, 86, 102, 0.1);
+	background-color: rgba(1,1,1,0.02);
+	padding: 10px 20px;
+	border-radius: 8px;
+	border-bottom: 1px solid rgba(238, 238, 238, 1.000);
+
+}
+
+
+/* Targeting the border color of the repeater inputs */
+.gfield_repeater_wrapper input  {
+	border:1px solid rgba(197, 198, 197, 1.000);
+	border-radius: 4px;
+}
+
+
+.gfield_repeater_buttons .add_repeater_item_text,
+.gfield_repeater_buttons .remove_repeater_item_text{
+	min-width: 100px;
+	height: 30px;
+	background: rgba(242, 242, 242, 0.5);
+	transition: all .3s cubic-bezier(0.67, 0.17, 0.40, 0.83);
+	font-size: 12px;
+	color: rgba(117, 117, 117, 1);
+	border-radius: 20px;
+	margin-right: 10px;
+	margin-bottom: 5px;
+	border: 1px solid rgba(117, 117, 117, 0.4);
+	font-weight: 400;
+}
+
+
+.gfield_repeater_buttons .add_repeater_item_plus,
+.gfield_repeater_buttons .remove_repeater_item_minus{
+	width: 22px;
+	height: 22px;
+	background: rgba(242, 242, 242, 0.5);
+	transition: all .3s cubic-bezier(0.67, 0.17, 0.40, 0.83);
+	font-size: 16px;
+	color: rgba(117, 117, 117, 1);
+	border-radius: 50%;
+	margin: 10px 5px 0px 5px;
+	border: 1px solid rgba(117, 117, 117, 0.4);
+	font-weight: 700;
+	padding: 0px;
+	padding-bottom: 5px;
+}
+
+.gfield_repeater_buttons button.gfield_icon_disabled {
+	cursor: default;
+	filter: alpha(opacity=30);
+	-moz-opacity: .3;
+	-khtml-opacity: .3;
+	opacity: .3;
+}
+
+.gfield_repeater_buttons button.gfield_icon_disabled:hover {
+	background: rgba(242, 242, 242, 0.5);
+	color: rgba(117, 117, 117, 1);
+	border: 1px solid rgba(117, 117, 117, 0.4);
+}
+
+/* Hover style for Add buttons */
+.gfield_repeater_buttons button:hover {
+	background: rgba(250, 250, 250, 1.000);
+	color: #374750;
+	border:1px solid rgba(117, 117, 117, 1);
+}
+
+
+/* Adding the separation border and padding in between items */
+.gfield_repeater .gfield_repeater_items  .gfield_repeater_item:not(:last-child)  {
+	border-bottom: 2px solid #e0e0e6;
+	padding-bottom: 20px;
+}
+
+/* Repeater - Left Border Color */
+.gfield_repeater_cell  > .gfield_repeater_wrapper   {
+	border-left: 8px solid rgba(241, 241, 241, 1.000);
+	box-shadow: 0 1px 1px 0 rgba(0,0,0,0.06), 0 2px 1px -1px rgba(0,0,0,0.06), 0 1px 5px 0 rgba(0,0,0,0.06);
+
+}
+
+
+
+/* //////////////////////////////////////////////////////////////*/
+/* /////////////////////// Form Edits Labels  ///////////////////////*/
+/* //////////////////////////////////////////////////////////////*/
+
+
+.gfield_repeater_buttons .add_repeater_item_text:focus,
+.gfield_repeater_buttons .remove_repeater_item_text:focus {
+	outline:0;
+}
+
+
+/*Coloring for the required asterisk*/
+.gfield_repeater_item .gfield_repeater_cell .gfield_required {
+	color: #c32121;
+}
+
+/* Field labels styling */
+.gform_wrapper .gfield_repeater_cell label{
+	color:rgb(155, 154, 154);
+	font-weight: 400;
+	font-size: 14px;;
+}
+
+
+/* //////////////////////////////////////////////////////////////*/
+/* /////////////////////// Forms Details  ///////////////////////*/
+/* //////////////////////////////////////////////////////////////*/
+
+
+
+/* Third Level Repeater Spacing */
+.gfield_repeater_value .gfield_repeater_value .gfield_repeater_cell{
+	padding-bottom: 20px;
+	padding-top: 0px;
+}
+
+
+/* Repeater styling line divider */
+.gfield_repeater .gfield_repeater_items .gfield_repeater_item:not(:last-child)  {
+	border-bottom: 2px solid #e0e0e6;
+	padding-bottom: 20px;
+	margin-bottom: 20px;
+	margin-right: 10px;
+}
+
+/*Spacing between adjancent cells in the same repeater*/
+div .gfield_repeater_cell {
+	margin-top: 5px;
+}
+
+
+/* Repeater containers */
+.gfield_repeater_value > .gfield_repeater {
+	border-left: 8px solid rgba(54, 86, 102, 0.1);
+	background-color: rgba(1, 1, 1, 0.02);
+	padding: 10px 20px;
+	border-radius: 8px;
+	border-bottom: 1px solid rgba(238, 238, 238, 1.000);
+	margin: 10px;
+}
+
+/* Styling for Fake disabled input containers */
+.gfield_repeater_cell  .gfield_repeater_value:not(:first-child)  {
+	color: rgba(117, 117, 117,0.7);
+	border:1px solid rgba(197, 198, 197, 1.000);
+	border-radius: 4px;
+	margin-right: 10px;
+	padding-left: 10px;
+	background-color: rgba(240, 240, 240, 1.000);
+}
+
+
+
+/* Consistent Padding in between cells and items */
+.gfield_repeater_items .gfield_repeater_cell:not(:first-child),
+.gfield_repeater .gfield_repeater_items{
+	padding-top: 5px;
+}
+
+/* Repeaters Labels styling */
+.gfield_repeater .gfield_label {
+	color: rgba(35, 40, 45, 1.000);
+	font-size: 16px;
+	font-weight: 600;
+}
+
+/* Field labels styling */
+.gfield_repeater_cell label.gfield_label,
+.gfield_repeater_cell div.ginput_complex_admin span label{
+	color:rgb(155, 154, 154);
+	font-weight: 400;
+	font-size: 14px;;
+}
+
+/* Decreasing the space below the label */
+.gfield_repeater_value .gfield_label {
+	padding-bottom: 0px;
+}
+
+/* Removing additional 20px padding when more repeaters are added on third level repeater */
+.gfield_repeater_value .gfield_repeater_value .gfield_repeater_item:first-child {
+	padding-bottom: 0px;
+}
+
+/*Addded this temporarily to disable extra spacing*/
+.gfield_repeater_cell .gfield_admin_icons {
+	height: 0px;
 }

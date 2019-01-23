@@ -414,9 +414,18 @@ if ( ! class_exists( 'GF_Background_Process' ) ) {
 			do {
 				$batch = $this->get_batch();
 
-				if ( is_multisite() && get_current_blog_id() !== $batch->blog_id ) {
-					$this->spawn_multisite_child_process( $batch->blog_id );
-					wp_die();
+				if ( is_multisite() ) {
+					$current_blog_id = get_current_blog_id();
+					if ( $current_blog_id !== $batch->blog_id ) {
+						$this->spawn_multisite_child_process( $batch->blog_id );
+						if ( defined( 'DOING_CRON' ) && DOING_CRON ) {
+							// Switch back to the current blog and return so the other tasks queued in this process can be run.
+							switch_to_blog( $current_blog_id );
+							return;
+						} else {
+							wp_die();
+						}
+					}
 				}
 
 				GFCommon::log_debug( sprintf( '%s(): Processing batch for %s.', __METHOD__, $this->action ) );
@@ -456,7 +465,12 @@ if ( ! class_exists( 'GF_Background_Process' ) ) {
 				$this->complete();
 			}
 
-			wp_die();
+			if ( defined( 'DOING_CRON' ) && DOING_CRON ) {
+				// Return so the other tasks queued in this process can be run.
+				return;
+			} else {
+				wp_die();
+			}
 		}
 
 		/**
@@ -591,19 +605,17 @@ if ( ! class_exists( 'GF_Background_Process' ) ) {
 
 			if ( $this->is_process_running() ) {
 				// Background process already running.
-				exit;
+				return;
 			}
 
 
 			if ( $this->is_queue_empty() ) {
 				// No data to process.
 				$this->clear_scheduled_event();
-				exit;
+				return;
 			}
 
 			$this->handle();
-
-			exit;
 		}
 
 		/**

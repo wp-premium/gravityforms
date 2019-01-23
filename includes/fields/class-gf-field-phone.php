@@ -120,7 +120,6 @@ class GF_Field_Phone extends GF_Field {
 	 * @uses    GF_Field_Phone::$failed_validation
 	 * @uses    GF_Field_Phone::get_phone_format()
 	 * @uses    GFFormsModel::is_html5_enabled()
-	 * @uses    GF_Field::get_conditional_logic_event()
 	 * @uses    GF_Field::get_field_placeholder_attribute()
 	 * @uses    GF_Field_Phone::$isRequired
 	 * @uses    GF_Field::get_tabindex()
@@ -158,14 +157,13 @@ class GF_Field_Phone extends GF_Field {
 		}
 
 		$html_input_type       = RGFormsModel::is_html5_enabled() ? 'tel' : 'text';
-		$logic_event           = $this->get_conditional_logic_event( 'keyup' );
 		$placeholder_attribute = $this->get_field_placeholder_attribute();
 		$required_attribute    = $this->isRequired ? 'aria-required="true"' : '';
 		$invalid_attribute     = $this->failed_validation ? 'aria-invalid="true"' : 'aria-invalid="false"';
 
 		$tabindex = $this->get_tabindex();
 
-		return sprintf( "<div class='ginput_container ginput_container_phone'><input name='input_%d' id='%s' type='{$html_input_type}' value='%s' class='%s' {$tabindex} {$logic_event} {$placeholder_attribute} {$required_attribute} {$invalid_attribute} %s/>{$instruction_div}</div>", $id, $field_id, esc_attr( $value ), esc_attr( $class ), $disabled_text );
+		return sprintf( "<div class='ginput_container ginput_container_phone'><input name='input_%d' id='%s' type='{$html_input_type}' value='%s' class='%s' {$tabindex} {$placeholder_attribute} {$required_attribute} {$invalid_attribute} %s/>{$instruction_div}</div>", $id, $field_id, esc_attr( $value ), esc_attr( $class ), $disabled_text );
 
 	}
 
@@ -207,7 +205,7 @@ class GF_Field_Phone extends GF_Field {
 	 * @return string The sanitized value.
 	 */
 	public function sanitize_entry_value( $value, $form_id ) {
-		$value = is_array( $value ) ? '' : sanitize_text_field( $value );
+		$value = is_array( $value ) ? array_map( 'sanitize_text_field', $value ) : sanitize_text_field( $value );
 		return $value;
 	}
 

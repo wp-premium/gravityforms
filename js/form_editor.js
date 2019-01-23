@@ -59,7 +59,7 @@ jQuery(document).ready(function() {
 			if ( jQuery('#gform_fields li').length === 1 ) {
 				jQuery( '#no-fields' ).show();
 			}
-            
+
             if(ui.helper && ui.helper.hasClass('ui-draggable-dragging')){
                 ui.helper.width(ui.helper.data('original_width'));
                 ui.helper.height(ui.helper.data('original_height'));
@@ -165,7 +165,7 @@ function MakeNoFieldsDroppable() {
 			jQuery( this ).show();
 		}
 	});
-	
+
 }
 
 function CloseStatus(){
@@ -350,6 +350,14 @@ function InitializeFieldSettings(){
 		var field = GetSelectedField();
 		if ( field.description != this.value ) {
 			SetFieldDescription(this.value);
+			RefreshSelectedFieldPreview();
+		}
+	});
+
+	jQuery('#field_checkbox_label').on('input propertychange', function(){
+		var field = GetSelectedField();
+		if ( field.checkboxLabel != this.value ) {
+			SetFieldCheckboxLabel(this.value);
 			RefreshSelectedFieldPreview();
 		}
 	});
@@ -540,6 +548,8 @@ function LoadFieldSettings(){
     jQuery("#field_default_value").val(field.defaultValue == undefined ? "" : field.defaultValue);
     jQuery("#field_default_value_textarea").val(field.defaultValue == undefined ? "" : field.defaultValue);
     jQuery("#field_description").val(field.description == undefined ? "" : field.description);
+	jQuery("#field_description").attr('placeholder', field.descriptionPlaceholder == undefined ? "" : field.descriptionPlaceholder);
+	jQuery("#field_checkbox_label").val(field.checkboxLabel == undefined ? "" : field.checkboxLabel);
     jQuery("#field_css_class").val(field.cssClass == undefined ? "" : field.cssClass);
     jQuery("#field_range_min").val( field.rangeMin == undefined || field.rangeMin === false ? "" : field.rangeMin);
     jQuery("#field_range_max").val(field.rangeMax == undefined  || field.rangeMax === false ? "" : field.rangeMax);
@@ -872,7 +882,9 @@ function LoadFieldSettings(){
 
     jQuery("#field_custom_field_name").val(field.postCustomFieldName);
 
-    jQuery("#field_columns_enabled").prop("checked", field.enableColumns ? true : false);
+    jQuery( '#field_columns_enabled' )
+	    .prop( 'checked', Boolean( field.enableColumns ) )
+	    .prop( 'disabled', has_entry( field.id ) );
 
     LoadFieldChoices(field);
 
@@ -950,7 +962,7 @@ function LoadFieldSettings(){
     }
 
     //Display custom field template for texareas and text fields
-    if(field["type"] == "post_custom_field" && field["inputType"] == "textarea" || field["inputType"] == "text"){
+    if(field["type"] == "post_custom_field" && (field["inputType"] == "textarea" || field["inputType"] == "text")){
         jQuery(".customfield_content_template_setting").show();
     }
 
@@ -996,14 +1008,6 @@ function LoadFieldSettings(){
             jQuery(".maxlen_setting").hide();
         } else {
             jQuery(".maxlen_setting").show();
-        }
-    }
-
-    if(field.type == 'product') {
-        if(field.inputType == 'singleproduct') {
-            jQuery(".admin_label_setting").hide();
-        } else {
-            jQuery(".admin_label_setting").show();
         }
     }
 
@@ -2040,15 +2044,15 @@ function StartDuplicateField(element) {
 
             if(field.inputs != null) {
 
-                var inputId = 1;
-
                 for(inputIndex in field.inputs) {
 
                     if(!field.inputs.hasOwnProperty(inputIndex))
                         continue;
 
-                    var id = field.inputs[inputIndex]['id'] + "";
-                    field.inputs[inputIndex]['id'] = id.replace(/(\d+\.)/, field.id + '.');
+                    var id = field.inputs[inputIndex]['id'] + '',
+						newId = id == sourcefieldId ? field.id : id.replace(/(\d+\.)/, field.id + '.');
+
+                    field.inputs[inputIndex]['id'] = newId;
 
                 }
             }
@@ -2101,20 +2105,28 @@ function GetFieldsByType(types){
 }
 
 function GetNextFieldId(){
-    var max = 0;
-    for(var i=0; i<form.fields.length; i++){
-        if(parseFloat(form.fields[i].id) > max)
-            max = parseFloat(form.fields[i].id);
-    }
-
-	if (form.deletedFields) {
-		for (var i = 0; i < form.deletedFields.length; i++) {
-			if (parseFloat(form.deletedFields[i]) > max)
-				max = parseFloat(form.deletedFields[i]);
+	var nextFieldId;
+   	if ( typeof form.nextFieldId == 'undefined' ) {
+		var max = 0;
+		for(var i=0; i<form.fields.length; i++){
+			if(parseFloat(form.fields[i].id) > max)
+				max = parseFloat(form.fields[i].id);
 		}
+
+		if (form.deletedFields) {
+			for (var i = 0; i < form.deletedFields.length; i++) {
+				if (parseFloat(form.deletedFields[i]) > max)
+					max = parseFloat(form.deletedFields[i]);
+			}
+		}
+		nextFieldId = parseFloat(max) + 1;
+	} else {
+		nextFieldId = parseInt(form.nextFieldId);
 	}
 
-    return parseFloat(max) + 1;
+	form.nextFieldId = nextFieldId + 1;
+
+    return nextFieldId;
 }
 
 function EndAddField(field, fieldString, index){
@@ -2249,6 +2261,7 @@ function EndChangeInputType(params){
     SetFieldSize(field.size);
     SetFieldDefaultValue(field.defaultValue);
     SetFieldDescription(field.description);
+    SetFieldCheckboxLabel(field.checkboxLabel);
     SetFieldRequired(field.isRequired);
     InitializeFields();
 
@@ -3406,6 +3419,13 @@ function SetFieldDescription(description){
         description = "";
 
     SetFieldProperty('description', description);
+}
+
+function SetFieldCheckboxLabel(text){
+    if(text == undefined)
+        text = "";
+
+    SetFieldProperty('checkboxLabel', text);
 }
 
 function SetPasswordStrength(isEnabled){

@@ -4,7 +4,7 @@
 browsers.css
 Gravity Forms Browser-Specific CSS
 http://www.gravityforms.com
-updated: January 12, 2017 03:56 PM (GMT-05:00) US Eastern Time
+updated: May 22, 2018 03:13 PM US Eastern Time
 
 Gravity Forms is a Rocketgenius project
 copyright 2008-2017 Rocketgenius Inc.
@@ -286,7 +286,8 @@ to no.
     .gform_wrapper.gf_browser_safari .chosen-container-single .chosen-single div b,
     .gform_wrapper.gf_browser_chrome .chosen-container-single .chosen-single div b {
         position: relative;
-        top: 12px;
+        top: 50%;
+        transform: translateY(-25%);
     }
 
  }

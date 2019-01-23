@@ -76,8 +76,8 @@ class GF_Field_Name extends GF_Field {
 	function validate( $value, $form ) {
 
 		if ( $this->isRequired && $this->nameFormat != 'simple' ) {
-			$first = rgpost( 'input_' . $this->id . '_3' );
-			$last  = rgpost( 'input_' . $this->id . '_6' );
+			$first = rgar( $value, $this->id . '.3' );
+			$last  = rgar( $value, $this->id . '.6' );
 			if (   ( empty( $first ) && ! $this->get_input_property( '3', 'isHidden' ) )
 				|| ( empty( $last )  && ! $this->get_input_property( '6', 'isHidden' ) ) ) {
 				$this->failed_validation  = true;
@@ -311,7 +311,7 @@ class GF_Field_Name extends GF_Field {
 				$css_class = $this->get_css_class();
 
 
-				return "<div class='ginput_complex{$class_suffix} ginput_container {$css_class} gfield_trigger_change' id='{$field_id}'>
+				return "<div class='ginput_complex{$class_suffix} ginput_container {$css_class}' id='{$field_id}'>
                             {$prefix_markup}
                             {$first_markup}
                             {$middle_markup}
@@ -641,6 +641,67 @@ class GF_Field_Name extends GF_Field {
 		}
 	}
 
+	/**
+	 * Removes the "for" attribute in the field label. Inputs are only allowed one label (a11y) and the inputs already have labels.
+	 *
+	 * @since  2.4
+	 * @access public
+	 *
+	 * @param array $form The Form Object currently being processed.
+	 *
+	 * @return string
+	 */
+	public function get_first_input_id( $form ) {
+		return '';
+	}
+
+	// # FIELD FILTER UI HELPERS ---------------------------------------------------------------------------------------
+
+	/**
+	 * Returns the sub-filters for the current field.
+	 *
+	 * @since 2.4
+	 *
+	 * @return array
+	 */
+	public function get_filter_sub_filters() {
+		$sub_filters = array();
+
+		if ( $this->nameFormat == 'simple' ) {
+			return $sub_filters;
+		}
+
+		$inputs = $this->inputs;
+
+		foreach ( (array) $inputs as $input ) {
+			if ( rgar( $input, 'isHidden' ) ) {
+				continue;
+			}
+
+			$sub_filters[] = array(
+				'key'             => rgar( $input, 'id' ),
+				'text'            => rgar( $input, 'customLabel', rgar( $input, 'label' ) ),
+				'preventMultiple' => false,
+				'operators'       => $this->get_filter_operators(),
+			);
+		}
+
+		return $sub_filters;
+	}
+
+	/**
+	 * Returns the filter operators for the current field.
+	 *
+	 * @since 2.4
+	 *
+	 * @return array
+	 */
+	public function get_filter_operators() {
+		$operators   = parent::get_filter_operators();
+		$operators[] = 'contains';
+
+		return $operators;
+	}
 }
 
 // Registers the Name field with the field framework.

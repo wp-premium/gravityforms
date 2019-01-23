@@ -790,12 +790,15 @@ class GFAPI {
 		// Make sure the form id exists
 		$form_id = rgar( $entry, 'form_id' );
 		if ( empty( $form_id ) ) {
-			$form_id = rgar( $current_entry, 'form_id' );
+			$form_id          = rgar( $current_entry, 'form_id' );
+			$entry['form_id'] = $form_id;
 		}
 
 		if ( false === self::form_id_exists( $form_id ) ) {
 			return new WP_Error( 'invalid_form_id', __( 'The form for this entry does not exist', 'gravityforms' ) );
 		}
+
+		$form = GFFormsModel::get_form_meta( $form_id );
 
 		/**
 		 * Filters the entry before it is updated.
@@ -807,30 +810,108 @@ class GFAPI {
 		 */
 		$entry = apply_filters( 'gform_entry_pre_update', $entry, $original_entry );
 
-		// Use values in the entry object if present
-		$post_id        = isset( $entry['post_id'] ) ? intval( $entry['post_id'] ) : 'NULL';
-		$date_created   = isset( $entry['date_created'] ) ? sprintf( "'%s'", esc_sql( $entry['date_created'] ) ) : 'utc_timestamp()';
-		$is_starred     = isset( $entry['is_starred'] ) ? $entry['is_starred'] : 0;
-		$is_read        = isset( $entry['is_read'] ) ? $entry['is_read'] : 0;
-		$ip             = isset( $entry['ip'] ) ? $entry['ip'] : GFFormsModel::get_ip();
-		$source_url     = isset( $entry['source_url'] ) ? $entry['source_url'] : GFFormsModel::get_current_page_url();
-		$user_agent     = isset( $entry['user_agent'] ) ? $entry['user_agent'] : 'API';
-		$currency       = isset( $entry['currency'] ) ? $entry['currency'] : GFCommon::get_currency();
-		$payment_status = isset( $entry['payment_status'] ) ? sprintf( "'%s'", esc_sql( $entry['payment_status'] ) ) : 'NULL';
-		$payment_date   = strtotime( rgar( $entry, 'payment_date' ) ) ? "'" . gmdate( 'Y-m-d H:i:s', strtotime( "{$entry['payment_date']}" ) ) . "'" : 'NULL';
-		$payment_amount = isset( $entry['payment_amount'] ) ? (float) $entry['payment_amount'] : 'NULL';
-		$payment_method = isset( $entry['payment_method'] ) ? $entry['payment_method'] : '';
-		$transaction_id = isset( $entry['transaction_id'] ) ? sprintf( "'%s'", esc_sql( $entry['transaction_id'] ) ) : 'NULL';
-		$is_fulfilled   = isset( $entry['is_fulfilled'] ) ? intval( $entry['is_fulfilled'] ) : 'NULL';
-		$status         = isset( $entry['status'] ) ? $entry['status'] : 'active';
+		// Use values in the entry object if present.
+		if ( ! isset( $entry['post_id'] ) ) {
+			$entry['post_id'] = null;
+		}
+		$post_id = ! empty( $entry['post_id'] ) ? intval( $entry['post_id'] ) : 'NULL';
 
-		global $current_user;
-		$user_id = isset( $entry['created_by'] ) ?  absint( $entry['created_by'] ) : '';
+		$current_time = $wpdb->get_var( 'SELECT utc_timestamp()' );
+
+		if ( empty( $entry['date_created'] ) ) {
+			$entry['date_created'] = $current_time;
+		}
+		$date_created = sprintf( "'%s'", esc_sql( $entry['date_created'] ) );
+
+		if ( empty( $entry['date_updated'] ) ) {
+			$entry['date_updated'] = $current_time;
+		}
+		$date_updated = sprintf( "'%s'", esc_sql( $entry['date_updated'] ) );
+
+		if ( ! isset( $entry['is_starred'] ) ) {
+			$entry['is_starred'] = 0;
+		}
+		$is_starred = intval( $entry['is_starred'] );
+
+		if ( ! isset( $entry['is_read'] ) ) {
+			$entry['is_read'] = 0;
+		}
+		$is_read = intval( $entry['is_read'] );
+
+		if ( ! isset( $entry['ip'] ) ) {
+			$entry['ip'] = rgars( $form, 'personalData/preventIP' ) ? '' : GFFormsModel::get_ip();
+		}
+		$ip = $entry['ip'];
+
+		if ( ! isset( $entry['source_url'] ) ) {
+			$entry['source_url'] = GFFormsModel::get_current_page_url();
+		}
+		$source_url = $entry['source_url'];
+
+		if ( ! isset( $entry['user_agent'] ) ) {
+			$entry['user_agent'] = 'API';
+		}
+		$user_agent = $entry['user_agent'];
+
+		if ( empty( $entry['currency'] ) ) {
+			$entry['currency'] = GFCommon::get_currency();
+		}
+		$currency = $entry['currency'];
+
+		if ( ! isset( $entry['payment_status'] ) ) {
+			$entry['payment_status'] = null;
+		}
+		$payment_status = ! empty( $entry['payment_status'] ) ? sprintf( "'%s'", esc_sql( $entry['payment_status'] ) ) : 'NULL';
+
+		if ( empty( $entry['payment_date'] ) ) {
+			$payment_date          = null;
+			$entry['payment_date'] = $payment_date;
+		} else {
+			$payment_date = strtotime( $entry['payment_date'] );
+		}
+		$payment_date = $payment_date ? sprintf( "'%s'", esc_sql( gmdate( 'Y-m-d H:i:s', $payment_date ) ) ) : 'NULL';
+
+		if ( ! isset( $entry['payment_amount'] ) ) {
+			$entry['payment_amount'] = null;
+		}
+		$payment_amount = ! empty( $entry['payment_amount'] ) ? (float) $entry['payment_amount'] : 'NULL';
+
+		if ( ! isset( $entry['payment_method'] ) ) {
+			$entry['payment_method'] = '';
+		}
+		$payment_method = $entry['payment_method'];
+
+		if ( ! isset( $entry['transaction_id'] ) ) {
+			$entry['transaction_id'] = null;
+		}
+		$transaction_id = ! empty( $entry['transaction_id'] ) ? sprintf( "'%s'", esc_sql( $entry['transaction_id'] ) ) : 'NULL';
+
+		if ( ! isset( $entry['is_fulfilled'] ) ) {
+			$entry['is_fulfilled'] = null;
+		}
+		$is_fulfilled = ! empty( $entry['is_fulfilled'] ) ? intval( $entry['is_fulfilled'] ) : 'NULL';
+
+		if ( empty( $entry['status'] ) ) {
+			$entry['status'] = 'active';
+		}
+		$status = $entry['status'];
+
+		$user_id = isset( $entry['created_by'] ) ? absint( $entry['created_by'] ) : '';
 		if ( empty( $user_id ) ) {
-			$user_id = $current_user && $current_user->ID ? absint( $current_user->ID ) : 'NULL';
+			global $current_user;
+			if ( $current_user && $current_user->ID ) {
+				$user_id             = absint( $current_user->ID );
+				$entry['created_by'] = $user_id;
+			} else {
+				$user_id             = 'NULL';
+				$entry['created_by'] = null;
+			}
 		}
 
-		$transaction_type = isset( $entry['transaction_type'] ) ? intval( $entry['transaction_type'] ) : 'NULL';
+		if ( ! isset( $entry['transaction_type'] ) ) {
+			$entry['transaction_type'] = null;
+		}
+		$transaction_type = ! empty( $entry['transaction_type'] ) ? intval( $entry['transaction_type'] ) : 'NULL';
 
 		$entry_table = GFFormsModel::get_entry_table_name();
 		$sql = $wpdb->prepare(
@@ -840,6 +921,7 @@ class GFAPI {
                 form_id = %d,
                 post_id = {$post_id},
                 date_created = {$date_created},
+                date_updated = {$date_updated},
                 is_starred = %d,
                 is_read = %d,
                 ip = %s,
@@ -867,13 +949,13 @@ class GFAPI {
 		// Only save field values for fields that currently exist in the form. The rest in $entry will be ignored. The rest in $current_entry will get deleted.
 
 		$entry_meta_table = GFFormsModel::get_entry_meta_table_name();
-		$current_fields    = $wpdb->get_results( $wpdb->prepare( "SELECT id, meta_key FROM $entry_meta_table WHERE entry_id=%d", $entry_id ) );
-
-		$form = GFFormsModel::get_form_meta( $form_id );
+		$current_fields    = $wpdb->get_results( $wpdb->prepare( "SELECT id, meta_key, item_index FROM $entry_meta_table WHERE entry_id=%d", $entry_id ) );
 
 		$form = gf_apply_filters( array( 'gform_form_pre_update_entry', $form_id ), $form, $entry, $entry_id );
 
 		GFFormsModel::begin_batch_field_operations();
+
+		$has_product_field = false;
 
 		foreach ( $form['fields'] as $field ) {
 			/* @var GF_Field $field */
@@ -881,32 +963,11 @@ class GFAPI {
 			if ( in_array( $type, array( 'html', 'page', 'section' ) ) ) {
 				continue;
 			}
-			$inputs = $field->get_entry_inputs();
-			if ( is_array( $inputs ) ) {
-				foreach ( $field->inputs as $input ) {
-					$input_id = (string) $input['id'];
-					if ( isset( $entry[ $input_id ] ) ) {
-						if ( $entry[ $input_id ] != $current_entry[ $input_id ] ) {
-							$lead_detail_id = GFFormsModel::get_lead_detail_id( $current_fields, $input_id );
-							$result         = GFFormsModel::queue_batch_field_operation( $form, $entry, $field, $lead_detail_id, $input_id, $entry[ $input_id ] );
-							if ( false === $result ) {
-								return new WP_Error( 'update_input_value_failed', __( 'There was a problem while updating one of the input values for the entry', 'gravityforms' ), $wpdb->last_error );
-							}
-						}
-						unset( $current_entry[ $input_id ] );
-					}
-				}
-			} else {
-				$field_id    = $field->id;
-				$field_value = isset( $entry[ (string) $field_id ] ) ? $entry[ (string) $field_id ] : '';
-				if ( $field_value != $current_entry[ $field_id ] ) {
-					$lead_detail_id = GFFormsModel::get_lead_detail_id( $current_fields, $field_id );
-					$result         = GFFormsModel::queue_batch_field_operation( $form, $entry, $field, $lead_detail_id, $field_id, $field_value );
-					if ( false === $result ) {
-						return new WP_Error( 'update_field_values_failed', __( 'There was a problem while updating the field values', 'gravityforms' ), $wpdb->last_error );
-					}
-				}
-				unset( $current_entry[ $field_id ] );
+
+			self::queue_batch_field_operation( $form, $entry, $field, '', $current_entry, $current_fields );
+
+			if ( ! $has_product_field && GFCommon::is_product_field( $field->type ) ) {
+				$has_product_field = true;
 			}
 		}
 
@@ -934,6 +995,12 @@ class GFAPI {
 			}
 		}
 
+		// Unset to prevent GFFormsModel::queue_batch_field_operation() setting them to empty strings in $entry during the next foreach.
+		$entry_columns = GFFormsModel::get_lead_db_columns();
+		foreach ( $entry_columns as $column ) {
+			unset( $current_entry[ $column ] );
+		}
+
 		foreach ( $current_entry as $k => $v ) {
 			$lead_detail_id = GFFormsModel::get_lead_detail_id( $current_fields, $k );
 			$field          = self::get_field( $form, $k );
@@ -945,6 +1012,9 @@ class GFAPI {
 
 		GFFormsModel::commit_batch_field_operations();
 
+		if ( $has_product_field ) {
+			GFFormsModel::refresh_product_cache( $form, $entry );
+		}
 
 		/**
 		 * Fires after the Entry is updated.
@@ -957,6 +1027,71 @@ class GFAPI {
 		gf_do_action( array( 'gform_post_update_entry', $form_id ), $entry, $original_entry );
 
 		return true;
+	}
+
+	private static function queue_batch_field_operation( $form, $entry, $field, $item_index = '', &$current_entry = array(), $current_fields = array() ) {
+
+		if ( is_array( $field->fields ) ) {
+			foreach ( $entry[ $field->id ] as $i => $values ) {
+				$new_item_index = $item_index . '_' . $i;
+				$values['id']   = $entry['id'];
+				foreach ( $field->fields as $sub_field ) {
+					self::queue_batch_field_operation( $form, $values, $sub_field, $new_item_index, $current_entry[ $field->id ], $current_fields );
+				}
+			}
+			foreach ( $field->fields as $sub_field ) {
+				foreach ( $current_fields as $current_field ) {
+					if ( intval( $current_field->meta_key ) == $sub_field->id && ! isset( $current_field->update ) ) {
+						$current_field->delete = true;
+						$result = GFFormsModel::queue_batch_field_operation( $form, $entry, $sub_field, $current_field->id, $current_field->meta_key, '', $current_field->item_index );
+						GFCommon::log_debug( __METHOD__ . "(): Deleting: {$field->label}(#{$sub_field->id}{$current_field->item_index} - {$field->type}). Result: " . var_export( $result, 1 ) );
+					}
+				}
+			}
+		}
+
+		$inputs = $field->get_entry_inputs();
+		if ( is_array( $inputs ) ) {
+			foreach ( $field->inputs as $input ) {
+				$input_id = (string) $input['id'];
+				$input_value = isset( $entry[ (string) $input_id ] ) ? $entry[ (string) $input_id ] : '';
+				$current_value = isset( $current_entry[ (string) $input_id ] ) ? $current_entry[ (string) $input_id ] : '';
+				if ( empty( $current_entry ) || $input_value != $current_value ) {
+					$lead_detail_id = $current_fields ? GFFormsModel::get_lead_detail_id( $current_fields, $input_id, $item_index ) : 0;
+					$result         = GFFormsModel::queue_batch_field_operation( $form, $entry, $field, $lead_detail_id, $input_id, $input_value, $item_index );
+					if ( false === $result ) {
+						return new WP_Error( 'update_input_value_failed', __( 'There was a problem while updating one of the input values for the entry', 'gravityforms' ) );
+					}
+					foreach ( $current_fields as $current_field ) {
+						if ( $current_field->meta_key == $input_id && $current_field->item_index == $item_index ) {
+							$current_field->update = true;
+						}
+					}
+				}
+
+				unset( $current_entry[ $input_id ] );
+			}
+
+		} else {
+			$field_id    = (string) $field->id;
+			$field_value = isset( $entry[ (string) $field_id ] ) ? $entry[ (string) $field_id ] : '';
+			$current_value = isset( $current_entry[ (string) $field_id ] ) ? $current_entry[ (string) $field_id ] : '';
+			if ( empty( $current_entry ) || $field_value != $current_value ) {
+				$lead_detail_id = $current_fields ? GFFormsModel::get_lead_detail_id( $current_fields, $field_id ) : 0;
+				$result         = GFFormsModel::queue_batch_field_operation( $form, $entry, $field, $lead_detail_id, $field_id, $field_value, $item_index );
+				if ( false === $result ) {
+					return new WP_Error( 'update_field_values_failed', __( 'There was a problem while updating the field values', 'gravityforms' ) );
+				}
+				foreach ( $current_fields as $current_field ) {
+					if ( $current_field->meta_key == $field_id && $current_field->item_index == $item_index ) {
+						$current_field->update = true;
+					}
+				}
+			}
+			unset( $current_entry[ $field_id ] );
+		}
+
+		return $current_entry;
 	}
 
 	/**
@@ -1009,12 +1144,16 @@ class GFAPI {
 			return new WP_Error( 'invalid_form_id', __( 'The form for this entry does not exist', 'gravityforms' ) );
 		}
 
+		$form = GFFormsModel::get_form_meta( $form_id );
+
 		// Use values in the entry object if present
 		$post_id        = isset( $entry['post_id'] ) ? intval( $entry['post_id'] ) : 'NULL';
 		$date_created   = isset( $entry['date_created'] ) && $entry['date_created'] != '' ? sprintf( "'%s'", esc_sql( $entry['date_created'] ) ) : 'utc_timestamp()';
+		$date_updated   = isset( $entry['date_updated'] ) && $entry['date_updated'] != '' ? sprintf( "'%s'", esc_sql( $entry['date_updated'] ) ) : 'utc_timestamp()';
 		$is_starred     = isset( $entry['is_starred'] ) ? $entry['is_starred'] : 0;
 		$is_read        = isset( $entry['is_read'] ) ? $entry['is_read'] : 0;
-		$ip             = isset( $entry['ip'] ) ? $entry['ip'] : GFFormsModel::get_ip();
+		$request_ip     = rgars( $form, 'personalData/preventIP' ) ? '' : GFFormsModel::get_ip();
+		$ip             = isset( $entry['ip'] ) ? $entry['ip'] : $request_ip;
 		$source_url     = isset( $entry['source_url'] ) ? $entry['source_url'] : esc_url_raw( GFFormsModel::get_current_page_url() );
 		$user_agent     = isset( $entry['user_agent'] ) ? $entry['user_agent'] : 'API';
 		$currency       = isset( $entry['currency'] ) ? $entry['currency'] : GFCommon::get_currency();
@@ -1039,9 +1178,9 @@ class GFAPI {
 			$wpdb->prepare(
 				"
                 INSERT INTO $entry_table
-                (form_id, post_id, date_created, is_starred, is_read, ip, source_url, user_agent, currency, payment_status, payment_date, payment_amount, transaction_id, is_fulfilled, created_by, transaction_type, status, payment_method)
+                (form_id, post_id, date_created, date_updated, is_starred, is_read, ip, source_url, user_agent, currency, payment_status, payment_date, payment_amount, transaction_id, is_fulfilled, created_by, transaction_type, status, payment_method)
                 VALUES
-                (%d, {$post_id}, {$date_created}, %d,  %d, %s, %s, %s, %s, {$payment_status}, {$payment_date}, {$payment_amount}, {$transaction_id}, {$is_fulfilled}, {$user_id}, {$transaction_type}, %s, %s)
+                (%d, {$post_id}, {$date_created}, {$date_updated}, %d,  %d, %s, %s, %s, %s, {$payment_status}, {$payment_date}, {$payment_amount}, {$transaction_id}, {$is_fulfilled}, {$user_id}, {$transaction_type}, %s, %s)
                 ", $form_id, $is_starred, $is_read, $ip, $source_url, $user_agent, $currency, $status, $payment_method
 			)
 		);
@@ -1055,33 +1194,13 @@ class GFAPI {
 		// only save field values for fields that currently exist in the form
 		GFFormsModel::begin_batch_field_operations();
 
-		$form = GFFormsModel::get_form_meta( $form_id );
 		foreach ( $form['fields'] as $field ) {
 			/* @var GF_Field $field */
 			if ( in_array( $field->type, array( 'html', 'page', 'section' ) ) ) {
 				continue;
 			}
-			$inputs = $field->get_entry_inputs();
-			if ( is_array( $inputs ) ) {
-				foreach ( $inputs as $input ) {
-					$input_id = (string) $input['id'];
-					if ( isset( $entry[ $input_id ] ) ) {
-						$result = GFFormsModel::queue_batch_field_operation( $form, $entry, $field, 0, $input_id, $entry[ $input_id ] );
-						if ( false === $result ) {
-							return new WP_Error( 'insert_input_value_failed', __( 'There was a problem while inserting one of the input values for the entry', 'gravityforms' ), $wpdb->last_error );
-						}
-					}
-				}
-			} else {
-				$field_id    = $field->id;
-				$field_value = isset( $entry[ (string) $field_id ] ) ? $entry[ (string) $field_id ] : '';
-				$result      = GFFormsModel::queue_batch_field_operation( $form, $entry, $field, 0, $field_id, $field_value );
-				if ( false === $result ) {
-					return new WP_Error( 'insert_field_values_failed', __( 'There was a problem while inserting the field values', 'gravityforms' ), $wpdb->last_error );
-				}
-			}
+			self::queue_batch_field_operation( $form, $entry, $field );
 		}
-
 
 		GFFormsModel::commit_batch_field_operations();
 
@@ -1165,23 +1284,20 @@ class GFAPI {
 	 *
 	 * @since  1.9
 	 * @access public
-	 * @global $wpdb
 	 *
-	 * @uses GFAPI::get_entry()
-	 * @uses GFAPI::get_form()
-	 * @uses GFAPI::get_field()
-	 * @uses GFFormsModel::get_lead_details_table_name()
-	 * @uses GFFormsModel::update_lead_field_value()
+	 * @param int    $entry_id   The ID of the Entry object.
+	 * @param string $input_id   The id of the input to be updated. For single input fields such as text, paragraph,
+	 *                           website, drop down etc... this will be the same as the field ID. For multi input
+	 *                           fields such as name, address, checkboxes, etc... the input id will be in the format
+	 *                           {FIELD_ID}.{INPUT NUMBER}. ( i.e. "1.3" ). The $input_id can be obtained by inspecting
+	 *                           the key for the specified field in the $entry object.
+	 * @param mixed  $value      The value to which the field should be set.
+	 * @param string $item_index The item index if the field is inside a Repeater.
 	 *
-	 * @param int    $entry_id The ID of the Entry object.
-	 * @param string $input_id The id of the input to be updated. For single input fields such as text, paragraph, website, drop down etc... this will be the same as the field ID.
-	 *                         For multi input fields such as name, address, checkboxes, etc... the input id will be in the format {FIELD_ID}.{INPUT NUMBER}. ( i.e. "1.3" ).
-	 *                         The $input_id can be obtained by inspecting the key for the specified field in the $entry object.
-	 * @param mixed  $value    The value to which the field should be set.
-	 *
-	 * @return bool|array Whether the entry property was updated successfully. If there's an error getting the entry, the entry object.
+	 * @return bool|array Whether the entry property was updated successfully. If there's an error getting the entry,
+	 *                    the entry object.
 	 */
-	public static function update_entry_field( $entry_id, $input_id, $value ) {
+	public static function update_entry_field( $entry_id, $input_id, $value, $item_index = '' ) {
 		global $wpdb;
 
 		if ( gf_upgrade()->get_submissions_block() ) {
@@ -1206,11 +1322,17 @@ class GFAPI {
 
 		$entry_meta_table_name = GFFormsModel::get_entry_meta_table_name();
 
-		$lead_detail_id = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$entry_meta_table_name} WHERE entry_id=%d AND meta_key= %s", $entry_id, $input_id ) );
+		$sql = $wpdb->prepare( "SELECT id FROM {$entry_meta_table_name} WHERE entry_id=%d AND meta_key=%s", $entry_id, $input_id );
+
+		if ( $item_index ) {
+			$sql .= $wpdb->prepare( ' AND item_index=%s', $item_index );
+		}
+
+		$lead_detail_id = $wpdb->get_var( $sql );
 
 		$result = true;
 		if ( ! isset( $entry[ $input_id ] ) || $entry[ $input_id ] != $value ) {
-			$result = GFFormsModel::update_entry_field_value( $form, $entry, $field, $lead_detail_id, $input_id, $value );
+			$result = GFFormsModel::update_entry_field_value( $form, $entry, $field, $lead_detail_id, $input_id, $value, $item_index );
 		}
 
 		return $result;
@@ -1350,6 +1472,8 @@ class GFAPI {
 				$result['confirmation_message'] = $confirmation_message;
 				$result['confirmation_type'] = 'message';
 			}
+
+			$result['entry_id'] = rgars( $submission_details, 'lead/id' );
 		}
 
 		if ( isset( $submission_details['resume_token'] ) ) {
@@ -1539,7 +1663,7 @@ class GFAPI {
 	 * @param string $event Optional. The event that's firing the notification. Defaults to 'form_submission'.
 	 * @param array  $data  Optional. Array of data which can be used in the notifications via the generic {object:property} merge tag. Defaults to empty array.
 	 *
-	 * @return array
+	 * @return array The array of notification IDs sent.
 	 */
 	public static function send_notifications( $form, $entry, $event = 'form_submission', $data = array() ) {
 
@@ -1591,13 +1715,15 @@ class GFAPI {
 			/**
 			 * Disables notifications.
 			 *
+			 * @since 2.3.6.6 Added the $data param.
 			 * @since Unknown
 			 *
 			 * @param bool  false  Determines if the notification will be disabled. Set to true to disable the notification.
 			 * @param array $form  The Form Object that triggered the notification event.
 			 * @param array $entry The Entry Object that triggered the notification event.
+			 * @param array $data  Array of data which can be used in the notifications via the generic {object:property} merge tag. Defaults to empty array.
 			 */
-			if ( gf_apply_filters( array( 'gform_disable_notification', $form['id'] ), false, $notification, $form, $entry ) ) {
+			if ( gf_apply_filters( array( 'gform_disable_notification', $form['id'] ), false, $notification, $form, $entry, $data ) ) {
 				GFCommon::log_debug( "GFAPI::send_notifications(): Notification is disabled by gform_disable_notification hook, not including notification (#{$notification['id']} - {$notification['name']})." );
 				// Skip notifications if it has been disabled by a hook
 				continue;
@@ -1607,6 +1733,8 @@ class GFAPI {
 		}
 
 		GFCommon::send_notifications( $notifications_to_send, $form, $entry, true, $event, $data );
+
+		return $notifications_to_send;
 	}
 
 
