@@ -46,7 +46,6 @@ class GF_Field_Select extends GF_Field {
 		$id       = $this->id;
 		$field_id = $is_entry_detail || $is_form_editor || $form_id == 0 ? "input_$id" : 'input_' . $form_id . "_$id";
 
-		$logic_event        = $this->get_conditional_logic_event( 'change' );
 		$size               = $this->size;
 		$class_suffix       = $is_entry_detail ? '_admin' : '';
 		$class              = $size . $class_suffix;
@@ -56,7 +55,7 @@ class GF_Field_Select extends GF_Field {
 		$required_attribute = $this->isRequired ? 'aria-required="true"' : '';
 		$invalid_attribute  = $this->failed_validation ? 'aria-invalid="true"' : 'aria-invalid="false"';
 
-		return sprintf( "<div class='ginput_container ginput_container_select'><select name='input_%d' id='%s' $logic_event class='%s' $tabindex %s %s %s>%s</select></div>", $id, $field_id, $css_class, $disabled_text, $required_attribute, $invalid_attribute, $this->get_choices( $value ) );
+		return sprintf( "<div class='ginput_container ginput_container_select'><select name='input_%d' id='%s' class='%s' $tabindex %s %s %s>%s</select></div>", $id, $field_id, $css_class, $disabled_text, $required_attribute, $invalid_attribute, $this->get_choices( $value ) );
 	}
 
 	public function get_choices( $value ) {
@@ -96,9 +95,10 @@ class GF_Field_Select extends GF_Field {
 	 * @return string The processed merge tag.
 	 */
 	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {
-		$use_value       = $modifier == 'value';
-		$use_price       = in_array( $modifier, array( 'price', 'currency' ) );
-		$format_currency = $modifier == 'currency';
+		$modifiers       = $this->get_modifiers();
+		$use_value       = in_array( 'value', $modifiers );
+		$format_currency = ! $use_value && in_array( 'currency', $modifiers );
+		$use_price       = $format_currency || ( ! $use_value && in_array( 'price', $modifiers ) );
 
 		if ( is_array( $raw_value ) && (string) intval( $input_id ) != $input_id ) {
 			$items = array( $input_id => $value ); // Float input Ids. (i.e. 4.1 ). Used when targeting specific checkbox items.
@@ -162,6 +162,22 @@ class GF_Field_Select extends GF_Field {
 
 		return $value;
 	}
+
+	// # FIELD FILTER UI HELPERS ---------------------------------------------------------------------------------------
+
+	/**
+	 * Returns the filter operators for the current field.
+	 *
+	 * @since 2.4
+	 *
+	 * @return array
+	 */
+	public function get_filter_operators() {
+		$operators = $this->type == 'product' ? array( 'is' ) : array( 'is', 'isnot', '>', '<' );
+
+		return $operators;
+	}
+
 }
 
 GF_Fields::register( new GF_Field_Select() );

@@ -16,7 +16,7 @@ class GF_Query_Literal {
 	 */
 	public function __construct( $value ) {
 		if ( is_int( $value ) || is_string( $value ) || is_float( $value ) ) {
-			$this->value = $value;
+			$this->_value = $value;
 		}
 	}
 
@@ -54,5 +54,9 @@ class GF_Query_Literal {
 			case 'value':
 				return $this->_value;
 		endswitch;
+	}
+
+	public function __isset( $key ) {
+		return in_array( $key, array( 'value' ) );
 	}
 }

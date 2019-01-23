@@ -351,7 +351,7 @@ class GF_Field_FileUpload extends GF_Field {
 				$uploaded_temp_files = GFFormsModel::$uploaded_files[ $form_id ][ $input_name ];
 				$uploaded_files      = array();
 				foreach ( $uploaded_temp_files as $i => $file_info ) {
-					$temp_filepath = GFFormsModel::get_upload_path( $form_id ) . '/tmp/' . $file_info['temp_filename'];
+					$temp_filepath = GFFormsModel::get_upload_path( $form_id ) . '/tmp/' . basename( $file_info['temp_filename'] );
 					if ( $file_info && file_exists( $temp_filepath ) ) {
 						$uploaded_files[ $i ] = $this->move_temp_file( $form_id, $file_info );
 					}
@@ -558,8 +558,8 @@ class GF_Field_FileUpload extends GF_Field {
 
 	public function move_temp_file( $form_id, $tempfile_info ) {
 
-		$target = GFFormsModel::get_file_upload_path( $form_id, $tempfile_info['uploaded_filename'] );
-		$source = GFFormsModel::get_upload_path( $form_id ) . '/tmp/' . $tempfile_info['temp_filename'];
+		$target = GFFormsModel::get_file_upload_path( $form_id, basename( $tempfile_info['uploaded_filename'] ) );
+		$source = GFFormsModel::get_upload_path( $form_id ) . '/tmp/' . basename( $tempfile_info['temp_filename']);
 
 		GFCommon::log_debug( __METHOD__ . '(): Moving temp file from: ' . $source );
 

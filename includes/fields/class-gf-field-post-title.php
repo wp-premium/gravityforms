@@ -58,14 +58,12 @@ class GF_Field_Post_Title extends GF_Field {
 
 		$tabindex = $this->get_tabindex();
 
-		$logic_event = $this->get_conditional_logic_event( 'keyup' );
-
 		$placeholder_attribute = $this->get_field_placeholder_attribute();
 		$required_attribute    = $this->isRequired ? 'aria-required="true"' : '';
 		$invalid_attribute     = $this->failed_validation ? 'aria-invalid="true"' : 'aria-invalid="false"';
 
 		return "<div class='ginput_container ginput_container_post_title'>
-					<input name='input_{$id}' id='{$field_id}' type='text' value='{$value}' class='{$class}' {$tabindex} {$logic_event} {$placeholder_attribute} {$required_attribute} {$invalid_attribute} {$disabled_text}/>
+					<input name='input_{$id}' id='{$field_id}' type='text' value='{$value}' class='{$class}' {$tabindex} {$placeholder_attribute} {$required_attribute} {$invalid_attribute} {$disabled_text}/>
 				</div>";
 
 	}
@@ -87,6 +85,22 @@ class GF_Field_Post_Title extends GF_Field {
 	 */
 	public function sanitize_entry_value( $value, $form_id ) {
 		return wp_strip_all_tags( $value );
+	}
+
+	// # FIELD FILTER UI HELPERS ---------------------------------------------------------------------------------------
+
+	/**
+	 * Returns the filter operators for the current field.
+	 *
+	 * @since 2.4
+	 *
+	 * @return array
+	 */
+	public function get_filter_operators() {
+		$operators   = parent::get_filter_operators();
+		$operators[] = 'contains';
+
+		return $operators;
 	}
 
 }

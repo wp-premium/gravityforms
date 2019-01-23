@@ -93,8 +93,8 @@ class GF_Field_CAPTCHA extends GF_Field {
 	public function validate_recaptcha( $form ) {
 
 		// when user clicks on the "I'm not a robot" box, the response token is populated into a hidden field by Google, get token from POST
-		$response_token = rgpost( 'g-recaptcha-response' );
-		$hash           = rgpost( 'gf-recaptcha-response-hash' );
+		$response_token = sanitize_text_field( rgpost( 'g-recaptcha-response' ) );
+		$hash           = sanitize_text_field( rgpost( 'gf-recaptcha-response-hash' ) );
 
 		if( GFFormDisplay::is_last_page( $form ) && $hash && wp_hash( $response_token ) === $hash ) {
 			$is_valid = true;
@@ -215,15 +215,18 @@ class GF_Field_CAPTCHA extends GF_Field {
 
 					$output = "<div id='" . esc_attr( $field_id ) ."' class='ginput_container ginput_recaptcha' data-sitekey='" . esc_attr( $site_key ) . "' {$stoken} data-theme='" . esc_attr( $theme ) . "' data-tabindex='{$tabindex}'></div>";
 
-					$recaptcha_response = rgpost( 'g-recaptcha-response' );
+					$recaptcha_response = sanitize_text_field( rgpost( 'g-recaptcha-response' ) );
 					$current_page = GFFormDisplay::get_current_page( $form['id'] );
 
 					if( $recaptcha_response && ! $this->failed_validation && $current_page != $this->pageNumber ) {
 
-						$hash = rgpost( 'gf-recaptcha-response-hash' );
+						$hash = sanitize_text_field( rgpost( 'gf-recaptcha-response-hash' ) );
 						if( ! $hash ) {
 							$hash = wp_hash( $recaptcha_response );
 						}
+
+						$hash               = esc_attr( $hash );
+						$recaptcha_response = esc_attr( $recaptcha_response );
 
 						$output .= "<input type='hidden' name='g-recaptcha-response' value='{$recaptcha_response}'>";
 						$output .= "<input type='hidden' name='gf-recaptcha-response-hash' value='{$hash}'>";

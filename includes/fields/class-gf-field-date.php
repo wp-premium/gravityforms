@@ -34,6 +34,17 @@ class GF_Field_Date extends GF_Field {
 		);
 	}
 
+	/**
+	 * Whether this field expects an array during submission.
+	 *
+	 * @since 2.4
+	 *
+	 * @return bool
+	 */
+	public function is_value_submission_array() {
+		return in_array( $this->dateType, array( 'datefield', 'datedropdown' ) );
+	}
+
 	public function validate( $value, $form ) {
 		if ( is_array( $value ) && rgempty( 0, $value ) && rgempty( 1, $value ) && rgempty( 2, $value ) ) {
 			$value = null;
@@ -455,7 +466,7 @@ class GF_Field_Date extends GF_Field {
 
 	public function get_value_entry_detail( $value, $currency = '', $use_text = false, $format = 'html', $media = 'screen' ) {
 
-		return GFCommon::date_display( $value, $this->dateFormat );
+		return GFCommon::date_display( $value, $this->dateFormat, $this->get_output_date_format() );
 	}
 
 	/**
@@ -481,9 +492,65 @@ class GF_Field_Date extends GF_Field {
 	 * @return string The processed merge tag.
 	 */
 	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {
-		$format_modifier = empty( $modifier ) ? $this->dateFormat : $modifier;
 
-		return GFCommon::date_display( $value, $format_modifier );
+		return GFCommon::date_display( $value, $this->dateFormat, $this->get_output_date_format() );
+	}
+
+	/**
+	 * Returns the date format to use when outputting the entry value on the detail page and when merge tags are processed.
+	 *
+	 * @since 2.4
+	 *
+	 * @return string
+	 */
+	public function get_output_date_format() {
+		$modifiers = $this->get_modifiers();
+		if ( ! empty( $modifiers ) ) {
+			$valid_modifiers = array(
+				'year',
+				'month',
+				'day',
+				'ymd',
+				'ymd_dash',
+				'ymd_dot',
+				'ymd_slash',
+				'mdy',
+				'mdy_dash',
+				'mdy_dot',
+				'mdy_slash',
+				'dmy',
+				'dmy_dash',
+				'dmy_dot',
+				'dmy_slash',
+			);
+
+			foreach ( $modifiers as $modifier ) {
+				if ( in_array( $modifier, $valid_modifiers ) ) {
+					return $modifier;
+				}
+			}
+		}
+
+		return $this->dateFormat;
+	}
+
+
+	/**
+	 * Returns a JS script to be rendered in the front end of the form.
+	 *
+	 * @param array $form The Form Object
+	 *
+	 * @return string Returns a JS script to be processed in the front end.
+	 */
+	public function get_form_inline_script_on_page_render( $form ) {
+
+		//Only return merge tag script if form supports JS merge tags
+		if ( ! GFFormDisplay::has_js_merge_tag( $form ) ) {
+			return '';
+		}
+
+		return "gform.addFilter( 'gform_value_merge_tag_{$form['id']}_{$this->id}', function( value, input, modifier ) { if( modifier === 'label' ) { return false; } return input.length == 1 ? input.val() : jQuery(input[0]).val() + '/' + jQuery(input[1]).val() + '/' + jQuery(input[2]).val(); } );";
+
 	}
 
 	private function get_month_dropdown( $name = '', $id = '', $selected_value = '', $tabindex = '', $disabled_text = '', $placeholder = '' ) {
@@ -513,7 +580,7 @@ class GF_Field_Date extends GF_Field {
 	}
 
 	private function get_number_dropdown( $name, $id, $selected_value, $tabindex, $disabled_text, $placeholder, $start_number, $end_number ) {
-		$str = "<select name='{$name}' id='{$id}' {$tabindex} {$disabled_text} >";
+		$str = "<select name='{$name}' id='{$id}' {$tabindex} {$disabled_text} aria-label='{$placeholder}'>";
 		if ( $placeholder !== false ) {
 			$str .= "<option value=''>{$placeholder}</option>";
 		}
@@ -563,6 +630,37 @@ class GF_Field_Date extends GF_Field {
 		if ( $this->dateFormat && ! in_array( $this->dateFormat, array(	'mdy', 'dmy', 'dmy_dash', 'dmy_dot', 'ymd_slash', 'ymd_dash', 'ymd_dot' ) ) ) {
 			$this->dateFormat = 'mdy';
 		}
+	}
+
+	/**
+	 * Removes the "for" attribute in the field label. Inputs are only allowed one label (a11y) and the inputs already have labels.
+	 *
+	 * @since  2.4
+	 * @access public
+	 *
+	 * @param array $form The Form Object currently being processed.
+	 *
+	 * @return string
+	 */
+	public function get_first_input_id( $form ) {
+		return in_array( $this->dateType, array( 'datefield', 'datedropdown' ) ) ? '' : parent::get_first_input_id( $form ) ;
+	}
+
+	// # FIELD FILTER UI HELPERS ---------------------------------------------------------------------------------------
+
+	/**
+	 * Returns the filter settings for the current field.
+	 *
+	 * @since 2.4
+	 *
+	 * @return array
+	 */
+	public function get_filter_settings() {
+		$filter_settings                = parent::get_filter_settings();
+		$filter_settings['placeholder'] = esc_html__( 'yyyy-mm-dd', 'gravityforms' );
+		$filter_settings['cssClass']    = 'datepicker ymd_dash';
+
+		return $filter_settings;
 	}
 }
 

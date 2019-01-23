@@ -99,7 +99,7 @@ class GF_Installation_Wizard_Step_Background_Updates extends GF_Installation_Wiz
 		if ( $this->background_updates == 'enabled' ) {
 			$this->accept_terms = false;
 		} elseif ( empty( $this->accept_terms ) ) {
-			$this->set_field_validation_result( 'accept_terms', esc_html__( 'Please accept the terms.' ) );
+			$this->set_field_validation_result( 'accept_terms', esc_html__( 'Please accept the terms.', 'gravityforms' ) );
 			$valid = false;
 		}
 
