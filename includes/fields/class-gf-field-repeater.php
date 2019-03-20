@@ -285,7 +285,7 @@ class GF_Field_Repeater extends GF_Field {
 
 				$field_input = $this->get_sub_field_input( $field, $form, $field_value, $entry, $i );
 
-				$cssClass = htmlentities( $field->cssClass );
+                		$cssClass = htmlentities( $field->labelPlacement . ' ' . $field->cssClass );
 				$row .= "<div class='gfield_repeater_cell $cssClass'>" . $field_input . '</div>';
 			}
 			$buttons = $this->get_buttons( $values );
