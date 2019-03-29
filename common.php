@@ -4686,7 +4686,7 @@ Content-Type: text/html;
 		$gf_global['number_formats']     = array();
 		$gf_global['spinnerUrl']         = GFCommon::get_base_url() . '/images/spinner.gif';
 
-		$gf_global_json = 'var gf_global = ' . json_encode( $gf_global ) . ';';
+		$gf_global_json = 'window.gf_global = ' . json_encode( $gf_global ) . ';';
 
 		if ( ! $echo ) {
 			return $return_array ? $gf_global : $gf_global_json;
