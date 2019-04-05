@@ -29,7 +29,7 @@ class GFSettings {
 	 *
 	 * @uses GFSettings::$addon_pages
 	 *
-	 * @param string       $name      The settings page slug.
+	 * @param string|array $name      The settings page slug.
 	 * @param string|array $handler   The callback function to run for this settings page.
 	 * @param string       $icon_path The path to the icon for the settings tab.
 	 */
@@ -160,6 +160,7 @@ class GFSettings {
 			delete_option( 'rg_gforms_enable_html5' );
 			delete_option( 'rg_gforms_captcha_public_key' );
 			delete_option( 'rg_gforms_captcha_private_key' );
+			delete_option( 'rg_gforms_captcha_type' );
 			delete_option( 'rg_gforms_message' );
 			delete_option( 'rg_gforms_currency' );
 			delete_option( 'rg_gforms_enable_akismet' );
@@ -303,39 +304,13 @@ class GFSettings {
 			update_option( 'rg_gforms_enable_akismet', self::get_posted_akismet_setting() ); // do not cast to bool, option is enabled by default; need a "1" or a "0"
 			update_option( 'rg_gforms_captcha_public_key', sanitize_text_field( rgpost( 'gforms_captcha_public_key' ) ) );
 			update_option( 'rg_gforms_captcha_private_key', sanitize_text_field( rgpost( 'gforms_captcha_private_key' ) ) );
+			update_option( 'rg_gforms_captcha_type', sanitize_text_field( rgpost( 'gforms_captcha_type' ) ) );
 
 			// If Logging was enabled, add Logging tab to settings page.
 			if ( rgpost( 'gform_enable_logging' ) ) {
-
-				// Update option.
-				update_option( 'gform_enable_logging', (bool) rgpost( 'gform_enable_logging' ) );
-
-				// Add settings page.
-				self::add_settings_page(
-					array(
-						'name'      => gf_logging()->get_slug(),
-						'tab_label' => gf_logging()->get_short_title(),
-						'title'     => gf_logging()->plugin_settings_title(),
-						'handler'   => array( gf_logging(), 'plugin_settings_page' ),
-					),
-					null,
-					null
-				);
-
-				// Enabling all loggers by default
-				gf_logging()->enable_all_loggers();
-
+                self::enable_logging();
 			} else {
-
-				// Update option.
-				update_option( 'gform_enable_logging', (bool) rgpost( 'gform_enable_logging' ) );
-
-				// Remove settings page.
-				unset( self::$addon_pages[ gf_logging()->get_slug() ] );
-
-				// Remove Log Files
-				gf_logging()->delete_log_files();
-
+				self::disable_logging();
 			}
 
 			if ( rgpost( 'gform_recaptcha_reset' ) ) {
@@ -532,8 +507,8 @@ class GFSettings {
 			<h3><span><i class="fa fa-cogs"></i> <?php esc_html_e( 'reCAPTCHA Settings', 'gravityforms' ); ?></span></h3>
 
 			<p style="text-align: left;">
-				<?php esc_html_e( 'Gravity Forms integrates with reCAPTCHA, a free CAPTCHA service that helps to digitize books while protecting your forms from spam bots. ', 'gravityforms' ); ?>
-				<?php printf( esc_html__( '%sPlease note%s, these settings are required only if you decide to use the reCAPTCHA field.', 'gravityforms' ), '<strong>', '</strong>' ); ?>
+				<?php esc_html_e( 'Gravity Forms integrates with reCAPTCHA, a free CAPTCHA service that uses an advanced risk analysis engine and adaptive challenges to keep automated software from engaging in abusive activities on your site. ', 'gravityforms' ); ?>
+				<strong><?php esc_html_e( 'Please note, only v2 keys are supported and checkbox keys are not compatible with invisible reCAPTCHA.', 'gravityforms' ); ?></strong> <?php esc_html_e( 'These settings are required only if you decide to use the reCAPTCHA field.', 'gravityforms' ); ?>
 				<a href="http://www.google.com/recaptcha/" target="_blank"><?php esc_html_e( 'Read more about reCAPTCHA.', 'gravityforms' ); ?></a>
 			</p>
 
@@ -563,7 +538,8 @@ class GFSettings {
 						<label for="gforms_captcha_private_key"><?php esc_html_e( 'Secret Key', 'gravityforms' ); ?></label>  <?php gform_tooltip( 'settings_recaptcha_private' ) ?>
 					</th>
 					<td>
-						<input type="text" name="gforms_captcha_private_key" style="width:350px;" value="<?php echo esc_attr( get_option( 'rg_gforms_captcha_private_key' ) ) ?>" onchange="loadRecaptcha();" />
+						<?php $recaptcha_private_key = get_option( 'rg_gforms_captcha_private_key' ); ?>
+						<input type="text" name="gforms_captcha_private_key" style="width:350px;" value="<?php esc_attr_e( $recaptcha_private_key ) ?>" onchange="loadRecaptcha();" />
 						<?php if ( $key_status !== null ) : ?>
 							<span class="gforms_captcha_site_key_status">
 								<?php if ( $key_status ) : ?>
@@ -575,13 +551,42 @@ class GFSettings {
 						<?php endif; ?>
 					</td>
 				</tr>
+				<tr valign="top">
+					<th scope="row">
+						<?php esc_html_e( 'Type', 'gravityforms' ); ?>  <?php gform_tooltip( 'settings_recaptcha_type' ) ?>
+					</th>
+					<td>
+						<?php
+						$recaptcha_type = get_option( 'rg_gforms_captcha_type' );
+						if ( empty ( $recaptcha_type ) ) {
+							$recaptcha_type = 'checkbox';
+						}
+						?>
+						<input
+								id="gforms_captcha_type_checkbox"
+								type="radio"
+								name="gforms_captcha_type"
+								value="checkbox"
+							<?php checked( true, $recaptcha_type == 'checkbox' ); ?>
+						/>
+						<label for="gforms_captcha_type_checkbox"><?php esc_html_e( 'Checkbox', 'gravityforms' ); ?></label>&nbsp;&nbsp;
+						<input
+								id="gforms_captcha_type_invisible"
+								type="radio"
+								name="gforms_captcha_type"
+								value="invisible"
+							<?php checked( true, $recaptcha_type == 'invisible' ); ?>
+						/><label for="gforms_captcha_type_invisible"><?php esc_html_e( 'Invisible', 'gravityforms' ); ?></label>
+					</td>
+				</tr>
+
 				<tr valign="top" id="gforms_confirm_recaptcha" style="display:none;">
 					<th scope="row">
-						<label for="gforms_validate_recaptcha"><?php esc_html_e( 'Validate Keys', 'gravityforms' ); ?></label> <?php gform_tooltip( 'gforms_validate_recaptcha' ) ?>
+						<label id="gforms_validate_recaptcha_label" for="gforms_validate_recaptcha"><?php esc_html_e( 'Validate Keys', 'gravityforms' ); ?></label> <?php gform_tooltip( 'gforms_validate_recaptcha' ) ?>
 					</th>
 					<td>
 
-						<p style="margin-bottom:10px;"><?php esc_html_e( 'Please complete the reCAPTCHA widget to validate your reCAPTCHA keys:' ); ?></p>
+						<p id="gforms_checkbox_recaptcha_message" style="margin-bottom:10px;"><?php esc_html_e( 'Please complete the reCAPTCHA widget to validate your reCAPTCHA keys:' ); ?></p>
 						<div id="recaptcha"></div>
 						<input name="gform_recaptcha_reset" type="hidden" value="" />
 
@@ -595,13 +600,21 @@ class GFSettings {
 									$reset      = $( 'input[name="gform_recaptcha_reset"]' ),
 									$keyStatus  = $( 'span.gforms_captcha_site_key_status' );
 
+								$('input[type=radio][name=gforms_captcha_type]').change(function() {
+									$('#gform_spinner').hide();
+									loadRecaptcha();
+								});
+
 								window.loadRecaptcha = function() {
 
 									var $recaptcha = $( '#recaptcha' ),
-										$save      = $( '#save' );
+										$save      = $( '#save' ),
+										type 		= $("input[name='gforms_captcha_type']:checked").val();
+
 
 									// flush all the things
 									window.___grecaptcha_cfg.clients = {};
+									window.___grecaptcha_cfg.count=0;
 									$recaptcha.html( '' );
 									$reset.val( 1 );
 									$keyStatus.remove();
@@ -613,14 +626,38 @@ class GFSettings {
 										$save.prop( 'disabled', true );
 									}
 
+									var size = type === 'invisible' ? type : '';
+
+
 									grecaptcha.render( 'recaptcha', {
 										'sitekey' : $siteKey.val(),
+										'size': size,
+										'badge': 'inline',
+										'error-callback' : function() {
+											$('#gform_spinner').hide();
+										},
 										'callback' : function() {
+											$('#gform_spinner').hide();
 											$save.prop( 'disabled', false );
 										}
 									} );
 
+									if ( type == 'invisible' ) {
+										$('#gforms_checkbox_recaptcha_message').hide();
+										$('#gforms_validate_recaptcha_label').hide();
+									} else {
+										$('#gforms_checkbox_recaptcha_message').show();
+										$('#gforms_validate_recaptcha_label').show();
+									}
+
 									$row.show();
+
+
+									if ( type == 'invisible' ) {
+										$('#gform_spinner').show();
+										grecaptcha.execute();
+									}
+
 
 								};
 
@@ -646,6 +683,7 @@ class GFSettings {
 					 */
 					echo apply_filters( 'gform_settings_save_button', $save_button );
 					?>
+					<span id="gform_spinner" style="display:none;margin-left:10px;"><img src="<?php echo GFCommon::get_base_url() . '/images/spinner.gif'; ?>" /></span>
 				</p>
 			<?php } ?>
 		</form>
@@ -878,6 +916,64 @@ class GFSettings {
 		}
 
 		return $akismet_setting;
+	}
+
+	/**
+	 * Enable the GFLogging class.
+	 *
+	 * @since 2.4.4.2
+	 *
+	 * @return bool
+	 */
+	public static function enable_logging() {
+
+		// Update option.
+		$enabled = update_option( 'gform_enable_logging', true );
+
+		// Prepare settings page, enable logging.
+		if ( function_exists( 'gf_logging' ) ) {
+
+			// Add settings page.
+			self::add_settings_page(
+				array(
+					'name'      => gf_logging()->get_slug(),
+					'tab_label' => gf_logging()->get_short_title(),
+					'title'     => gf_logging()->plugin_settings_title(),
+					'handler'   => array( gf_logging(), 'plugin_settings_page' ),
+				),
+				null,
+				null
+			);
+
+			// Enabling all loggers by default
+			gf_logging()->enable_all_loggers();
+
+		}
+
+		return $enabled;
+
+	}
+
+	/**
+	 * Disable the GFLogging class.
+	 *
+	 * @since 2.4.4.2
+	 *
+	 * @return bool
+	 */
+	public static function disable_logging() {
+
+		// Update option.
+		$disabled = update_option( 'gform_enable_logging', false );
+
+		// Remove settings page, log files.
+		if ( function_exists( 'gf_logging' ) ) {
+			unset( self::$addon_pages[ gf_logging()->get_slug() ] );
+			gf_logging()->delete_log_files();
+		}
+
+		return $disabled;
+
 	}
 
 }

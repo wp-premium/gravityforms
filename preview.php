@@ -49,6 +49,8 @@ $min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] 
 			GFFormDisplay::enqueue_form_scripts( $form );
 		}
 
+		wp_enqueue_script( 'gform_preview' );
+
 		wp_print_head_scripts();
 
 		$styles = apply_filters( 'gform_preview_styles', array(), $form );
@@ -56,91 +58,6 @@ $min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] 
 			wp_print_styles( $styles );
 		}
 	?>
-
-	<?php /* quick bit of script to toggle the helper classes that show the form structure */ ?>
-	<script>
-	jQuery( document ).ready(function() {
-
-		jQuery('.toggle_helpers input[type=checkbox]').attr('checked',false);
-
-	    jQuery('#showgrid').click(function(){
-		    if(jQuery(this).is(":checked")) {
-		        jQuery('#preview_form_container').addClass("showgrid");
-		    } else {
-		        jQuery('#preview_form_container').removeClass("showgrid");
-		    }
-		});
-
-		jQuery('#showme').click(function(){
-		    if(jQuery(this).is(":checked")) {
-		        jQuery('.gform_wrapper form').addClass("gf_showme");
-		        jQuery('#helper_legend_container').css("display", "inline-block");
-		    } else {
-		        jQuery('.gform_wrapper form').removeClass("gf_showme");
-		        jQuery('#helper_legend_container').css("display", "none");
-		    }
-		});
-
-	});
-	</script>
-
-	<?php /* dismiss the alerts and set a cookie so they're not annoying */ ?>
-
-	<script>
-
-	jQuery(document).ready(function () {
-	    if (GetCookie("dismissed-notifications")) {
-	        jQuery(GetCookie("dismissed-notifications")).hide();
-	    }
-	    jQuery(".hidenotice").click(function () {
-	        var alertId = jQuery(this).closest(".preview_notice").attr("id");
-	        var dismissedNotifications = GetCookie("dismissed-notifications") + ",#" + alertId;
-	        jQuery(this).closest(".preview_notice").slideToggle('slow');
-	      SetCookie("dismissed-notifications",dismissedNotifications.replace('null,',''))
-	    });
-
-      // Create the cookie
-		function SetCookie(sName, sValue)
-		{
-		  document.cookie = sName + "=" + escape(sValue);
-		  // Expires the cookie after a month
-		  var date = new Date();
-		  date.setMonth(date.getMonth()+1);
-		  document.cookie += ("; expires=" + date.toUTCString());
-		}
-
-      // Retrieve the value of the cookie.
-		function GetCookie(sName)
-		{
-		  var aCookie = document.cookie.split("; ");
-		  for (var i=0; i < aCookie.length; i++)
-		  {
-		    var aCrumb = aCookie[i].split("=");
-		    if (sName == aCrumb[0])
-		      return unescape(aCrumb[1]);
-		  	}
-		  	return null;
-			}
-		});
-
-	</script>
-
-	<?php /* now display the current viewport size */ ?>
-
-	<script type="text/javascript">
-
-	jQuery( document ).ready(function() {
-
-	   jQuery('#browser_size_info').text('Viewport ( Width : '
-	                + jQuery(window).width() + 'px , Height :' + jQuery(window).height() + 'px )');
-
-	    jQuery(window).resize(function () {
-			jQuery('#browser_size_info').text('Viewport ( Width : ' + jQuery(window).width()
-	                                 + 'px , Height :' + jQuery(window).height() + 'px )');
-	    });
-	});
-
-	</script>
 
 </head>
 <body>

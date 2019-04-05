@@ -105,6 +105,21 @@ class GF_Query_Condition {
 	const NCONTAINS = 'NCONTAINS';
 
 	/**
+	 * @const string The IS operator.
+	 */
+	const IS = 'IS';
+
+	/**
+	 * @const string The IS NOT operator.
+	 */
+	const ISNOT = 'IS NOT';
+
+	/**
+	 * @const string NULL.
+	 */
+	const NULL = 'NULL';
+
+	/**
 	 * A condition.
 	 *
 	 * @param GF_Query_Column|GF_Query_Call|GF_Query_Literal|null $left The left-hand expression.
@@ -115,7 +130,7 @@ class GF_Query_Condition {
 	 */
 	public function __construct( $left = null, $operator = null, $right = null ) {
 
-		$allowed_ops = array( self::LT, self::LTE, self::GT, self::GTE, self::EQ, self::NEQ, self::IN, self::NIN, self::LIKE, self::NLIKE, self::BETWEEN, self::NBETWEEN, self::CONTAINS, self::NCONTAINS );
+		$allowed_ops = array( self::LT, self::LTE, self::GT, self::GTE, self::EQ, self::NEQ, self::IN, self::NIN, self::LIKE, self::NLIKE, self::BETWEEN, self::NBETWEEN, self::CONTAINS, self::NCONTAINS, self::IS, self::ISNOT );
 
 		/**
 		 * Left-hand expression, non Series.
@@ -342,7 +357,8 @@ class GF_Query_Condition {
 
 				if ( $this->left instanceof GF_Query_Column && $this->left->is_nullable_entry_column() ) {
 					if ( ( $this->operator == self::EQ && empty ( $this->right->value ) ) || ( $this->operator == self::NEQ && ! empty ( $this->right->value ) ) ) {
-						$right .= ' OR ' . $left . ' IS NULL';
+						$right .= ' OR ' . $left . ' IS NULL)';
+						$left = "($left";
 					}
 				}
 
@@ -377,7 +393,8 @@ class GF_Query_Condition {
 			( $expression instanceof GF_Query_Literal ) ||
 			( $expression instanceof GF_Query_Column ) ||
 			( $expression instanceof GF_Query_Series ) ||
-			( $expression instanceof GF_Query_Call )
+			( $expression instanceof GF_Query_Call ) ||
+			( $expression === self::NULL )
 		);
 	}
 
@@ -409,6 +426,12 @@ class GF_Query_Condition {
 			}
 
 			return $this->right->sql( $query, ' AND ' );
+		} elseif ( in_array( $this->operator, array( self::IS, self::ISNOT ) ) ) {
+			if ( $this->right !== self::NULL ) {
+				return '';
+			}
+
+			return self::NULL;
 		}
 
 		return $this->right->sql( $query );

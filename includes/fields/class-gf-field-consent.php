@@ -175,14 +175,13 @@ class GF_Field_Consent extends GF_Field {
 		}
 		$checked = $is_form_editor ? '' : checked( '1', $value, false );
 
-		$tooltip     = '';
-		$description = $is_entry_detail ? $this->get_field_description_from_revision( $revision_id ) : $this->description;
+		$aria_describedby  = '';
+		$description       = $is_entry_detail ? $this->get_field_description_from_revision( $revision_id ) : $this->description;
 		if ( ! empty( $description ) ) {
 			$aria_describedby = "aria-describedby='gfield_consent_description_{$form['id']}_{$this->id}'";
-			$tooltip          = sprintf( "<button {$aria_describedby} aria-hidden='false' class='screen-reader-text'>%s</button>", esc_html__( 'Show Full Agreement', 'gravityforms' ) );
 		}
 
-		$input  = "<input name='input_{$id}.1' id='{$target_input_id}' type='{$html_input_type}' value='1' {$tabindex} {$required_attribute} {$invalid_attribute} {$disabled_text} {$checked} /> <label {$label_class_attribute} {$for_attribute} >{$checkbox_label}</label>{$required_div} {$tooltip}";
+		$input  = "<input name='input_{$id}.1' id='{$target_input_id}' type='{$html_input_type}' value='1' {$tabindex} {$aria_describedby} {$required_attribute} {$invalid_attribute} {$disabled_text} {$checked} /> <label {$label_class_attribute} {$for_attribute} >{$checkbox_label}</label>{$required_div}";
 		$input .= "<input type='hidden' name='input_{$id}.2' value='" . esc_attr( $checkbox_label ) . "' class='gform_hidden' />";
 		$input .= "<input type='hidden' name='input_{$id}.3' value='" . esc_attr( $revision_id ) . "' class='gform_hidden' />";
 
@@ -472,10 +471,6 @@ class GF_Field_Consent extends GF_Field {
 			array(
 				'value' => '1',
 				'text'  => esc_html__( 'Checked', 'gravityforms' ),
-			),
-			array(
-				'value' => '',
-				'text'  => esc_html__( 'Not Checked', 'gravityforms' ),
 			),
 		);
 

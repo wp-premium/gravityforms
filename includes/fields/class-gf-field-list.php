@@ -106,11 +106,8 @@ class GF_Field_List extends GF_Field {
 	 */
 	public function get_field_input( $form, $value = '', $entry = null ) {
 
-		$form_id         = $form['id'];
-		$is_entry_detail = $this->is_entry_detail();
-		$is_form_editor  = $this->is_form_editor();
-
-		$disabled_text = $is_form_editor ? 'disabled="disabled"' : '';
+		$form_id        = $form['id'];
+		$is_form_editor = $this->is_form_editor();
 
 		if ( ! empty( $value ) ) {
 			$value = maybe_unserialize( $value );
@@ -136,8 +133,7 @@ class GF_Field_List extends GF_Field {
 							vertical-align: middle !important;
 						}
 
-						body .ginput_container_list table.gfield_list tbody tr td.gfield_list_icons img.add_list_item,
-						body .ginput_container_list table.gfield_list tbody tr td.gfield_list_icons img.delete_list_item {
+						body .ginput_container_list table.gfield_list tbody tr td.gfield_list_icons img {
 							background-color: transparent !important;
 							background-position: 0 0;
 							background-size: 16px 16px !important;
@@ -152,8 +148,7 @@ class GF_Field_List extends GF_Field {
 						    -o-transition: opacity .5s ease-out;
 						}
 
-						body .ginput_container_list table.gfield_list tbody tr td.gfield_list_icons img.add_list_item:hover,
-						body .ginput_container_list table.gfield_list tbody tr td.gfield_list_icons img.delete_list_item:hover {
+						body .ginput_container_list table.gfield_list tbody tr td.gfield_list_icons a:hover img {
 							opacity: 1.0;
 						}
 
@@ -194,7 +189,7 @@ class GF_Field_List extends GF_Field {
 				'</colgroup>';
 		}
 
-		$delete_display      = count( $value ) == 1 ? 'visibility:hidden;' : '';
+		$delete_display      = count( $value ) == 1 ? 'style="visibility:hidden;"' : '';
 		$maxRow              = intval( $this->maxRows );
 		$disabled_icon_class = ! empty( $maxRow ) && count( $value ) >= $maxRow ? 'gfield_icon_disabled' : '';
 
@@ -237,8 +232,8 @@ class GF_Field_List extends GF_Field {
 				// Can't replace these icons with the webfont versions since they appear on the front end.
 
 				$list .= "<td class='gfield_list_icons'>";
-				$list .= "   <img src='{$add_icon}' class='add_list_item {$disabled_icon_class}' {$disabled_text} title='" . esc_attr__( 'Add another row', 'gravityforms' ) . "' alt='" . esc_attr__( 'Add a new row', 'gravityforms' ) . "' {$add_events} style='cursor:pointer;' " . $this->get_tabindex() . "/>" .
-				         "   <img src='{$delete_icon}' class='delete_list_item' {$disabled_text} title='" . esc_attr__( 'Remove this row', 'gravityforms' ) . "' alt='" . esc_attr__( 'Remove this row', 'gravityforms' ) . "' {$delete_events} style='cursor:pointer; {$delete_display}' " . $this->get_tabindex() . "/>";
+				$list .= "   <a href='javascript:void(0);' class='add_list_item {$disabled_icon_class}' aria-label='" . esc_attr__( 'Add another row', 'gravityforms' ) . "' {$add_events}><img src='{$add_icon}' alt='' title='" . esc_attr__( 'Add a new row', 'gravityforms' ) . "' /></a>" .
+				         "   <a href='javascript:void(0);' class='delete_list_item' aria-label='" . esc_attr__( 'Remove this row', 'gravityforms' ) . "' {$delete_events} {$delete_display}><img src='{$delete_icon}' alt='' title='" . esc_attr__( 'Remove this row', 'gravityforms' ) . "' /></a>";
 				$list .= '</td>';
 
 			}
@@ -338,7 +333,7 @@ class GF_Field_List extends GF_Field {
 
 			default :
 				// a11y: inputs without a label must have the aria-label attribute set.
-				$input = "<input aria-label='" . $aria_label . "' type='text' name='input_{$this->id}[]' value='" . esc_attr( $value ) . "' {$tabindex} {$disabled}/>";
+				$input = "<input aria-label='" . esc_attr( $aria_label ) . "' type='text' name='input_{$this->id}[]' value='" . esc_attr( $value ) . "' {$tabindex} {$disabled}/>";
 				break;
 		}
 
@@ -417,7 +412,8 @@ class GF_Field_List extends GF_Field {
 	 * @return array
 	 */
 	public function create_list_array_recursive( $value ) {
-		if ( is_array( $value[0] ) ) {
+		if ( isset( $value[0] ) && is_array( $value[0] ) ) {
+			$new_value = array();
 			foreach ( $value  as $k => $v ) {
 				$new_value[ $k ] = $this->create_list_array_recursive( $v );
 			}
@@ -472,7 +468,7 @@ class GF_Field_List extends GF_Field {
 		}
 
 		$value = maybe_unserialize( $value );
-		
+
 		if( ! is_array( $value ) || ! isset( $value[0] ) ) {
 			return '';
 		}
@@ -652,7 +648,7 @@ class GF_Field_List extends GF_Field {
 	 * @return string The processed merge tag.
 	 */
 	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {
-		
+
 		$modifiers = $this->get_modifiers();
 
 		$allowed_modifiers = array( 'text', 'html', 'url' );
@@ -763,7 +759,7 @@ class GF_Field_List extends GF_Field {
 		}
 
 		$value = rgar( $entry, $input_id );
-		$value = unserialize( $value );
+		$value = maybe_unserialize( $value );
 
 		if ( empty( $value ) || $is_csv ) {
 			return $value;

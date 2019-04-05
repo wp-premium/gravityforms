@@ -51,6 +51,14 @@ class GF_Field_SingleShipping extends GF_Field {
 		$price_number    = GFCommon::to_number( $this->basePrice );
 		$this->basePrice = GFCommon::to_money( $price_number );
 	}
+
+	public function get_value_default() {
+		$value = $this->is_form_editor() ? $this->defaultValue : GFCommon::replace_variables_prepopulate( $this->defaultValue );
+		if( rgblank( $value ) ) {
+			$value = $this->basePrice;
+		}
+		return $value;
+	}
 }
 
 GF_Fields::register( new GF_Field_SingleShipping() );

@@ -693,6 +693,10 @@ function LoadFieldSettings(){
 		field = UpgradePasswordField(field);
 	}
 
+    if(field.type === 'consent'){
+        field = UpgradeConsentField(field);
+    }
+
     var defaultState = field.defaultState == undefined ? "" : field.defaultState;
     var defaultProvince = field.defaultProvince == undefined ? "" : field.defaultProvince; //for backwards compatibility
     var defaultStateProvince = addressType == "canadian" && defaultState == "" ? defaultProvince : defaultState;
@@ -740,7 +744,11 @@ function LoadFieldSettings(){
     var hasPostFeaturedImage = field.postFeaturedImage ? true : false;
     jQuery('#gfield_featured_image').prop('checked', hasPostFeaturedImage);
 
-    var isStandardMask = IsStandardMask(field.inputMaskValue);
+	if (typeof field.inputMaskIsCustom != 'boolean') {
+		field.inputMaskIsCustom = !IsStandardMask(field.inputMaskValue);
+	}
+
+	var isStandardMask = !field.inputMaskIsCustom;
 
     jQuery("#field_input_mask").prop('checked', field.inputMask ? true : false);
 
@@ -929,6 +937,7 @@ function LoadFieldSettings(){
     SetColorPickerColor("field_captcha_bg", bg);
 
 	jQuery("#field_captcha_type").val(field.captchaType == undefined ? "captcha" : field.captchaType);
+	jQuery("#field_captcha_badge").val(field.captchaBadge == undefined ? "bottomright" : field.captchaBadge);
 	jQuery("#field_captcha_size").val(field.simpleCaptchaSize == undefined ? "medium" : field.simpleCaptchaSize);
 
 	//controlling settings based on captcha type
@@ -1360,6 +1369,18 @@ function UpgradeAddressField(field){
     return field;
 }
 
+function UpgradeConsentField(field) {
+    if(field.type !== 'consent'){
+        return field;
+    }
+
+    if(field.choices[1] && field.choices[1]['value'] === "0"){
+        field.choices.pop();
+    }
+
+    return field;
+}
+
 
 function TogglePasswordStrength(isInit){
     var speed = isInit ? "" : "slow";
@@ -1569,22 +1590,24 @@ function ToggleInputMask(isInit){
         jQuery(".maxlen_setting").show();
         SetFieldProperty('inputMask', false);
         SetFieldProperty('inputMaskValue', '');
+		SetFieldProperty('inputMaskIsCustom', false);
     }
 }
 
 function ToggleInputMaskOptions(isInit){
 
-    var isStandard = jQuery("#field_mask_standard").is(":checked");
-    show_element = isStandard ? "#field_mask_select" : "#field_mask_text, .mask_text_description"
-    hide_element = isStandard ? "#field_mask_text, .mask_text_description"  : "#field_mask_select";
+	var isStandard = jQuery('#field_mask_standard').is(':checked'),
+		show_element = isStandard ? '#field_mask_select' : '#field_mask_text, .mask_text_description',
+		hide_element = isStandard ? '#field_mask_text, .mask_text_description' : '#field_mask_select',
+		speed = isInit ? '' : '';
 
-    var speed = isInit ? "" : "";
+	jQuery(hide_element).val('').hide(speed);
+	jQuery(show_element).show(speed);
 
-    jQuery(hide_element).val('').hide(speed);
-    jQuery(show_element).show(speed);
-
-    if(!isInit)
-        SetFieldProperty('inputMaskValue', '');
+	if (!isInit) {
+		SetFieldProperty('inputMaskValue', '');
+		SetFieldProperty('inputMaskIsCustom', !isStandard);
+	}
 }
 
 function ToggleAutoresponder(){
@@ -2200,14 +2223,22 @@ function ResetRecaptcha(){
     field['captchaTheme'] = 'light';
 }
 
-function StartChangeProductType(type){
-    field = GetSelectedField();
-    if(type == "singleproduct" || type == "hiddenproduct" || field["inputType"] == "calculation" )
-        field["enablePrice"] = null;
-    else
-        field["enablePrice"] = true;
+function StartChangeProductType(type) {
+	field = GetSelectedField();
 
-    return StartChangeInputType(type, field);
+	if (type === 'radio' || type === 'select') {
+		field.enablePrice = true;
+	} else {
+		field.enablePrice = null;
+		field.choices = null;
+	}
+
+	if (type !== 'calculation') {
+		field.enableCalculation = false;
+		field.calculationFormula = '';
+	}
+
+	return StartChangeInputType(type, field);
 }
 
 function StartChangeDonationType(type){
@@ -2220,12 +2251,16 @@ function StartChangeDonationType(type){
     return StartChangeInputType(type, field);
 }
 
-function StartChangeShippingType(type){
-    field = GetSelectedField();
-    if(type != "singleshipping")
-        field["enablePrice"] = true;
+function StartChangeShippingType(type) {
+	field = GetSelectedField();
+	if (type !== 'singleshipping') {
+		field.enablePrice = true;
+	} else {
+		field.enablePrice = null;
+		field.choices = null;
+	}
 
-    return StartChangeInputType(type, field);
+	return StartChangeInputType(type, field);
 }
 
 function StartChangePostCategoryType(type){
@@ -3740,3 +3775,48 @@ gform.addFilter( 'gform_is_conditional_logic_field', function( isConditionalLogi
 
     return isConditionalLogicField;
 } );
+
+/**
+ * Validates the calculation formula.
+ *
+ * @since 2.4.6.8 Moved from form_detail.php and added filter.
+ * @since 1.8
+ *
+ * @param formula The formula to be validated.
+ *
+ * @return boolean
+ */
+function IsValidFormula(formula) {
+	if (formula == '')  {
+		return true;
+	}
+
+	var patt = /{([^}]+)}/i,
+		exprPatt = /^[0-9 -/*\(\)]+$/i,
+		expr = formula.replace(/(\r\n|\n|\r)/gm, ''),
+		match,
+		result = false;
+
+	while (match = patt.exec(expr)) {
+		expr = expr.replace(match[0], 1);
+	}
+
+	if (exprPatt.test(expr)) {
+		try {
+			var r = eval(expr);
+			result = !isNaN(parseFloat(r)) && isFinite(r);
+		} catch (e) {
+			result = false;
+		}
+	}
+
+	/**
+	 * Allow the validation result to be overridden.
+	 *
+	 * @since 2.4.6.8
+	 *
+	 * @param result The validation result.
+	 * @param formula The calculation formula being validated.
+	 */
+	return gform.applyFilters( 'gform_is_valid_formula_form_editor', result, formula );
+}
