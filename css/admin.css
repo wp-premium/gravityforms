@@ -645,15 +645,18 @@ div.ginput_complex.ginput_container.gf_name_has_5 span:first-child {
     padding-bottom:10px;
 }
 
-.gfield label.screen-reader-text,
-.gfield label.hidden_sub_label,
-.ginput_container_consent button.screen-reader-text {
- 	clip: rect(1px, 1px, 1px, 1px);
- 	position: absolute !important;
- 	height: 1px;
- 	width: 1px;
- 	overflow: hidden;
- }
+.gfield label.hidden_sub_label {
+	border: 0;
+	clip: rect(1px, 1px, 1px, 1px);
+	clip-path: inset(50%);
+	height: 1px;
+	margin: -1px;
+	overflow: hidden;
+	padding: 0;
+	position: absolute;
+	width: 1px;
+	word-wrap: normal !important;
+}
 
 .gfield .copy_values_option_container {
     padding-bottom: 10px;
@@ -4495,18 +4498,20 @@ ul.gform_fields.right_label li.gfield.gfield_html .gfield_label {
 	width: 100%;
 }
 
-a.gf_insert_field_choice,
-a.gf_delete_field_choice {
+.gf_delete_field_choice,
+.gf_insert_field_choice{
 	color: #9B9B9B;
 	text-decoration: none;
 	margin-left: 6px;
 	font-size: 14px;
+	border: 0;
+	padding: 0;
 }
 
-a.gf_insert_field_choice:hover,
-a.gf_insert_field_choice:active,
-a.gf_delete_field_choice:hover,
-a.gf_delete_field_choice:active {
+.gf_insert_field_choice:hover,
+.gf_insert_field_choice:active,
+.gf_delete_field_choice:hover,
+.gf_delete_field_choice:active {
 	color: #444;
 }
 

@@ -378,6 +378,16 @@ class GFExport {
 							</li>
 							<?php
 							$forms = RGFormsModel::get_forms( null, 'title' );
+
+							/**
+							 * Modify list of forms available for export.
+							 *
+							 * @since 2.4.7
+							 *
+							 * @param array $forms Forms to display on Export Forms page.
+							 */
+							$forms = apply_filters( 'gform_export_forms_forms', $forms );
+
 							foreach ( $forms as $form ) {
 								?>
 								<li>
@@ -536,6 +546,16 @@ class GFExport {
 							<option value=""><?php esc_html_e( 'Select a form', 'gravityforms' ); ?></option>
 							<?php
 							$forms = RGFormsModel::get_forms( null, 'title' );
+
+							/**
+							 * Modify list of forms available to export entries from.
+							 *
+							 * @since 2.4.7
+							 *
+							 * @param array $forms Forms to display on Export Entries page.
+							 */
+							$forms = apply_filters( 'gform_export_entries_forms', $forms );
+
 							foreach ( $forms as $form ) {
 								?>
 								<option value="<?php echo absint( $form->id ) ?>"><?php echo esc_html( $form->title ) ?></option>
@@ -802,83 +822,7 @@ class GFExport {
 			$leads = gf_apply_filters( array( 'gform_leads_before_export', $form_id ), $leads, $form, $paging );
 
 			foreach ( $leads as $lead ) {
-				GFCommon::log_debug( __METHOD__ . '(): Processing entry #' . $lead['id'] );
-
-				foreach ( $fields as $field_id ) {
-					switch ( $field_id ) {
-						case 'date_created' :
-						case 'payment_date' :
-							$value = $lead[ $field_id ];
-							if ( $value ) {
-								$lead_gmt_time   = mysql2date( 'G', $value );
-								$lead_local_time = GFCommon::get_local_timestamp( $lead_gmt_time );
-								$value           = date_i18n( 'Y-m-d H:i:s', $lead_local_time, true );
-							}
-							break;
-						default :
-							$field = RGFormsModel::get_field( $form, $field_id );
-
-							$value = is_object( $field ) ? $field->get_value_export( $lead, $field_id, false, true ) : rgar( $lead, $field_id );
-							$value = apply_filters( 'gform_export_field_value', $value, $form_id, $field_id, $lead );
-
-							//GFCommon::log_debug( "GFExport::start_export(): Value for field ID {$field_id}: {$value}" );
-							break;
-					}
-
-					if ( isset( $field_rows[ $field_id ] ) ) {
-						$list = empty( $value ) ? array() : $value;
-
-						foreach ( $list as $row ) {
-							if ( is_array( $row ) ) {
-								// Entry from a multi-column list field.
-								$row_values = array_values( $row );
-								$row_str    = implode( '|', $row_values );
-							} else {
-								// Entry from a standard list field.
-								$row_str = $row;
-							}
-
-							if ( strpos( $row_str, '=' ) === 0 ) {
-								// Prevent Excel formulas
-								$row_str = "'" . $row_str;
-							}
-
-							$lines .= '"' . str_replace( '"', '""', $row_str ) . '"' . $separator;
-						}
-
-						//filling missing subrow columns (if any)
-						$missing_count = intval( $field_rows[ $field_id ] ) - count( $list );
-						for ( $i = 0; $i < $missing_count; $i ++ ) {
-							$lines .= '""' . $separator;
-						}
-					} else {
-						if ( is_array( $value ) ) {
-							if ( ! empty( $value[0] ) && is_array( $value[0] ) ) {
-								// Entry from a multi-column list field.
-								$values = array();
-								foreach ( $value as $item ) {
-									$values[] = implode( '|', array_values( $item ) );
-								}
-
-								$value = implode( ',', $values );
-							} else {
-								// Entry from a standard list field.
-								$value = implode( '|', $value );
-							}
-						}
-
-						if ( strpos( $value, '=' ) === 0 ) {
-							// Prevent Excel formulas
-							$value = "'" . $value;
-						}
-
-						$lines .= '"' . str_replace( '"', '""', $value ) . '"' . $separator;
-					}
-				}
-				$lines = substr( $lines, 0, strlen( $lines ) - 1 );
-
-				//GFCommon::log_debug( "GFExport::start_export(): Lines: {$lines}" );
-
+				$lines .= self::get_entry_export_line( $lead, $form, $fields, $field_rows, $separator );
 				$lines .= "\n";
 			}
 
@@ -909,12 +853,16 @@ class GFExport {
 			/**
 			 * Fires after exporting all the entries in form
 			 *
+			 * @since 2.4.5.11 Added the $export_id param.
+			 * @since 1.9.3
+			 *
 			 * @param array  $form       The Form object to get the entries from
 			 * @param string $start_date The start date for when the export of entries should take place
 			 * @param string $end_date   The end date for when the export of entries should stop
 			 * @param array  $fields     The specified fields where the entries should be exported from
+			 * @param string $export_id  A unique ID for the export.
 			 */
-			do_action( 'gform_post_export_entries', $form, $start_date, $end_date, $fields );
+			do_action( 'gform_post_export_entries', $form, $start_date, $end_date, $fields, $export_id );
 		}
 
 		$offset = $complete ? 0 : $offset;
@@ -929,6 +877,99 @@ class GFExport {
 		GFCommon::log_debug( __METHOD__ . '(): Status: ' . print_r( $status, 1 ) );
 
 		return $status;
+	}
+
+	/**
+	 * Returns the content to be included in the export for the supplied entry.
+	 *
+	 * @since 2.4.5.11
+	 *
+	 * @param array  $entry      The entry being exported.
+	 * @param array  $form       The form associated with the current entry.
+	 * @param array  $fields     The IDs of the fields to be exported.
+	 * @param array  $field_rows An array of List fields.
+	 * @param string $separator  The character to be used as the column separator.
+	 *
+	 * @return string
+	 */
+	public static function get_entry_export_line( $entry, $form, $fields, $field_rows, $separator ) {
+		GFCommon::log_debug( __METHOD__ . '(): Processing entry #' . $entry['id'] );
+
+		$line = '';
+
+		foreach ( $fields as $field_id ) {
+			switch ( $field_id ) {
+				case 'date_created' :
+				case 'payment_date' :
+					$value = $entry[ $field_id ];
+					if ( $value ) {
+						$lead_gmt_time   = mysql2date( 'G', $value );
+						$lead_local_time = GFCommon::get_local_timestamp( $lead_gmt_time );
+						$value           = date_i18n( 'Y-m-d H:i:s', $lead_local_time, true );
+					}
+					break;
+				default :
+					$field = GFAPI::get_field( $form, $field_id );
+
+					$value = is_object( $field ) ? $field->get_value_export( $entry, $field_id, false, true ) : rgar( $entry, $field_id );
+					$value = apply_filters( 'gform_export_field_value', $value, $form['id'], $field_id, $entry );
+					break;
+			}
+
+			if ( isset( $field_rows[ $field_id ] ) ) {
+				$list = empty( $value ) ? array() : $value;
+
+				foreach ( $list as $row ) {
+					if ( is_array( $row ) ) {
+						// Entry from a multi-column list field.
+						$row_values = array_values( $row );
+						$row_str    = implode( '|', $row_values );
+					} else {
+						// Entry from a standard list field.
+						$row_str = $row;
+					}
+
+					if ( strpos( $row_str, '=' ) === 0 ) {
+						// Prevent Excel formulas
+						$row_str = "'" . $row_str;
+					}
+
+					$line .= '"' . str_replace( '"', '""', $row_str ) . '"' . $separator;
+				}
+
+				//filling missing subrow columns (if any)
+				$missing_count = intval( $field_rows[ $field_id ] ) - count( $list );
+				for ( $i = 0; $i < $missing_count; $i ++ ) {
+					$line .= '""' . $separator;
+				}
+			} else {
+				if ( is_array( $value ) ) {
+					if ( ! empty( $value[0] ) && is_array( $value[0] ) ) {
+						// Entry from a multi-column list field.
+						$values = array();
+						foreach ( $value as $item ) {
+							$values[] = implode( '|', array_values( $item ) );
+						}
+
+						$value = implode( ',', $values );
+					} else {
+						// Entry from a standard list field.
+						$value = implode( '|', $value );
+					}
+				}
+
+				if ( strpos( $value, '=' ) === 0 ) {
+					// Prevent Excel formulas
+					$value = "'" . $value;
+				}
+
+				$line .= '"' . str_replace( '"', '""', $value ) . '"' . $separator;
+			}
+		}
+
+		$line = substr( $line, 0, strlen( $line ) - 1 );
+
+		return $line;
 	}
 
 	public static function add_default_export_fields( $form ) {

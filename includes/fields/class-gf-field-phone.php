@@ -160,10 +160,11 @@ class GF_Field_Phone extends GF_Field {
 		$placeholder_attribute = $this->get_field_placeholder_attribute();
 		$required_attribute    = $this->isRequired ? 'aria-required="true"' : '';
 		$invalid_attribute     = $this->failed_validation ? 'aria-invalid="true"' : 'aria-invalid="false"';
+		$aria_describedby      = $this->get_aria_describedby();
 
 		$tabindex = $this->get_tabindex();
 
-		return sprintf( "<div class='ginput_container ginput_container_phone'><input name='input_%d' id='%s' type='{$html_input_type}' value='%s' class='%s' {$tabindex} {$placeholder_attribute} {$required_attribute} {$invalid_attribute} %s/>{$instruction_div}</div>", $id, $field_id, esc_attr( $value ), esc_attr( $class ), $disabled_text );
+		return sprintf( "<div class='ginput_container ginput_container_phone'><input name='input_%d' id='%s' type='{$html_input_type}' value='%s' class='%s' {$tabindex} {$placeholder_attribute} {$required_attribute} {$invalid_attribute} {$aria_describedby} %s/>{$instruction_div}</div>", $id, $field_id, esc_attr( $value ), esc_attr( $class ), $disabled_text );
 
 	}
 
@@ -289,7 +290,7 @@ class GF_Field_Phone extends GF_Field {
 	 * @access public
 	 *
 	 * @used-by GF_Field_Phone::get_phone_format()
-	 * 
+	 *
 	 * @param null|int $form_id The ID of the current form or null to use the value from the current fields form_id property. Defaults to null.
 	 *
 	 * @return array The phone formats available.
@@ -349,7 +350,7 @@ class GF_Field_Phone extends GF_Field {
 	 * @used-by GF_Field_Phone::validate()
 	 * @uses    GF_Field_Phone::get_phone_formats()
 	 * @uses    GF_Field_Phone::$phoneFormat
-	 * 
+	 *
 	 * @return array The phone format.
 	 */
 	public function get_phone_format() {

@@ -77,11 +77,13 @@ class GFFormsModel {
 	 * @return string
 	 */
 	public static function get_database_version() {
-		static $db_version = null;
-		if ( empty( $db_version ) ) {
-			$db_version = get_option( 'gf_db_version' );
+		static $db_version = array();
+		$blog_id = get_current_blog_id();
+		if ( empty( $db_version[ $blog_id ] ) ) {
+			$db_version[ $blog_id ] = get_option( 'gf_db_version' );
 		}
-		return $db_version;
+
+		return $db_version[ $blog_id ];
 	}
 
 	/**
@@ -927,6 +929,9 @@ class GFFormsModel {
 		// Load notifications to legacy structure to maintain backward compatibility with legacy hooks and functions
 		$form = self::load_notifications_to_legacy( $form );
 
+		// Ensure the next field ID is set correctly.
+		$form['nextFieldId'] = self::get_next_field_id( $form['fields'] );
+
 		/**
 		 * Filters the Form object after the form meta is obtained
 		 *
@@ -938,6 +943,33 @@ class GFFormsModel {
 		self::$_current_forms[ $key ] = $form;
 
 		return $form;
+	}
+
+	/**
+	 * Recursively checks the highest ID for all the fields in the form and then returns the highest ID + 1.
+	 *
+	 * @since 2.4.6.12
+	 *
+	 * @param GF_Field[] $fields
+	 * @param int        $next_field_id
+	 *
+	 * @return int
+	 */
+	public static function get_next_field_id( $fields, $next_field_id = 1 ) {
+
+		foreach ( $fields as $field ) {
+
+			if ( is_array( $field->fields ) ) {
+				$next_field_id = self::get_next_field_id( $field->fields, $next_field_id );
+			}
+
+			if ( $field->id >= $next_field_id ) {
+				$next_field_id = $field->id + 1;
+			}
+
+		}
+
+		return (int) $next_field_id;
 	}
 
 	/**
@@ -1394,7 +1426,7 @@ class GFFormsModel {
 	}
 
 	public static function update_entry_property( $lead_id, $property_name, $property_value, $update_akismet = true, $disable_hook = false ) {
-		global $wpdb;
+		global $wpdb, $current_user;
 
 		if ( version_compare( GFFormsModel::get_database_version(), '2.3-dev-1', '<' ) ) {
 			return GF_Forms_Model_Legacy::update_lead_property( $lead_id, $property_name, $property_value, $update_akismet, $disable_hook );
@@ -1415,6 +1447,11 @@ class GFFormsModel {
 				$form = self::get_form_meta( $lead['form_id'] );
 				GFCommon::mark_akismet_spam( $form, $lead, true );
 			}
+		}
+
+		// If property is trash, log user login
+		if ( $property_name == 'status' && $property_value == 'trash' && ! empty( $current_user->user_login ) ) {
+			GFCommon::log_debug( __METHOD__ . "(): User ID {$current_user->ID} requested moving of entry #{$lead_id} to trash." );		
 		}
 
 		//updating lead
@@ -1505,7 +1542,7 @@ class GFFormsModel {
 	}
 
 	public static function delete_entries_by_form( $form_id, $status = '' ) {
-		global $wpdb;
+		global $wpdb, $current_user;
 
 		if ( version_compare( self::get_database_version(), '2.3-dev-1', '<' ) ) {
 			GF_Forms_Model_Legacy::delete_leads_by_form( $form_id, $status );
@@ -1534,6 +1571,11 @@ class GFFormsModel {
 
 		// If entries were found, loop through them and run action.
 		if ( ! empty( $entry_ids ) ) {
+
+		// Log user login for user requesting the deletion of entries
+		if ( ! empty( $current_user->user_login ) ) {
+			GFCommon::log_debug( __METHOD__ . "(): User ID {$current_user->ID} requested deletion of entries: " . json_encode( $entry_ids ) );		
+		}	
 
 			foreach ( $entry_ids as $entry_id ) {
 
@@ -1593,7 +1635,12 @@ class GFFormsModel {
 			return new WP_Error( 'submissions_blocked', __( 'Submissions are currently blocked due to an upgrade in progress', 'gravityforms' ) );
 		}
 
-		global $wpdb;
+		global $wpdb, $current_user;
+
+		// Log user login for user requesting deletion of views
+		if ( ! empty( $current_user->user_login ) ) {
+			GFCommon::log_debug( __METHOD__ . "(): User ID {$current_user->ID} requested deletion of views for form #{$form_id}." );
+		}			
 
 		$form_view_table = self::get_form_view_table_name();
 
@@ -1615,7 +1662,12 @@ class GFFormsModel {
 			return new WP_Error( 'submissions_blocked', __( 'Submissions are currently blocked due to an upgrade in progress', 'gravityforms' ) );
 		}
 
-		global $wpdb;
+		global $wpdb, $current_user;
+
+		// Log user login for user requesting deletion of form
+		if ( ! empty( $current_user->user_login ) ) {
+			GFCommon::log_debug( __METHOD__ . "(): User ID {$current_user->ID} requested deletion of form #{$form_id}." );
+		}			
 
         /**
          * Fires before a form is deleted
@@ -1646,6 +1698,12 @@ class GFFormsModel {
 		$sql = $wpdb->prepare( "DELETE FROM $form_table WHERE id=%d", $form_id );
 		$wpdb->query( $sql );
 
+		// Prepare the cache key.
+		$key = get_current_blog_id() . '_' . $form_id;
+
+		// Remove the cached form.
+		self::$_current_forms[ $key ] = null;
+
         /**
          * Fires after a form is deleted
          *
@@ -1660,7 +1718,11 @@ class GFFormsModel {
 			return new WP_Error( 'submissions_blocked', __( 'Submissions are currently blocked due to an upgrade in progress', 'gravityforms' ) );
 		}
 
-		global $wpdb;
+		global $wpdb, $current_user;
+		// Log user login for user moving the form to trash
+		if ( ! empty( $current_user->user_login ) ) {
+			GFCommon::log_debug( __METHOD__ . "(): User ID {$current_user->ID} requested moving of form #{$form_id} to trash." );
+		}		
 		$form_table_name = self::get_form_table_name();
 		$sql             = $wpdb->prepare( "UPDATE $form_table_name SET is_trash=1 WHERE id=%d", $form_id );
 		$result          = $wpdb->query( $sql );
@@ -1720,7 +1782,7 @@ class GFFormsModel {
 	 * @static
 	 * @param  int $form_id Form ID to duplicate.
 	 *
-	 * @return int $new_id New form ID.
+	 * @return int|WP_Error
 	 */
 	public static function duplicate_form( $form_id ) {
 
@@ -1966,20 +2028,9 @@ class GFFormsModel {
 			$form = self::get_form_meta( $lead['form_id'] );
 		}
 
-		// Default field types to delete
-		$field_types = array( 'fileupload', 'post_image' );
+		$field_types = self::get_delete_file_field_types( $form );
+		$fields      = self::get_fields_by_type( $form, $field_types );
 
-		/**
-		 * Allows more files to be deleted
-		 *
-		 * @since 1.9.10
-		 *
-		 * @param array $field_types Field types which contain file uploads
-		 * @param array $form        The Form Object
-		 */
-		$field_types = gf_apply_filters( array( 'gform_field_types_delete_files', $form['id'] ), $field_types, $form );
-
-		$fields = self::get_fields_by_type( $form, $field_types );
 		if ( is_array( $fields ) ) {
 			foreach ( $fields as $field ) {
 
@@ -2006,23 +2057,10 @@ class GFFormsModel {
 
 		$entry_table_name = version_compare( self::get_database_version(), '2.3-dev-1', '<' ) ? self::get_lead_table_name() : self::get_entry_table_name();
 
-		$form   = self::get_form_meta( $form_id );
+		$form        = self::get_form_meta( $form_id );
+		$field_types = self::get_delete_file_field_types( $form );
+		$fields      = self::get_fields_by_type( $form, $field_types );
 
-		// Default field types to delete
-		$field_types = array( 'fileupload', 'post_image' );
-
-		/**
-		 * Allows more files to be deleted
-		 *
-		 * @since 1.9.10
-		 *
-		 * @param array $field_types Field types which contain file uploads
-		 * @param array $form        The Form Object
-		 */
-		$field_types = gf_apply_filters( array( 'gform_field_types_delete_files', $form_id ), $field_types, $form );
-
-
-		$fields = self::get_fields_by_type( $form, $field_types );
 		if ( empty( $fields ) ) {
 			return;
 		}
@@ -2032,6 +2070,72 @@ class GFFormsModel {
 
 		foreach ( $results as $result ) {
 			self::delete_files( $result['id'], $form );
+		}
+	}
+
+	/**
+	 * Returns an array of field types for which can uploaded files can be deleted.
+	 *
+	 * @since 2.4.6.1
+	 *
+	 * @param array $form The current form.
+	 *
+	 * @return array
+	 */
+	public static function get_delete_file_field_types( $form ) {
+		$field_types = array( 'fileupload', 'post_image' );
+
+		/**
+		 * Allows more files to be deleted
+		 *
+		 * @since 1.9.10
+		 *
+		 * @param array $field_types Field types which contain file uploads
+		 * @param array $form The Form Object
+		 */
+		return gf_apply_filters( array( 'gform_field_types_delete_files', $form['id'] ), $field_types, $form );
+	}
+
+	/**
+	 * Deletes the uploaded files for the specified form and field.
+	 *
+	 * Note: Does not delete the file URLs from the entries, that is done by GFFormsModel::delete_field_values().
+	 *
+	 * @since 2.4.6.1
+	 *
+	 * @param int $form_id The current form ID.
+	 * @param int $field_id The ID of field being deleted.
+	 */
+	public static function delete_field_files( $form_id, $field_id ) {
+		if ( version_compare( self::get_database_version(), '2.3-dev-1', '<' ) ) {
+			return;
+		}
+
+		global $wpdb;
+
+		$entry_meta_table_name = self::get_entry_meta_table_name();
+
+		$values = $wpdb->get_col( $wpdb->prepare( "SELECT meta_value FROM {$entry_meta_table_name} WHERE form_id=%d AND meta_key=%s", $form_id, $field_id ) );
+
+		if ( is_array( $values ) ) {
+			foreach ( $values as $value ) {
+				if ( empty( $value ) ) {
+					continue;
+				}
+
+				if ( $value[0] == '[' ) {
+					// Value from a multi-file enabled field.
+					$files = json_decode( $value );
+					if ( is_array( $files ) ) {
+						foreach ( $files as $file ) {
+							self::delete_physical_file( $file );
+						}
+					}
+				} else {
+					// Value from a single file or post image field.
+					self::delete_physical_file( $value );
+				}
+			}
 		}
 	}
 
@@ -2105,17 +2209,21 @@ class GFFormsModel {
 		if ( is_multisite() && get_site_option( 'ms_files_rewriting' ) ) {
 			$file_path = preg_replace( "|^(.*?)/files/gravity_forms/|", BLOGUPLOADDIR . 'gravity_forms/', $url );
 		} else {
-			$file_path = str_replace( WP_CONTENT_URL, WP_CONTENT_DIR, $url );
+			$file_path = str_replace( self::get_upload_url_root(), self::get_upload_root(), $url );
 		}
 
 		return $file_path;
 	}
 
-	public static function delete_field( $form_id, $field_id ) {
+	public static function delete_field( $form_or_id, $field_id, $save_form = true ) {
 
-		if ( $form_id == 0 ) {
-			return;
+		$form = is_numeric( $form_or_id ) ? self::get_form_meta( $form_or_id ) : $form_or_id;
+
+		if ( empty( $form['id'] ) || ! isset( $form['fields'] ) || ! is_array( $form['fields'] ) ) {
+			return null;
 		}
+
+		$form_id = $form['id'];
 
         /**
          * Fires before a field is deleted
@@ -2125,40 +2233,35 @@ class GFFormsModel {
          */
 		do_action( 'gform_before_delete_field', $form_id, $field_id );
 
-
-		$form = self::get_form_meta( $form_id );
-
 		$field_type = '';
 
-		//Deleting field from form meta
 		$count = sizeof( $form['fields'] );
 		for ( $i = $count - 1; $i >= 0; $i -- ) {
+			/** @var GF_Field $field */
 			$field = $form['fields'][ $i ];
 
-			//Deleting associated conditional logic rules
+			// Deleting associated conditional logic rules.
 			if ( ! empty( $field->conditionalLogic ) ) {
-				$rule_count = sizeof( $field->conditionalLogic['rules'] );
-				for ( $j = $rule_count - 1; $j >= 0; $j -- ) {
-					if ( $field->conditionalLogic['rules'][ $j ]['fieldId'] == $field_id ) {
-						unset( $form['fields'][ $i ]->conditionalLogic['rules'][ $j ] );
-					}
-				}
-				$form['fields'][ $i ]->conditionalLogic['rules'] = array_values( $form['fields'][ $i ]->conditionalLogic['rules'] );
-
-				//If there aren't any rules, remove the conditional logic
-				if ( sizeof( $form['fields'][ $i ]->conditionalLogic['rules'] ) == 0 ) {
-					$form['fields'][ $i ]->conditionalLogic = false;
-				}
+				$field->conditionalLogic = self::delete_field_from_conditional_logic( $field->conditionalLogic, $field_id );
 			}
 
-			//Deleting field from form meta
+			if ( $field->type === 'page' && ! empty( $field->nextButton['conditionalLogic'] ) ) {
+				$field->nextButton['conditionalLogic'] = self::delete_field_from_conditional_logic( $field->nextButton['conditionalLogic'], $field_id );
+			}
+
+			// Deleting field from form meta.
 			if ( $field->id == $field_id ) {
 				$field_type = $field->type;
 				unset( $form['fields'][ $i ] );
 			}
 		}
 
-		//removing post content and title template if the field being deleted is a post content field or post title field
+		// The field has already been removed from the form passed by GFFormDetail::save_form_info(), get the field from the db.
+		if ( empty( $field_type ) && $deleted_field = self::get_field( $form_id, $field_id ) ) {
+			$field_type = $deleted_field->type;
+		}
+
+		// Removing post content and title template if the field being deleted is a post content field or post title field.
 		if ( $field_type == 'post_content' ) {
 			$form['postContentTemplateEnabled'] = false;
 			$form['postContentTemplate']        = '';
@@ -2167,24 +2270,23 @@ class GFFormsModel {
 			$form['postTitleTemplate']        = '';
 		}
 
-		//Deleting associated routing rules
-		if ( ! empty( $form['notification']['routing'] ) ) {
-			$routing_count = sizeof( $form['notification']['routing'] );
-			for ( $j = $routing_count - 1; $j >= 0; $j -- ) {
-				if ( intval( $form['notification']['routing'][ $j ]['fieldId'] ) == $field_id ) {
-					unset( $form['notification']['routing'][ $j ] );
-				}
-			}
-			$form['notification']['routing'] = array_values( $form['notification']['routing'] );
+		if ( ! empty( $form['button']['conditionalLogic'] ) ) {
+			$form['button']['conditionalLogic'] = self::delete_field_from_conditional_logic( $form['button']['conditionalLogic'], $field_id );
+		}
 
-			//If there aren't any routing, remove it
-			if ( sizeof( $form['notification']['routing'] ) == 0 ) {
-				$form['notification']['routing'] = null;
-			}
+		// Notifications/confirmations are not present in the form passed by GFFormDetail::save_form_info() but they could be present in other scenarios.
+		$form = GFFormsModel::delete_field_from_confirmations( $form, $field_id );
+		$form = GFFormsModel::delete_field_from_notifications( $form, $field_id );
+
+		if ( in_array( $field_type, self::get_delete_file_field_types( $form ) ) ) {
+			self::delete_field_files( $form_id, $field_id );
 		}
 
 		$form['fields'] = array_values( $form['fields'] );
-		self::update_form_meta( $form_id, $form );
+
+		if ( $save_form ) {
+			self::update_form_meta( $form_id, $form );
+		}
 
 		//Delete from grid column meta
 		$columns = self::get_grid_column_meta( $form_id );
@@ -2208,6 +2310,129 @@ class GFFormsModel {
          *
 		 */
 		do_action( 'gform_after_delete_field', $form_id, $field_id );
+
+		return $form;
+	}
+
+	/**
+	 * Deletes confirmation conditional logic rules based on the deleted field.
+	 *
+	 * @since 2.4.6.1
+	 *
+	 * @param array $form     The form containing the confirmations to be processed.
+	 * @param int   $field_id The ID of the field being deleted.
+	 *
+	 * @return array
+	 */
+	public static function delete_field_from_confirmations( $form, $field_id ) {
+		if ( empty( $form['confirmations'] ) ) {
+			return $form;
+		}
+
+		$save = false;
+
+		foreach ( $form['confirmations'] as &$confirmation ) {
+			if ( ! empty( $confirmation['conditionalLogic'] ) ) {
+				$processed = self::delete_field_from_conditional_logic( $confirmation['conditionalLogic'], $field_id );
+				if ( $confirmation['conditionalLogic'] != $processed ) {
+					$confirmation['conditionalLogic'] = $processed;
+					$save                             = true;
+				}
+			}
+		}
+
+		if ( $save ) {
+			GFFormsModel::update_form_meta( $form['id'], $form['confirmations'], 'confirmations' );
+		}
+
+		return $form;
+	}
+
+	/**
+	 * Deletes notification routing and conditional logic rules based on the deleted field.
+	 *
+	 * @since 2.4.6.1
+	 *
+	 * @param array $form     The form containing the notifications to be processed.
+	 * @param int   $field_id The ID of the field being deleted.
+	 *
+	 * @return array
+	 */
+	public static function delete_field_from_notifications( $form, $field_id ) {
+		if ( empty( $form['notifications'] ) ) {
+			return $form;
+		}
+
+		$save = false;
+
+		foreach ( $form['notifications'] as &$notification ) {
+			if ( ! empty( $notification['routing'] ) ) {
+				$dirty = false;
+
+				foreach ( $notification['routing'] as $key => $rule ) {
+					if ( intval( rgar( $rule, 'fieldId' ) ) == $field_id ) {
+						unset( $notification['routing'][ $key ] );
+						$dirty = true;
+					}
+				}
+
+				if ( $dirty ) {
+					$notification['routing'] = empty( $notification['routing'] ) ? null : array_values( $notification['routing'] );
+					$save                    = true;
+				}
+			}
+
+			if ( ! empty( $notification['conditionalLogic'] ) ) {
+				$processed = self::delete_field_from_conditional_logic( $notification['conditionalLogic'], $field_id );
+				if ( $notification['conditionalLogic'] != $processed ) {
+					$notification['conditionalLogic'] = $processed;
+					$save                             = true;
+				}
+			}
+		}
+
+		if ( $save ) {
+			GFFormsModel::update_form_meta( $form['id'], $form['notifications'], 'notifications' );
+		}
+
+		return $form;
+	}
+
+	/**
+	 * Deletes conditional logic rules based on the deleted field.
+	 *
+	 * If no rules remain following the deletion conditional logic is disabled.
+	 *
+	 * @since 2.4.6.1
+	 *
+	 * @param array $logic    The conditional logic object to be processed.
+	 * @param int   $field_id The ID of the field being deleted.
+	 *
+	 * @return null|array
+	 */
+	public static function delete_field_from_conditional_logic( $logic, $field_id ) {
+		if ( empty( $logic['rules'] ) ) {
+			return null;
+		}
+
+		$dirty = false;
+
+		foreach ( $logic['rules'] as $key => $rule ) {
+			if ( intval( rgar( $rule, 'fieldId' ) ) == $field_id ) {
+				unset( $logic['rules'][ $key ] );
+				$dirty = true;
+			}
+		}
+
+		if ( $dirty ) {
+			if ( empty( $logic['rules'] ) ) {
+				$logic = null;
+			} else {
+				$logic['rules'] = array_values( $logic['rules'] );
+			}
+		}
+
+		return $logic;
 	}
 
 	public static function delete_field_values( $form_id, $field_id ) {
@@ -2249,7 +2474,12 @@ class GFFormsModel {
 	}
 
 	public static function delete_entry( $entry_id ) {
-		global $wpdb;
+		global $wpdb, $current_user;
+
+		// Log if user requested deletion of entries
+		if ( ! empty( $current_user->user_login ) ) {
+			GFCommon::log_debug( __METHOD__ . "(): User ID {$current_user->ID} requested deletion of entry #{$entry_id}" );			
+		}
 
 		if ( version_compare( GFFormsModel::get_database_version(), '2.3-dev-1', '<' ) ) {
 			GF_Forms_Model_Legacy::delete_lead( $entry_id );
@@ -2389,7 +2619,7 @@ class GFFormsModel {
 	}
 
 	public static function save_entry( $form, &$entry ) {
-		global $wpdb;
+		global $wpdb, $current_user;
 
 		if ( version_compare( self::get_database_version(), '2.3-dev-1', '<' ) ) {
 			GF_Forms_Model_Legacy::save_lead( $form, $entry );
@@ -2404,22 +2634,33 @@ class GFFormsModel {
 		$is_admin        = $is_form_editor || $is_entry_detail;
 
 		if ( $is_admin && ! GFCommon::current_user_can_any( 'gravityforms_edit_entries' ) ) {
-			die( esc_html__( "You don't have adequate permission to edit entries.", 'gravityforms' ) );
+			wp_die( esc_html__( "You don't have adequate permission to edit entries.", 'gravityforms' ) );
 		}
 
 		$entry_meta_table = self::get_entry_meta_table_name();
-		$is_new_lead       = $entry == null;
+		$is_new_lead      = empty( $entry );
+
+		// Log user login for user updating the entry
+		if ( ! $is_new_lead && ! empty( $entry['id'] ) && ! empty( $current_user->ID ) ) {
+			GFCommon::log_debug( __METHOD__ . "(): User ID {$current_user->ID} requested update of entry #{$entry['id']}." );
+		}
+
+		if ( ! $is_new_lead && ! self::entry_exists( rgar( $entry, 'id' ) ) ) {
+			// Force a new entry to be saved when an entry does not exist for the supplied id.
+			$entry       = array();
+			$is_new_lead = true;
+		}
 
 		$die_message = esc_html__( 'An error prevented the entry for this form submission being saved. Please contact support.', 'gravityforms' );
 
 		$entry_table = GFFormsModel::get_entry_table_name();
 
-		//Inserting lead if null
+		$current_date = $wpdb->get_var( 'SELECT utc_timestamp()' );
+
 		if ( $is_new_lead ) {
+			// Saving the new entry.
 
-			global $current_user;
 			$user_id = $current_user && $current_user->ID ? $current_user->ID : 'NULL';
-
 
 			$user_agent = self::truncate( rgar( $_SERVER, 'HTTP_USER_AGENT' ), 250 );
 			$user_agent = sanitize_text_field( $user_agent );
@@ -2436,17 +2677,13 @@ class GFFormsModel {
 
 			$ip = rgars( $form, 'personalData/preventIP' ) ? '' : self::get_ip();
 
-			$date_created = $wpdb->get_var( 'SELECT utc_timestamp()' );
-
-			$wpdb->query( $wpdb->prepare( "INSERT INTO $entry_table(form_id, ip, source_url, date_created, date_updated, user_agent, currency, created_by) VALUES(%d, %s, %s, %s, %s, %s, %s, {$user_id})", $form['id'], $ip, $source_url, $date_created, $date_created, $user_agent, $currency ) );
-
+			$wpdb->query( $wpdb->prepare( "INSERT INTO $entry_table(form_id, ip, source_url, date_created, date_updated, user_agent, currency, created_by) VALUES(%d, %s, %s, %s, %s, %s, %s, {$user_id})", $form['id'], $ip, $source_url, $current_date, $current_date, $user_agent, $currency ) );
 
 			// Reading newly created lead id
 			$lead_id = $wpdb->insert_id;
 
 			if ( $lead_id == 0 ) {
 				GFCommon::log_error( __METHOD__ . '(): Unable to save entry. ' . $wpdb->last_error );
-
 				wp_die( $die_message );
 			}
 
@@ -2458,8 +2695,8 @@ class GFFormsModel {
 				'source_url'       => $source_url,
 				'currency'         => $currency,
 				'post_id'          => null,
-				'date_created'     => $date_created,
-				'date_updated'     => $date_created,
+				'date_created'     => $current_date,
+				'date_updated'     => $current_date,
 				'is_starred'       => 0,
 				'is_read'          => 0,
 				'user_agent'       => $user_agent,
@@ -2473,19 +2710,16 @@ class GFFormsModel {
 				'transaction_type' => null,
 			);
 
-
 			GFCommon::log_debug( __METHOD__ . "(): Entry record created in the database. ID: {$lead_id}." );
-		} elseif ( ! empty( $entry['id'] ) ) {
-			// Make sure the entry array contains all the entry properties.
-			$sql = $wpdb->prepare( "SELECT * FROM $entry_table WHERE id=%d", $entry['id'] );
-			$current_properties = $wpdb->get_row( $sql, ARRAY_A );
-			foreach ( $current_properties as $key => $property ) {
-				if ( ! isset( $entry[ (string) $key ] ) ) {
-					$entry[ (string) $key ] = $current_properties[ $key ];
-				}
-			}
-			$date_updated = $wpdb->get_var( 'SELECT utc_timestamp()' );
-			GFAPI::update_entry_property( $entry['id'], 'date_updated', $date_updated );
+		} else {
+			GFCommon::log_debug( __METHOD__ . "(): Updating existing entry. ID: {$entry['id']}." );
+
+			// Ensures the entry being updated contains all the current properties and registered meta.
+			self::add_properties_to_entry( $entry );
+			self::add_meta_to_entry( $entry );
+
+			GFAPI::update_entry_property( $entry['id'], 'date_updated', $current_date );
+			$entry['date_updated'] = $current_date;
 		}
 
 		$current_fields = $wpdb->get_results( $wpdb->prepare( "SELECT id, meta_key, item_index FROM $entry_meta_table WHERE entry_id=%d", $entry['id'] ) );
@@ -2640,6 +2874,53 @@ class GFFormsModel {
 		GFCommon::log_debug( __METHOD__ . '(): Finished saving entry fields.' );
 	}
 
+	/**
+	 * Populates the supplied entry with missing properties.
+	 *
+	 * @since 2.4.5.8
+	 *
+	 * @param array $entry The partial or complete entry currently being updated.
+	 */
+	public static function add_properties_to_entry( &$entry ) {
+		if ( empty( $entry['id'] ) ) {
+			return;
+		}
+
+		global $wpdb;
+		$entry_table = GFFormsModel::get_entry_table_name();
+		$sql         = $wpdb->prepare( "SELECT * FROM $entry_table WHERE id=%d", $entry['id'] );
+		$properties  = $wpdb->get_row( $sql, ARRAY_A );
+
+		foreach ( $properties as $key => $property ) {
+			if ( ! isset( $entry[ (string) $key ] ) ) {
+				// Add the missing entry property.
+				$entry[ (string) $key ] = $properties[ $key ];
+			}
+		}
+	}
+
+	/**
+	 * Populates the supplied entry with missing meta.
+	 *
+	 * @since 2.4.5.8
+	 *
+	 * @param array $entry The partial or complete entry currently being updated.
+	 */
+	public static function add_meta_to_entry( &$entry ) {
+		if ( empty( $entry['id'] ) || empty( $entry['form_id'] ) ) {
+			return;
+		}
+
+		$meta_keys = array_keys( self::get_entry_meta( $entry['form_id'] ) );
+
+		foreach ( $meta_keys as $meta_key ) {
+			if ( ! isset( $entry[ $meta_key ] ) ) {
+				// Add the missing entry meta.
+				$entry[ $meta_key ] = gform_get_meta( $entry['id'], $meta_key );
+			}
+		}
+	}
+
 	public static function hydrate_repeaters( &$entry, $form ) {
 		$fields = $form['fields'];
 		foreach( $fields as $field ) {
@@ -2665,7 +2946,7 @@ class GFFormsModel {
 		$lead['ip']           = rgars( $form, 'personalData/preventIP' ) ? '' : self::get_ip();
 		$source_url           = self::truncate( self::get_current_page_url(), 200 );
 		$lead['source_url']   = esc_url_raw( $source_url );
-		$user_agent           = strlen( $_SERVER['HTTP_USER_AGENT'] ) > 250 ? substr( $_SERVER['HTTP_USER_AGENT'], 0, 250 ) : $_SERVER['HTTP_USER_AGENT'];
+		$user_agent           = self::truncate( rgar( $_SERVER, 'HTTP_USER_AGENT' ), 250 );
 		$lead['user_agent']   = sanitize_text_field( $user_agent );
 		$lead['created_by']   = $current_user && $current_user->ID ? $current_user->ID : 'NULL';
 
@@ -3153,7 +3434,7 @@ class GFFormsModel {
 	 * @return false|int
 	 */
 	public static function purge_expired_incomplete_submissions( $expiration_days = 30 ) {
-		_deprecated_function( 'GFFormsModel::purge_expired_incomplete_submissions', '2.4', 'GFFormsModel::purge_expired_incomplete_submissions' );
+		_deprecated_function( 'GFFormsModel::purge_expired_incomplete_submissions', '2.4', 'GFFormsModel::purge_expired_draft_submissions' );
 		return self::purge_expired_draft_submissions( $expiration_days = 30 );
 	}
 
@@ -3629,7 +3910,7 @@ class GFFormsModel {
 		}
 
 		// Converting list format
-		if ( RGFormsModel::get_input_type( $field ) == 'list' ) {
+		if ( ! empty( $value ) && RGFormsModel::get_input_type( $field ) == 'list' ) {
 
 			// Transforms this: col1|col2,col1b|col2b into this: col1,col2,col1b,col2b
 			$column_count = is_array( $field->choices ) ? count( $field->choices ) : 0;
@@ -4486,8 +4767,9 @@ class GFFormsModel {
 
 	public static function media_handle_upload( $url, $post_id, $post_data = array() ) {
 
-		//WordPress Administration API required for the media_handle_upload() function
+		// WordPress Administration API required for the media_handle_upload() function.
 		require_once( ABSPATH . 'wp-admin/includes/image.php' );
+		require_once( ABSPATH . 'wp-admin/includes/media.php' );
 
 		$name = basename( $url );
 
@@ -5911,14 +6193,12 @@ class GFFormsModel {
 	public static function get_sub_field( $repeater_field, $field_id ) {
 		if ( is_array( $repeater_field->fields ) ) {
 			foreach ( $repeater_field->fields as $field ) {
-				if ( is_array( $field ) ) {
+				if ( $field->id == $field_id ) {
+					return $field;
+				} elseif ( is_array( $field->fields ) ) {
 					$f = self::get_sub_field( $field, $field_id );
 					if ( $f ) {
 						return $f;
-					}
-				} else {
-					if ( $field->id == $field_id ) {
-						return $field;
 					}
 				}
 			}
@@ -6904,6 +7184,31 @@ class GFFormsModel {
 
 		return $files;
 	}
+
+	/**
+	 * Checks if an entry exists for the supplied ID.
+	 *
+	 * @since 2.4.5.8
+	 *
+	 * @param int $entry_id The ID to be checked.
+	 *
+	 * @return bool
+	 */
+	public static function entry_exists( $entry_id ) {
+		$entry_id = intval( $entry_id );
+		if ( $entry_id <= 0 ) {
+			return false;
+		}
+
+		global $wpdb;
+		$entry_table_name = GFFormsModel::get_entry_table_name();
+
+		$sql    = $wpdb->prepare( "SELECT count(id) FROM {$entry_table_name} WHERE id = %d", $entry_id );
+		$result = intval( $wpdb->get_var( $sql ) );
+
+		return $result > 0;
+	}
+
 }
 
 class RGFormsModel extends GFFormsModel {

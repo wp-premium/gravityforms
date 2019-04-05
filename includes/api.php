@@ -210,21 +210,22 @@ class GFAPI {
 		if ( empty( $form_id ) ) {
 			$form_id = $form['id'];
 		} else {
-			// Make sure the form object has the right form id.
+			// Make sure the form object has the right form ID.
 			$form['id'] = $form_id;
-			if ( isset( $form['fields'] ) ) {
-				foreach ( $form['fields'] as &$field ) {
-					if ( $field instanceof GF_Field ) {
-						$field->formId = $form_id;
-					} else {
-						$field['formId'] = $form_id;
-					}
-				}
-			}
 		}
 
 		if ( empty( $form_id ) ) {
 			return new WP_Error( 'missing_form_id', __( 'Missing form id', 'gravityforms' ) );
+		}
+
+		if ( isset( $form['fields'] ) ) {
+
+			// Make sure the formId is correct.
+			$form = GFFormsModel::convert_field_objects( $form );
+
+			$next_field_id = GFFormsModel::get_next_field_id( $form['fields'] );
+
+			$form['fields'] = self::add_missing_ids( $form['fields'], $next_field_id );
 		}
 
 		$meta_table_name = GFFormsModel::get_meta_table_name();
@@ -268,6 +269,28 @@ class GFAPI {
 	}
 
 	/**
+	 * Adds missing IDs to field objects.
+	 *
+	 * @since 2.4.6.12
+	 *
+	 * @param GF_Field[] $fields
+	 * @param $next_field_id
+	 *
+	 * @return GF_Field[]
+	 */
+	private static function add_missing_ids( $fields, $next_field_id ) {
+		foreach ( $fields as &$field ) {
+			if ( empty( $field->id ) ) {
+				$field->id = $next_field_id ++;
+			}
+			if ( is_array( $field->fields ) ) {
+				$field->fields = self::add_missing_ids( $field->fields, $next_field_id );
+			}
+		}
+		return $fields;
+	}
+
+	/**
 	 * Updates a form property - a column in the main forms table. e.g. is_trash, is_active, title
 	 *
 	 * @since  1.8.3.15
@@ -276,9 +299,9 @@ class GFAPI {
 	 * @uses GFFormsModel::get_form_table_name()
 	 * @uses GFFormsModel::get_form_db_columns()
 	 *
-	 * @param array $form_ids     The IDs of the forms to update.
-	 * @param array $property_key The name of the column in the database e.g. is_trash, is_active, title.
-	 * @param array $value        The new value.
+	 * @param array  $form_ids     The IDs of the forms to update.
+	 * @param string $property_key The name of the column in the database e.g. is_trash, is_active, title.
+	 * @param mixed  $value        The new value.
 	 *
 	 * @return mixed Either a WP_Error instance or the result of the query
 	 */
@@ -401,6 +424,11 @@ class GFAPI {
 		if ( rgar( $form_meta, 'title' ) == '' ) {
 			return new WP_Error( 'missing_title', __( 'The form title is missing', 'gravityforms' ) );
 		}
+
+		if ( ! isset( $form_meta['fields'] ) || ! is_array( $form_meta['fields'] ) ) {
+			return new WP_Error( 'missing_fields', __( 'The form fields are missing', 'gravityforms' ) );
+		}
+
 		// Making sure title is not duplicate.
 		$title = $form_meta['title'];
 		$count = 2;
@@ -449,6 +477,13 @@ class GFAPI {
 			GFFormsModel::update_form_meta( $form_id, $form_meta['notifications'], 'notifications' );
 			unset( $form_meta['notifications'] );
 		}
+
+		// Make sure the formId is correct.
+		$form_meta = GFFormsModel::convert_field_objects( $form_meta );
+
+		$next_field_id = GFFormsModel::get_next_field_id( $form_meta['fields'] );
+
+		$form_meta['fields'] = self::add_missing_ids( $form_meta['fields'], $next_field_id );
 
 		// Updating form meta.
 		$result = GFFormsModel::update_form_meta( $form_id, $form_meta );
@@ -1032,13 +1067,17 @@ class GFAPI {
 	private static function queue_batch_field_operation( $form, $entry, $field, $item_index = '', &$current_entry = array(), $current_fields = array() ) {
 
 		if ( is_array( $field->fields ) ) {
-			foreach ( $entry[ $field->id ] as $i => $values ) {
-				$new_item_index = $item_index . '_' . $i;
-				$values['id']   = $entry['id'];
-				foreach ( $field->fields as $sub_field ) {
-					self::queue_batch_field_operation( $form, $values, $sub_field, $new_item_index, $current_entry[ $field->id ], $current_fields );
+			$field_id = (string) $field->id;
+			if ( isset( $entry[ $field_id ] ) && is_array( $entry[ $field_id ] ) ) {
+				foreach ( $entry[ $field_id ] as $i => $values ) {
+					$new_item_index = $item_index . '_' . $i;
+					$values['id']   = $entry['id'];
+					foreach ( $field->fields as $sub_field ) {
+						self::queue_batch_field_operation( $form, $values, $sub_field, $new_item_index, $current_entry[ $field_id ], $current_fields );
+					}
 				}
 			}
+
 			foreach ( $field->fields as $sub_field ) {
 				foreach ( $current_fields as $current_field ) {
 					if ( intval( $current_field->meta_key ) == $sub_field->id && ! isset( $current_field->update ) ) {
@@ -1799,11 +1838,9 @@ class GFAPI {
 	// HELPERS ----------------------------------------------------
 
 	/**
-	 * Private.
+	 * Checks whether a form ID exists.
 	 *
 	 * @since  1.8
-	 * @access private
-	 * @ignore
 	 */
 	public static function form_id_exists( $form_id ) {
 		global $wpdb;
@@ -1820,4 +1857,18 @@ class GFAPI {
 
 		return $result > 0;
 	}
+
+	/**
+	 * Checks if an entry exists for the supplied ID.
+	 *
+	 * @since 2.4.5.8
+	 *
+	 * @param int $entry_id The ID to be checked.
+	 *
+	 * @return bool
+	 */
+	public static function entry_exists( $entry_id ) {
+		return GFFormsModel::entry_exists( $entry_id );
+	}
+
 }

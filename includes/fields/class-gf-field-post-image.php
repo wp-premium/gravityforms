@@ -109,9 +109,9 @@ class GF_Field_Post_Image extends GF_Field_Fileupload {
 	public function get_value_entry_list( $value, $entry, $field_id, $columns, $form ) {
 		list( $url, $title, $caption, $description ) = rgexplode( '|:|', $value, 4 );
 		if ( ! empty( $url ) ) {
-			//displaying thumbnail (if file is an image) or an icon based on the extension
+			// displaying thumbnail (if file is an image) or an icon based on the extension.
 			$thumb = GFEntryList::get_icon_url( $url );
-			$value = "<a href='" . esc_attr( $url ) . "' target='_blank' title='" . __( 'Click to view', 'gravityforms' ) . "'><img src='$thumb'/></a>";
+			$value = "<a href='" . esc_attr( $url ) . "' target='_blank' aria-label='" . esc_attr__( 'View the image', 'gravityforms' ) . "'><img src='$thumb' alt='' /></a>";
 		}
 		return $value;
 	}
@@ -135,7 +135,7 @@ class GF_Field_Post_Image extends GF_Field_Fileupload {
 					break;
 
 				default :
-					$value = "<a href='$url' target='_blank' title='" . __( 'Click to view', 'gravityforms' ) . "'><img src='$url' width='100' /></a>";
+					$value = "<a href='$url' target='_blank' aria-label='" . esc_attr__( 'View the image', 'gravityforms' ) . "'><img src='$url' width='100' alt='' /></a>";
 					$value .= ! empty( $title ) ? "<div>Title: $title</div>" : '';
 					$value .= ! empty( $caption ) ? "<div>Caption: $caption</div>" : '';
 					$value .= ! empty( $description ) ? "<div>Description: $description</div>" : '';

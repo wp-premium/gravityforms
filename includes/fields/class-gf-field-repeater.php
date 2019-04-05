@@ -81,8 +81,10 @@ class GF_Field_Repeater extends GF_Field {
 		/* @var GF_Field[] $fields */
 		$fields = $this->fields;
 
-		foreach ( $items as $item ) {
+		foreach ( $items as $i => $item ) {
 			foreach ( $fields as $field ) {
+
+				$field->set_context_property( 'itemIndex', $i );
 
 				$inputs = $field->get_entry_inputs();
 				if ( is_array( $inputs ) ) {
@@ -98,15 +100,26 @@ class GF_Field_Repeater extends GF_Field {
 				}
 
 				if ( $field->isRequired && $field->is_value_empty( $field_value ) ) {
-					$this->failed_validation = true;
-					return;
+					$field->failed_validation = true;
 				} else {
 					$field->validate( $field_value, $form );
-					if ( $field->failed_validation ) {
-						$this->failed_validation = true;
-						return;
-					}
 				}
+
+				$custom_validation_result = gf_apply_filters( array( 'gform_field_validation', $form['id'], $field->id ), array(
+					'is_valid' => $field->failed_validation ? false : true,
+					'message'  => $field->validation_message
+				), $field_value, $form, $field );
+				$this->failed_validation  = rgar( $custom_validation_result, 'is_valid' ) ? false : true;
+
+				// Reset the field validation and item index.
+				$field->failed_validation = false;
+				$field->set_context_property( 'itemIndex', null );
+
+				if ( $this->failed_validation ) {
+					// One field has failed validation so the entire repeater fails.
+					return;
+				}
+
 			}
 		}
 	}
@@ -283,9 +296,13 @@ class GF_Field_Repeater extends GF_Field {
 
 				$field_value = $this->get_field_value( $field, $value );
 
+				$field->set_context_property( 'itemIndex', $i );
+
 				$field_input = $this->get_sub_field_input( $field, $form, $field_value, $entry, $i );
 
 				$row .= "<div class='gfield_repeater_cell'>" . $field_input . '</div>';
+
+				$field->set_context_property( 'itemIndex', null );
 			}
 			$buttons = $this->get_buttons( $values );
 			$row .= "<div class='gfield_repeater_buttons'>{$buttons}</div>";
@@ -344,13 +361,13 @@ class GF_Field_Repeater extends GF_Field {
 
 		$disabled_icon_class = ! empty( $this->maxItems ) && count( $values ) >= intval( $this->maxItems ) ? 'gfield_icon_disabled' : '';
 
-		$add_button_text    = $this->addButtonText ? $this->addButtonText : '&#43';
-		$remove_button_text = $this->removeButtonText ? $this->removeButtonText : '&#45' ;
+		$add_button_text    = $this->addButtonText ? $this->addButtonText : '&#43;';
+		$remove_button_text = $this->removeButtonText ? $this->removeButtonText : '&#45;' ;
 
 		$add_button_class = $this->addButtonText ? 'add_repeater_item_text' : 'add_repeater_item_plus';
 		$remove_button_class = $this->removeButtonText ? 'remove_repeater_item_text' : 'remove_repeater_item_minus';
-		$html = "<button type='button' class='add_repeater_item {$disabled_icon_class} {$add_button_class}' {$add_events} title='" . $add_button_text . "'>" . $add_button_text . "</button>" .
-		        "<button type='button' class='remove_repeater_item {$remove_button_class}' {$delete_events} style='{$delete_display}' title='" . $remove_button_text . "'>" . $remove_button_text . "</button>";
+		$html = "<button type='button' class='add_repeater_item {$disabled_icon_class} {$add_button_class}' {$add_events}>" . $add_button_text . "</button>" .
+		        "<button type='button' class='remove_repeater_item {$remove_button_class}' {$delete_events} style='{$delete_display}'>" . $remove_button_text . "</button>";
 
 		return $html;
 	}
@@ -565,6 +582,12 @@ class GF_Field_Repeater extends GF_Field {
 			if ( ! $field->failed_validation ) {
 				$field->validate( $field_value, $form );
 			}
+
+			$custom_validation_result = gf_apply_filters( array( 'gform_field_validation', $form['id'], $field->id ), array(
+				'is_valid' => $field->failed_validation ? false : true,
+				'message'  => $field->validation_message
+			), $field_value, $form, $field );
+			$field->failed_validation  = rgar( $custom_validation_result, 'is_valid' ) ? false : true;
 		}
 
 		$validation_message = ( $field->failed_validation && ! empty( $field->validation_message ) ) ? sprintf( "<div class='gfield_description validation_message'>%s</div>", $field->validation_message ) : '';
@@ -912,8 +935,15 @@ class GF_Field_Repeater extends GF_Field {
 							$lines = array();
 							foreach ( $list_rows as $i => $list_row ) {
 								$row_label = $label . ' ' . ( $i + 1 );
-								$row_value = array( (string) $field->id => $list_row );
-								$lines[] = $row_label . ': ' . $field->get_value_export( $row_value, $field->id, $use_text, $is_csv );
+
+								// Prepare row value.
+								$row_value = implode( '|', $list_row );
+								if ( strpos( $row_value, '=' ) === 0 ) {
+									// Prevent Excel formulas
+									$row_value = "'" . $row_value;
+								}
+
+								$lines[] = $row_label . ': ' . $row_value;
 							}
 							$line = implode( "\n", $lines );
 						} else {
