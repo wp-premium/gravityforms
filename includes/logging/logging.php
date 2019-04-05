@@ -854,13 +854,15 @@ class GFLogging extends GFAddOn {
 
 		if ( is_multisite() ) {
 
-			// Get network sites.
-			$sites = wp_get_sites();
+			// Get network sites. get_sites() is available with WP 4.6+.
+			$sites = function_exists( 'get_sites' ) ? get_sites() : wp_get_sites();
 
 			foreach ( $sites as $site ) {
 
+				$blog_id = $site instanceof WP_Site ? $site->blog_id : $site['blog_id'];
+
 				// Get old settings.
-				$old_settings = get_blog_option( $site['blog_id'], 'gf_logging_settings', array() );
+				$old_settings = get_blog_option( $blog_id, 'gf_logging_settings', array() );
 
 				// If old settings don't exist, exit.
 				if ( ! $old_settings ) {
@@ -879,10 +881,10 @@ class GFLogging extends GFAddOn {
 				}
 
 				// Save new settings.
-				update_blog_option( $site['blog_id'], 'gravityformsaddon_' . $this->_slug . '_settings', $new_settings );
+				update_blog_option( $blog_id, 'gravityformsaddon_' . $this->_slug . '_settings', $new_settings );
 
 				// Delete old settings.
-				delete_blog_option( $site['blog_id'], 'gf_logging_settings' );
+				delete_blog_option( $blog_id, 'gf_logging_settings' );
 
 			}
 

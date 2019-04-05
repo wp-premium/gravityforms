@@ -293,7 +293,7 @@ class GFEntryDetail {
 				 */
 				gf_do_action( array( 'gform_after_update_entry', $form['id'] ), $form, $lead['id'], $original_entry );
 
-				$lead = RGFormsModel::get_lead( $lead['id'] );
+				$lead = GFFormsModel::get_entry( $lead['id'] );
 				$lead = GFFormsModel::set_entry_meta( $lead, $form );
 				self::set_current_entry( $lead );
 
@@ -319,7 +319,7 @@ class GFEntryDetail {
 					}
 
 					if ( ! empty( $consent_update_note ) ) {
-						RGFormsModel::add_note( $lead['id'], $current_user->ID, $user_data->display_name, $consent_update_note );
+						GFFormsModel::add_note( $lead['id'], $current_user->ID, $user_data->display_name, $consent_update_note );
 					}
 				}
 
@@ -328,7 +328,7 @@ class GFEntryDetail {
 			case 'add_note' :
 				check_admin_referer( 'gforms_update_note', 'gforms_update_note' );
 				$user_data = get_userdata( $current_user->ID );
-				RGFormsModel::add_note( $lead['id'], $current_user->ID, $user_data->display_name, stripslashes( $_POST['new_note'] ) );
+				GFFormsModel::add_note( $lead['id'], $current_user->ID, $user_data->display_name, stripslashes( $_POST['new_note'] ) );
 
 				//emailing notes if configured
 				if ( rgpost( 'gentry_email_notes_to' ) ) {
@@ -371,7 +371,7 @@ class GFEntryDetail {
 			case 'add_quick_note' :
 				check_admin_referer( 'gforms_save_entry', 'gforms_save_entry' );
 				$user_data = get_userdata( $current_user->ID );
-				RGFormsModel::add_note( $lead['id'], $current_user->ID, $user_data->display_name, stripslashes( $_POST['quick_note'] ) );
+				GFFormsModel::add_note( $lead['id'], $current_user->ID, $user_data->display_name, stripslashes( $_POST['quick_note'] ) );
 				break;
 
 			case 'bulk' :
@@ -380,12 +380,15 @@ class GFEntryDetail {
 					if ( ! GFCommon::current_user_can_any( 'gravityforms_edit_entry_notes' ) ) {
 						wp_die( esc_html__( "You don't have adequate permission to delete notes.", 'gravityforms' ) );
 					}
-					RGFormsModel::delete_notes( $_POST['note'] );
+					GFFormsModel::delete_notes( $_POST['note'] );
 				}
 				break;
 
 			case 'trash' :
 				check_admin_referer( 'gforms_save_entry', 'gforms_save_entry' );
+				if ( ! GFCommon::current_user_can_any( 'gravityforms_delete_entries' ) ) {
+					wp_die( esc_html__( "You don't have adequate permission to trash entries.", 'gravityforms' ) );
+				}
 				GFFormsModel::update_entry_property( $lead['id'], 'status', 'trash' );
 				$admin_url = admin_url( 'admin.php?page=gf_entries&view=entries&id=' . absint( $form['id'] ) . '&trashed_entry=' . absint( $lead['id'] ) );
 				?>
@@ -396,17 +399,26 @@ class GFEntryDetail {
 				break;
 
 			case 'restore' :
+				check_admin_referer( 'gforms_save_entry', 'gforms_save_entry' );
+				if ( ! GFCommon::current_user_can_any( 'gravityforms_delete_entries' ) ) {
+					wp_die( esc_html__( "You don't have adequate permission to restore entries.", 'gravityforms' ) );
+				}
+				GFFormsModel::update_entry_property( $lead['id'], 'status', 'active' );
+				$lead = RGFormsModel::get_lead( $lead['id'] );
+				self::set_current_entry( $lead );
+				break;
+
 			case 'unspam' :
 				check_admin_referer( 'gforms_save_entry', 'gforms_save_entry' );
 				GFFormsModel::update_entry_property( $lead['id'], 'status', 'active' );
-				$lead = RGFormsModel::get_lead( $lead['id'] );
+				$lead = GFFormsModel::get_entry( $lead['id'] );
 				self::set_current_entry( $lead );
 				break;
 
 			case 'spam' :
 				check_admin_referer( 'gforms_save_entry', 'gforms_save_entry' );
 				GFFormsModel::update_entry_property( $lead['id'], 'status', 'spam' );
-				$lead = RGFormsModel::get_lead( $lead['id'] );
+				$lead = GFFormsModel::get_entry( $lead['id'] );
 				self::set_current_entry( $lead );
 				break;
 
@@ -631,10 +643,10 @@ class GFEntryDetail {
 							 */
 							do_action( 'gform_entry_detail_content_before', $form, $lead );
 
-							if ( $mode == 'view' ) {
-								self::lead_detail_grid( $form, $lead, true );
-							} else {
+							if ( 'edit' === $mode && GFCommon::current_user_can_any( 'gravityforms_edit_entries' ) ) {
 								self::lead_detail_edit( $form, $lead );
+							} else {
+								self::lead_detail_grid( $form, $lead, true );
 							}
 
 							/**
@@ -1192,7 +1204,7 @@ class GFEntryDetail {
 		$class .= ' gf_entry_pagination_link';
 		$class .= $pos !== false ? ' gf_entry_pagination_link_active' : ' gf_entry_pagination_link_inactive';
 
-		return '<a ' . $href . ' class="' . $class . '" title="' . esc_attr( $label ) . '"><i class="fa-lg ' . esc_attr( $icon ) . '"></i></a></li>';
+		return '<a ' . $href . ' class="' . $class . '" aria-label="' . esc_attr( $label ) . '"><i aria-hidden="true" class="fa-lg ' . esc_attr( $icon ) . '" title="' . esc_attr( $label ) . '"></i></a>';
 	}
 
 	public static function payment_details_box( $entry, $form ) {
@@ -1353,20 +1365,20 @@ class GFEntryDetail {
 				if ( ! empty( $entry['created_by'] ) && $usermeta = get_userdata( $entry['created_by'] ) ) {
 					?>
 					<?php esc_html_e( 'User', 'gravityforms' ); ?>:
-					<a href="user-edit.php?user_id=<?php echo absint( $entry['created_by'] ) ?>" alt="<?php esc_attr_e( 'View user profile', 'gravityforms' ); ?>" title="<?php esc_attr_e( 'View user profile', 'gravityforms' ); ?>"><?php echo esc_html( $usermeta->user_login ) ?></a>
+					<a href="user-edit.php?user_id=<?php echo absint( $entry['created_by'] ) ?>"><?php echo esc_html( $usermeta->user_login ) ?></a>
 					<br /><br />
 					<?php
 				}
 
 				esc_html_e( 'Embed Url', 'gravityforms' ); ?>:
-				<a href="<?php echo esc_url( $entry['source_url'] ) ?>" target="_blank" alt="<?php echo esc_attr( $entry['source_url'] ) ?>" title="<?php echo esc_attr( $entry['source_url'] ) ?>">.../<?php echo esc_html( GFCommon::truncate_url( $entry['source_url'] ) ) ?></a>
+				<a href="<?php echo esc_url( $entry['source_url'] ) ?>" target="_blank">.../<?php echo esc_html( GFCommon::truncate_url( $entry['source_url'] ) ) ?></a>
 				<br /><br />
 				<?php
 				if ( ! empty( $entry['post_id'] ) ) {
 					$post = get_post( $entry['post_id'] );
 					?>
 					<?php esc_html_e( 'Edit Post', 'gravityforms' ); ?>:
-					<a href="post.php?action=edit&post=<?php echo absint( $post->ID ) ?>" alt="<?php esc_attr_e( 'Click to edit post', 'gravityforms' ); ?>" title="<?php esc_attr_e( 'Click to edit post', 'gravityforms' ); ?>"><?php echo esc_html( $post->post_title ) ?></a>
+					<a href="post.php?action=edit&post=<?php echo absint( $post->ID ) ?>"><?php echo esc_html( $post->post_title ) ?></a>
 					<br /><br />
 					<?php
 				}
@@ -1401,11 +1413,9 @@ class GFEntryDetail {
 							break;
 
 						case 'trash' :
-							?>
-							<a onclick="jQuery('#action').val('restore'); jQuery('#entry_form').submit()" href="#"><?php esc_html_e( 'Restore', 'gravityforms' ) ?></a>
-							<?php
 							if ( GFCommon::current_user_can_any( 'gravityforms_delete_entries' ) ) {
-								?>
+							?>
+								<a onclick="jQuery('#action').val('restore'); jQuery('#entry_form').submit()" href="#"><?php esc_html_e( 'Restore', 'gravityforms' ) ?></a>
 								|
 								<a class="submitdelete deletion" onclick="if ( confirm('<?php echo esc_js( __( "You are about to delete this entry. 'Cancel' to stop, 'OK' to delete.", 'gravityforms' ) ); ?>') ) {jQuery('#action').val('delete'); jQuery('#entry_form').submit(); return true;} return false;" href="#"><?php esc_html_e( 'Delete Permanently', 'gravityforms' ) ?></a>
 								<?php

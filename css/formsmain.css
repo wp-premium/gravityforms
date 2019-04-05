@@ -459,14 +459,18 @@ body .gform_wrapper ul li.field_description_below div.ginput_container_checkbox 
 }
 
 .gform_wrapper label.screen-reader-text,
-.gform_wrapper label.hidden_sub_label,
-.ginput_container_consent button.screen-reader-text {
-    clip: rect(1px, 1px, 1px, 1px);
-    position: absolute !important;
-    height: 1px;
-    width: 1px;
-    overflow: hidden;
- }
+.gform_wrapper label.hidden_sub_label {
+	border: 0;
+	clip: rect(1px, 1px, 1px, 1px);
+	clip-path: inset(50%);
+	height: 1px;
+	margin: -1px;
+	overflow: hidden;
+	padding: 0;
+	position: absolute;
+	width: 1px;
+	word-wrap: normal !important;
+}
 
 .gform_wrapper input.small,
 .gform_wrapper select.small,
@@ -1048,7 +1052,7 @@ body .gform_wrapper ul.gform_fields li.gfield.gform_validation_container {
 .gform_wrapper div.charleft {
     font-size: .688em;
     margin-top: 4px;
-    color: #B7B7B7;
+    color: #767676;
     width: 92% !important;
     white-space: nowrap !important;
 }
@@ -1070,7 +1074,7 @@ body .gform_wrapper ul.gform_fields li.gfield.gform_validation_container {
 }
 
 .gform_wrapper div.charleft.warningTextareaInfo {
-    color: #A1A1A1;
+    color: #767676;
 }
 
 .gform_wrapper div.charleft.ginput_counter_error {
@@ -3105,7 +3109,7 @@ body .gform_wrapper ul.chosen-results li {
 
     body .gform_wrapper select.small.gfield_select + div.chosen-container-single[style],
     body .gform_wrapper select.small.gfield_select + div.chosen-container-multi[style] {
-        width: 25%; !important;
+        width: 25% !important;
     }
 
 }
