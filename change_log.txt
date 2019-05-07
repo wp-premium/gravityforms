@@ -1,14 +1,7 @@
 ------------------------------------------------------------------------------------------------------------------
-Version 2.4.7.3
+Version 2.4.8
 	- Fixed notices generated when AF add-ons did not specify a $_capabilities_form_settings capability or specified an array of capabilities.
-
-------------------------------------------------------------------------------------------------------------------
-Version 2.4.7.2
 	- Fixed an issue with the Gravity Forms widget introduced in v2.4.7 where forms are missing the gf_global JavaScript variable.
-
-------------------------------------------------------------------------------------------------------------------
-Version 2.4.7.1
-	- Added tab capabilities backwards compatibility for add-ons.
 
 ------------------------------------------------------------------------------------------------------------------
 Version 2.4.7
