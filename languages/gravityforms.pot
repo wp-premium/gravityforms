@@ -1,9 +1,9 @@
 # Copyright 2009-2019 Rocketgenius, Inc.
 msgid ""
 msgstr ""
-"Project-Id-Version: Gravity Forms 2.4.7.3\n"
+"Project-Id-Version: Gravity Forms 2.4.8\n"
 "Report-Msgid-Bugs-To: https://www.gravtiyforms.com\n"
-"POT-Creation-Date: 2019-04-04 16:37:45+00:00\n"
+"POT-Creation-Date: 2019-04-05 14:56:13+00:00\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
