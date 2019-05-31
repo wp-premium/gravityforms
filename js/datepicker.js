@@ -8,7 +8,7 @@ function gformInitDatepicker() {
 }
 
 function gformInitSingleDatepicker( $element ) {
-	var inputId = $element.attr( 'id' ),
+	var inputId = $element.attr( 'id' ) ? $element.attr( 'id' ) : '',
 		optionsObj = {
 			yearRange: '-100:+20',
 			showOn: 'focus',
@@ -47,6 +47,7 @@ function gformInitSingleDatepicker( $element ) {
 		optionsObj.showOn = 'both';
 		optionsObj.buttonImage = $element.parent().siblings("[id^='gforms_calendar_icon_input']").val();
 		optionsObj.buttonImageOnly = true;
+		optionsObj.buttonText = '';
 	}
 
 	inputId = inputId.split('_');

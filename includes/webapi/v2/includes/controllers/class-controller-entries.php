@@ -88,24 +88,25 @@ class GF_REST_Entries_Controller extends GF_REST_Form_Entries_Controller {
 	public function get_item( $request ) {
 
 		$entry_id = $request->get_param( 'entry_id' );
+		$entry    = GFAPI::get_entry( $entry_id );
+
+		if ( is_wp_error( $entry ) ) {
+			return new WP_Error( 'gf_entry_invalid_id', __( 'Invalid entry id.', 'gravityforms' ), array( 'status' => 404 ) );
+		}
+
+		// Get form id here, it could be removed when _field_ids are specified.
+		$form_id = $entry['form_id'];
 
 		$field_ids = $request['_field_ids'];
 		if ( ! empty( $field_ids ) ) {
 			$field_ids = (array) explode( ',', $request['_field_ids'] );
 			$field_ids = array_map( 'trim', $field_ids );
-		}
-
-		$labels = $request['_labels'];
-
-		$entry = GFAPI::get_entry( $entry_id );
-
-		$form_id = $entry['form_id'];
-
-		if ( ! is_wp_error( $entry ) ) {
-			if ( ! empty( $field_ids ) && ( ! empty( $entry ) ) ) {
+			if ( ! empty( $field_ids ) ) {
 				$entry = $this->filter_entry_fields( $entry, $field_ids );
 			}
 		}
+
+		$labels = $request['_labels'];
 
 		if ( $labels ) {
 

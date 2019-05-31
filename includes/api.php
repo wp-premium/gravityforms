@@ -245,14 +245,16 @@ class GFAPI {
 		}
 
 		if ( isset( $form['confirmations'] ) && is_array( $form['confirmations'] ) ) {
-			$result = GFFormsModel::update_form_meta( $form_id, $form['confirmations'], 'confirmations' );
+			$confirmations = self::set_property_as_key( $form['confirmations'], 'id' );
+			$result        = GFFormsModel::update_form_meta( $form_id, $confirmations, 'confirmations' );
 			if ( false === $result ) {
 				return new WP_Error( 'error_updating_confirmations', __( 'Error updating form confirmations', 'gravityforms' ), $wpdb->last_error );
 			}
 		}
 
 		if ( isset( $form['notifications'] ) && is_array( $form['notifications'] ) ) {
-			$result = GFFormsModel::update_form_meta( $form_id, $form['notifications'], 'notifications' );
+			$notifications = self::set_property_as_key( $form['notifications'], 'id' );
+			$result        = GFFormsModel::update_form_meta( $form_id, $notifications, 'notifications' );
 			if ( false === $result ) {
 				return new WP_Error( 'error_updating_notifications', __( 'Error updating form notifications', 'gravityforms' ), $wpdb->last_error );
 			}

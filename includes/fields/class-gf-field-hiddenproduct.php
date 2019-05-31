@@ -31,6 +31,20 @@ class GF_Field_HiddenProduct extends GF_Field {
 			$this->validation_message = esc_html__( 'Please enter a valid quantity', 'gravityforms' );
 		}
 	}
+	
+	public function get_value_default() {
+		$value = array();
+		if ( is_array( $this->inputs ) ) {
+			foreach ( $this->inputs as $index => $input ) {
+				$input_value = $this->is_form_editor() ? rgar( $input, 'defaultValue' ) : GFCommon::replace_variables_prepopulate( rgar( $input, 'defaultValue' ) );
+				if ( rgblank( $input_value ) && $input['id'] == "{$this->id}.2" ) {
+					$input_value = $this->basePrice;
+				}
+				$value[ strval( $input['id'] ) ] = $input_value;
+			}
+		}
+		return $value;
+	}
 
 	public function get_field_input( $form, $value = '', $entry = null ) {
 		$form_id         = $form['id'];
@@ -66,6 +80,28 @@ class GF_Field_HiddenProduct extends GF_Field {
 		$field_type = $is_entry_detail || $is_form_editor ? 'text' : 'hidden';
 
 		return $quantity_field . $product_name_field . "<input name='input_{$id}.2' id='ginput_base_price_{$form_id}_{$this->id}' type='{$field_type}' value='{$price}' class='gform_hidden ginput_amount' {$disabled_text}/>";
+	}
+
+	public function get_value_entry_detail( $value, $currency = '', $use_text = false, $format = 'html', $media = 'screen' ) {
+		if ( is_array( $value ) && ! empty( $value ) ) {
+			$product_name = trim( $value[ $this->id . '.1' ] );
+			$price        = trim( $value[ $this->id . '.2' ] );
+			$quantity     = trim( $value[ $this->id . '.3' ] );
+
+			$product_details = $product_name;
+
+			if ( ! rgblank( $quantity ) ) {
+				$product_details .= ', ' . esc_html__( 'Qty: ', 'gravityforms' ) . $quantity;
+			}
+
+			if ( ! rgblank( $price ) ) {
+				$product_details .= ', ' . esc_html__( 'Price: ', 'gravityforms' ) . GFCommon::format_number( $price, 'currency', $currency );
+			}
+
+			return $product_details;
+		} else {
+			return '';
+		}
 	}
 
 	public function sanitize_settings() {

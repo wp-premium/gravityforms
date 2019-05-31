@@ -1032,6 +1032,15 @@ class GF_Field extends stdClass implements ArrayAccess {
 	 */
 	public function get_value_default_if_empty( $value ) {
 
+		if ( is_array( $this->inputs ) && is_array( $value ) ) {
+			$defaults = $this->get_value_default();
+			foreach( $value as $index => &$input_value ) {
+				if ( rgblank( $input_value ) ) {
+					$input_value = rgar( $defaults, $index );
+				}
+			}
+		}
+
 		if ( ! GFCommon::is_empty_array( $value ) ) {
 			return $value;
 		}
