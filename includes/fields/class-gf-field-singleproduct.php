@@ -131,6 +131,18 @@ class GF_Field_SingleProduct extends GF_Field {
 		}
 	}
 
+	/**
+	 * Actions to be performed after the field has been converted to an object.
+	 *
+	 * @since 2.4.8.2
+	 */
+	public function post_convert_field() {
+		parent::post_convert_field();
+
+		// Ensure the choices property is not an array to prevent issues with some features such as the conditional logic reset to default.
+		$this->choices = null;
+	}
+
 }
 
 GF_Fields::register( new GF_Field_SingleProduct() );

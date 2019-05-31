@@ -2212,7 +2212,7 @@ class GFFormDisplay {
 
 			//get parameter value if pre-populate is enabled
 			if ( $field->allowsPrepopulate ) {
-				if ( $input_type == 'checkbox' ) {
+				if ( $input_type == 'checkbox' || $input_type == 'multiselect' ) {
 					$field_val = RGFormsModel::get_parameter_value( $field->inputName, $field_values, $field );
 					if ( ! is_array( $field_val ) ) {
 						$field_val = explode( ',', $field_val );
@@ -2220,7 +2220,7 @@ class GFFormDisplay {
 				} elseif ( is_array( $inputs ) ) {
 					$field_val = array();
 					foreach ( $inputs as $input ) {
-						$field_val["input_{$input['id']}"] = RGFormsModel::get_parameter_value( rgar( $input, 'name' ), $field_values, $field );
+						$field_val[ $input['id'] ] = RGFormsModel::get_parameter_value( rgar( $input, 'name' ), $field_values, $field );
 					}
 				} elseif ( $input_type == 'time' ) { // maintained for backwards compatibility. The Time field now has an inputs array.
 					$parameter_val = RGFormsModel::get_parameter_value( $field->inputName, $field_values, $field );
@@ -2264,16 +2264,26 @@ class GFFormDisplay {
 					$is_prepopulated    = is_array( $field_val ) ? in_array( $choice['value'], $field_val ) : $choice['value'] == $field_val;
 					$is_choice_selected = rgar( $choice, 'isSelected' ) || $is_prepopulated;
 
-					if ( $is_choice_selected && $input_type == 'select' ) {
-						$price = GFCommon::to_number( rgar( $choice, 'price' ) ) == false ? 0 : GFCommon::to_number( rgar( $choice, 'price' ) );
-						$val   = $is_pricing_field && $field->type != 'quantity' ? $choice['value'] . '|' . $price : $choice['value'];
-						$default_values[ $field->id ] = $val;
-					} elseif ( $is_choice_selected ) {
-						if ( ! isset( $default_values[ $field->id ] ) ) {
-							$default_values[ $field->id ] = array();
+					if ( $is_choice_selected ) {
+						// Select
+						if ( $input_type == 'select' ) {
+							$price                        = GFCommon::to_number( rgar( $choice, 'price' ) ) == false ? 0 : GFCommon::to_number( rgar( $choice, 'price' ) );
+							$val                          = $is_pricing_field && $field->type != 'quantity' ? $choice['value'] . '|' . $price : $choice['value'];
+							$default_values[ $field->id ] = $val;
 						}
-
-						$default_values[ $field->id ][] = "choice_{$form['id']}_{$field->id}_{$choice_index}";
+						else {
+							if ( ! isset( $default_values[ $field->id ] ) ) {
+								$default_values[ $field->id ] = array();
+							}
+							// Multiselect
+							if ( $input_type == 'multiselect' ) {
+								$default_values[ $field->id ][] = $choice['value'];
+							}
+							// Checkboxes & Radio Buttons
+							else {
+								$default_values[ $field->id ][] = "choice_{$form['id']}_{$field->id}_{$choice_index}";
+							}
+						}
 					}
 					$choice_index ++;
 				}

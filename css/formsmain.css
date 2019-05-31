@@ -458,7 +458,7 @@ body .gform_wrapper ul li.field_description_below div.ginput_container_checkbox 
     margin-bottom: 12px;
 }
 
-.gform_wrapper label.screen-reader-text,
+.gform_wrapper .screen-reader-text,
 .gform_wrapper label.hidden_sub_label {
 	border: 0;
 	clip: rect(1px, 1px, 1px, 1px);

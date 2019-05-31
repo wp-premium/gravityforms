@@ -2618,6 +2618,15 @@ class GFFormsModel {
 		self::save_entry( $form, $entry );
 	}
 
+	/**
+	 * Save Entry to database.
+	 *
+	 * @since 2.4.8.13 Updated created_by property to save as an empty value when undefined.
+	 * @since Unknown
+	 *
+	 * @param array $form  Form object.
+	 * @param array $entry Entry object.
+	 */
 	public static function save_entry( $form, &$entry ) {
 		global $wpdb, $current_user;
 
@@ -2660,7 +2669,7 @@ class GFFormsModel {
 		if ( $is_new_lead ) {
 			// Saving the new entry.
 
-			$user_id = $current_user && $current_user->ID ? $current_user->ID : 'NULL';
+			$user_id = $current_user && $current_user->ID ? $current_user->ID : null;
 
 			$user_agent = self::truncate( rgar( $_SERVER, 'HTTP_USER_AGENT' ), 250 );
 			$user_agent = sanitize_text_field( $user_agent );
@@ -2677,7 +2686,29 @@ class GFFormsModel {
 
 			$ip = rgars( $form, 'personalData/preventIP' ) ? '' : self::get_ip();
 
-			$wpdb->query( $wpdb->prepare( "INSERT INTO $entry_table(form_id, ip, source_url, date_created, date_updated, user_agent, currency, created_by) VALUES(%d, %s, %s, %s, %s, %s, %s, {$user_id})", $form['id'], $ip, $source_url, $current_date, $current_date, $user_agent, $currency ) );
+			$wpdb->insert(
+				$entry_table,
+				array(
+					'form_id'      => $form['id'],
+					'ip'           => $ip,
+					'source_url'   => $source_url,
+					'date_created' => $current_date,
+					'date_updated' => $current_date,
+					'user_agent'   => $user_agent,
+					'currency'     => $currency,
+					'created_by'   => $user_id,
+				),
+				array(
+					'form_id'      => '%d',
+					'ip'           => '%s',
+					'source_url'   => '%s',
+					'date_created' => '%s',
+					'date_updated' => '%s',
+					'user_agent'   => '%s',
+					'currency'     => '%s',
+					'created_by'   => '%s',
+				)
+			);
 
 			// Reading newly created lead id
 			$lead_id = $wpdb->insert_id;
