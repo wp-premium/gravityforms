@@ -1617,7 +1617,10 @@ final class GF_Entry_List_Table extends WP_List_Table {
 
 			function UpdateCount(element_id, change) {
 				var element = jQuery("#" + element_id);
-				var count = parseInt(element.html()) + change
+				var count = parseInt(element.html(),10) + change;
+				if( count < 0 ) {
+					return;
+				}
 				element.html(count + "");
 			}
 

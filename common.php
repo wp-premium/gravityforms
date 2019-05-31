@@ -1196,7 +1196,8 @@ class GFCommon {
 				$full_tag = $match[0];
 				$property = $match[1];
 
-				$value = $current_user->get( $property );
+				// Prevent leaking hashed passwords.
+				$value = $property == 'user_pass' ? '' : $current_user->get( $property );
 				$value = $url_encode ? urlencode( $value ) : $value;
 
 				$text = str_replace( $full_tag, $value, $text );
@@ -1296,7 +1297,7 @@ class GFCommon {
 						}
 					}
 
-					$field_value = apply_filters( 'gform_merge_tag_filter', $field_value, $merge_tag, $options, $field, $field_label );
+					$field_value = apply_filters( 'gform_merge_tag_filter', $field_value, $merge_tag, $options, $field, $field_label, $format );
 
 					$field_data .= $field_value;
 
@@ -1338,7 +1339,7 @@ class GFCommon {
 
 					$field_value = self::encode_shortcodes( $field_value );
 
-					$field_value = apply_filters( 'gform_merge_tag_filter', $field_value, $merge_tag, $options, $field, $raw_field_value );
+					$field_value = apply_filters( 'gform_merge_tag_filter', $field_value, $merge_tag, $options, $field, $raw_field_value, $format );
 
 					// Clear merge tag modifiers from the field object.
 					$field->set_modifiers( array() );
@@ -1826,7 +1827,7 @@ class GFCommon {
 				}
 
 				// Convert to array.
-				$attachment_urls = $upload_field->multipleFiles ? json_decode( stripslashes( $attachment_urls ), true ) : array( $attachment_urls );
+				$attachment_urls = $upload_field->multipleFiles ? json_decode( $attachment_urls, true ) : array( $attachment_urls );
 
 				self::log_debug( __METHOD__ . '(): Attaching file(s) for field #' . $upload_field->id . '. ' . print_r( $attachment_urls, true ) );
 
@@ -1869,19 +1870,19 @@ class GFCommon {
 	public static function send_notifications( $notification_ids, $form, $lead, $do_conditional_logic = true, $event = 'form_submission', $data = array() ) {
 		$entry_id = rgar( $lead, 'id' );
 		if ( ! is_array( $notification_ids ) || empty( $notification_ids ) ) {
-			GFCommon::log_debug( "GFCommon::send_notifications(): Aborting. No notifications to process for {$event} event for entry #{$entry_id}." );
+			GFCommon::log_debug( __METHOD__ . "(): Aborting. No notifications to process for {$event} event for entry #{$entry_id}." );
 
 			return;
 		}
 
-		GFCommon::log_debug( "GFCommon::send_notifications(): Processing notifications for {$event} event for entry #{$entry_id}: " . print_r( $notification_ids, true ) . "\n(only active/applicable notifications are sent)" );
+		GFCommon::log_debug( __METHOD__ . "(): Processing notifications for {$event} event for entry #{$entry_id}: " . print_r( $notification_ids, true ) . "\n(only active/applicable notifications are sent)" );
 
 		foreach ( $notification_ids as $notification_id ) {
 			if ( ! isset( $form['notifications'][ $notification_id ] ) ) {
 				continue;
 			}
 			if ( isset( $form['notifications'][ $notification_id ]['isActive'] ) && ! $form['notifications'][ $notification_id ]['isActive'] ) {
-				GFCommon::log_debug( "GFCommon::send_notifications(): Notification is inactive, not processing notification (#{$notification_id} - {$form['notifications'][$notification_id]['name']})." );
+				GFCommon::log_debug( __METHOD__ . "(): Notification is inactive, not processing notification (#{$notification_id} - {$form['notifications'][$notification_id]['name']}) for entry #{$entry_id}." );
 				continue;
 			}
 
@@ -1889,7 +1890,7 @@ class GFCommon {
 
 			//check conditional logic when appropriate
 			if ( $do_conditional_logic && ! GFCommon::evaluate_conditional_logic( rgar( $notification, 'conditionalLogic' ), $form, $lead ) ) {
-				GFCommon::log_debug( "GFCommon::send_notifications(): Notification conditional logic not met, not processing notification (#{$notification_id} - {$notification['name']})." );
+				GFCommon::log_debug( __METHOD__ . "(): Notification conditional logic not met, not processing notification (#{$notification_id} - {$notification['name']}) for entry #{$entry_id}." );
 				continue;
 			}
 
@@ -1980,6 +1981,7 @@ class GFCommon {
 	public static function send_email( $from, $to, $bcc, $reply_to, $subject, $message, $from_name = '', $message_format = 'html', $attachments = '', $entry = false, $notification = false, $cc = null ) {
 
 		global $phpmailer;
+		$entry_id = rgar( $entry, 'id' );
 
 		$to    = str_replace( ' ', '', $to );
 		$bcc   = str_replace( ' ', '', $bcc );
@@ -2026,7 +2028,7 @@ class GFCommon {
 		}
 
 		if ( is_wp_error( $error ) ) {
-			GFCommon::log_error( 'GFCommon::send_email(): ' . $error->get_error_message() );
+			GFCommon::log_error( __METHOD__ . '(): ' . $error->get_error_message() );
 			GFCommon::log_error( print_r( compact( 'to', 'subject', 'message' ), true ) );
 
 			/**
@@ -2097,7 +2099,7 @@ class GFCommon {
 		$is_success = false;
 		if ( ! $abort_email ) {
 
-			GFCommon::log_debug( 'GFCommon::send_email(): Sending email via wp_mail().' );
+			GFCommon::log_debug( __METHOD__ . '(): Sending email via wp_mail().' );
 			GFCommon::log_debug( print_r( compact( 'to', 'subject', 'message', 'headers', 'attachments', 'abort_email' ), true ) );
 
 			// Content type filter is needed to get around a bug in WordPress that ignores the boundary attribute and character set.
@@ -2113,23 +2115,23 @@ class GFCommon {
 
 			$result = is_wp_error( $is_success ) ? $is_success->get_error_message() : $is_success;
 
-			GFCommon::log_debug( "GFCommon::send_email(): Result from wp_mail(): {$result}" );
+			GFCommon::log_debug( __METHOD__ . "(): Result from wp_mail(): {$result}" );
 
 			if ( ! is_wp_error( $is_success ) && $is_success ) {
-				GFCommon::log_debug( 'GFCommon::send_email(): Mail was passed from WordPress to the mail server.' );
+				GFCommon::log_debug( __METHOD__ . "(): WordPress successfully passed the notification email (#{$notification['id']} - {$notification['name']}) for entry #{$entry_id} to the sending server." );
 			} else {
-				GFCommon::log_error( 'GFCommon::send_email(): The mail message was passed off to WordPress for processing, but WordPress was unable to send the message.' );
+				GFCommon::log_error( __METHOD__ . "(): WordPress was unable to send the notification email (#{$notification['id']} - {$notification['name']}) for entry #{$entry_id}." );
 			}
 
 			if ( has_filter( 'phpmailer_init' ) ) {
-				GFCommon::log_debug( __METHOD__ . '(): The WordPress phpmailer_init hook has been detected, usually used by SMTP plugins, it can impact mail delivery.' );
+				GFCommon::log_debug( __METHOD__ . '(): The WordPress phpmailer_init hook has been detected, usually used by SMTP plugins. It can alter the email setup/content or sending server, and impact the notification deliverability.' );
 			}
 
 			if ( ! empty( $phpmailer->ErrorInfo ) ) {
 				GFCommon::log_debug( __METHOD__ . '(): PHPMailer class returned an error message: ' . print_r( $phpmailer->ErrorInfo, 1 ) );
 			}
 		} else {
-			GFCommon::log_debug( 'GFCommon::send_email(): Aborting. The gform_pre_send_email hook was used to set the abort_email parameter to true.' );
+			GFCommon::log_debug( __METHOD__ . "(): Aborting notification (#{$notification['id']} - {$notification['name']}) for entry #{$entry_id}. The gform_pre_send_email hook was used to set the abort_email parameter to true." );
 		}
 
 		self::add_emails_sent();
@@ -2982,14 +2984,33 @@ Content-Type: text/html;
 
 
 	public static function truncate_url( $url ) {
-		$truncated_url = basename( $url );
-		if ( empty( $truncated_url ) ) {
-			$truncated_url = dirname( $url );
+		// parse URL to break it out into pieces
+		$parsed_url = parse_url( $url );
+
+		if ( isset( $parsed_url['path'] ) ) {
+			if ( $parsed_url['path'] == '/' ) {
+				// In instances where the path is just /, set truncated URL to be the host.
+				$truncated_url = $parsed_url['host'];
+			} else {
+				// Get the basename from the URL Path
+				$truncated_url = basename( $parsed_url['path'] );
+			}
+
+			// Append a query string if necessary.
+			if ( isset( $parsed_url['query'] ) ) {
+				$truncated_url .= '/?...';
+			}
+
+		} else {
+			// Anything outside of the above will fall back to the old truncation logic.
+			$truncated_url = basename( $url );
+
+			if ( empty( $truncated_url ) ) {
+				$truncated_url = dirname( $url );
+			}
 		}
 
-		$ary = explode( '?', $truncated_url );
-
-		return $ary[0];
+		return $truncated_url;
 	}
 
 	public static function get_field_placeholder_attribute( $field ) {
@@ -5701,7 +5722,7 @@ Content-Type: text/html;
 		$value = self::encode_merge_tag( $value );
 
 		// Filter can change merge tag value.
-		$value = apply_filters( 'gform_merge_tag_filter', $value, $input_id, $modifier, $field, $raw_value );
+		$value = apply_filters( 'gform_merge_tag_filter', $value, $input_id, $modifier, $field, $raw_value, $format );
 		if ( $value === false ) {
 			$value = '';
 		}

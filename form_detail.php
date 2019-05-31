@@ -740,7 +740,7 @@ class GFFormDetail {
 				<?php esc_html_e( 'Field Type', 'gravityforms' ); ?>
 				<?php gform_tooltip( 'form_field_type' ) ?>
 			</label>
-			<select id="post_custom_field_type" onchange="if(jQuery(this).val() == '') return; jQuery('#field_settings').slideUp(function(){StartChangeInputType(jQuery('#post_custom_field_type').val());});">
+			<select id="post_custom_field_type" onchange="if(jQuery(this).val() == '') return; jQuery('#field_settings').slideUp(function(){StartChangePostCustomFieldType(jQuery('#post_custom_field_type').val());});">
 				<optgroup class="option_header" label="<?php esc_attr_e( 'Standard Fields', 'gravityforms' ); ?>">
 					<option value="text"><?php esc_html_e( 'Single line text', 'gravityforms' ); ?></option>
 					<option value="textarea"><?php esc_html_e( 'Paragraph Text', 'gravityforms' ); ?></option>

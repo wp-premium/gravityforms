@@ -2279,6 +2279,12 @@ function StartChangePostCategoryType(type){
     return StartChangeInputType(type, field);
 }
 
+function StartChangePostCustomFieldType( type ) {
+	if ( jQuery.inArray( type, [ 'radio', 'select', 'checkbox', 'multiselect' ] ) === -1 ) {
+		field.choices = null;
+	}
+	return StartChangeInputType(type, field);
+}
 
 function EndChangeInputType(params){
     var fieldId = params.id, fieldType = params.type, fieldString = params.fieldString;

@@ -451,7 +451,7 @@ function gf_reset_to_default(targetId, defaultValue){
 		if(radio_button_name == "gf_other_choice"){
 			val = element.attr("value");
 		}
-		else if(jQuery.isArray(defaultValue)){
+		else if( jQuery.isArray( defaultValue ) && ! element.is( 'select[multiple]' ) ) {
 			val = defaultValue[target_index];
 		}
 		else if(jQuery.isPlainObject(defaultValue)){
