@@ -2447,8 +2447,20 @@ Content-Type: text/html;
 		return '';
 	}
 
+	/**
+	 * Checks if the given type is a pricing field.
+	 *
+	 * @since 2.4.10 Added creditcard field.
+	 * @since unknown
+	 *
+	 * @param string $field_type The value of the field type or inputType property.
+	 *
+	 * @return bool
+	 */
 	public static function is_pricing_field( $field_type ) {
-		return self::is_product_field( $field_type ) || $field_type == 'donation';
+		$types = array( 'creditcard', 'donation' );
+
+		return in_array( $field_type, $types, true ) || self::is_product_field( $field_type );
 	}
 
 	/**
@@ -3336,14 +3348,11 @@ Content-Type: text/html;
 			return $field_input;
 		}
 
-		// Product fields are not editable
-		if ( rgget('view') == 'entry' && self::is_product_field( $field->type ) ) {
+		// Pricing fields are not editable.
+		if ( rgget('view') == 'entry' && self::is_pricing_field( $field->type ) ) {
 
-			return "<div class='ginput_container'>" . esc_html__( 'Product fields are not editable' , 'gravityforms' ) . '</div>';
+			return "<div class='ginput_container'>" . esc_html__( 'Pricing fields are not editable' , 'gravityforms' ) . '</div>';
 
-		} elseif ( rgget('view') == 'entry' && $field->type == 'donation' ) {
-
-			return "<div class='ginput_container'>" . esc_html__( 'Donations are not editable' , 'gravityforms' ) . '</div>';
 		}
 
 		// Add categories as choices for Post Category field
