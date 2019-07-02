@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms
 Plugin URI: https://www.gravityforms.com
 Description: Easily create web forms and manage form entries within the WordPress admin.
-Version: 2.4.9
+Version: 2.4.10
 Author: rocketgenius
 Author URI: https://www.rocketgenius.com
 License: GPL-2.0+
@@ -215,7 +215,7 @@ class GFForms {
 	 *
 	 * @var string $version The version number.
 	 */
-	public static $version = '2.4.9';
+	public static $version = '2.4.10';
 
 	/**
 	 * Handles background upgrade tasks.
@@ -311,6 +311,21 @@ class GFForms {
 		if ( ( false === ( defined( 'DOING_AJAX' ) && true === DOING_AJAX ) ) ) {
 
 			gf_upgrade()->maybe_upgrade();
+
+		}
+
+		// Load Editor Blocks if WordPress is 5.0+.
+		if ( function_exists( 'register_block_type' ) ) {
+
+			// Load block framework.
+			if ( ! class_exists( 'GF_Blocks' ) ) {
+				require_once plugin_dir_path( __FILE__ ) . 'includes/blocks/class-gf-blocks.php';
+			}
+
+			// Load included Blocks.
+			foreach ( glob( plugin_dir_path( __FILE__ ) . 'includes/blocks/class-gf-block-*.php' ) as $filename ) {
+				require_once $filename;
+			}
 
 		}
 
