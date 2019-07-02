@@ -907,10 +907,17 @@ if ( class_exists( 'GFForms' ) ) {
 			global $wpdb;
 			$table_name = GFFormsModel::get_rest_api_keys_table_name();
 
+			// If on a multi-site installation use the base database prefix so the query below uses the correct users table.
+			if ( is_multisite() ) {
+				$wpdb_prefix = $wpdb->base_prefix;
+			} else {
+				$wpdb_prefix = $wpdb->prefix;
+			}
+
 			$keys  = $wpdb->get_results("
 			SELECT key_id, user_id, description, permissions, concat('...', substring( consumer_key, -7, 7 )) as 'key', u.user_login as user, last_access
 			FROM {$table_name} k
-			INNER JOIN {$wpdb->prefix}users u ON k.user_id = u.id
+			INNER JOIN {$wpdb_prefix}users u ON k.user_id = u.id
 		", ARRAY_A
 			);
 

@@ -57,11 +57,18 @@ if ( ! class_exists( 'GFWidget' ) ) {
 
 			extract( $args );
 			echo $before_widget;
+
 			/**
-			 * Filters the widget title
-			 * @param string $instance['title'] The title
+			 * Filters the widget title.
+			 *
+			 * @since 2.4.10 Added the $instance and $id_base args.
+			 * @since unknown
+			 *
+			 * @param string $title    The widget title.
+			 * @param array  $instance Saved database values for the widget.
+			 * @param mixed  $id_base  The widget ID.
 			 */
-			$title = apply_filters( 'widget_title', $instance['title'] );
+			$title = apply_filters( 'widget_title', $instance['title'], $instance, $this->id_base );
 
 			if ( $title ) {
 				echo $before_title . $title . $after_title;
