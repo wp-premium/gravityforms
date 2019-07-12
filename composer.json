@@ -6,7 +6,7 @@
   "minimum-stability": "dev",
   "require": {
     "php": ">=5.3",
-    "composer/installers": "~1.0"
+    "composer/installers": ">=1.0"
   },
   "dist": {
     "url": "git@github.com:Samsonator/gravityforms.git",
