@@ -1,7 +1,7 @@
 {
   "name": "Samsonator/gravityforms",
   "description": "Fork of GravityForms repo so we can use it as WP Plugin.",
-  "type": "wordpress-plugin",
+  "type": "wordpress-muplugin",
   "license": "GPL-3.0",
   "minimum-stability": "dev",
   "require": {
