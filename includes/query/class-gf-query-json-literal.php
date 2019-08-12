@@ -32,11 +32,8 @@ class GF_Query_JSON_Literal extends GF_Query_Literal{
 		global $wpdb;
 
 		if ( is_string( $this->value ) ) {
-			$value = $this->value;
-
-			$value = str_replace( '\\', '\\\\\\\\', $value );
-			$value = str_replace( '/', '\\\\/', $value );
-			$value = str_replace( '"', '\\\\"', $value );
+			$value = trim( json_encode( $this->value ), '"' );
+			$value = str_replace( '\\', '\\\\', $value );
 
 			return $wpdb->prepare( '%s', $value );
 		}

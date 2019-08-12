@@ -1038,14 +1038,7 @@ class GFAPI {
 			unset( $current_entry[ $column ] );
 		}
 
-		foreach ( $current_entry as $k => $v ) {
-			$lead_detail_id = GFFormsModel::get_lead_detail_id( $current_fields, $k );
-			$field          = self::get_field( $form, $k );
-			$result         = GFFormsModel::queue_batch_field_operation( $form, $entry, $field, $lead_detail_id, $k, '' );
-			if ( false === $result ) {
-				return new WP_Error( 'update_field_values_failed', __( 'There was a problem while updating the field values', 'gravityforms' ), $wpdb->last_error );
-			}
-		}
+		self::purge_missing_entry_values( $form, $entry, $current_entry, $current_fields );
 
 		GFFormsModel::commit_batch_field_operations();
 
@@ -1066,6 +1059,45 @@ class GFAPI {
 		return true;
 	}
 
+	/**
+	 * Delete obsolete fields from the current entry.
+	 *
+	 * The $current_entry object here contains subfields in repeater fields which are no longer available in the
+	 * updated entry. So we need to delete them all from the $entry object.
+	 *
+	 * @since 2.4.11
+	 *
+	 * @param array  $form The form object.
+	 * @param array  $entry The entry object.
+	 * @param array  $current_entry The current entry array.
+	 * @param array  $current_fields Current entry meta gets from DB.
+	 * @param string $item_index Item index.
+	 *
+	 * @return void|WP_Error Return WP_Error if there's DB errors.
+	 */
+	private static function purge_missing_entry_values( $form, &$entry, $current_entry, $current_fields, $item_index = '' ) {
+		global $wpdb;
+
+		if ( $current_entry !== null ) {
+			foreach ( $current_entry as $k => $v ) {
+				$field = self::get_field( $form, $k );
+
+				if ( $field instanceof GF_Field_Repeater && ! empty( $v ) ) {
+					foreach ( $v as $i => $values ) {
+						$new_item_index = $item_index . '_' . $i;
+						self::purge_missing_entry_values( $form, $entry, $values, $current_fields, $new_item_index );
+					}
+				} else {
+					$lead_detail_id = GFFormsModel::get_lead_detail_id( $current_fields, $k, $item_index );
+					$result         = GFFormsModel::queue_batch_field_operation( $form, $entry, $field, $lead_detail_id, $k, '', $item_index );
+					if ( false === $result ) {
+						return new WP_Error( 'update_field_values_failed', __( 'There was a problem while updating the field values', 'gravityforms' ), $wpdb->last_error );
+					}
+				}
+			}
+		}
+	}
+
 	private static function queue_batch_field_operation( $form, $entry, $field, $item_index = '', &$current_entry = array(), $current_fields = array() ) {
 
 		if ( is_array( $field->fields ) ) {
@@ -1075,17 +1107,7 @@ class GFAPI {
 					$new_item_index = $item_index . '_' . $i;
 					$values['id']   = $entry['id'];
 					foreach ( $field->fields as $sub_field ) {
-						self::queue_batch_field_operation( $form, $values, $sub_field, $new_item_index, $current_entry[ $field_id ], $current_fields );
-					}
-				}
-			}
-
-			foreach ( $field->fields as $sub_field ) {
-				foreach ( $current_fields as $current_field ) {
-					if ( intval( $current_field->meta_key ) == $sub_field->id && ! isset( $current_field->update ) ) {
-						$current_field->delete = true;
-						$result = GFFormsModel::queue_batch_field_operation( $form, $entry, $sub_field, $current_field->id, $current_field->meta_key, '', $current_field->item_index );
-						GFCommon::log_debug( __METHOD__ . "(): Deleting: {$field->label}(#{$sub_field->id}{$current_field->item_index} - {$field->type}). Result: " . var_export( $result, 1 ) );
+						self::queue_batch_field_operation( $form, $values, $sub_field, $new_item_index, $current_entry[ $field_id ][ $i ], $current_fields );
 					}
 				}
 			}
@@ -1118,7 +1140,7 @@ class GFAPI {
 			$field_value = isset( $entry[ (string) $field_id ] ) ? $entry[ (string) $field_id ] : '';
 			$current_value = isset( $current_entry[ (string) $field_id ] ) ? $current_entry[ (string) $field_id ] : '';
 			if ( empty( $current_entry ) || $field_value != $current_value ) {
-				$lead_detail_id = $current_fields ? GFFormsModel::get_lead_detail_id( $current_fields, $field_id ) : 0;
+				$lead_detail_id = $current_fields ? GFFormsModel::get_lead_detail_id( $current_fields, $field_id, $item_index ) : 0;
 				$result         = GFFormsModel::queue_batch_field_operation( $form, $entry, $field, $lead_detail_id, $field_id, $field_value, $item_index );
 				if ( false === $result ) {
 					return new WP_Error( 'update_field_values_failed', __( 'There was a problem while updating the field values', 'gravityforms' ) );
@@ -1362,18 +1384,39 @@ class GFAPI {
 		$field = self::get_field( $form, $input_id );
 
 		$entry_meta_table_name = GFFormsModel::get_entry_meta_table_name();
+		$result                = true;
 
-		$sql = $wpdb->prepare( "SELECT id FROM {$entry_meta_table_name} WHERE entry_id=%d AND meta_key=%s", $entry_id, $input_id );
+		// If it's a Repeater field.
+		if ( $field instanceof GF_Field_Repeater && isset( $field->fields ) && is_array( $field->fields ) ) {
+			if ( isset( $entry[ $input_id ] ) ) {
+				// delete all values in the repeater field.
+				$result = GFFormsModel::update_entry_field_value( $form, $entry, $field, 0, $input_id, '' );
+			}
+			if ( true !== $result ) {
+				return $result;
+			}
 
-		if ( $item_index ) {
-			$sql .= $wpdb->prepare( ' AND item_index=%s', $item_index );
-		}
+			foreach ( $value as $i => $sub_values ) {
+				$new_item_index = $item_index . '_' . $i;
+				foreach ( $sub_values as $key => $sub_value ) {
+					$result = self::update_entry_field( $entry_id, $key, $sub_value, $new_item_index );
 
-		$lead_detail_id = $wpdb->get_var( $sql );
+					if ( true !== $result ) {
+						return $result;
+					}
+				}
+			}
+		} else {
+			$sql = $wpdb->prepare( "SELECT id FROM {$entry_meta_table_name} WHERE entry_id=%d AND meta_key=%s", $entry_id, $input_id );
+			if ( $item_index ) {
+				$sql .= $wpdb->prepare( ' AND item_index=%s', $item_index );
+			}
 
-		$result = true;
-		if ( ! isset( $entry[ $input_id ] ) || $entry[ $input_id ] != $value ) {
-			$result = GFFormsModel::update_entry_field_value( $form, $entry, $field, $lead_detail_id, $input_id, $value, $item_index );
+			$lead_detail_id = $wpdb->get_var( $sql );
+
+			if ( ! isset( $entry[ $input_id ] ) || ( $value === 0 && $entry[ $input_id ] !== '0' ) || $entry[ $input_id ] != $value ) {
+				$result = GFFormsModel::update_entry_field_value( $form, $entry, $field, $lead_detail_id, $input_id, $value, $item_index );
+			}
 		}
 
 		return $result;
@@ -1452,7 +1495,6 @@ class GFAPI {
 		$input_values[ 'gform_source_page_number_' . $form_id ] = absint( $source_page );
 		$input_values['gform_field_values']                     = $field_values;
 
-
 		require_once( GFCommon::get_base_path() . '/form_display.php' );
 
 		if ( ! isset( $_POST ) ) {
@@ -1464,14 +1506,21 @@ class GFAPI {
 		// Ensure that confirmation handler doesn't send a redirect header or add redirect JavaScript.
 		add_filter( 'gform_suppress_confirmation_redirect', '__return_true' );
 
+		// Ensure the state field is in the submission.
+		add_filter( 'gform_pre_validation', array( 'GFAPI', 'submit_form_filter_gform_pre_validation' ), 50 );
+
 		try {
 			GFFormDisplay::process_form( $form_id );
 		} catch ( Exception $ex ) {
 			remove_filter( 'gform_suppress_confirmation_redirect', '__return_true' );
+			remove_filter( 'gform_pre_validation', array( 'GFAPI', 'submit_form_filter_gform_pre_validation' ), 50 );
 			return new WP_Error( 'error_processing_form', __( 'There was an error while processing the form:', 'gravityforms' ) . ' ' . $ex->getCode() . ' ' . $ex->getMessage() );
 		}
 
 		remove_filter( 'gform_suppress_confirmation_redirect', '__return_true' );
+
+		remove_filter( 'gform_pre_validation', array( 'GFAPI', 'submit_form_filter_gform_pre_validation' ), 50 );
+
 
 		if ( empty( GFFormDisplay::$submission ) ) {
 			return new WP_Error( 'error_processing_form', __( 'There was an error while processing the form:', 'gravityforms' ) );
@@ -1526,6 +1575,26 @@ class GFAPI {
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Ensure that the state field is set when the form is submitted via GFAPI::submit_form()
+	 * or via the POST forms/[id]/submissions REST API endpoint.
+	 *
+	 * @since 2.4.11
+	 *
+	 * @param array $form
+	 *
+	 * @return array
+	 */
+	public static function submit_form_filter_gform_pre_validation( $form ) {
+		$name = 'state_' . absint( $form['id'] );
+		if ( ! isset( $_POST[ $name ] ) ) {
+			$field_values   = rgpost( 'gform_field_values' );
+			$_POST[ $name ] = GFFormDisplay::get_state( $form, $field_values );
+		}
+
+		return $form;
 	}
 
 	// FEEDS ------------------------------------------------------
@@ -1871,6 +1940,34 @@ class GFAPI {
 	 */
 	public static function entry_exists( $entry_id ) {
 		return GFFormsModel::entry_exists( $entry_id );
+	}
+
+	/**
+	 * Write an error message to the Gravity Forms API log.
+	 *
+	 * @since 2.4.11
+	 *
+	 * @param string $message The message to be logged.
+	 */
+	public static function log_error( $message ) {
+		if ( class_exists( 'GFLogging' ) ) {
+			GFLogging::include_logger();
+			GFLogging::log_message( 'gravityformsapi', $message, KLogger::ERROR );
+		}
+	}
+
+	/**
+	 * Write a debug message to the Gravity Forms API log.
+	 *
+	 * @since 2.4.11
+	 *
+	 * @param string $message The message to be logged.
+	 */
+	public static function log_debug( $message ) {
+		if ( class_exists( 'GFLogging' ) ) {
+			GFLogging::include_logger();
+			GFLogging::log_message( 'gravityformsapi', $message, KLogger::DEBUG );
+		}
 	}
 
 }

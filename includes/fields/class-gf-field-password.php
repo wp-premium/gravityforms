@@ -46,7 +46,12 @@ class GF_Field_Password extends GF_Field {
 			$this->failed_validation  = true;
 			$this->validation_message = esc_html__( 'Your passwords do not match.', 'gravityforms' );
 		} elseif ( $this->passwordStrengthEnabled && ! empty( $this->minPasswordStrength ) && ! empty( $password ) ) {
-			$strength = $_POST[ 'input_' . $this->id . '_strength' ];
+			
+			$strength = rgpost('input_' . $this->id . '_strength' );
+			
+			if ( empty( $strength ) ) {
+				$strength = $this->get_password_strength( $password );
+			}
 
 			$levels = array( 'short' => 1, 'bad' => 2, 'good' => 3, 'strong' => 4 );
 			if ( $levels[ $strength ] < $levels[ $this->minPasswordStrength ] ) {
@@ -54,6 +59,60 @@ class GF_Field_Password extends GF_Field {
 				$this->validation_message = empty( $this->errorMessage ) ? sprintf( esc_html__( 'Your password does not meet the required strength. %sHint: To make it stronger, use upper and lower case letters, numbers and symbols like ! " ? $ %% ^ & ).', 'gravityforms' ), '<br />' ) : $this->errorMessage;
 			}
 		}
+	}
+	
+	/**
+	 * Calculate the password score using PHP when not passed by JS.
+	 *
+	 * @since 2.4.11
+	 *
+	 * @see gravityforms.js gformPasswordStrength() JS code
+	 *
+	 * @param string $password The password that should be checked.
+	 *
+	 * @return string blank|short|bad|good|strong
+	 */
+	protected function get_password_strength( $password = '' ) {
+
+		$symbol_size = 0;
+		$strlen      = GFCommon::safe_strlen( $password );
+
+		if ( 0 >= $strlen ) {
+			return 'blank';
+		}
+
+		if ( $strlen < 4 ) {
+			return 'short';
+		}
+
+		if ( preg_match( '/[ 0 - 9 ] /', $password ) ) {
+			$symbol_size += 10;
+		}
+
+		if ( preg_match( '/[ a - z ] /', $password ) ) {
+			$symbol_size += 26;
+		}
+
+		if ( preg_match( '/[ A - Z ] /', $password ) ) {
+			$symbol_size += 26;
+		}
+
+		if ( preg_match( '/[^a - zA - Z0 - 9]/', $password ) ) {
+			$symbol_size += 31;
+		}
+
+		$natLog = log( pow( $symbol_size, $strlen ) );
+		$score  = $natLog / log( 2 );
+
+		if ( 40 > $score ) {
+			return 'bad';
+		}
+
+		if ( 56 > $score ) {
+			return 'good';
+		}
+
+		return 'strong';
 	}
 
 	public function get_field_input( $form, $value = '', $entry = null ) {

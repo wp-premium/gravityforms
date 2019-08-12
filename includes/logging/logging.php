@@ -514,7 +514,7 @@ class GFLogging extends GFAddOn {
 		$dir = $this->get_log_dir();
 
 		if ( is_dir( $dir ) ) {
-			$files = glob( "{$dir}{,.}*", GLOB_BRACE ); // Get all file names.
+			$files = glob( "{$dir}{,.}*" ); // Get all file names.
 			foreach ( $files as $file ) {
 				if ( is_file( $file ) ) {
 					unlink( $file ); // Delete file.

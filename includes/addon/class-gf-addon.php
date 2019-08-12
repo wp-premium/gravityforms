@@ -2540,6 +2540,7 @@ abstract class GFAddOn {
 		$key_field['name']    .= '_key';
 		$key_field['choices']  = isset( $field['field_map'] ) ? $field['field_map'] : null;
 		$key_field['class']    = 'key key_{i}';
+		$key_field['title']    = rgar( $field, 'key_field_title' );
 
 		// Define custom key field properties.
 		$custom_key_field['name']  .= '_custom_key_{i}';
@@ -2552,6 +2553,7 @@ abstract class GFAddOn {
 		// Define value field properties.
 		$value_field['name']  .= '_custom_value';
 		$value_field['class']  = 'value value_{i}';
+		$value_field['title']  = rgar( $field, 'value_field_title' );
 
 		// Remove unneeded field properties.
 		unset( $field['field_map'], $value_field['field_map'], $key_field['field_map'], $custom_key_field['field_map'] );
@@ -2561,9 +2563,17 @@ abstract class GFAddOn {
 			$html .= $this->get_error_icon( $field );
 		}
 
+		$header = '';
+		if ( ! empty( $key_field['title'] ) || ! empty ( $value_field['title'] ) ) {
+			$header = '<th>' . $key_field['title'] . '</th>' .'
+					   <th>' . $value_field['title'] . '</th>';
+
+		}
+
 		// Display dynamic field map table.
 		$html .= '
             <table class="settings-field-map-table" cellspacing="0" cellpadding="0">
+            	' . $header . '
                 <tbody class="repeater">
 	                <tr>
 	                    '. $this->get_mapping_field( 'key', $key_field, $custom_key_field ) .'

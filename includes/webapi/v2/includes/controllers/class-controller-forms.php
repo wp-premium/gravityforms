@@ -266,11 +266,11 @@ class GF_REST_Forms_Controller extends GF_REST_Controller {
 		 *
 		 * @since 2.4
 		 *
-		 * @param string          $capability The capability required for this endpoint.
+		 * @param string|array    $capability The capability required for this endpoint.
 		 * @param WP_REST_Request $request    Full data about the request.
 		 */
 		$capability = apply_filters( 'gform_rest_api_capability_get_forms', 'gravityforms_edit_forms', $request );
-		return GFAPI::current_user_can_any( $capability );
+		return $this->current_user_can_any( $capability, $request );
 	}
 
 	/**
@@ -288,11 +288,11 @@ class GF_REST_Forms_Controller extends GF_REST_Controller {
 		 *
 		 * @since 2.4
 		 *
-		 * @param string          $capability The capability required for this endpoint.
+		 * @param string|array    $capability The capability required for this endpoint.
 		 * @param WP_REST_Request $request    Full data about the request.
 		 */
 		$capability = apply_filters( 'gform_rest_api_capability_get_forms', 'gravityforms_edit_forms', $request );
-		return GFAPI::current_user_can_any( $capability );
+		return $this->current_user_can_any( $capability, $request );
 	}
 
 	/**
@@ -310,11 +310,11 @@ class GF_REST_Forms_Controller extends GF_REST_Controller {
 		 *
 		 * @since 2.4
 		 *
-		 * @param string          $capability The capability required for this endpoint.
+		 * @param string|array    $capability The capability required for this endpoint.
 		 * @param WP_REST_Request $request    Full data about the request.
 		 */
 		$capability = apply_filters( 'gform_rest_api_capability_post_forms', 'gravityforms_create_form', $request );
-		return GFAPI::current_user_can_any( $capability );
+		return $this->current_user_can_any( $capability, $request );
 	}
 
 	/**
@@ -332,11 +332,11 @@ class GF_REST_Forms_Controller extends GF_REST_Controller {
 		 *
 		 * @since 2.4
 		 *
-		 * @param string          $capability The capability required for this endpoint.
+		 * @param string|array    $capability The capability required for this endpoint.
 		 * @param WP_REST_Request $request    Full data about the request.
 		 */
 		$capability = apply_filters( 'gform_rest_api_capability_put_forms', 'gravityforms_create_form', $request );
-		return GFAPI::current_user_can_any( $capability );
+		return $this->current_user_can_any( $capability, $request );
 	}
 
 	/**
@@ -354,11 +354,11 @@ class GF_REST_Forms_Controller extends GF_REST_Controller {
 		 *
 		 * @since 2.4
 		 *
-		 * @param string          $capability The capability required for this endpoint.
+		 * @param string|array    $capability The capability required for this endpoint.
 		 * @param WP_REST_Request $request    Full data about the request.
 		 */
 		$capability = apply_filters( 'gform_rest_api_capability_delete_forms', 'gravityforms_delete_forms', $request );
-		return GFAPI::current_user_can_any( $capability );
+		return $this->current_user_can_any( $capability, $request );
 	}
 
 	/**

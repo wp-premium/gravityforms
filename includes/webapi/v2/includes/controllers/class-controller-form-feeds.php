@@ -141,12 +141,12 @@ class GF_REST_Form_Feeds_Controller extends GF_REST_Controller {
 		 *
 		 * @since 2.4
 		 *
-		 * @param string          $capability The capability required for this endpoint.
+		 * @param string|array    $capability The capability required for this endpoint.
 		 * @param WP_REST_Request $request    Full data about the request.
 		 */
 		$capability = apply_filters( 'gform_rest_api_capability_get_feeds', 'gravityforms_edit_forms', $request );
 
-		return GFAPI::current_user_can_any( $capability );
+		return $this->current_user_can_any( $capability, $request );
 	}
 
 	/**
@@ -165,12 +165,12 @@ class GF_REST_Form_Feeds_Controller extends GF_REST_Controller {
 		 *
 		 * @since 2.0-beta-2
 		 *
-		 * @param string          $capability The capability required for this endpoint.
+		 * @param string|array    $capability The capability required for this endpoint.
 		 * @param WP_REST_Request $request    Full data about the request.
 		 */
 		$capability = apply_filters( 'gform_rest_api_capability_post_feeds', 'gravityforms_edit_forms', $request );
 
-		return GFAPI::current_user_can_any( $capability );
+		return $this->current_user_can_any( $capability, $request );
 	}
 
 	/**

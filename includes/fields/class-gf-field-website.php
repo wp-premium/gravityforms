@@ -66,8 +66,6 @@ class GF_Field_Website extends GF_Field {
 		$is_html5        = RGFormsModel::is_html5_enabled();
 		$html_input_type = $is_html5 ? 'url' : 'text';
 
-		$max_length = is_numeric( $this->maxLength ) ? "maxlength='{$this->maxLength}'" : '';
-
 		$placeholder_attribute = $this->get_field_placeholder_attribute();
 		$required_attribute    = $this->isRequired ? 'aria-required="true"' : '';
 		$invalid_attribute     = $this->failed_validation ? 'aria-invalid="true"' : 'aria-invalid="false"';
@@ -78,7 +76,7 @@ class GF_Field_Website extends GF_Field {
 		$class    = esc_attr( $class );
 
 		return "<div class='ginput_container ginput_container_website'>
-                    <input name='input_{$id}' id='{$field_id}' type='$html_input_type' value='{$value}' class='{$class}' {$max_length} {$tabindex} {$aria_describedby} {$disabled_text} {$placeholder_attribute} {$required_attribute} {$invalid_attribute}/>
+                    <input name='input_{$id}' id='{$field_id}' type='$html_input_type' value='{$value}' class='{$class}' {$tabindex} {$aria_describedby} {$disabled_text} {$placeholder_attribute} {$required_attribute} {$invalid_attribute}/>
                 </div>";
 	}
 
