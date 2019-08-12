@@ -106,6 +106,10 @@ class GF_REST_Authentication {
 		// Allow third party plugins use our authentication methods.
 		$third_party = ( false !== strpos( $_SERVER['REQUEST_URI'], $rest_prefix . 'gf-' ) );
 
+		if ( has_filter( 'gform_is_request_to_rest_api' ) ) {
+			$this->log_debug( __METHOD__ . '(): Executing functions hooked to gform_is_request_to_rest_api.' );
+		}
+
 		/**
 		 * Allows filtering of whether or not the current request is a request to the Gravity Forms REST API.
 		 *
@@ -130,6 +134,8 @@ class GF_REST_Authentication {
 		if ( ! empty( $user_id ) || ! $this->is_request_to_rest_api() ) {
 			return $user_id;
 		}
+
+		$this->log_debug( __METHOD__ . '(): Running.' );
 
 		if ( is_ssl() ) {
 			$user_id = $this->perform_basic_authentication();
@@ -172,6 +178,8 @@ class GF_REST_Authentication {
 		$this->user = null;
 
 		$this->error = $error;
+
+		$this->log_error( __METHOD__ . '(): ' . print_r( $error, true ) );
 	}
 
 	/***
@@ -211,6 +219,8 @@ class GF_REST_Authentication {
 	 * @return int|bool Returs the authenticated user's User ID if successfull. Otherwise, returns false.
 	 */
 	private function perform_basic_authentication() {
+		$this->log_debug( __METHOD__ . '(): Running.' );
+
 		$this->auth_method = 'basic_auth';
 		$consumer_key      = '';
 		$consumer_secret   = '';
@@ -229,12 +239,16 @@ class GF_REST_Authentication {
 
 		// Stop if don't have any key.
 		if ( ! $consumer_key || ! $consumer_secret ) {
+			$this->log_error( __METHOD__ . '(): Aborting; credentials not found.' );
+
 			return false;
 		}
 
 		// Get user data.
 		$this->user = $this->get_user_data_by_consumer_key( $consumer_key );
 		if ( empty( $this->user ) ) {
+			$this->log_error( __METHOD__ . '(): Aborting; user not found.' );
+
 			return false;
 		}
 
@@ -244,6 +258,8 @@ class GF_REST_Authentication {
 
 			return false;
 		}
+
+		$this->log_debug( __METHOD__ . '(): Valid.' );
 
 		return $this->user->user_id;
 	}
@@ -389,10 +405,14 @@ class GF_REST_Authentication {
 	 * @return int|bool
 	 */
 	private function perform_oauth_authentication() {
+		$this->log_debug( __METHOD__ . '(): Running.' );
+
 		$this->auth_method = 'oauth1';
 
 		$params = $this->get_oauth_parameters();
 		if ( empty( $params ) ) {
+			$this->log_error( __METHOD__ . '(): Aborting; OAuth parameters not found.' );
+
 			return false;
 		}
 
@@ -417,6 +437,8 @@ class GF_REST_Authentication {
 			$this->set_error( $timestamp_and_nonce );
 			return false;
 		}
+
+		$this->log_debug( __METHOD__ . '(): Valid.' );
 
 		return $this->user->user_id;
 	}
@@ -463,6 +485,8 @@ class GF_REST_Authentication {
 		$signature      = base64_encode( hash_hmac( $hash_algorithm, $string_to_sign, $secret, true ) );
 
 		if ( ! hash_equals( $signature, $consumer_signature ) ) {
+			$this->log_debug( __METHOD__ . '(): Signature base: ' . $string_to_sign );
+
 			return new WP_Error( 'gform_rest_authentication_error', __( 'Invalid signature - provided signature does not match.', 'gravityforms' ), array( 'status' => 401 ) );
 		}
 
@@ -691,14 +715,18 @@ class GF_REST_Authentication {
 	 */
 	public function check_user_permissions( $result, $server, $request ) {
 		if ( $this->user ) {
+			$this->log_debug( sprintf( '%s(): Running for user #%d.', __METHOD__, $this->user->user_id ) );
 			// Check API Key permissions.
 			$allowed = $this->check_permissions( $request->get_method() );
 			if ( is_wp_error( $allowed ) ) {
+				$this->log_error( __METHOD__ . '(): ' . print_r( $allowed, true ) );
+
 				return $allowed;
 			}
 
 			// Register last access.
 			$this->update_last_access();
+			$this->log_debug( __METHOD__ . '(): Permissions valid.' );
 		}
 
 		return $result;
@@ -721,6 +749,29 @@ class GF_REST_Authentication {
 			return str_replace( array( '+', '%7E' ), array( ' ', '~' ), rawurlencode( $value ) );
 		}
 	}
+
+	/**
+	 * Write an error message to the Gravity Forms API log.
+	 *
+	 * @since 2.4.11
+	 *
+	 * @param string $message The message to be logged.
+	 */
+	public function log_error( $message ) {
+		GFAPI::log_error( $message );
+	}
+
+	/**
+	 * Write a debug message to the Gravity Forms API log.
+	 *
+	 * @since 2.4.11
+	 *
+	 * @param string $message The message to be logged.
+	 */
+	public function log_debug( $message ) {
+		GFAPI::log_debug( $message );
+	}
+
 }
 
 new GF_REST_Authentication();

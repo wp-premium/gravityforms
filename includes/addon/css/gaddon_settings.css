@@ -176,7 +176,13 @@ table.settings-field-map-table tbody td {
     list-style: decimal;
 }
 
-.repeater-buttons .add-item { margin-right: 6px; }
+.repeater-buttons .add-item {
+	margin-right: 6px;
+}
+
+.add-item, .remove-item {
+	color: #444;
+}
 
 .mt-gaddon-editor {
 	float: right;

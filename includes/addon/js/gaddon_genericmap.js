@@ -1,10 +1,10 @@
 var GFGenericMap = function( options ) {
-	
+
 	var self = this;
-	
+
 	self.options = options;
 	self.UI = jQuery( '#gaddon-setting-row-'+ self.options.fieldName );
-	
+
 	self.init = function() {
 
 		self.bindEvents();
@@ -14,9 +14,9 @@ var GFGenericMap = function( options ) {
 		self.setupRepeater();
 
 	};
-	
+
 	self.bindEvents = function() {
-		
+
 		self.UI.on( 'change', 'select[name="_gaddon_setting_'+ self.options.keyFieldName +'"]', function() {
 
 			var $select    = jQuery( this ),
@@ -48,7 +48,7 @@ var GFGenericMap = function( options ) {
 			} );
 
 		} );
-		
+
 		self.UI.on( 'click', 'a.custom-key-reset', function( event ) {
 
 			event.preventDefault();
@@ -82,23 +82,23 @@ var GFGenericMap = function( options ) {
 			} );
 
 		} );
-		
+
 		self.UI.closest( 'form' ).on( 'submit', function( event ) {
-			
+
 			jQuery( '[name^="_gaddon_setting_'+ self.options.fieldName +'_"]' ).each( function( i ) {
-				
+
 				jQuery( this ).removeAttr( 'name' );
-				
+
 			} );
-			
+
 		} );
-		
+
 	};
-	
+
 	self.setupData = function() {
-		
+
 		self.data = jQuery.parseJSON( jQuery( '#' + self.options.fieldId ).val() );
-		
+
 		if ( ! self.data ) {
 			self.data = [ {
 				key: '',
@@ -107,24 +107,24 @@ var GFGenericMap = function( options ) {
 				custom_value: ''
 			} ];
 		}
-		
+
 	}
-	
+
 	self.setupRepeater = function() {
 
 		var limit = self.options.limit > 0 ? self.options.limit : 0;
-		
+
 		self.UI.find( 'tbody.repeater' ).repeater( {
-			
+
 			limit:              limit,
 			items:              self.data,
-			addButtonMarkup:    '<span>+</span>',
-			removeButtonMarkup: '<span>-</span>',
+			addButtonMarkup:    '<i class="gficon-add"></i>',
+			removeButtonMarkup: '<i class="gficon-subtract"></i>',
 			callbacks:          {
 				add:  function( obj, $elem, item ) {
-					
+
 					var key_select = $elem.find( 'select[name="_gaddon_setting_'+ self.options.keyFieldName +'"]' );
-					
+
 					if ( ! item.custom_key && ( key_select.length > 0 && key_select.val() !== 'gf_custom' ) ) {
 						$elem.find( '.custom-key-container' ).hide();
 					} else {
@@ -147,19 +147,19 @@ var GFGenericMap = function( options ) {
 					if ( window.hasOwnProperty( 'gform' ) ) {
 						gform.doAction( 'gform_fieldmap_add_row', obj, $elem, item );
 					}
-					
+
 				},
 				save: function( obj, data ) {
 
 					jQuery( '#'+ self.options.fieldId ).val( JSON.stringify( data ) );
-					
+
 				}
 			}
-			
+
 		} );
-		
+
 	}
-	
+
 	return self.init();
-	
+
 };

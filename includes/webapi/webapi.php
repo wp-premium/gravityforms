@@ -601,8 +601,39 @@ if ( class_exists( 'GFForms' ) ) {
 			<?php
 		}
 
+		/**
+		 * Removes the REST API from the logging page.
+		 * 
+		 * @since 2.4.11
+		 *
+		 * @param array $plugins The plugins which support logging.
+		 *
+		 * @return array
+		 */
 		public function set_logging_supported( $plugins ) {
-			return parent::set_logging_supported( $plugins );
+			return $plugins;
+		}
+
+		/**
+		 * Write an error message to the Gravity Forms API log.
+		 *
+		 * @since 2.4.11
+		 *
+		 * @param string $message The message to be logged.
+		 */
+		public function log_error( $message ) {
+			GFAPI::log_error( $message );
+		}
+
+		/**
+		 * Write a debug message to the Gravity Forms API log.
+		 *
+		 * @since 2.4.11
+		 *
+		 * @param string $message The message to be logged.
+		 */
+		public function log_debug( $message ) {
+			GFAPI::log_debug( $message );
 		}
 
 		public function query_vars( $query_vars ) {
@@ -2323,5 +2354,6 @@ if ( class_exists( 'GFForms' ) ) {
 		}
 
 	}
+
 	new GFWebAPI();
 }

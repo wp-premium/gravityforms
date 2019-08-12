@@ -222,6 +222,7 @@ class GF_Field_CAPTCHA extends GF_Field {
 					if ( $type == 'invisible' ) {
 						$size = "data-size='invisible'";
 						$badge = $this->captchaBadge ? $this->captchaBadge : 'bottomright';
+						$tabindex = -1;
 					}
 
 					$output = "<div id='" . esc_attr( $field_id ) ."' class='ginput_container ginput_recaptcha' data-sitekey='" . esc_attr( $site_key ) . "' {$stoken} data-theme='" . esc_attr( $theme ) . "' data-tabindex='{$tabindex}' {$size} data-badge='{$badge}'></div>";
