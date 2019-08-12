@@ -1803,7 +1803,7 @@ function renderRecaptcha() {
 		    parameters.callback = callback;
 	    }
 
-        grecaptcha.render( this.id, parameters );
+        $elem.data( 'widget-id', grecaptcha.render( this.id, parameters ) );
 
 	    if ( parameters.tabindex ) {
 		    $elem.find( 'iframe' ).attr( 'tabindex', parameters.tabindex );
@@ -2341,7 +2341,7 @@ jQuery( document ).on( 'submit.gravityforms', '.gform_wrapper form', function( e
             var token = $reCaptchaResponse.val();
             if ( ! token ) {
                 // Execute the invisible captcha.
-                grecaptcha.execute();
+                grecaptcha.execute($reCaptcha.data('widget-id'));
                 event.preventDefault();
             }
         }

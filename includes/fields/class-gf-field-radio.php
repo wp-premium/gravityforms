@@ -168,12 +168,12 @@ class GF_Field_Radio extends GF_Field {
 	}
 
 	public function get_value_entry_list( $value, $entry, $field_id, $columns, $form ) {
-		return GFCommon::selection_display( $value, $this, $entry['currency'] );
+		return wp_kses_post( GFCommon::selection_display( $value, $this, $entry['currency'] ) );
 	}
 
 	public function get_value_entry_detail( $value, $currency = '', $use_text = false, $format = 'html', $media = 'screen' ) {
 
-		return GFCommon::selection_display( $value, $this, $currency, $use_text );
+		return wp_kses_post( GFCommon::selection_display( $value, $this, $currency, $use_text ) );
 	}
 
 	/**

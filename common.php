@@ -4388,7 +4388,12 @@ Content-Type: text/html;
 
 		if ( preg_match( '/^[0-9 -\/*\(\)]+$/', $formula ) ) {
 			$prev_reporting_level = error_reporting( 0 );
-			$result               = eval( "return {$formula};" );
+			try {
+				$result = eval( "return {$formula};" );
+        		} catch ( ParseError $e ) {
+				GFCommon::log_debug( __METHOD__ . sprintf( '(): Formula could not be parsed: "%s".', $e->getMessage() ) );
+				$result = 0;
+			}
 			error_reporting( $prev_reporting_level );
 		}
 

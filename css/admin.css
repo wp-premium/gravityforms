@@ -4050,6 +4050,15 @@ div#confirmation-editor {
 	position: relative;
 	margin-left: 6px;
 	color: #444;
+	top:3px;
+}
+
+#feed_condition_conditional_logic_container {
+	margin-top:10px;
+}
+
+.add_field_choice {
+	margin-left: 16px;
 }
 
 #confirmation_action_type {

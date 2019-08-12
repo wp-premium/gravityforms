@@ -1451,7 +1451,7 @@ class GFFormsModel {
 
 		// If property is trash, log user login
 		if ( $property_name == 'status' && $property_value == 'trash' && ! empty( $current_user->user_login ) ) {
-			GFCommon::log_debug( __METHOD__ . "(): User ID {$current_user->ID} requested moving of entry #{$lead_id} to trash." );		
+			GFCommon::log_debug( __METHOD__ . "(): User ID {$current_user->ID} requested moving of entry #{$lead_id} to trash." );
 		}
 
 		//updating lead
@@ -1574,8 +1574,8 @@ class GFFormsModel {
 
 		// Log user login for user requesting the deletion of entries
 		if ( ! empty( $current_user->user_login ) ) {
-			GFCommon::log_debug( __METHOD__ . "(): User ID {$current_user->ID} requested deletion of entries: " . json_encode( $entry_ids ) );		
-		}	
+			GFCommon::log_debug( __METHOD__ . "(): User ID {$current_user->ID} requested deletion of entries: " . json_encode( $entry_ids ) );
+		}
 
 			foreach ( $entry_ids as $entry_id ) {
 
@@ -1640,7 +1640,7 @@ class GFFormsModel {
 		// Log user login for user requesting deletion of views
 		if ( ! empty( $current_user->user_login ) ) {
 			GFCommon::log_debug( __METHOD__ . "(): User ID {$current_user->ID} requested deletion of views for form #{$form_id}." );
-		}			
+		}
 
 		$form_view_table = self::get_form_view_table_name();
 
@@ -1667,7 +1667,7 @@ class GFFormsModel {
 		// Log user login for user requesting deletion of form
 		if ( ! empty( $current_user->user_login ) ) {
 			GFCommon::log_debug( __METHOD__ . "(): User ID {$current_user->ID} requested deletion of form #{$form_id}." );
-		}			
+		}
 
         /**
          * Fires before a form is deleted
@@ -1722,7 +1722,7 @@ class GFFormsModel {
 		// Log user login for user moving the form to trash
 		if ( ! empty( $current_user->user_login ) ) {
 			GFCommon::log_debug( __METHOD__ . "(): User ID {$current_user->ID} requested moving of form #{$form_id} to trash." );
-		}		
+		}
 		$form_table_name = self::get_form_table_name();
 		$sql             = $wpdb->prepare( "UPDATE $form_table_name SET is_trash=1 WHERE id=%d", $form_id );
 		$result          = $wpdb->query( $sql );
@@ -2478,7 +2478,7 @@ class GFFormsModel {
 
 		// Log if user requested deletion of entries
 		if ( ! empty( $current_user->user_login ) ) {
-			GFCommon::log_debug( __METHOD__ . "(): User ID {$current_user->ID} requested deletion of entry #{$entry_id}" );			
+			GFCommon::log_debug( __METHOD__ . "(): User ID {$current_user->ID} requested deletion of entry #{$entry_id}" );
 		}
 
 		if ( version_compare( GFFormsModel::get_database_version(), '2.3-dev-1', '<' ) ) {
@@ -3354,7 +3354,13 @@ class GFFormsModel {
 				break;
 
 			case 'ends_with' :
+				// If target value is a 0 set $val2 to 0 rather than the empty string it currently is to prevent false positives.
+				if ( empty( $val2 ) ) {
+					$val2 = 0;
+				}
+
 				$start = strlen( $val1 ) - strlen( $val2 );
+
 				if ( $start < 0 ) {
 					return false;
 				}
@@ -5059,14 +5065,26 @@ class GFFormsModel {
 			}
 
 		} else {
-			// Deleting details for this field
-			$sql    = $wpdb->prepare( "DELETE FROM $entry_meta_table_name WHERE entry_id=%d AND meta_key = %s ", $entry_id, $input_id );
-			if ( $item_index ) {
-				$sql .= $wpdb->prepare( ' AND item_index=%s', $item_index );
-			}
-			$result = $wpdb->query( $sql );
-			if ( false === $result ) {
-				return false;
+			// when the value is empty and no $entry_meta_id was set, check if it's a repeater field.
+			if ( empty( $entry_meta_id ) && $field instanceof GF_Field_Repeater && isset( $field->fields ) && is_array( $field->fields ) ) {
+				foreach ( $field->fields as $subfield ) {
+					self::update_entry_field_value( $form, $entry, $subfield, 0, $subfield->id, '' );
+				}
+			} else {
+				// Deleting details for this field
+				if ( is_array( $field->inputs ) ) {
+					$_input_id = ( false === strpos( $input_id, '.' ) ) ? sprintf( '%d.%%', $input_id ) : $input_id;
+					$sql = $wpdb->prepare( "DELETE FROM $entry_meta_table_name WHERE entry_id=%d AND meta_key LIKE %s ", $entry_id, $_input_id );
+				} else {
+					$sql = $wpdb->prepare( "DELETE FROM $entry_meta_table_name WHERE entry_id=%d AND meta_key = %s ", $entry_id, $input_id );
+				}
+				if ( $item_index ) {
+					$sql .= $wpdb->prepare( ' AND item_index=%s', $item_index );
+				}
+				$result = $wpdb->query( $sql );
+				if ( false === $result ) {
+					return false;
+				}
 			}
 		}
 
@@ -5407,6 +5425,9 @@ class GFFormsModel {
 		$legacy_tables = GF_Forms_Model_Legacy::get_legacy_tables();
 
 		$drop_tables = array_merge( $drop_tables, $legacy_tables );
+
+		// Prevent the legacy table query notice when they are dropped by wp_uninitialize_site().
+		remove_filter( 'query', array( 'GFForms', 'filter_query' ) );
 
 		return $drop_tables;
 	}

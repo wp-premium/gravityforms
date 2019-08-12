@@ -2557,15 +2557,13 @@ class GFFormDisplay {
 				$error_style   = $rte_enabled ? ' ginput_counter_error' : '';
 
 				$field_script =
-					"jQuery('#{$input_id}').textareaCount(" .
-					"    {" .
-					"    'maxCharacterSize': {$max_length}," .
+					"if(!jQuery('#{$input_id}+.ginput_counter').length){jQuery('#{$input_id}').textareaCount(" .
+					"    {'maxCharacterSize': {$max_length}," .
 					"    'originalStyle': 'ginput_counter{$tinymce_style}'," .
 					"	 'truncate': {$truncate}," .
 					"	 'errorStyle' : '{$error_style}'," .
 					"    'displayFormat' : '#input " . esc_js( __( 'of', 'gravityforms' ) ) . ' #max ' . esc_js( __( 'max characters', 'gravityforms' ) ) . "'" .
-					"    } );" .
-					"jQuery('#{$input_id}').next( '.ginput_counter' ).attr( 'aria-live', 'polite' );";
+					"    });" . "jQuery('{$input_id}').next('.ginput_counter').attr('aria-live','polite');}";
 
 				$script .= gf_apply_filters( array( 'gform_counter_script', $form['id'] ), $field_script, $form['id'], $input_id, $max_length, $field );
 			}

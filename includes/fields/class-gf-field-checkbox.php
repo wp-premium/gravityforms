@@ -278,7 +278,7 @@ class GF_Field_Checkbox extends GF_Field {
 							break;
 
 						default:
-							$items .= '<li>' . GFCommon::selection_display( $item, $this, $currency, $use_text ) . '</li>';
+							$items .= '<li>' . wp_kses_post( GFCommon::selection_display( $item, $this, $currency, $use_text ) ) . '</li>';
 							break;
 					}
 				}
@@ -836,7 +836,7 @@ class GF_Field_Checkbox extends GF_Field {
 		$value             = wp_kses_no_null( $value, array( 'slash_zero' => 'keep' ) );
 		$value             = wp_kses_hook( $value, 'post', $allowed_protocols );
 		$value             = wp_kses_split( $value, 'post', $allowed_protocols );
-
+		
 		return $value;
 
 	}

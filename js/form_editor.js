@@ -834,7 +834,7 @@ function LoadFieldSettings(){
 
     jQuery("#field_enable_copy_values_option").prop("checked", field.enableCopyValuesOption == true ? true : false);
     jQuery("#field_copy_values_option_default").prop("checked", field.copyValuesOptionDefault == true ? true : false);
-    var copyValueOptions = GetCopyValuesFieldsOptions(field.copyValuesFieldId, field);
+    var copyValueOptions = GetCopyValuesFieldsOptions(field.copyValuesOptionField, field);
     if(copyValueOptions.length>0){
         jQuery("#field_enable_copy_values_option").prop("disabled", false);
         jQuery("#field_copy_values_disabled").hide();

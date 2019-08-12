@@ -175,20 +175,82 @@ class GF_Block_Form extends GF_Block {
 				continue;
 			}
 
+			if ( ! has_block( $this->type, $post->post_content ) ) {
+				continue;
+			}
+
 			$blocks = parse_blocks( $post->post_content );
 
-			foreach ( $blocks as $block ) {
-				if ( $block['blockName'] == $this->type && rgars( $block, 'attrs/formId' ) ) {
-					require_once( GFCommon::get_base_path() . '/form_display.php' );
-					$form = GFAPI::get_form( rgars( $block, 'attrs/formId' ) );
-					GFFormDisplay::enqueue_form_scripts( $form, rgars( $block, 'attrs/ajax' ) );
-				}
+			// Get form IDs for blocks.
+			$form_ids = $this->get_block_form_ids( $blocks );
+
+			// If no form IDs were found, skip.
+			if ( empty( $form_ids ) ) {
+				continue;
+			}
+
+			// Load GFFormDisplay.
+			if ( ! class_exists( 'GFFormDisplay' ) ) {
+				require_once( GFCommon::get_base_path() . '/form_display.php' );
+			}
+
+			// Enqueue scripts for found forms.
+			foreach ( $form_ids as $form_id => $ajax ) {
+				$form = GFAPI::get_form( $form_id );
+				GFFormDisplay::enqueue_form_scripts( $form, $ajax );
 			}
 
 		}
 
 	}
 
+	/**
+	 * Check current blocks and inner blocks for Gravity Forms block and return their form IDs.
+	 *
+	 * @since 2.4.11
+	 *
+	 * @param array $blocks Array of blocks.
+	 *
+	 * @return array
+	 */
+	private function get_block_form_ids( $blocks ) {
+
+		$form_ids = array();
+
+		foreach ( $blocks as $block ) {
+
+			// If block has inner blocks, add to form IDs array.
+			if ( rgar( $block, 'innerBlocks' ) ) {
+
+				// Get nested form IDs.
+				$nested_form_ids = $this->get_block_form_ids( $block['innerBlocks'] );
+
+				// Merge arrays.
+				if ( ! empty( $nested_form_ids ) ) {
+					$form_ids = array_replace( $form_ids, $nested_form_ids );
+				}
+
+			}
+
+			// If this is not a Form block or the form ID is not defined, skip.
+			if ( $this->type !== rgar( $block, 'blockName' ) || ( $this->type === rgar( $block, 'blockName' ) && ! rgars( $block, 'attrs/formId' ) ) ) {
+				continue;
+			}
+
+			// Get the form ID and AJAX attributes.
+			$form_id = (int) $block['attrs']['formId'];
+			$ajax    = rgars( $block, 'attrs/ajax' ) ? (bool) $block['attrs']['ajax'] : false;
+
+			// Add form ID to return array.
+			if ( ! in_array( $form_id, $form_ids ) || ( in_array( $form_id, $form_ids ) && true === $ajax && false === $form_ids[ $form_id ] ) ) {
+				$form_ids[ $form_id ] = $ajax;
+			}
+
+		}
+
+		return $form_ids;
+
+	}
 
 
 

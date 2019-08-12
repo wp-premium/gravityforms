@@ -1,22 +1,22 @@
 var gfieldmap = function( options ) {
-	
+
 	var self = this;
-	
+
 	self.options = options;
 	self.UI = jQuery( '#gaddon-setting-row-'+ self.options.fieldName );
-	
+
 	self.init = function() {
-		
+
 		self.bindEvents();
-		
+
 		self.setupData();
-		
+
 		self.setupRepeater();
-					
+
 	};
-	
+
 	self.bindEvents = function() {
-		
+
 		self.UI.on( 'change', 'select[name="_gaddon_setting_'+ self.options.keyFieldName +'"]', function() {
 
 			var $select    = jQuery( this ),
@@ -32,7 +32,7 @@ var gfieldmap = function( options ) {
 			} );
 
 		} );
-		
+
 		self.UI.on( 'click', 'a.custom-key-reset', function( event ) {
 
 			event.preventDefault();
@@ -49,23 +49,23 @@ var gfieldmap = function( options ) {
 			} );
 
 		} );
-		
+
 		self.UI.closest( 'form' ).on( 'submit', function( event ) {
-			
+
 			jQuery( '[name^="_gaddon_setting_'+ self.options.fieldName +'_"]' ).each( function( i ) {
-				
+
 				jQuery( this ).removeAttr( 'name' );
-				
+
 			} );
-			
+
 		} );
-		
+
 	};
-	
+
 	self.setupData = function() {
-		
+
 		self.data = jQuery.parseJSON( jQuery( '#' + self.options.fieldId ).val() );
-		
+
 		if ( ! self.data ) {
 			self.data = [ {
 				key: '',
@@ -73,9 +73,9 @@ var gfieldmap = function( options ) {
 				custom_key: ''
 			} ];
 		}
-		
+
 	}
-	
+
 	self.setupRepeater = function() {
 
 		var limit;
@@ -85,51 +85,51 @@ var gfieldmap = function( options ) {
 		else{
 			limit = 0;
 		}
-		
+
 		self.UI.find( 'tbody.repeater' ).repeater( {
-			
+
 			limit:              limit,
 			items:              self.data,
-			addButtonMarkup:    '<span>+</span>',
-			removeButtonMarkup: '<span>-</span>',
+			addButtonMarkup:    '<i class="gficon-add"></i>',
+			removeButtonMarkup: '<i class="gficon-subtract"></i>',
 			callbacks:          {
 				add:  function( obj, $elem, item ) {
-					
+
 					var key_select = $elem.find( 'select[name="_gaddon_setting_'+ self.options.keyFieldName +'"]' );
-					
+
 					if ( ! item.custom_key && key_select.length > 0 ) {
 						$elem.find( '.custom-key-container' ).hide();
 					} else {
 						$elem.find( '.key' ).hide();
 					}
-					
+
 					gform.doAction( 'gform_fieldmap_add_row', obj, $elem, item );
-					
+
 				},
 				save: function( obj, data ) {
-					
+
 					data = jQuery.extend( {}, data );
-					
+
 					for ( var i = 0; i < data.length; i++ ) {
-						
+
 						if ( data[i].custom_key != '' ) {
 							data[i].custom = 1;
 							data[i].key = data[i].custom_key;
 						}
-						
+
 						delete data[i].custom_key;
-						
+
 					}
-										
+
 					jQuery( '#'+ self.options.fieldId ).val( jQuery.toJSON( data ) );
-					
+
 				}
 			}
-			
+
 		} );
-		
+
 	}
-	
+
 	return self.init();
-	
+
 };

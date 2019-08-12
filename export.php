@@ -487,6 +487,10 @@ class GFExport {
 
 						return false;
 					});
+					
+					$('#export_form').on('change', function() {
+						SelectExportForm($(this).val());
+					}).trigger('change');
 				});
 
 				function process( offset, exportId ) {
@@ -542,7 +546,7 @@ class GFExport {
 					</th>
 					<td>
 
-						<select id="export_form" name="export_form" onchange="SelectExportForm(jQuery(this).val());">
+						<select id="export_form" name="export_form">
 							<option value=""><?php esc_html_e( 'Select a form', 'gravityforms' ); ?></option>
 							<?php
 							$forms = RGFormsModel::get_forms( null, 'title' );
@@ -558,7 +562,7 @@ class GFExport {
 
 							foreach ( $forms as $form ) {
 								?>
-								<option value="<?php echo absint( $form->id ) ?>"><?php echo esc_html( $form->title ) ?></option>
+								<option value="<?php echo absint( $form->id ) ?>" <?php selected( rgget( 'id' ), $form->id ); ?>><?php echo esc_html( $form->title ) ?></option>
 								<?php
 							}
 							?>

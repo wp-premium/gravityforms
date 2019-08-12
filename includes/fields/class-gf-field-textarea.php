@@ -172,12 +172,16 @@ class GF_Field_Textarea extends GF_Field {
 
 		preg_match_all( $pattern, $script, $matches, PREG_SET_ORDER );
 
+		// Fix editor height issue: https://core.trac.wordpress.org/ticket/45461.
+		$wp_version       = get_bloginfo( 'version' );
+		$height_issue_fix = version_compare( $wp_version, '5.0', '>=' ) && version_compare( $wp_version, '5.2', '<' ) ? ' gform_post_conditional_logic' : '';
+
 		foreach ( $matches as $match ) {
 
 			list( $search, $open_tag, $guts, $close_tag ) = $match;
 
 			$custom  = "if ( typeof current_page === 'undefined' ) { return; }\nfor( var id in tinymce.editors ) { tinymce.EditorManager.remove( tinymce.editors[id] ); }";
-			$replace = sprintf( "%s\njQuery( document ).on( 'gform_post_render gform_post_conditional_logic', function( event, form_id, current_page ) { \n%s\n%s } );\n%s", $open_tag, $custom, $guts, $close_tag );
+			$replace = sprintf( "%s\njQuery( document ).on( 'gform_post_render%s', function( event, form_id, current_page ) { \n%s\n%s } );\n%s", $open_tag, $height_issue_fix, $custom, $guts, $close_tag );
 			$script  = str_replace( $search, $replace, $script );
 
 		}
