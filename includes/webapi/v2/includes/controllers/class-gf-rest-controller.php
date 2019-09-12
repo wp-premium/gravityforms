@@ -195,19 +195,25 @@ abstract class GF_REST_Controller extends WP_REST_Controller {
 
 		$form = GFAPI::get_form( $entry['form_id'] );
 		foreach ( $form['fields'] as $field ) {
-			if ( $this->is_field_value_json( $field ) ) {
 
-				$value = $entry[ $field->id ];
+			if ( empty( $entry[ $field->id ] ) ) {
+				continue;
+			}
 
-				if ( $field->get_input_type() == 'list' ) {
-					$new_value = maybe_unserialize( $value );
-				} else {
-					$new_value = json_decode( $value );
-				}
+			if ( $field instanceof GF_Field_MultiSelect ) {
 
-				$entry[ $field->id ] = $new_value;
+				$entry[ $field->id ] = $field->to_array( $entry[ $field->id ] );
+
+			} elseif ( $field instanceof GF_Field_FileUpload && $field->multipleFiles ) {
+
+				$entry[ $field->id ] = json_decode( $entry[ $field->id ] );
+
+			} elseif ( $field instanceof GF_Field_List ) {
+
+				$entry[ $field->id ] = maybe_unserialize( $entry[ $field->id ] );
 
 			}
+
 		}
 
 		return $entry;
@@ -281,10 +287,23 @@ abstract class GF_REST_Controller extends WP_REST_Controller {
 
 		$form = GFAPI::get_form( $entry['form_id'] );
 
+		/** @var GF_Field $field */
 		foreach ( $form['fields'] as $field ) {
-			if ( $this->is_field_value_json( $field ) && $field->get_input_type() != 'list' && isset( $entry[ $field->id ] ) ) {
-				$entry[ $field->id ] = json_encode( $entry[ $field->id ] );
+
+			if ( empty( $entry[ $field->id ] ) ) {
+				continue;
 			}
+
+			if ( $field->get_input_type() === 'fileupload' && $field->multipleFiles ) {
+
+				$entry[ $field->id ] = json_encode( $entry[ $field->id ] );
+
+			} elseif ( $field instanceof GF_Field_MultiSelect ) {
+
+				$entry[ $field->id ] = $field->to_string( $entry[ $field->id ] );
+
+			}
+
 		}
 
 		return $entry;

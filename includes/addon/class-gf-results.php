@@ -79,7 +79,7 @@ if ( ! class_exists( 'GFResults' ) ) {
 			wp_localize_script( 'gaddon_results_js', 'gresultsVars', $vars );
 
 			$strings = array(
-				'ajaxError' => esc_html__( 'Error retrieving results. If the problem persists, please contact support.', 'gravityforms' )
+				'ajaxError' => wp_strip_all_tags( __( 'Error retrieving results. If the problem persists, please contact support.', 'gravityforms' ) )
 			);
 
 			wp_localize_script( 'gaddon_results_js', 'gresultsStrings', $strings );

@@ -222,45 +222,56 @@ class GF_Query {
 
 		if ( ! empty( $start_date ) ) {
 
-			$start_date           = new DateTime( $search_criteria['start_date'] );
-			$start_datetime_str = $start_date->format( 'Y-m-d H:i:s' );
-			$start_date_str       = $start_date->format( 'Y-m-d' );
-			if ( $start_datetime_str == $start_date_str  . ' 00:00:00' ) {
-				$start_date_str = $start_date_str . ' 00:00:00';
-			} else {
-				$start_date_str = $start_date->format( 'Y-m-d H:i:s' );
+			try {
+				$start_date         = new DateTime( $search_criteria['start_date'] );
+				$start_datetime_str = $start_date->format( 'Y-m-d H:i:s' );
+				$start_date_str     = $start_date->format( 'Y-m-d' );
+				if ( $start_datetime_str == $start_date_str . ' 00:00:00' ) {
+					$start_date_str = $start_date_str . ' 00:00:00';
+				} else {
+					$start_date_str = $start_date->format( 'Y-m-d H:i:s' );
+				}
+
+				$start_date_str_utc = get_gmt_from_date( $start_date_str );
+
+				$property_conditions[] = new GF_Query_Condition(
+					$column,
+					GF_Query_Condition::GTE,
+					new GF_Query_Literal( $start_date_str_utc )
+				);
+			} catch ( Exception $e ) {
+				GFAPI::log_error( __METHOD__ . '(): Invalid start_date; ' . $e->getMessage() );
 			}
 
-			$start_date_str_utc = get_gmt_from_date( $start_date_str );
-
-			$property_conditions[] = new GF_Query_Condition(
-				$column,
-				GF_Query_Condition::GTE,
-				new GF_Query_Literal( $start_date_str_utc )
-			);
 		}
 
 		if ( ! empty( $end_date ) ) {
-			$end_date         = new DateTime( $search_criteria['end_date'] );
-			$end_datetime_str = $end_date->format( 'Y-m-d H:i:s' );
-			$end_date_str     = $end_date->format( 'Y-m-d' );
 
-			// extend end date till the end of the day unless a time was specified. 00:00:00 is ignored.
-			if ( $end_datetime_str == $end_date_str . ' 00:00:00' ) {
-				$end_date_str = $end_date->format( 'Y-m-d' ) . ' 23:59:59';
-			} else {
-				$end_date_str = $end_date->format( 'Y-m-d H:i:s' );
+			try {
+				$end_date         = new DateTime( $search_criteria['end_date'] );
+				$end_datetime_str = $end_date->format( 'Y-m-d H:i:s' );
+				$end_date_str     = $end_date->format( 'Y-m-d' );
+
+				// extend end date till the end of the day unless a time was specified. 00:00:00 is ignored.
+				if ( $end_datetime_str == $end_date_str . ' 00:00:00' ) {
+					$end_date_str = $end_date->format( 'Y-m-d' ) . ' 23:59:59';
+				} else {
+					$end_date_str = $end_date->format( 'Y-m-d H:i:s' );
+				}
+
+				$end_date_str_utc = get_gmt_from_date( $end_date_str );
+
+				if ( ! empty( $end_date ) ) {
+					$property_conditions[] = new GF_Query_Condition(
+						$column,
+						GF_Query_Condition::LTE,
+						new GF_Query_Literal( $end_date_str_utc )
+					);
+				}
+			} catch ( Exception $e ) {
+				GFAPI::log_error( __METHOD__ . '(): Invalid end_date; ' . $e->getMessage() );
 			}
 
-			$end_date_str_utc = get_gmt_from_date( $end_date_str );
-
-			if ( ! empty( $end_date ) ) {
-				$property_conditions[] = new GF_Query_Condition(
-					$column,
-					GF_Query_Condition::LTE,
-					new GF_Query_Literal( $end_date_str_utc )
-				);
-			}
 		}
 
 		if ( ! empty( $property_conditions ) ) {

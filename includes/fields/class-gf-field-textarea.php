@@ -44,6 +44,8 @@ class GF_Field_Textarea extends GF_Field {
 
 	public function get_field_input( $form, $value = '', $entry = null ) {
 
+		global $current_screen;
+
 		$form_id         = absint( $form['id'] );
 		$is_entry_detail = $this->is_entry_detail();
 		$is_form_editor  = $this->is_form_editor();
@@ -68,10 +70,12 @@ class GF_Field_Textarea extends GF_Field {
 
 		if ( $this->get_allowable_tags() === false ) {
 			$value = esc_textarea( $value );
+		} else {
+			$value = wp_kses_post( $value );
 		}
 
 		//see if the field is set to use the rich text editor
-		if ( ! $is_admin && $this->is_rich_edit_enabled() ) {
+		if ( ! $is_admin && $this->is_rich_edit_enabled() && ( ! $current_screen || ( $current_screen && ! rgobj( $current_screen, 'is_block_editor' ) ) ) ) {
 			//placeholders cannot be used with the rte; message displayed in admin when this occurs
 			//field cannot be used in conditional logic by another field; message displayed in admin and field removed from conditional logic drop down
 			$tabindex = GFCommon::$tab_index > 0 ? GFCommon::$tab_index ++ : '';

@@ -826,8 +826,21 @@ class GFExport {
 			$leads = gf_apply_filters( array( 'gform_leads_before_export', $form_id ), $leads, $form, $paging );
 
 			foreach ( $leads as $lead ) {
-				$lines .= self::get_entry_export_line( $lead, $form, $fields, $field_rows, $separator );
-				$lines .= "\n";
+				$line = self::get_entry_export_line( $lead, $form, $fields, $field_rows, $separator );
+				/**
+				 * Filter the current line being exported.
+				 *
+				 * @since 2.4.11.5
+				 *
+				 * @param string   $line       The current line being exported.
+				 * @param array    $form       The current form object.
+				 * @param array    $fields     An array of field IDs to be exported.
+				 * @param array    $field_rows An array of List fields
+				 * @param array    $entry      The current entry.
+				 * @param string   $separator  The separator
+				 */
+				$line = apply_filters( 'gform_export_line', $line, $form, $fields, $field_rows, $lead, $separator );
+				$lines .= "$line\n";
 			}
 
 			$offset += $page_size;
