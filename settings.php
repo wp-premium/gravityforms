@@ -366,7 +366,7 @@ class GFSettings {
 					<td>
 						<?php
 						$key = GFCommon::get_key();
-						$key_field = '<input type="password" name="gforms_key" id="gforms_key" style="width:350px;" value="' . $key . '" />';
+						$key_field = '<input type="password" name="gforms_key" id="gforms_key" style="width:350px;" value="' . $key . '" autocomplete="off" />';
 						if ( ! rgempty( 'is_error', $version_info ) ) {
 							$key_field .= "&nbsp;<img src='" . GFCommon::get_base_url() . "/images/exclamation.png' class='gf_keystatus_error gf_tooltip' alt='There was an error validating your key' title='<h6>" . esc_attr__( 'Validation Error', 'gravityforms' ) . '</h6>' . esc_attr__( 'There was an error while validating your license key. Gravity Forms will continue to work, but automatic upgrades will not be available. Please contact support to resolve this issue.', 'gravityforms' ) . "'/>";
 						} else if ( rgar( $version_info, 'is_valid_key' ) ) {

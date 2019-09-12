@@ -98,7 +98,7 @@ class GFFormSettingsLocking extends GFLocking {
 		if ( empty( $subview ) ) {
 			$subview = 'settings';
 		}
-		$edit_url = admin_url( sprintf( 'admin.php?page=gf_edit_forms&view=settings&subview=%s&id=%d', esc_html( $subview ), $form_id ) );
+		$edit_url = admin_url( sprintf( 'admin.php?page=gf_edit_forms&view=settings&subview=%s&id=%d', esc_attr( $subview ), $form_id ) );
 		parent::__construct( 'form_settings', $redirect_url, $edit_url, $capabilities );
 	}
 

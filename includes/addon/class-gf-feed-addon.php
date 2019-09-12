@@ -1046,10 +1046,19 @@ abstract class GFFeedAddOn extends GFAddOn {
 	}
 
 	public function ajax_toggle_is_active() {
+		check_ajax_referer( 'feed_list', 'nonce' );
+
+		if ( ! $this->current_user_can_any( $this->_capabilities_form_settings ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Access denied.', 'gravityforms' ) ) );
+		}
+
 		$feed_id   = rgpost( 'feed_id' );
 		$is_active = rgpost( 'is_active' );
 
-		$this->update_feed_active( $feed_id, $is_active );
+		if ( $this->update_feed_active( $feed_id, $is_active ) ) {
+			wp_send_json_success();
+		}
+
 		die();
 	}
 

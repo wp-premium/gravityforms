@@ -3551,19 +3551,23 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		$form  = GFAPI::get_form( $entry['form_id'] );
 		$feed  = $this->get_payment_feed( $entry, $form );
 
+		// If user is not authorized, exit.
+		if ( $feed && $this->_slug === $feed['addon_slug'] && ! GFCommon::current_user_can_any( $this->_capabilities_settings_page ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Access denied.', 'gravityforms' ) ) );
+		}
+
 		//This addon does not have a payment feed. Abort.
 		if ( empty ( $feed ) ) {
 			$this->log_debug( __METHOD__ . '(): Aborting. Entry does not have a feed.' );
-
 			return;
 		}
 
 		if ( $this->cancel( $entry, $feed ) ) {
 			$this->cancel_subscription( $entry, $feed );
-			die( '1' );
+			wp_send_json_success();
 		} else {
 			$this->log_debug( __METHOD__ . '(): Aborting. Unable to cancel subscription.' );
-			die( '0' );
+			wp_send_json_error();
 		}
 
 	}

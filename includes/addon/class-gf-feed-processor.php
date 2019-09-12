@@ -297,7 +297,7 @@ class GF_Feed_Processor extends GF_Background_Process {
  * Returns an instance of the GF_Feed_Processor class
  *
  * @see    GF_Feed_Processor::get_instance()
- * @return object GF_Feed_Processor
+ * @return GF_Feed_Processor
  */
 function gf_feed_processor() {
 	return GF_Feed_Processor::get_instance();
