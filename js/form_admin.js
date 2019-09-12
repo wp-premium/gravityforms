@@ -774,6 +774,16 @@ function ConfirmationObj() {
 
     };
 
+    gaddon.toggleFeedSwitch = function(img, is_active) {
+        if (is_active) {
+            img.src = img.src.replace("spinner.gif", "active1.png");
+            jQuery(img).attr('title',gf_vars.inactive).attr('alt', gf_vars.inactive);
+        } else{
+            img.src = img.src.replace("spinner.gif", "active0.png");
+            jQuery(img).attr('title',gf_vars.active).attr('alt', gf_vars.active);
+        }
+    };
+
     gaddon.toggleFeedActive = function(img, addon_slug, feed_id){
         var is_active = img.src.indexOf("active1.png") >=0 ? 0 : 1;
         img.src = img.src.replace("active1.png", "spinner.gif");
@@ -782,19 +792,21 @@ function ConfirmationObj() {
         jQuery.post(ajaxurl, {
             action: "gf_feed_is_active_" + addon_slug,
             feed_id: feed_id,
-            is_active: is_active
+            is_active: is_active,
+            nonce: jQuery('#feed_list').val()
             },
             function(response){
-                if(is_active){
-                    img.src = img.src.replace("spinner.gif", "active1.png");
-                    jQuery(img).attr('title',gf_vars.inactive).attr('alt', gf_vars.inactive);
-                }
-                else{
-                    img.src = img.src.replace("spinner.gif", "active0.png");
-                    jQuery(img).attr('title',gf_vars.active).attr('alt', gf_vars.active);
+                if (response.success) {
+                    gaddon.toggleFeedSwitch(img, is_active);
+                } else {
+                    gaddon.toggleFeedSwitch(img, ! is_active);
+                    alert(response.data.message);
                 }
             }
-        );
+        ).fail(function(jqXHR, textStatus, error) {
+            gaddon.toggleFeedSwitch(img, ! is_active);
+            alert(error);
+        });
 
         return true;
     };

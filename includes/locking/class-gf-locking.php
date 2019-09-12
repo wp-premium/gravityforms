@@ -196,18 +196,18 @@ abstract class GFLocking {
 
 	protected function get_strings() {
 		$strings = array(
-			'currently_locked'  => esc_html__( 'This page is currently locked. Click on the "Request Control" button to let %s know you\'d like to take over.', 'gravityforms' ),
-			'accept'            => esc_html__( 'Accept', 'gravityforms' ),
-			'cancel'            => esc_html__( 'Cancel', 'gravityforms' ),
-			'currently_editing' => esc_html__( '%s is currently editing', 'gravityforms' ),
-			'taken_over'        => esc_html__( '%s has taken over and is currently editing.', 'gravityforms' ),
-			'lock_requested'    => esc_html__( '%s has requested permission to take over control.', 'gravityforms' ),
-			'gained_control'    => esc_html__( 'You now have control', 'gravityforms' ),
-			'request_pending'   => esc_html__( 'Pending', 'gravityforms' ),
-			'no_response'       => esc_html__( 'No response', 'gravityforms' ),
-			'request_again'     => esc_html__( 'Request again', 'gravityforms' ),
-			'request_error'     => esc_html__( 'Error', 'gravityforms' ),
-			'request_rejected'  => esc_html__( 'Your request was rejected', 'gravityforms' ),
+			'currently_locked'  => wp_strip_all_tags( __( 'This page is currently locked. Click on the "Request Control" button to let %s know you\'d like to take over.', 'gravityforms' ) ),
+			'accept'            => wp_strip_all_tags( __( 'Accept', 'gravityforms' ) ),
+			'cancel'            => wp_strip_all_tags( __( 'Cancel', 'gravityforms' ) ),
+			'currently_editing' => wp_strip_all_tags( __( '%s is currently editing', 'gravityforms' ) ),
+			'taken_over'        => wp_strip_all_tags( __( '%s has taken over and is currently editing.', 'gravityforms' ) ),
+			'lock_requested'    => wp_strip_all_tags( __( '%s has requested permission to take over control.', 'gravityforms' ) ),
+			'gained_control'    => wp_strip_all_tags( __( 'You now have control', 'gravityforms' ) ),
+			'request_pending'   => wp_strip_all_tags( __( 'Pending', 'gravityforms' ) ),
+			'no_response'       => wp_strip_all_tags( __( 'No response', 'gravityforms' ) ),
+			'request_again'     => wp_strip_all_tags( __( 'Request again', 'gravityforms' ) ),
+			'request_error'     => wp_strip_all_tags( __( 'Error', 'gravityforms' ) ),
+			'request_rejected'  => wp_strip_all_tags( __( 'Your request was rejected', 'gravityforms' ) ),
 		);
 
 		return $strings;

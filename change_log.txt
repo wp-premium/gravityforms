@@ -1,3 +1,17 @@
+### 2.4.12 | 2019-08-28
+- Added security enhancements.
+- Added From Email validation in the notifications settings.
+- Added From Email warning message in the notification settings when the site domain is not being used for this setting.
+- Added [gform_export_line](https://docs.gravityforms.com/gform_export_line/) filter to allow modifying each line of the export separately.
+- Updated the default placeholder for new Website fields. Credit: The GravityView team.
+- Fixed a typo preventing the year sub-label input from displaying when editing a date field and having sub-label placement set to be above inputs.
+- Fixed Dashicons not appearing in the block editor when using a Classic block with a Gravity Forms shortcode whose form contains a Rich Text Editor enabled Paragraph field.
+- Fixed legacy database errors and notices generated during the uninstall process for add-ons.
+- Fixed a PHP fatal error which can occur during entry export if invalid values are entered in the start or end date filters.
+- Fixed PHP errors which could occur if the gform_recent_forms user meta does not contain the expected value.
+- API: Fixed an issue with the way REST API v2 is handling entry values for legacy (pre v2.2) Multi Select fields.
+
+
 ### 2.4.11 | 2019-07-10
 - Added security enhancements. Credit: SimranJeet Singh (@TurbanatorSJS).
 - Added accessibility enhancements.
@@ -1309,7 +1323,7 @@ Description Filter which checks whether the operator is valid. Allows …)* filt
 - Added security enhancements to the entry export process.
 - Added $support_placeholders parameter to GFCommon::get_select_choices() method.
 - Added gf_input_change() JS function.
-- Added action-based system to conditional_logic.js; new method will trigger conditional logic from generic *gform_input_change* event. Allows more granular control of the order in which input-change-event-based functionality (i.e. conditional logic) is triggered.
+- Added action-based system to conditional_logic.js; new method will trigger conditional logic from generic *[gform_input_change](https://docs.gravityforms.com/gform_input_change/)* event. Allows more granular control of the order in which input-change-event-based functionality (i.e. conditional logic) is triggered.
 - Added 'fields' property to *gf_form_conditional_logic* JS object. Used to determine field's with conditional logic dependent on the current field. This differs from the 'dependents' property in that the dependents property refers to fields that should be shown/hidden based on a "parent" field (i.e. fields within a Section Break).
 - Added new JS helper functions: rgar() and rgars(); work just like their PHP counterparts.
 - Added field type specific classes to input containers.

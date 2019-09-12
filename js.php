@@ -661,7 +661,7 @@ if ( ! class_exists( 'GFForms' ) ) {
 				if (!field.label)
 					field.label = <?php echo json_encode( esc_html__( 'Website', 'gravityforms' ) ); ?>;
 				if (!field.placeholder)
-					field.placeholder = 'http://';
+					field.placeholder = 'https://';
 				break;
 			case "password" :
 				field.inputs = GetPasswordFieldInputs(field);
