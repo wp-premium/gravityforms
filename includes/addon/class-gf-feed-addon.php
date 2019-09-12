@@ -1046,10 +1046,19 @@ abstract class GFFeedAddOn extends GFAddOn {
 	}
 
 	public function ajax_toggle_is_active() {
+		check_ajax_referer( 'feed_list', 'nonce' );
+
+		if ( ! $this->current_user_can_any( $this->_capabilities_form_settings ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Access denied.', 'gravityforms' ) ) );
+		}
+
 		$feed_id   = rgpost( 'feed_id' );
 		$is_active = rgpost( 'is_active' );
 
-		$this->update_feed_active( $feed_id, $is_active );
+		if ( $this->update_feed_active( $feed_id, $is_active ) ) {
+			wp_send_json_success();
+		}
+
 		die();
 	}
 
@@ -1313,6 +1322,18 @@ abstract class GFFeedAddOn extends GFAddOn {
 		} else {
 			$result = $this->insert_feed( $form_id, true, $settings );
 		}
+
+		/**
+		 * Perform a custom action when a feed is saved.
+		 *
+		 * @param string  $feed_id 	The ID of the feed which was saved.
+		 * @param int 	  $form_id 	The current form ID associated with the feed.
+		 * @param array   $settings	An array containing the settings and mappings for the feed.
+		 * @param GFAddOn $addon 	The current instance of the GFAddOn object which extends GFFeedAddOn or GFPaymentAddOn (i.e. GFCoupons, GF_User_Registration, GFStripe).
+		 *
+		 * @since 2.4.12.3
+		 */
+		do_action( 'gform_post_save_feed_settings', $result, $form_id, $settings, $this );
 
 		return $result;
 	}

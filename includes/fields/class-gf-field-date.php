@@ -185,7 +185,7 @@ class GF_Field_Date extends GF_Field {
                                     <input id='{$field_id}_2' name='ginput_day' type='text' {$day_placeholder_attribute} {$disabled_text} value='{$day_value}'/>
                                </div>";
 				$year_field  = "<div class='gfield_date_year ginput_date' id='gfield_input_date_year' style='display:$datefield_display'>
-                                    <label for='{$field_id}_2' {$sub_label_class_attribute}>{$year_sub_label}</label>
+                                    <label for='{$field_id}_3' {$sub_label_class_attribute}>{$year_sub_label}</label>
                                     <input id='{$field_id}_3' type='text' name='text' {$year_placeholder_attribute} {$disabled_text} value='{$year_value}'/>
                                </div>";
 			} else {

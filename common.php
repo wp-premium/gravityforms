@@ -5248,17 +5248,17 @@ Content-Type: text/html;
 		wp_localize_script(
 			'gform_gravityforms', 'gform_gravityforms', array(
 				'strings' => array(
-					'invalid_file_extension' => esc_html__( 'This type of file is not allowed. Must be one of the following: ', 'gravityforms' ),
-					'delete_file'            => esc_html__( 'Delete this file', 'gravityforms' ),
-					'in_progress'            => esc_html__( 'in progress', 'gravityforms' ),
-					'file_exceeds_limit'     => esc_html__( 'File exceeds size limit', 'gravityforms' ),
-					'illegal_extension'      => esc_html__( 'This type of file is not allowed.', 'gravityforms' ),
-					'max_reached'            => esc_html__( 'Maximum number of files reached', 'gravityforms' ),
-					'unknown_error'          => esc_html__( 'There was a problem while saving the file on the server', 'gravityforms' ),
-					'currently_uploading'    => esc_html__( 'Please wait for the uploading to complete', 'gravityforms' ),
-					'cancel'                 => esc_html__( 'Cancel', 'gravityforms' ),
-					'cancel_upload'          => esc_html__( 'Cancel this upload', 'gravityforms' ),
-					'cancelled'              => esc_html__( 'Cancelled', 'gravityforms' )
+					'invalid_file_extension' => wp_strip_all_tags( __( 'This type of file is not allowed. Must be one of the following: ', 'gravityforms' ) ),
+					'delete_file'            => wp_strip_all_tags( __( 'Delete this file', 'gravityforms' ) ),
+					'in_progress'            => wp_strip_all_tags( __( 'in progress', 'gravityforms' ) ),
+					'file_exceeds_limit'     => wp_strip_all_tags( __( 'File exceeds size limit', 'gravityforms' ) ),
+					'illegal_extension'      => wp_strip_all_tags( __( 'This type of file is not allowed.', 'gravityforms' ) ),
+					'max_reached'            => wp_strip_all_tags( __( 'Maximum number of files reached', 'gravityforms' ) ),
+					'unknown_error'          => wp_strip_all_tags( __( 'There was a problem while saving the file on the server', 'gravityforms' ) ),
+					'currently_uploading'    => wp_strip_all_tags( __( 'Please wait for the uploading to complete', 'gravityforms' ) ),
+					'cancel'                 => wp_strip_all_tags( __( 'Cancel', 'gravityforms' ) ),
+					'cancel_upload'          => wp_strip_all_tags( __( 'Cancel this upload', 'gravityforms' ) ),
+					'cancelled'              => wp_strip_all_tags( __( 'Cancelled', 'gravityforms' ) )
 				),
 				'vars'    => array(
 					'images_url' => GFCommon::get_base_url() . '/images'
@@ -6021,6 +6021,40 @@ Content-Type: text/html;
 
 		return $result;
 	}
+
+	/**
+	 * Checks if notification from email is using the site domain.
+	 *
+	 * @since  2.4.12
+	 *
+	 * @param string $email_address Email address to check.
+	 * @param string $domain        Domain to check.
+	 *
+	 * @return bool
+	 */
+	public static function email_domain_matches( $email_address, $domain = '' ) {
+
+		GFCommon::log_debug( __METHOD__ . '(): Email address: ' . $email_address );
+
+		if ( ! is_email( $email_address ) ) {
+			GFCommon::log_debug( __METHOD__ . '(): Email address failed is_email() validation.' );
+			return false;
+		}
+
+		if ( empty( $domain ) ) {
+			$domain = parse_url( get_bloginfo( 'url' ), PHP_URL_HOST );
+		}
+
+		GFCommon::log_debug( __METHOD__ . '(): Domain or URL: ' . $domain );
+
+		$email_domain = explode( '@', $email_address );
+
+		$domain_matches = ( strpos( $domain, array_pop( $email_domain ) ) !== false ) ? true : false;
+		GFCommon::log_debug( __METHOD__ . '(): Domain matches? '. var_export( $domain_matches, true ) );
+
+		return $domain_matches;
+  }
+
 }
 
 class GFCategoryWalker extends Walker {

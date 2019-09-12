@@ -4561,7 +4561,8 @@ ul:not(.top_label) .ginput_container.ginput_single_email {
     width: 95%;
 }
 
-.gaddon-setting.medium {
+.gaddon-setting.medium,
+.gaddon-select {
     width: 50%;
 }
 

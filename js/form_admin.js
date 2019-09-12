@@ -774,6 +774,16 @@ function ConfirmationObj() {
 
     };
 
+    gaddon.toggleFeedSwitch = function(img, is_active) {
+        if (is_active) {
+            img.src = img.src.replace("spinner.gif", "active1.png");
+            jQuery(img).attr('title',gf_vars.inactive).attr('alt', gf_vars.inactive);
+        } else{
+            img.src = img.src.replace("spinner.gif", "active0.png");
+            jQuery(img).attr('title',gf_vars.active).attr('alt', gf_vars.active);
+        }
+    };
+
     gaddon.toggleFeedActive = function(img, addon_slug, feed_id){
         var is_active = img.src.indexOf("active1.png") >=0 ? 0 : 1;
         img.src = img.src.replace("active1.png", "spinner.gif");
@@ -782,19 +792,21 @@ function ConfirmationObj() {
         jQuery.post(ajaxurl, {
             action: "gf_feed_is_active_" + addon_slug,
             feed_id: feed_id,
-            is_active: is_active
+            is_active: is_active,
+            nonce: jQuery('#feed_list').val()
             },
             function(response){
-                if(is_active){
-                    img.src = img.src.replace("spinner.gif", "active1.png");
-                    jQuery(img).attr('title',gf_vars.inactive).attr('alt', gf_vars.inactive);
-                }
-                else{
-                    img.src = img.src.replace("spinner.gif", "active0.png");
-                    jQuery(img).attr('title',gf_vars.active).attr('alt', gf_vars.active);
+                if (response.success) {
+                    gaddon.toggleFeedSwitch(img, is_active);
+                } else {
+                    gaddon.toggleFeedSwitch(img, ! is_active);
+                    alert(response.data.message);
                 }
             }
-        );
+        ).fail(function(jqXHR, textStatus, error) {
+            gaddon.toggleFeedSwitch(img, ! is_active);
+            alert(error);
+        });
 
         return true;
     };
@@ -1418,7 +1430,7 @@ var gfMergeTagsObj = function( form, element ) {
 
 				var tag = tags[i];
 
-				var tagHTML = jQuery( '<a class="" data-value="' + tag.tag + '">' + tag.label + '</a>' );
+				var tagHTML = jQuery( '<a class="" data-value="' + escapeAttr( tag.tag ) + '">' + escapeHtml( tag.label ) + '</a>' );
 				tagHTML.on( 'click.gravityforms', self.bindMergeTagListClick );
 
 				optionsHTML.push( jQuery( '<li></li>' ).html( tagHTML ) );
@@ -1566,10 +1578,12 @@ var gfMergeTagsObj = function( form, element ) {
 
 	};
 
-	// If element is defined, initialze.
+	// If element is defined, initialize.
 	if ( self.elem ) {
 		self.init();
 	}
+
+
 
 };
 
@@ -1641,3 +1655,54 @@ function isSet( $var ) {
     return typeof $var != 'undefined';
 }
 
+/**
+ * The entity mappings used by the escaping helper functions.
+ *
+ * Also used in form_editor.js
+ *
+ * @since 2.4.13
+ *
+ * @type {object}
+ */
+var entityMap = {
+	'&': '&amp;',
+	'<': '&lt;',
+	'>': '&gt;',
+	'"': '&quot;',
+	'\'': '&#39;',
+	'/': '&#x2F;',
+	'`': '&#x60;',
+	'=': '&#x3D;'
+};
+
+/**
+ * Escapes the given string string ready to be output as the value of an HTML attribute.
+ *
+ * Also used in form_editor.js
+ *
+ * @since 2.4.13
+ *
+ * @param {string} string The string to escape.
+ * @returns {string}
+ */
+function escapeAttr( string ) {
+	return String( string ).replace( /["']/g, function ( s ) {
+		return entityMap[s];
+	} );
+}
+
+/**
+ * Escapes the given string string ready to be output to the page as HTML.
+ *
+ * Also used in form_editor.js
+ *
+ * @since 2.4.13
+ *
+ * @param {string} string The string to escape.
+ * @returns {string}
+ */
+function escapeHtml( string ) {
+	return String( string ).replace( /[&<>"'`=\/]/g, function ( s ) {
+		return entityMap[s];
+	} );
+}

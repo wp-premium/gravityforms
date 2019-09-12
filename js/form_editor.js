@@ -2574,31 +2574,6 @@ function LoadCustomChoices(){
     }
 }
 
-
-var entityMap = {
-	'&': '&amp;',
-	'<': '&lt;',
-	'>': '&gt;',
-	'"': '&quot;',
-	"'": '&#39;',
-	'/': '&#x2F;',
-	'`': '&#x60;',
-	'=': '&#x3D;'
-};
-
-function escapeAttr (string) {
-
-	return String(string).replace(/["']/g, function (s) {
-		return entityMap[s];
-	});
-}
-
-function escapeHtml (string) {
-	return String(string).replace(/[&<>"'`=\/]/g, function (s) {
-		return entityMap[s];
-	});
-}
-
 function SelectCustomChoice( name ){
 
     jQuery("#gfield_bulk_add_input").val(gform_custom_choices[name].join("\n"));

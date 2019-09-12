@@ -227,7 +227,9 @@ Class GFNotification {
 		}
 
 		if ( $is_update && $is_valid ) {
+
 			$url = remove_query_arg( 'nid' );
+
 			GFCommon::add_message( sprintf( esc_html__( 'Notification saved successfully. %sBack to notifications.%s', 'gravityforms' ), '<a href="' . esc_url( $url ) . '">', '</a>' ) );
 			/**
 			 * Fires an action after a notification has been saved
@@ -992,15 +994,45 @@ Class GFNotification {
 		<?php $ui_settings['notification_from_name'] = ob_get_contents();
 		ob_clean(); ?>
 
-		<tr valign="top">
+		<?php
+		$from_email_value      = rgar( $notification, 'from', '{admin_email}' );
+		$is_invalid_from_email = ! $is_valid && $from_email_value && ! self::is_valid_notification_email( $from_email_value );
+		$class                 = $is_invalid_from_email ? "class='gfield_error'" : '';
+		?>
+		<tr valign="top" <?php echo $class; ?>>
 			<th scope="row">
 				<label for="gform_notification_from">
 					<?php esc_html_e( 'From Email', 'gravityforms' ); ?>
-					<?php gform_tooltip( 'notification_from_email' ) ?>
+					<?php gform_tooltip( 'notification_from_email' ); ?>
 				</label>
 			</th>
 			<td>
-				<input type="text" class="fieldwidth-2 merge-tag-support mt-position-right mt-hide_all_fields" name="gform_notification_from" id="gform_notification_from" value="<?php echo rgempty( 'from', $notification ) ? '{admin_email}' : esc_attr( rgget( 'from', $notification ) ) ?>" />
+				<input type="text" class="fieldwidth-2 mt-position-right mt-hide_all_fields" name="gform_notification_from" id="gform_notification_from" value="<?php echo rgempty( 'from', $notification ) ? '{admin_email}' : esc_attr( rgget( 'from', $notification ) ); ?>" />
+				<?php
+
+				/**
+				 * Disable the From Email warning.
+				 *
+				 * @since 2.4.13
+				 *
+				 * @param bool $disable_from_warning Should the From Email warning be disabled?
+				 */
+				$disable_from_warning = gf_apply_filters( array( 'gform_notification_disable_from_warning', $form['id'], rgar( $notification, 'id' ) ), false );
+
+				// Display warning message if not using an email address containing the site domain or {admin_email}.
+				if ( ! $disable_from_warning && rgar( $notification, 'service' ) === 'wordpress' && ! $is_invalid_from_email && ! self::is_site_domain_in_from( $from_email_value ) ) {
+					echo '<div class="alert_yellow" style="padding:15px;margin-top:15px;">';
+					$doc_page = 'https://docs.gravityforms.com/troubleshooting-notifications/#use-a-valid-from-address';
+					echo sprintf( esc_html__( 'Warning! Using a third-party email in the From Email field may prevent your notification from being delivered. It is best to use an email with the same domain as your website. %sMore details in our documentation.%s', 'gravityforms' ), '<a href="' . esc_url( $doc_page ) . '" target="_blank" >', '</a>' );
+					echo '</div>';
+				}
+
+				if ( $is_invalid_from_email ) {
+					?>
+					<br><span class="validation_message"><?php esc_html_e( 'Please enter a valid email address or {admin_email} merge tag in the From Email field.', 'gravityforms' ); ?></span>
+					<?php
+				}
+				?>
 			</td>
 		</tr> <!-- / to from email -->
 		<?php $ui_settings['notification_from'] = ob_get_contents();
@@ -1316,6 +1348,11 @@ Class GFNotification {
 			$is_valid = false;
 		}
 
+		$from_email = rgpost( 'gform_notification_from' );
+		if ( ! empty( $from_email ) && ! self::is_valid_notification_email( $from_email ) ) {
+			$is_valid = false;
+		}
+
 		return $is_valid;
 	}
 
@@ -1411,6 +1448,26 @@ Class GFNotification {
 		 * @param string $gform_notification_to_field The field that is being used for the notification, if available.
 		 */
 		return $is_valid = apply_filters( 'gform_is_valid_notification_to', $is_valid, rgpost( 'gform_notification_to_type' ), rgpost( 'gform_notification_to_email' ), rgpost( 'gform_notification_to_field' ) );
+	}
+
+	/**
+	 * Checks if notification from email is using the site domain.
+	 *
+	 * @since  2.4.12
+	 *
+	 * @param string $from_email Email address to check.
+	 *
+	 * @return bool
+	 */
+	private static function is_site_domain_in_from( $from_email ) {
+
+		// If {admin_email} is used check email from WP settings.
+		if ( strpos( $from_email, '{admin_email}' ) !== false ) {
+			$from_email = get_bloginfo( 'admin_email' );
+		}
+
+		return GFCommon::email_domain_matches( $from_email );
+
 	}
 
 	/**
