@@ -385,8 +385,8 @@ class GFAPI {
 			return new WP_Error( 'invalid', __( 'Invalid form objects', 'gravityforms' ) );
 		}
 		$form_ids = array();
-		foreach ( $forms as $form ) {
-			$result = self::add_form( $form );
+		foreach ( $forms as $key => $form ) {
+			$result = self::add_form( $form, $key );
 			if ( is_wp_error( $result ) ) {
 				return $result;
 			}
@@ -409,10 +409,11 @@ class GFAPI {
 	 * @uses GFFormsModel::update_form_meta()
 	 *
 	 * @param array $form_meta The Form object.
+	 * @param array $desired_id Form ID to use (if available)
 	 *
 	 * @return int|WP_Error Either the new Form ID or a WP_Error instance.
 	 */
-	public static function add_form( $form_meta ) {
+	public static function add_form( $form_meta, $desired_id = FALSE ) {
 		global $wpdb;
 
 		if ( gf_upgrade()->get_submissions_block() ) {
@@ -440,7 +441,7 @@ class GFAPI {
 		}
 
 		// Inserting form.
-		$form_id = RGFormsModel::insert_form( $title );
+		$form_id = RGFormsModel::insert_form( $title, $desired_id );
 
 		// Updating form meta.
 		$form_meta['title'] = $title;

@@ -1070,21 +1070,22 @@ class GFFormsModel {
 		}
 
 		$results = $wpdb->get_results(
-			" SELECT display_meta, confirmations, notifications FROM {$form_table_name} f
+			" SELECT id, display_meta, confirmations, notifications FROM {$form_table_name} f
                                         INNER JOIN {$meta_table_name} m ON f.id = m.form_id
                                         WHERE id in({$ids})", ARRAY_A
 		);
 
+		$forms = array();
 		foreach ( $results as &$result ) {
 			$form                  = self::unserialize( $result['display_meta'] );
 			$form['confirmations'] = self::unserialize( $result['confirmations'] );
 			$form['notifications'] = self::unserialize( $result['notifications'] );
 			// Creating field objects and copying some form variables down to fields for easier access
 			$form   = self::convert_field_objects( $form );
-			$result = $form;
+			$forms[ $result['id'] ] = $form;
 		}
 
-		return $results;
+		return $forms;
 
 	}
 
@@ -1891,12 +1892,18 @@ class GFFormsModel {
 		}
 	}
 
-	public static function insert_form( $form_title ) {
+	public static function insert_form( $form_title, $desired_id = FALSE ) {
 		global $wpdb;
 		$form_table_name = self::get_form_table_name();
 
 		//creating new form
-		$wpdb->query( $wpdb->prepare( "INSERT INTO $form_table_name(title, date_created) VALUES(%s, utc_timestamp())", $form_title ) );
+		//test whether a specific id is desired *and* available
+		if ( $desired_id && !self::get_form( $desired_id, true ) ) {
+			$wpdb->query( $wpdb->prepare( "INSERT INTO $form_table_name(id, title, date_created) VALUES(%d, %s, utc_timestamp())", $desired_id, $form_title ) );
+		}
+		else {
+			$wpdb->query( $wpdb->prepare( "INSERT INTO $form_table_name(title, date_created) VALUES(%s, utc_timestamp())", $form_title ) );
+		}
 
 		//returning newly created form id
 		return $wpdb->insert_id;
