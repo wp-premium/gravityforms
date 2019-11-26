@@ -864,8 +864,25 @@ class GFEntryDetail {
 			foreach ( $notes as $note ) {
 				$count ++;
 				$is_last = $count >= $notes_count ? true : false;
+
+				// Prepare note classes.
+				$classes = array();
+
+				// Add base note class.
+				if ( $note->note_type ) {
+					$classes[] = sprintf( 'gforms_note_%s', $note->note_type );
+				}
+
+				// Add sub type note class.
+				if ( rgobj( $note, 'sub_type' ) ) {
+					$classes[] = sprintf( 'gforms_note_%s', $note->sub_type );
+				}
+
+				// Escape note classes.
+				$classes = array_map( 'esc_attr', $classes );
+
 				?>
-				<tr valign="top">
+				<tr valign="top" data-id="<?php echo esc_attr( $note->id ); ?>" data-type="<?php echo esc_attr( $note->note_type ); ?>"<?php echo rgobj( $note, 'sub_type' ) ? ' data-sub-type="' . esc_attr( $note->sub_type ) . '"' : ''; ?>>
 					<?php
 					if ( $is_editable && GFCommon::current_user_can_any( 'gravityforms_edit_entry_notes' ) ) {
 					?>
@@ -880,29 +897,35 @@ class GFEntryDetail {
 					<td class="entry-detail-note<?php echo $is_last ? ' lastrow' : '' ?>">
 						<?php
 						}
-						$class = $note->note_type ? " gforms_note_{$note->note_type}" : '';
 						?>
-						<div class="note-meta-container <?php echo $note->user_email ? 'note-has-email' : ''; ?>">
+						<div class="note-meta-container">
 							<div class="note-avatar">
 								<?php
+
+								if ( $note->user_id ) {
+									$avatar = get_avatar( $note->user_id, 48 );
+								} else {
+									$avatar = sprintf(
+										'<img src="%s" alt="%s" />',
+										GFCommon::get_base_url() . '/images/note-placeholder.svg',
+										esc_attr( $note->user_name )
+									);
+								}
+
 								/**
 								 * Allows filtering of the notes avatar
 								 *
 								 * @param array $note The Note object that is being filtered when modifying the avatar
 								 */
-								echo apply_filters( 'gform_notes_avatar', get_avatar( $note->user_id, 48 ), $note ); ?>
+								echo apply_filters( 'gform_notes_avatar', $avatar, $note ); ?>
 							</div>
 							<div class="note-meta">
 								<h6 class="note-author"><?php echo esc_html( $note->user_name ) ?></h6>
-								<p class="note-email">
-									<?php if( $note->user_email ): ?>
-										<a href="mailto:<?php echo esc_attr( $note->user_email ) ?>"><?php echo esc_html( $note->user_email ) ?></a> <br>
-									<?php endif; ?>
-									<?php esc_html_e( 'added on', 'gravityforms' ); ?> <?php echo esc_html( GFCommon::format_date( $note->date_created, false ) ) ?>
-								</p>
+								<?php if ( $note->user_email ): ?><a href="mailto:<?php echo esc_attr( $note->user_email ) ?>" class="note-email"><?php echo esc_html( $note->user_email ) ?></a><?php endif; ?><br />
+								<time class="note-date"><?php esc_html_e( 'added', 'gravityforms' ); ?> <?php echo esc_html( GFCommon::format_date( $note->date_created, true ) ) ?></time>
 							</div>
 						</div>
-						<div class="detail-note-content<?php echo $class ?>"><?php echo nl2br( esc_html( $note->value ) ) ?></div>
+						<div class="detail-note-content <?php echo implode( ' ', $classes ); ?>"><?php echo nl2br( esc_html( $note->value ) ) ?></div>
 					</td>
 
 				</tr>

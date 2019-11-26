@@ -298,7 +298,7 @@ class GF_Field_Phone extends GF_Field {
 	public function get_phone_formats( $form_id = null ) {
 
 		if ( empty( $form_id ) ) {
-			$form_id = $this->form_id;
+			$form_id = $this->formId;
 		}
 		$form_id = absint( $form_id );
 
@@ -325,17 +325,7 @@ class GF_Field_Phone extends GF_Field {
 		 * @param array $phone_formats The phone formats.
 		 * @param int   $form_id       The ID of the current form.
 		 */
-		$phone_formats = apply_filters( 'gform_phone_formats', $phone_formats, $form_id );
-
-		/**
-		 * Filters the custom form inputs only for a specific form ID.
-		 *
-		 * @since 2.0.0
-		 *
-		 * @param array $phone_formats The phone formats.
-		 * @param int   $form_id       The ID of the current form.
-		 */
-		return apply_filters( 'gform_phone_formats_' . $form_id, $phone_formats, $form_id );
+		return gf_apply_filters( array( 'gform_phone_formats', $form_id ), $phone_formats, $form_id );
 	}
 
 	/**

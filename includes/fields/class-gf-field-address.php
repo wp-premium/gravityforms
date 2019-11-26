@@ -1260,7 +1260,7 @@ class GF_Field_Address extends GF_Field {
 			if ( empty( $country ) ) {
 				$country = $placeholder;
 			}
-			$selected = strtolower( $code ) == $selected_country ? "selected='selected'" : '';
+			$selected = strtolower( esc_attr( $code ) ) == $selected_country ? "selected='selected'" : '';
 			$str .= "<option value='" . esc_attr( $code ) . "' $selected>" . esc_html( $country ) . '</option>';
 		}
 

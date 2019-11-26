@@ -2058,30 +2058,11 @@ class GFFormSettings {
 		}
 
 		if ( ! $has_save_confirmation ) {
-			$confirmation_id = uniqid( 'sc1' );
-			$form['confirmations'][ $confirmation_id ] = array(
-				'id'          => $confirmation_id,
-				'event'       => 'form_saved',
-				'name'        => __( 'Save and Continue Confirmation', 'gravityforms' ),
-				'isDefault'   => true,
-				'type'        => 'message',
-				'message'     => __( '<p>Please use the following link to return and complete this form from any computer.</p><p class="resume_form_link_wrapper"> {save_link} </p><p> Note: This link will expire after 30 days.<br />Enter your email address if you would like to receive the link via email.</p></p> {save_email_input}</p>', 'gravityforms' ),
-				'url'         => '',
-				'pageId'      => '',
-				'queryString' => '',
-			);
-			$confirmation_id = uniqid( 'sc2' );
-			$form['confirmations'][ $confirmation_id ] = array(
-				'id'          => $confirmation_id,
-				'event'       => 'form_save_email_sent',
-				'name'        => __( 'Save and Continue Email Sent Confirmation', 'gravityforms' ),
-				'isDefault'   => true,
-				'type'        => 'message',
-				'message'     => __( '<span class="saved_message_success">Success!</span>The link was sent to the following email address: <span class="saved_message_email">{save_email}</span>', 'gravityforms' ),
-				'url'         => '',
-				'pageId'      => '',
-				'queryString' => '',
-			);
+			$confirmation_1 = GFFormsModel::get_default_confirmation( 'form_saved' );
+			$confirmation_2 = GFFormsModel::get_default_confirmation( 'form_save_email_sent' );
+
+			$form['confirmations'][ $confirmation_1['id'] ] = $confirmation_1;
+			$form['confirmations'][ $confirmation_2['id'] ] = $confirmation_2;
 			GFFormsModel::save_form_confirmations( $form_id, $form['confirmations'] );
 		}
 		return $form;

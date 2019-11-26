@@ -150,36 +150,56 @@ class GFFormList {
 
 			function ToggleActive(img, form_id) {
 
-				if( ! gfPageLoaded ) {
+				if ( ! gfPageLoaded ) {
 					return;
 				}
 
-				var is_active = img.src.indexOf("active1.png") >= 0
-				if (is_active) {
-					img.src = img.src.replace("active1.png", 'active0.png');
-					jQuery(img).attr('title', <?php echo json_encode( esc_attr__( 'Inactive', 'gravityforms' ) ); ?>).attr('alt', <?php echo json_encode( esc_attr__( 'Inactive', 'gravityforms' ) ); ?>);
+				var is_active = img.src.indexOf( 'active1.png' ) >= 0;
+				img.src = img.src.replace( is_active ? 'active1.png' : 'active0.png', 'spinner.gif' );
+
+				jQuery.ajax(
+					{
+						url:      '<?php echo admin_url( 'admin-ajax.php' ); ?>',
+						method:   'POST',
+						dataType: 'json',
+						data: {
+							action: 'rg_update_form_active',
+							rg_update_form_active: '<?php echo wp_create_nonce( 'rg_update_form_active' ); ?>',
+							form_id: form_id,
+							is_active: is_active ? 0 : 1,
+						},
+						success:  function() {
+							UpdateCount( 'active_count', is_active ? -1 : 1 );
+							UpdateCount( 'inactive_count', is_active ? 1 : -1 );
+
+							if ( is_active ) {
+								setToggleInactive();
+							} else {
+								setToggleActive();
+							}
+						},
+						error:    function() {
+							if ( ! is_active ) {
+								setToggleInactive();
+							} else {
+								setToggleActive();
+							}
+
+							alert( '<?php echo esc_js( __( 'Ajax error while updating form', 'gravityforms' ) ); ?>' );
+						}
+					}
+				);
+
+				function setToggleInactive() {
+					img.src = img.src.replace( 'spinner.gif', 'active0.png' );
+					jQuery( img ).attr( 'title', <?php echo json_encode( esc_attr__( 'Inactive', 'gravityforms' ) ); ?> ).attr( 'alt', <?php echo json_encode( esc_attr__( 'Inactive', 'gravityforms' ) ); ?> );
 				}
-				else {
-					img.src = img.src.replace("active0.png", 'active1.png');
-					jQuery(img).attr('title', <?php echo json_encode( esc_attr__( 'Active', 'gravityforms' ) ); ?>).attr('alt', <?php echo json_encode( esc_attr__( 'Active', 'gravityforms' ) ); ?>);
+
+				function setToggleActive() {
+					img.src = img.src.replace( 'spinner.gif', 'active1.png' );
+					jQuery( img ).attr( 'title', <?php echo json_encode( esc_attr__( 'Active', 'gravityforms' ) ); ?> ).attr( 'alt', <?php echo json_encode( esc_attr__( 'Active', 'gravityforms' ) ); ?> );
 				}
 
-				UpdateCount("active_count", is_active ? -1 : 1);
-				UpdateCount("inactive_count", is_active ? 1 : -1);
-
-				var mysack = new sack(<?php echo json_encode( admin_url( 'admin-ajax.php' ) ); ?>);
-				mysack.execute = 1;
-				mysack.method = 'POST';
-				mysack.setVar("action", "rg_update_form_active");
-				mysack.setVar("rg_update_form_active", <?php echo json_encode( wp_create_nonce( 'rg_update_form_active' ) ); ?>);
-				mysack.setVar("form_id", form_id);
-				mysack.setVar("is_active", is_active ? 0 : 1);
-				mysack.onError = function () {
-					alert(<?php echo json_encode( __( 'Ajax error while updating form', 'gravityforms' ) ); ?>)
-				};
-				mysack.runAJAX();
-
-				return true;
 			}
 			function UpdateCount(element_id, change) {
 				var element = jQuery("#" + element_id);
@@ -447,9 +467,9 @@ class GF_Form_List_Table extends WP_List_Table {
 
 		$views = array(
 			'all' => '<a class="' . $all_class . '" href="?page=gf_edit_forms">' . esc_html( _x( 'All', 'Form List', 'gravityforms' ) ) . ' <span class="count">(<span id="all_count">' . $form_count['total'] . '</span>)</span></a>',
-			'active' => '<a class="' . $active_class . '" href="?page=gf_edit_forms&filter=active">' . esc_html( _x( 'Active', 'Form List', 'gravityforms' ) ) . ' <span class="count">(<span id="all_count">' . $form_count['active'] . '</span>)</span></a>',
-			'inactive' => '<a class="' . $inactive_class . '" href="?page=gf_edit_forms&filter=inactive">' . esc_html( _x( 'Inactive', 'Form List', 'gravityforms' ) ) . ' <span class="count">(<span id="all_count">' . $form_count['inactive'] . '</span>)</span></a>',
-			'trash' => '<a class="' . $trash_class . '" href="?page=gf_edit_forms&filter=trash">' . esc_html( _x( 'Trash', 'Form List', 'gravityforms' ) ) . ' <span class="count">(<span id="all_count">' . $form_count['trash'] . '</span>)</span></a>',
+			'active' => '<a class="' . $active_class . '" href="?page=gf_edit_forms&filter=active">' . esc_html( _x( 'Active', 'Form List', 'gravityforms' ) ) . ' <span class="count">(<span id="active_count">' . $form_count['active'] . '</span>)</span></a>',
+			'inactive' => '<a class="' . $inactive_class . '" href="?page=gf_edit_forms&filter=inactive">' . esc_html( _x( 'Inactive', 'Form List', 'gravityforms' ) ) . ' <span class="count">(<span id="inactive_count">' . $form_count['inactive'] . '</span>)</span></a>',
+			'trash' => '<a class="' . $trash_class . '" href="?page=gf_edit_forms&filter=trash">' . esc_html( _x( 'Trash', 'Form List', 'gravityforms' ) ) . ' <span class="count">(<span id="trash_count">' . $form_count['trash'] . '</span>)</span></a>',
 		);
 		return $views;
 	}

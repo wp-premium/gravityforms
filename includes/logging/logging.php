@@ -451,9 +451,9 @@ class GFLogging extends GFAddOn {
 	 *
 	 * @access public
 	 *
-	 * @param string   $plugin Plugin name.
-	 * @param string   $message (default: null) Message to log.
-	 * @param constant $message_type (default: KLogger::DEBUG) Message type.
+	 * @param string $plugin       Plugin name.
+	 * @param string $message      (default: null) Message to log.
+	 * @param int    $message_type (default: KLogger::DEBUG) Message type.
 	 *
 	 * NOTE: This function is static for backwards compatibility reasons. Some legacy add-ons still reference this function statically
 	 */
@@ -478,7 +478,23 @@ class GFLogging extends GFAddOn {
 
 		// Log message.
 		$log = $instance->get_logger( $plugin, $plugin_setting['log_level'] );
-		$log->Log( $message, $message_type );
+
+		/**
+		* Filters the logging message.
+		*
+		* @since 2.4.15
+		*
+		* @param string $message        The current logging message.
+		* @param string $message_type   The current logging message type.
+		* @param array  $plugin_setting The logging setting for plugin.
+		* @param object $log            The KLogger instance.
+		* @param object $GFLogging      The Gravity Forms Logging object.
+		*/
+		$message = apply_filters( 'gform_logging_message', $message, $message_type, $plugin_setting, $log, $instance );
+
+		if ( $message ) {
+			$log->Log( $message, $message_type );
+		}
 
 	}
 
@@ -514,7 +530,7 @@ class GFLogging extends GFAddOn {
 		$dir = $this->get_log_dir();
 
 		if ( is_dir( $dir ) ) {
-			$files = glob( "{$dir}{,.}*" ); // Get all file names.
+			$files = GFCommon::glob( '*', $dir ); // Get all file names.
 			foreach ( $files as $file ) {
 				if ( is_file( $file ) ) {
 					unlink( $file ); // Delete file.
@@ -701,6 +717,15 @@ class GFLogging extends GFAddOn {
 	}
 
 	/**
+	 * Flushes the cached KLogger objects.
+	 *
+	 * @since 2.4.15
+	 */
+	public function flush_loggers() {
+		$this->loggers = array();
+	}
+
+	/**
 	 * Disable all logging.
 	 *
 	 * @since  2.2
@@ -739,7 +764,7 @@ class GFLogging extends GFAddOn {
 		}
 
 		// Get files which match the base name.
-		$similar_files = glob( $folder . $file_base . '*.*' );
+		$similar_files = GFCommon::glob( $file_base . '*.*', $folder );
 		$file_count    = count( $similar_files );
 
 		// Check quantity of files and delete older ones if too many.

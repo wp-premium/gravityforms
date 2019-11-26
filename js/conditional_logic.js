@@ -29,10 +29,11 @@ function gf_apply_rules(formId, fields, isInit){
 function gf_check_field_rule(formId, fieldId, isInit, callback){
 
 	//if conditional logic is not specified for that field, it is supposed to be displayed
-	if(!window["gf_form_conditional_logic"] || !window["gf_form_conditional_logic"][formId] || !window["gf_form_conditional_logic"][formId]["logic"][fieldId])
-		return "show";
+	var conditionalLogic = gf_get_field_logic( formId, fieldId );
+	if ( ! conditionalLogic ) {
+		return 'show';
+	}
 
-	var conditionalLogic = window["gf_form_conditional_logic"][formId]["logic"][fieldId];
 	var action = gf_get_field_action(formId, conditionalLogic["section"]);
 
 	//If section is hidden, always hide field. If section is displayed, see if field is supposed to be displayed or hidden
@@ -40,6 +41,42 @@ function gf_check_field_rule(formId, fieldId, isInit, callback){
 		action = gf_get_field_action(formId, conditionalLogic["field"]);
 
 	return action;
+}
+
+/**
+ * Retrieves the conditional logic properties for the specified field.
+ *
+ * @since 2.4.16
+ *
+ * @param {(string|number)} formId  The ID of the current form.
+ * @param {(string|number)} fieldId The ID of the current field.
+ *
+ * @return {(boolean|object)} False or the field conditional logic properties.
+ */
+function gf_get_field_logic(formId, fieldId) {
+	var formConditionalLogic = rgars( window, 'gf_form_conditional_logic/' + formId );
+	if ( ! formConditionalLogic ) {
+		return false;
+	}
+
+	var conditionalLogic = rgars( formConditionalLogic, 'logic/' + fieldId );
+	if ( conditionalLogic ) {
+		return conditionalLogic;
+	}
+
+	var dependents = rgar( formConditionalLogic, 'dependents' );
+	if ( ! dependents ) {
+		return false;
+	}
+
+	// Attempting to get section field conditional logic instead.
+	for ( var key in dependents ) {
+		if ( dependents[key].indexOf( fieldId ) !== -1 ) {
+			return rgars( formConditionalLogic, 'logic/' + key );
+		}
+	}
+
+	return false;
 }
 
 function gf_apply_field_rule(formId, fieldId, isInit, callback){
@@ -120,7 +157,7 @@ function gf_is_match_checkable( $inputs, rule, formId, fieldId ) {
 		}
 		// if the 'other' choice is selected, get the value from the 'other' text input
 		else if ( fieldValue == 'gf_other_choice' ) {
-			fieldValue = $( '#input_{0}_{1}_other'.format( formId, fieldId ) ).val();
+			fieldValue = jQuery( '#input_{0}_{1}_other'.format( formId, fieldId ) ).val();
 		}
 
 		if( gf_matches_operation( fieldValue, rule.value, rule.operator ) ) {
@@ -482,7 +519,7 @@ function gf_reset_to_default(targetId, defaultValue){
 			// Check for Single Product & Shipping input and force visual price update.
 			if( gf_is_hidden_pricing_input( element ) ) {
 				var ids = gf_get_ids_by_html_id( element.parents( '.gfield' ).attr( 'id' ) );
-				jQuery( '#input_' + ids[1] + '_' + ids[2] ).text( gformFormatMoney( element.val() ) );
+				jQuery( '#input_' + ids[0] + '_' + ids[1] ).text( gformFormatMoney( element.val() ) );
 			}
 		}
 		else{
