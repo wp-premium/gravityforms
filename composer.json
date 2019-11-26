@@ -1,5 +1,5 @@
 {
-  "name": "Samsonator/gravityforms",
+  "name": "samjameswatson/gravityforms",
   "description": "Fork of GravityForms repo so we can use it as WP Plugin.",
   "type": "wordpress-plugin",
   "license": "GPL-3.0",
@@ -9,7 +9,7 @@
     "composer/installers": ">=1.0"
   },
   "dist": {
-    "url": "git@github.com:Samsonator/gravityforms.git",
+    "url": "git@github.com:samjameswatson/gravityforms.git",
     "type": "git"
   }
 }
