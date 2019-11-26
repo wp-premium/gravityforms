@@ -1354,6 +1354,45 @@ body .gform_wrapper ul.gform_fields li.gfield.gform_validation_container {
     border-bottom: 3px solid #8DFF1C;
 }
 
+.ginput_container_password,
+.ginput_container_password span {
+    position: relative;
+}
+
+.ginput_container_password button {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    border: none;
+    padding: 5px 0;
+    position: absolute;
+    right: 1px;
+    text-align: center;
+    top: 1px;
+    width: 40px;
+}
+
+.ginput_container_password span.ginput_left button {
+    right: 9px;
+}
+
+.ginput_container_password:not(.ginput_complex) span {
+    display: inline-block;
+    width: 100%;
+}
+
+.ginput_container_password:not(.ginput_complex) span input {
+    width: 100%;
+}
+
+.ginput_container_password span.medium {
+    width: calc(50% - 8px);
+}
+
+.ginput_container_password span.small {
+    width: 25%;
+}
+
 .gform_wrapper table.gfield_list,
 .gform_wrapper table.gfield_list caption,
 .gform_wrapper table.gfield_list tbody,

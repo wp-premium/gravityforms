@@ -1,8 +1,94 @@
+### 2.4.15.9
+- Fixed an issue with the US/Canada phone field type not validating correctly when the no duplicates feature is enabled.
+
+
+### 2.4.15.8
+- Fixed the form widget and gravity_form function not suppressing the tabindex by default.
+
+
+### 2.4.15.7
+- Added security enhancements.
+
+
+### 2.4.15.6
+- Fixed a PHP notice for $phpmailer->ErrorInfo in certain sites where a third-party plugin or custom function could be altering the $phpmailer object.
+- Fixed front-end merge tag replacement returning values for fields in sections hidden by conditional logic.
+
+
+### 2.4.15.5
+- Fixed issue where [gform_input_change](https://docs.gravityforms.com/gform_input_change/) filter did not pass correct values for its parameters.
+
+
+### 2.4.15.4
+- Fixed styling conflict between Ready Classes and the Signature Add-on field.
+- Fixed password fields using the password strength feature throwing a false validation error in some multi-page form configurations.
+
+
+### 2.4.15.3
+- Fixed an issue where spaces at the beginning of a consent field's label can trigger false validation errors on a multi-page form if the field is marked as required.
+
+
+### 2.4.15.2
+- Updated the gform_version_info option so autoload is disabled.
+
+
+### 2.4.15.1
+- Fixed password visibility toggle being clickable when editing form.
+
+
+### 2.4.15 | 2019-11-06
+- Added entry notes with the sending result as part of the notification sending process. These notes can be customized or disabled using the *[gform_notification_note](https://docs.gravityforms.com/gform_notification_note/)* filter.
+- Added the *[gform_logging_message](https://docs.gravityforms.com/gform_logging_message/)* filter. Credit: Jamie Oastler.
+- Added support for disabling Confirm Password input in Password field.
+- Added password visibility toggle to Password field, enabled via new field setting.
+- Added support for osDXP.
+- Updated handling of sending notes and logging messages when no entry id is provided.
+- Updated Password field strength meter to match the WordPress password strength algorithm.
+- Updated the *[gform_{$SHORT_SLUG}_error](https://docs.gravityforms.com/gform_slug_error/)* hook to include *$error_message* as the fourth parameter.
+- Fixed update notifications on the Plugins page of a subsite when Gravity Forms or add-ons are activated on it, but aren't activated on the main site or the network.
+- Fixed an issue with invisible reCaptcha which can prevent the form from being submitted.
+- Fixed an issue where the honeypot can be assigned the wrong ID when the form contains Repeater fields.
+- Fixed a JavaScript error when conditional logic based on the radio button field other input is evaluated.
+- Fixed the form ID not being passed to the *[gform_phone_formats](https://docs.gravityforms.com/gform_phone_formats/)* filter when the field settings are sanitized on form save.
+- Fixed a PHP warning that would output if a notification is set to use conditional routing for the Send To address but no routing rules are defined.
+- Fixed active and inactive form counts not updating when changing a form's active status.
+- Fixed a corrupt confirmation being created for a form when all the confirmations have been deleted and there isn't a legacy confirmation (pre 1.7) to upgrade.
+- Fixed an issue with the address field where countries with apostrophes throw incorrect validation errors in certain situations.
+- Fixed PHP fatal errors caused by some required files not being loaded when the site path includes square brackets.
+- Removed the ability to set a placeholder in the settings UI for a consent field as the field does not use placeholders or the entered value anywhere.
+- API: Fixed an issue with field visibility evaluation for third-party integrations processing multiple entries in the same request. Credit: The GravityView team.
+- API: Fixed inactive notifications not being sent when using the v2 POST /entries/[ENTRY_ID]/notifications endpoint with the _notifications arg.
+
+
+### 2.4.14 | 2019-09-25
+- Fix an issue with the automatic update.
+
+
+### 2.4.13 | 2019-09-25
+- Added support for delaying feed processing with Stripe Add-On version 3.1 and greater when using the Stripe Checkout payment collection method.
+- Added support for defining field values when using the Form block in the WordPress editor.
+- Added the *[gform_notification_disable_from_warning](https://docs.gravityforms.com/gform_notification_disable_from_warning/)* filter to allow the from address warning to be disabled.
+- Updated *[gform_post_note_added](https://docs.gravityforms.com/gform_post_note_added/)* filter to support new note sub-type parameter.
+- Updated Import/Export page to be accessible if user has "gravityforms_edit_forms" capability.
+- Removed support for the Members plugins v1. Members v2+ integration remains.
+- Fixed the conditional logic init scripts not being output when a Repeater field is located before other fields with conditional logic.
+- Fixed an issue where HTML tags in field choices break conditional logic.
+- Fixed an issue with the merge tag UI where labels with HTML tags are not encoded.
+- Fixed an issue with the merge tag UI where the selected merge tag is incomplete if the label contains a double quote character.
+- Fixed detection of domain used for the From Email warning message in the notification settings in certain scenarios.
+- AF: Added GFPaymentAddOn::get_post_payment_actions_config() for payment add-ons to define where the Post Payment Action setting (delayed feeds) should appear on their feed configuration page.
+- AF: Added GFPaymentAddOn::trigger_payment_delayed_feeds() for payment add-ons to call when delayed feeds should be processed.
+- AF: Added the *[gform_trigger_payment_delayed_feeds](https://docs.gravityforms.com/gform_trigger_payment_delayed_feeds/)* action hook which runs when payment add-ons trigger delayed feeds.
+- AF: Added the *[gform_post_save_feed_settings](https://docs.gravityforms.com/gform_post_save_feed_settings/)* action hook which runs when the feed is saved or updated from the feed configuration page.
+- AF: Fixed an issue where multiple GFPaymentAddOn based payment add-ons would process the submission when conditional logic isn't configured on the feeds.
+- AF: Fixed issue where select fields overflow and break the settings layout.
+
+
 ### 2.4.12 | 2019-08-28
 - Added security enhancements.
 - Added From Email validation in the notifications settings.
 - Added From Email warning message in the notification settings when the site domain is not being used for this setting.
-- Added [gform_export_line](https://docs.gravityforms.com/gform_export_line/) filter to allow modifying each line of the export separately.
+- Added *[gform_export_line](https://docs.gravityforms.com/gform_export_line/)* filter to allow modifying each line of the export separately.
 - Updated the default placeholder for new Website fields. Credit: The GravityView team.
 - Fixed a typo preventing the year sub-label input from displaying when editing a date field and having sub-label placement set to be above inputs.
 - Fixed Dashicons not appearing in the block editor when using a Classic block with a Gravity Forms shortcode whose form contains a Rich Text Editor enabled Paragraph field.
@@ -43,7 +129,6 @@
 - API: Fixed an issue with GFAPI::submit_form() and the POST forms/[form ID]/submissions endpoint where validation fails for product fields.
 - AF: Added header title support for dynamic field map settings fields.
 - AF: Updated + and - icons so that they are consistent accross all settings fields.
-
 
 
 ### 2.4.10 | 2019-06-12

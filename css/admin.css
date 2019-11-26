@@ -536,8 +536,7 @@ td.content_center {
 	text-align: center !important;
 }
 
-tr img.gform_active_icon,
-img[src*="active"]{
+tr img[src*="active"]{
 	width: 25px;
 	height: auto;
 	display: -moz-inline-stack;
@@ -1598,43 +1597,70 @@ span.note-divider {
 	opacity: 0.25;
 }
 
-h6.note-author {
+.note-author {
+	display: inline;
 	font-weight: bold;
-	font-size: 1.1rem;
+	font-size: .9rem;
 	line-height: 1;
 	margin: 0 0 2px;
 	padding: 0;
 }
 
-p.note-email {
+.note-email {
+	font-size: .9rem;
 	line-height: 1.3;
 	margin: 0 !important;
 	padding: 0 !important;
 	text-align: left;
 }
 
-div.detail-note-content {
-	margin: 1.8em 1em 1.8em 0;
-    padding: 1.8rem;
-    position: relative;
-    line-height: 1.8rem;
- 	border-left: 4px solid #E6DB55;
-	background-color: #FFFBCC;
+.note-email:before {
+	color: #DADADA;
+	content: '\2014';
+	margin: 0 5px;
 }
 
-div.detail-note-content p {
+.detail-note-content {
+	margin: 1em 0;
+    padding: 1rem;
+    position: relative;
+    line-height: 1.8rem;
+ 	border-left: 4px solid #DDD;
+	background-color: #F7F7F7;
+}
+
+.detail-note-content p {
 	line-height: 30px;
 }
 
-div.detail-note-content.gforms_note_success{
+.detail-note-content.gforms_note_success {
     background-color: #ECFCDE;
-    border: 1px solid #A7C886;
+    border-left-color: #A7C886;
 
 }
-div.detail-note-content.gforms_note_error{
-    background-color: #FFEBE8;
-    border: 1px solid #CC0000;
 
+.detail-note-content.gforms_note_warning {
+	background-color: #FFFBCC;
+	border-left-color: #E6DB55;
+}
+
+.detail-note-content.gforms_note_error {
+    background-color: #FFEBE8;
+    border-left-color: #CC0000;
+}
+
+div.gforms_note_content {
+	margin: 0;
+}
+
+div.gforms_note_content p:last-child {
+	margin-bottom: 0;
+}
+
+.note-meta-container .note-date {
+	display: block;
+	font-size: .8rem;
+	line-height: 1;
 }
 
 /* edit details form styles */
@@ -2152,6 +2178,35 @@ a.button-primary.gfbutton {
 	-webkit-border-radius: 16px !important;
 	-moz-border-radius: 16px !important;
 	border-radius: 16px !important;
+}
+
+/* Password Visibility */
+.ginput_container_password span {
+	position: relative;
+}
+
+.ginput_container_password span button {
+	-webkit-appearance: none;
+	appearance: none;
+	background: transparent;
+	border: none;
+	padding: 3px 0;
+	pointer-events: none;
+	position: absolute;
+	right: 1px;
+	text-align: center;
+	top: 1px;
+	width: 30px;
+}
+
+.ginput_container_password span button .dashicons {
+	font-size: 16px;
+	height: 16px;
+	width: 16px;
+}
+
+.ginput_container_password span.ginput_left button {
+	right: 21px;
 }
 
 /* password strength */
@@ -4561,7 +4616,8 @@ ul:not(.top_label) .ginput_container.ginput_single_email {
     width: 95%;
 }
 
-.gaddon-setting.medium {
+.gaddon-setting.medium,
+.gaddon-select {
     width: 50%;
 }
 
@@ -4820,9 +4876,9 @@ div.wrap.gf_browser_chrome .gfield_checkbox li input {
 
 #entry_list_form .column-is_starred,
 #form_list_form .column-is_active{
-    width: 40px;
+    width: 19px;
 	vertical-align: top;
-	padding: 8px 10px;
+	padding: 9px 31px 8px 10px;
 }
 
 

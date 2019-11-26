@@ -611,6 +611,8 @@ function LoadFieldSettings(){
     jQuery('#gfield_enable_enhanced_ui').prop('checked', field.enableEnhancedUI ? true : false);
 
     jQuery("#gfield_password_strength_enabled").prop("checked", field.passwordStrengthEnabled == true ? true : false);
+    jQuery("#gfield_password_visibility_enabled").prop("checked", field.passwordVisibilityEnabled == true ? true : false);
+    TogglePasswordVisibility( true );
     jQuery("#gfield_min_strength").val(field.minPasswordStrength == undefined ? "" : field.minPasswordStrength);
     TogglePasswordStrength(true);
 
@@ -689,9 +691,6 @@ function LoadFieldSettings(){
     if(field.type == 'email' || field.inputType == 'email' ){
         field = UpgradeEmailField(field);
     }
-	if(field.type == 'password' || field.inputType == 'password' ){
-		field = UpgradePasswordField(field);
-	}
 
     if(field.type === 'consent'){
         field = UpgradeConsentField(field);
@@ -1027,6 +1026,42 @@ function LoadFieldSettings(){
     if(inputType == "email"){
         ToggleEmailSettings(field);
     }
+
+	// Setup Password field.
+	if ( field.type === 'password' || field.inputType === 'password' ) {
+
+		// Upgrade Password field properties.
+		field = UpgradePasswordField( field );
+
+		// Create Password inputs UI.
+		var passwordFields = GetCustomizeInputsUI( field );
+		jQuery( '#field_password_fields_container' ).html( passwordFields );
+		jQuery( '#field_password_fields_container table tr:eq(1) td:eq(0) img' ).remove();
+
+		// Show/Hide Size setting.
+		var confirmEnabled = field.inputs[1].isHidden == 'undefined' ? true : ! field.inputs[1].isHidden;
+		if ( confirmEnabled ) {
+			jQuery( '.size_setting' ).hide();
+		}
+
+		// Hide Password sub-label.
+		jQuery( '.password_setting .custom_inputs_setting ' ).on( 'click keypress', '.input_active_icon', function () {
+
+			var field = GetSelectedField(),
+				confirmEnabled = ! field.inputs[1].isHidden,
+				passwordSubLabel = jQuery( 'label[for="input_' + field.id + '"]' );
+
+			if ( confirmEnabled ) {
+				passwordSubLabel.show();
+				jQuery( '.size_setting' ).hide();
+			} else {
+				passwordSubLabel.hide();
+				jQuery( '.size_setting' ).show();
+			}
+
+		} );
+
+	}
 
     jQuery(document).trigger('gform_load_field_settings', [field, form]);
 
@@ -1381,6 +1416,13 @@ function UpgradeConsentField(field) {
     return field;
 }
 
+function TogglePasswordVisibility( isInit ){
+	if ( jQuery( '#gfield_password_visibility_enabled' ).is( ":checked" ) ) {
+		jQuery( '.gfield.field_selected .ginput_container_password span button' ).show();
+	} else {
+		jQuery( '.gfield.field_selected .ginput_container_password span button' ).hide();
+	}
+}
 
 function TogglePasswordStrength(isInit){
     var speed = isInit ? "" : "slow";
@@ -2572,31 +2614,6 @@ function LoadCustomChoices(){
         str += "<li class='choice_section_header'>" + gf_vars.predefinedChoices + "</li>";
         jQuery("#bulk_items").prepend(str);
     }
-}
-
-
-var entityMap = {
-	'&': '&amp;',
-	'<': '&lt;',
-	'>': '&gt;',
-	'"': '&quot;',
-	"'": '&#39;',
-	'/': '&#x2F;',
-	'`': '&#x60;',
-	'=': '&#x3D;'
-};
-
-function escapeAttr (string) {
-
-	return String(string).replace(/["']/g, function (s) {
-		return entityMap[s];
-	});
-}
-
-function escapeHtml (string) {
-	return String(string).replace(/[&<>"'`=\/]/g, function (s) {
-		return entityMap[s];
-	});
 }
 
 function SelectCustomChoice( name ){

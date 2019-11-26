@@ -451,20 +451,10 @@ class GFAPI {
 		// Add default confirmation if form has no confirmations.
 		if ( ! isset( $form_meta['confirmations'] ) || empty( $form_meta['confirmations'] ) ) {
 
-			// Generate confirmation ID.
-			$confirmation_id = uniqid();
+			$confirmation = GFFormsModel::get_default_confirmation();
 
 			// Add default confirmation to form.
-			$form_meta['confirmations'][ $confirmation_id ] = array(
-				'id'          => $confirmation_id,
-				'name'        => __( 'Default Confirmation', 'gravityforms' ),
-				'isDefault'   => true,
-				'type'        => 'message',
-				'message'     => __( 'Thanks for contacting us! We will get in touch with you shortly.', 'gravityforms' ),
-				'url'         => '',
-				'pageId'      => '',
-				'queryString' => '',
-			);
+			$form_meta['confirmations'] = array( $confirmation['id'] => $confirmation );
 
 		}
 
@@ -996,8 +986,7 @@ class GFAPI {
 
 		foreach ( $form['fields'] as $field ) {
 			/* @var GF_Field $field */
-			$type = GFFormsModel::get_input_type( $field );
-			if ( in_array( $type, array( 'html', 'page', 'section' ) ) ) {
+			if ( $field->displayOnly ) {
 				continue;
 			}
 
@@ -1259,7 +1248,7 @@ class GFAPI {
 
 		foreach ( $form['fields'] as $field ) {
 			/* @var GF_Field $field */
-			if ( in_array( $field->type, array( 'html', 'page', 'section' ) ) ) {
+			if ( $field->displayOnly ) {
 				continue;
 			}
 			self::queue_batch_field_operation( $form, $entry, $field );
