@@ -43,6 +43,7 @@ class GF_Block_Form extends GF_Block {
 		'description' => array( 'type' => 'boolean' ),
 		'ajax'        => array( 'type' => 'boolean' ),
 		'tabindex'    => array( 'type' => 'string' ),
+		'fieldValues' => array( 'type' => 'string' ),
 		'formPreview' => array( 'type' => 'boolean' ),
 	);
 
@@ -269,11 +270,12 @@ class GF_Block_Form extends GF_Block {
 	public function render_block( $attributes = array() ) {
 
 		// Prepare variables.
-		$form_id     = rgar( $attributes, 'formId' ) ? $attributes['formId'] : false;
-		$title       = isset( $attributes['title'] ) ? $attributes['title'] : true;
-		$description = isset( $attributes['description'] ) ? $attributes['description'] : true;
-		$ajax        = isset( $attributes['ajax'] ) ? $attributes['ajax'] : false;
-		$tabindex    = isset( $attributes['tabindex'] ) ? intval( $attributes['tabindex'] ) : 0;
+		$form_id      = rgar( $attributes, 'formId' ) ? $attributes['formId'] : false;
+		$title        = isset( $attributes['title'] ) ? $attributes['title'] : true;
+		$description  = isset( $attributes['description'] ) ? $attributes['description'] : true;
+		$ajax         = isset( $attributes['ajax'] ) ? $attributes['ajax'] : false;
+		$tabindex     = isset( $attributes['tabindex'] ) ? intval( $attributes['tabindex'] ) : 0;
+		$field_values = isset( $attributes['fieldValues'] ) ? $attributes['fieldValues'] : null;
 
 		// If form ID was not provided or form does not exist, return.
 		if ( ! $form_id || ( $form_id && ! GFAPI::get_form( $form_id ) ) ) {
@@ -286,8 +288,15 @@ class GF_Block_Form extends GF_Block {
 			// Start output buffering.
 			ob_start();
 
+			// Prepare field values.
+			if ( ! empty( $field_values ) ) {
+				$field_values = str_replace( '&#038;', '&', $field_values );
+				parse_str( $field_values, $field_value_array );
+				$field_values = stripslashes_deep( $field_value_array );
+			}
+
 			// Get form output string.
-			$form_string = gravity_form( $form_id, $title, $description, false, null, $ajax, $tabindex, false );
+			$form_string = gravity_form( $form_id, $title, $description, false, $field_values, $ajax, $tabindex, false );
 
 			// Get output buffer contents.
 			$buffer_contents = ob_get_contents();
@@ -298,7 +307,17 @@ class GF_Block_Form extends GF_Block {
 
 		}
 
-		return sprintf( '[gravityforms id="%d" title="%s" description="%s" ajax="%s" tabindex="%d"]', $form_id, ( $title ? 'true' : 'false' ), ( $description ? 'true' : 'false' ), ( $ajax ? 'true' : 'false' ), $tabindex );
+		// Encode field values.
+		$field_values = htmlspecialchars( $field_values );
+		$field_values = str_replace( array( '[', ']' ), array( '&#91;', '&#93;' ), $field_values );
+
+		// If no field values are set, set field values to null.
+		parse_str( $field_values, $field_value_array );
+		if ( empty( $field_value_array ) ) {
+			$field_values = null;
+		}
+
+		return sprintf( '[gravityforms id="%d" title="%s" description="%s" ajax="%s" tabindex="%d" field_values="%s"]', $form_id, ( $title ? 'true' : 'false' ), ( $description ? 'true' : 'false' ), ( $ajax ? 'true' : 'false' ), $tabindex, $field_values );
 
 	}
 
