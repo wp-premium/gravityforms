@@ -755,6 +755,15 @@ class GFFormsModel {
 			}
 		}
 
+		/**
+		 * Modifies the summary of all forms, includes unread and total entry counts.
+		 *
+		 * @since 2.4.16
+		 *
+		 * @param array $forms Form summary.
+		 */
+		$forms = apply_filters( 'gform_form_summary', $forms );
+
 		return $forms;
 	}
 

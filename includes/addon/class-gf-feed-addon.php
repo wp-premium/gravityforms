@@ -1962,11 +1962,16 @@ abstract class GFFeedAddOn extends GFAddOn {
 	 *
 	 * @since 2.4
 	 *
-	 * @param array $form The current Form Object
+	 * @param array $form The current Form Object.
 	 *
 	 * @return bool Returns true if one ore more feeds were registered, false if no feeds were registered
 	 */
 	public function register_frontend_feeds( $form ) {
+
+		// Don't register frontend feeds if $form ID is empty.
+		if ( empty( $form['id'] ) ) {
+			return false;
+		}
 
 		if ( ! isset( self::$_frontend_feeds[ $form['id'] ] ) ) {
 			self::$_frontend_feeds[ $form['id'] ] = array();
