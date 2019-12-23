@@ -536,7 +536,8 @@ td.content_center {
 	text-align: center !important;
 }
 
-tr img[src*="active"]{
+tr img[src$='/images/active0.png'],
+tr img[src$='/images/active1.png'] {
 	width: 25px;
 	height: auto;
 	display: -moz-inline-stack;

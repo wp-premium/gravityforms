@@ -28,7 +28,8 @@ to no.
 /* mobile styles first ​*/
 
 .gform_wrapper {
-    margin: 16px 0;
+    margin-bottom: 16px;
+    margin-top: 16px;
     max-width: 100%;
 }
 

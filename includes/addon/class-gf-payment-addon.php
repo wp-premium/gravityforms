@@ -3330,9 +3330,11 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		);
 		$wpdb->query( $sql );
 
-		// deleting callback log
-		$sql = $wpdb->prepare( "DELETE FROM {$wpdb->prefix}gf_addon_payment_callback WHERE addon_slug=%s", $this->_slug );
-		$wpdb->query( $sql );
+		if ( $this->_supports_callbacks ) {
+			// deleting callback log
+			$sql = $wpdb->prepare( "DELETE FROM {$wpdb->prefix}gf_addon_payment_callback WHERE addon_slug=%s", $this->_slug );
+			$wpdb->query( $sql );
+		}
 
 		//clear cron
 		wp_clear_scheduled_hook( $this->_slug . '_cron' );

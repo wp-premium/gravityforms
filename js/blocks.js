@@ -411,15 +411,15 @@ registerBlockType('gravityforms/form', {
 			type: 'string'
 		},
 		title: {
-			type: 'bool',
+			type: 'boolean',
 			default: true
 		},
 		description: {
-			type: 'bool',
+			type: 'boolean',
 			default: true
 		},
 		ajax: {
-			type: 'bool',
+			type: 'boolean',
 			default: false
 		},
 		tabindex: {
@@ -429,7 +429,7 @@ registerBlockType('gravityforms/form', {
 			type: 'string'
 		},
 		formPreview: {
-			type: 'bool',
+			type: 'boolean',
 			default: true
 		}
 	},
@@ -447,19 +447,19 @@ registerBlockType('gravityforms/form', {
 					}
 				},
 				title: {
-					type: 'bool',
+					type: 'boolean',
 					shortcode: ({ named: { title } }) => {
 						return 'true' === title;
 					}
 				},
 				description: {
-					type: 'bool',
+					type: 'boolean',
 					shortcode: ({ named: { description } }) => {
 						return 'true' === description;
 					}
 				},
 				ajax: {
-					type: 'bool',
+					type: 'boolean',
 					shortcode: ({ named: { ajax } }) => {
 						return 'true' === ajax;
 					}

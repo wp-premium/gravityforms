@@ -583,14 +583,18 @@ class GFLogging extends GFAddOn {
 	 */
 	public function get_log_file_name( $plugin_name ) {
 
+		$plugin_setting = $this->get_plugin_setting( $plugin_name );
+
+		if ( rgempty( 'file_name', $plugin_setting ) ) {
+			return '';
+		}
+
 		$log_dir = $this->get_log_dir();
 
 		if ( ! file_exists( $log_dir ) ) {
 			wp_mkdir_p( $log_dir );
 			@touch( $log_dir . 'index.html' );
 		}
-
-		$plugin_setting = $this->get_plugin_setting( $plugin_name );
 
 		return $log_dir . $plugin_name . '_' . $plugin_setting['file_name'] . '.txt';
 

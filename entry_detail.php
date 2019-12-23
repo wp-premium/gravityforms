@@ -141,7 +141,7 @@ class GFEntryDetail {
 
 		$sort_field      = empty( $_GET['orderby'] ) ? 0 : $_GET['orderby'];
 		$sort_field_meta = RGFormsModel::get_field( $form, $sort_field );
-		$is_numeric      = $sort_field_meta['type'] == 'number';
+		$is_numeric      = rgar( $sort_field_meta, 'type' ) == 'number';
 
 		$search_criteria['status'] = $status;
 

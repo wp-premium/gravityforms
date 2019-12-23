@@ -1,39 +1,37 @@
-### 2.4.15.9
-- Fixed an issue with the US/Canada phone field type not validating correctly when the no duplicates feature is enabled.
+### 2.4.16.1
+- Fixed an issue where the Checkboxes "select all" feature did not function for some form configurations using Poll, Quiz, or Survey fields.
+- Updated the *[gform_form_export_filename](https://docs.gravityforms.com/gform_form_export_filename/)* filter to include an additional parameter containing the IDs of the forms to be exported.
 
 
-### 2.4.15.8
-- Fixed the form widget and gravity_form function not suppressing the tabindex by default.
-
-
-### 2.4.15.7
+### 2.4.16 | 2019-12-18
 - Added security enhancements.
-
-
-### 2.4.15.6
+- Added the *[gform_form_summary](https://docs.gravityforms.com/gform_form_summary/)* filter.
+- Added the *[gform_form_switcher_forms](https://docs.gravityforms.com/gform_form_switcher_forms/)* filter.
+- Added performance enhancement: updated the gform_version_info option so autoload is disabled.
+- Updated the minimum version of WordPress required for support to 5.2.
+- Fixed an issue where merge tags used in the placeholder setting of drop down fields are not being processed.
+- Fixed an issue where PHP notices thrown in PHP 7.4 when Stripe add-on is enabled.
+- Fixed a compatibility issue with the Form block and WPGraphQL Gutenberg.
+- Fixed a JavaScript error which can occur in the form editor when trying to edit a field which has been populated with integer based choices via a form object filter.
+- Fixed PHP 7.4 compatibility issues. Credit: The Gravity PDF team.
+- Fixed some untranslatable strings for the form and entry locking features. Credit: The GravityView team.
+- Fixed an issue with the styles for the active/inactive toggle in the admin.
+- Fixed an issue where the conditional shortcode can output content when using an ends_with 0 rule and the value does not match. Credit: The Gravity PDF team.
+- Fixed a typo in the address field's country subfield for the Brunei Darussalam choice.
+- Fixed the form block and widget not centering when using the Twenty Twenty theme.
+- Fixed an issue with the US/Canada phone field type not validating correctly when the no duplicates feature is enabled.
+- Fixed the form widget not suppressing the tabindex by default.
 - Fixed a PHP notice for $phpmailer->ErrorInfo in certain sites where a third-party plugin or custom function could be altering the $phpmailer object.
-- Fixed front-end merge tag replacement returning values for fields in sections hidden by conditional logic.
-
-
-### 2.4.15.5
-- Fixed issue where [gform_input_change](https://docs.gravityforms.com/gform_input_change/) filter did not pass correct values for its parameters.
-
-
-### 2.4.15.4
+- Fixed the front-end merge tag replacement returning values for fields in sections hidden by conditional logic.
+- Fixed an issue where [gform_input_change](https://docs.gravityforms.com/gform_input_change/) filter doesn't pass correct values for its parameters.
 - Fixed styling conflict between Ready Classes and the Signature Add-on field.
-- Fixed password fields using the password strength feature throwing a false validation error in some multi-page form configurations.
-
-
-### 2.4.15.3
+- Fixed the password field using the password strength feature throwing a false validation error in some multi-page form configurations.
 - Fixed an issue where spaces at the beginning of a consent field's label can trigger false validation errors on a multi-page form if the field is marked as required.
-
-
-### 2.4.15.2
-- Updated the gform_version_info option so autoload is disabled.
-
-
-### 2.4.15.1
-- Fixed password visibility toggle being clickable when editing form.
+- Fixed the password visibility toggle being clickable when editing form.
+- AF: Fixed a database error which could occur when uninstalling a payment add-on which does not support callbacks.
+- API: Fixed an issue with GFAPI::get_feeds() and the GET gf/v2/feeds and GET/PUT/DELETE gf/v2/feeds/[feed_id] endpoints where feeds cannot be updated or deleted correctly.
+- API: Fixed an issue with GFAPI::update_forms_property() which can result in updating the wrong forms.
+- API: Fixed the gravity_form() function not suppressing the tabindex by default.
 
 
 ### 2.4.15 | 2019-11-06

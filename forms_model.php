@@ -755,6 +755,15 @@ class GFFormsModel {
 			}
 		}
 
+		/**
+		 * Modifies the summary of all forms, includes unread and total entry counts.
+		 *
+		 * @since 2.4.16
+		 *
+		 * @param array $forms Form summary.
+		 */
+		$forms = apply_filters( 'gform_form_summary', $forms );
+
 		return $forms;
 	}
 
@@ -901,7 +910,7 @@ class GFFormsModel {
 
 
 		// Loading main form object (supports serialized strings as well as JSON strings)
-		$form = self::unserialize( $form_row['display_meta'] );
+		$form = self::unserialize( rgar( $form_row, 'display_meta' ) );
 
 		if ( ! $form ) {
 			return null;
@@ -3427,7 +3436,7 @@ class GFFormsModel {
 			case 'ends_with' :
 				// If target value is a 0 set $val2 to 0 rather than the empty string it currently is to prevent false positives.
 				if ( empty( $val2 ) ) {
-					$val2 = 0;
+					$val2 = '0';
 				}
 
 				$start = strlen( $val1 ) - strlen( $val2 );
@@ -5375,7 +5384,7 @@ class GFFormsModel {
 
 	public static function get_file_upload_path( $form_id, $file_name ) {
 
-		if ( get_magic_quotes_gpc() ) {
+		if ( version_compare( phpversion(), '7.4', '<' ) && get_magic_quotes_gpc() ) {
 			$file_name = stripslashes( $file_name );
 		}
 

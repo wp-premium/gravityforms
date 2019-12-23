@@ -803,7 +803,7 @@ class GFFormDisplay {
 			}
 		}
 
-		if ( ! $review_page_done ) {
+		if ( ! $review_page_done && $form !== false ) {
 			$form = self::maybe_add_review_page( $form );
 		}
 
@@ -2771,7 +2771,7 @@ class GFFormDisplay {
 
 		if ( is_array( $form['fields'] ) ) {
 			foreach ( $form['fields'] as $field ) {
-				if ( $field->type == 'checkbox' && ( ! $select_all_enabled || ( $select_all_enabled && $field->enableSelectAll ) ) ) {
+				if ( $field->get_input_type() == 'checkbox' && ( ! $select_all_enabled || ( $select_all_enabled && $field->enableSelectAll ) ) ) {
 					return true;
 				}
 			}

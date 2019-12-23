@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms
 Plugin URI: https://www.gravityforms.com
 Description: Easily create web forms and manage form entries within the WordPress admin.
-Version: 2.4.15.9
+Version: 2.4.16.1
 Author: rocketgenius
 Author URI: https://www.rocketgenius.com
 License: GPL-2.0+
@@ -133,7 +133,7 @@ define( 'GF_SUPPORTED_WP_VERSION', version_compare( get_bloginfo( 'version' ), G
  *
  * @var string GF_MIN_WP_VERSION_SUPPORT_TERMS The version number
  */
-define( 'GF_MIN_WP_VERSION_SUPPORT_TERMS', '5.1' );
+define( 'GF_MIN_WP_VERSION_SUPPORT_TERMS', '5.2' );
 
 
 if ( ! defined( 'GRAVITY_MANAGER_URL' ) ) {
@@ -215,7 +215,7 @@ class GFForms {
 	 *
 	 * @var string $version The version number.
 	 */
-	public static $version = '2.4.15.9';
+	public static $version = '2.4.16.1';
 
 	/**
 	 * Handles background upgrade tasks.
@@ -3966,8 +3966,14 @@ class GFForms {
 	 */
 	public static function form_switcher() {
 
-		// Get all forms.
-		$all_forms = RGFormsModel::get_forms( null, 'title' );
+		/**
+		 * Get forms to be displayed in Form Switcher dropdown.
+		 *
+		 * @since 2.4.16
+		 *
+		 * @param array $all_forms All available Form objects, sorted by title.
+		 */
+		$all_forms = apply_filters( 'gform_form_switcher_forms', GFFormsModel::get_forms( null, 'title' ) );
 
 		// Sort forms by active state.
 		$forms = array( 'active' => array(), 'inactive' => array(), );
