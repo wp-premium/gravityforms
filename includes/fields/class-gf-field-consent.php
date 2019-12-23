@@ -114,7 +114,6 @@ class GF_Field_Consent extends GF_Field {
 			'checkbox_label_setting',
 			'rules_setting',
 			'visibility_setting',
-			'placeholder_setting',
 			'description_setting',
 			'css_class_setting',
 		);
@@ -165,13 +164,13 @@ class GF_Field_Consent extends GF_Field {
 			$revision_id    = ! is_array( $value ) || empty( $value[ $id . '.3' ] ) ? GFFormsModel::get_latest_form_revisions_id( $form['id'] ) : $value[ $id . '.3' ];
 			$value          = ! is_array( $value ) || empty( $value[ $id . '.1' ] ) ? '0' : esc_attr( $value[ $id . '.1' ] );
 		} else {
-			$checkbox_label = $this->checkboxLabel;
+			$checkbox_label = trim( $this->checkboxLabel );
 			$revision_id    = GFFormsModel::get_latest_form_revisions_id( $form['id'] );
 			// We compare if the description text from different revisions has been changed.
 			$current_description   = $this->get_field_description_from_revision( $revision_id );
 			$submitted_description = $this->get_field_description_from_revision( $value[ $id . '.3' ] );
 
-			$value = ! is_array( $value ) || empty( $value[ $id . '.1' ] ) || ( $this->checkboxLabel !== $value[ $id . '.2' ] ) || ( $current_description !== $submitted_description ) ? '0' : esc_attr( $value[ $id . '.1' ] );
+			$value = ! is_array( $value ) || empty( $value[ $id . '.1' ] ) || ( $checkbox_label !== $value[ $id . '.2' ] ) || ( $current_description !== $submitted_description ) ? '0' : esc_attr( $value[ $id . '.1' ] );
 		}
 		$checked = $is_form_editor ? '' : checked( '1', $value, false );
 

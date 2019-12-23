@@ -74,7 +74,7 @@ if ( ! class_exists( 'GFWidget' ) ) {
 				echo $before_title . $title . $after_title;
 			}
 
-			$tabindex = is_numeric( $instance['tabindex'] ) ? $instance['tabindex'] : 1;
+			$tabindex = is_numeric( $instance['tabindex'] ) ? $instance['tabindex'] : 0;
 
 			// Creating form
 			$form = RGFormsModel::get_form_meta( $instance['form_id'] );
@@ -106,7 +106,7 @@ if ( ! class_exists( 'GFWidget' ) ) {
 			$instance['ajax']            = rgar( $new_instance, 'ajax' );
 			$instance['disable_scripts'] = rgar( $new_instance, 'disable_scripts' );
 			$instance['showdescription'] = rgar( $new_instance, 'showdescription' );
-			$instance['tabindex']        = rgar( $new_instance, 'tabindex' );
+			$instance['tabindex']        = rgar( $new_instance, 'tabindex', 0 );
 
 			return $instance;
 		}
@@ -120,7 +120,7 @@ if ( ! class_exists( 'GFWidget' ) ) {
 		 */
 		function form( $instance ) {
 
-			$instance = wp_parse_args( (array) $instance, array( 'title' => __( 'Contact Us', 'gravityforms' ), 'tabindex' => '1' ) );
+			$instance = wp_parse_args( (array) $instance, array( 'title' => __( 'Contact Us', 'gravityforms' ), 'tabindex' => '0' ) );
 			?>
 			<p>
 				<label for="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>"><?php esc_html_e( 'Title', 'gravityforms' ); ?>:</label>
@@ -156,7 +156,7 @@ if ( ! class_exists( 'GFWidget' ) ) {
 				<input type="checkbox" name="<?php echo esc_attr( $this->get_field_name( 'disable_scripts' ) ); ?>" id="<?php echo esc_attr( $this->get_field_id( 'disable_scripts' ) ); ?>" <?php checked( rgar( $instance, 'disable_scripts' ) ); ?> value="1" />
 				<label for="<?php echo esc_attr( $this->get_field_id( 'disable_scripts' ) ); ?>"><?php esc_html_e( 'Disable script output', 'gravityforms' ); ?></label><br />
 				<label for="<?php echo esc_attr( $this->get_field_id( 'tabindex' ) ); ?>"><?php esc_html_e( 'Tab Index Start', 'gravityforms' ); ?>: </label>
-				<input id="<?php echo esc_attr( $this->get_field_id( 'tabindex' ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( 'tabindex' ) ); ?>" value="<?php echo esc_attr( rgar( $instance, 'tabindex' ) ); ?>" style="width:15%;" /><br />
+				<input id="<?php echo esc_attr( $this->get_field_id( 'tabindex' ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( 'tabindex' ) ); ?>" value="<?php echo esc_attr( rgar( $instance, 'tabindex', 0 ) ); ?>" style="width:15%;" /><br />
 				<small><?php esc_html_e( 'If you have other forms on the page (i.e. Comments Form), specify a higher tabindex start value so that your Gravity Form does not end up with the same tabindices as your other forms. To disable the tabindex, enter 0 (zero).', 'gravityforms' ); ?></small>
 			</p>
 

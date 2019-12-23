@@ -55,14 +55,14 @@ class GF_Update {
 			<?php
 			// All installed plugins
 			$plugins = get_plugins();
-	
+
 			// Loop through updates.
 			foreach ( $updates as $update ) {
 				$update_available = version_compare( $update['installed_version'], $update['latest_version'], '<' );
 				$update_class = $update_available ? ' update' : '';
 				$settings_link = $update['slug'] == 'gravityforms' ? admin_url( 'admin.php?page=gf_settings' ) : admin_url( 'admin.php?page=gf_settings&subview=' . $update['slug'] );
 				$plugin = $plugins[ $update['path'] ];
-	
+
 				?>
 				<tr class="inactive<?php echo $update_class?>" data-slug="admin-bar-form-search" data-plugin="gw-admin-bar-form-manager.php">
 					<th scope="row" class="check-column">
@@ -83,36 +83,46 @@ class GF_Update {
 						</div>
 					</td>
 				</tr>
-	
+
 				<?php if ( $update_available ) { ?>
 				<tr class="plugin-update-tr inactive">
 					<td colspan="3" class="plugin-update colspanchange">
 						<div class="update-message notice inline notice-warning notice-alt">
 							<p>
 								<?php
-									
-									printf( esc_html__( 'There is a new version of %s available.', 'gravityforms' ), $update['name'] );
-	
+
+									printf( esc_html__( 'There is a new version of %s available. ', 'gravityforms' ), $update['name'] );
+
 									if ( $update['is_valid_key'] ) {
-	
-										printf( esc_html__( '%1$sView version %2$s details %3$s or %4$supdate now%5$s.', 'gravityforms' ),
-											'<a href="plugin-install.php?tab=plugin-information&plugin=' . urlencode( $update['slug'] ) . '&section=changelog&TB_iframe=true&width=600&height=700" class="thickbox open-plugin-details-modal">',
-											$update['latest_version'],
-											'</a>',
-											'<a href="' . $update['upgrade_url'] . '" class="update-link">',
-											'</a>'
-										);
-	
+										// Changelog URL is different in a multisite network.
+										$changelog_url = wp_nonce_url( self_admin_url( 'admin-ajax.php?action=gf_get_changelog&plugin=' . urlencode( $update['slug'] ) . '&TB_iframe=true&width=640&height=808' ) );
+
+										if ( ! current_user_can( 'update_plugins' ) ) {
+											printf( esc_html__( '%1$sView version %2$s details %3$s. ', 'gravityforms' ),
+												'<a href="' . $changelog_url . '" class="thickbox open-plugin-details-modal">',
+												$update['latest_version'],
+												'</a>'
+											);
+										} else {
+											printf( esc_html__( '%1$sView version %2$s details %3$s or %4$supdate now%5$s.', 'gravityforms' ),
+												'<a href="' . $changelog_url . '" class="thickbox open-plugin-details-modal">',
+												$update['latest_version'],
+												'</a>',
+												'<a href="' . $update['upgrade_url'] . '" class="update-link">',
+												'</a>'
+											);
+										}
+
 									} else {
-	
+
 										printf(
-											esc_html( ' %sRegister%s your copy of Gravity Forms to receive access to automatic updates and support. Need a license key? %sPurchase one now%s.', 'gravityforms' ),
+											esc_html__( '%sRegister%s your copy of Gravity Forms to receive access to automatic updates and support. Need a license key? %sPurchase one now%s.', 'gravityforms' ),
 											'<a href="admin.php?page=gf_settings">',
 											'</a>',
 											'<a href="https://www.gravityforms.com">',
 											'</a>'
 										);
-	
+
 									}
 								?>
 							</p>
@@ -181,7 +191,7 @@ class GF_Update {
 					'%s<p>%s</p>',
 					esc_html__( 'There is a new version of Gravity Forms available.', 'gravityforms' ),
 					sprintf(
-						esc_html( '%sRegister%s your copy of Gravity Forms to receive access to automatic updates and support. Need a license key? %sPurchase one now%s.', 'gravityforms' ),
+						esc_html__( '%sRegister%s your copy of Gravity Forms to receive access to automatic updates and support. Need a license key? %sPurchase one now%s.', 'gravityforms' ),
 						'<a href="admin.php?page=gf_settings">',
 						'</a>',
 						'<a href="https://www.gravityforms.com">',
@@ -217,5 +227,5 @@ class GF_Update {
 		return $updates;
 
 	}
-	
+
 }
