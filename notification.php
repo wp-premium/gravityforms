@@ -1009,8 +1009,18 @@ Class GFNotification {
 			<td>
 				<input type="text" class="fieldwidth-2 mt-position-right mt-hide_all_fields" name="gform_notification_from" id="gform_notification_from" value="<?php echo rgempty( 'from', $notification ) ? '{admin_email}' : esc_attr( rgget( 'from', $notification ) ); ?>" />
 				<?php
+
+				/**
+				 * Disable the From Email warning.
+				 *
+				 * @since 2.4.13
+				 *
+				 * @param bool $disable_from_warning Should the From Email warning be disabled?
+				 */
+				$disable_from_warning = gf_apply_filters( array( 'gform_notification_disable_from_warning', $form['id'], rgar( $notification, 'id' ) ), false );
+
 				// Display warning message if not using an email address containing the site domain or {admin_email}.
-				if ( rgar( $notification, 'service' ) === 'wordpress' && ! $is_invalid_from_email && ! self::is_site_domain_in_from( $from_email_value ) ) {
+				if ( ! $disable_from_warning && rgar( $notification, 'service' ) === 'wordpress' && ! $is_invalid_from_email && ! self::is_site_domain_in_from( $from_email_value ) ) {
 					echo '<div class="alert_yellow" style="padding:15px;margin-top:15px;">';
 					$doc_page = 'https://docs.gravityforms.com/troubleshooting-notifications/#use-a-valid-from-address';
 					echo sprintf( esc_html__( 'Warning! Using a third-party email in the From Email field may prevent your notification from being delivered. It is best to use an email with the same domain as your website. %sMore details in our documentation.%s', 'gravityforms' ), '<a href="' . esc_url( $doc_page ) . '" target="_blank" >', '</a>' );
@@ -1203,7 +1213,6 @@ Class GFNotification {
 				<input type="checkbox" name="gform_notification_disable_autoformat" id="gform_notification_disable_autoformat" value="1" <?php echo empty( $notification['disableAutoformat'] ) ? '' : "checked='checked'" ?>/>
 				<label for="gform_notification_disable_autoformat" class="inline">
 					<?php esc_html_e( 'Disable auto-formatting', 'gravityforms' ); ?>
-					<?php gform_tooltip( 'notification_autoformat' ) ?>
 				</label>
 			</td>
 		</tr> <!-- / disable autoformat -->
@@ -1234,6 +1243,7 @@ Class GFNotification {
 
 		<?php $ui_settings['notification_conditional_logic'] = ob_get_contents();
 		ob_clean(); ?>
+
 
 		<?php
 		ob_end_clean();
