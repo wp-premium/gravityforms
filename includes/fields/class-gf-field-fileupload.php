@@ -392,7 +392,8 @@ class GF_Field_FileUpload extends GF_Field {
 
 			//check if file has already been uploaded by previous step
 			$file_info     = GFFormsModel::get_temp_filename( $form_id, $input_name );
-			$temp_filepath = GFFormsModel::get_upload_path( $form_id ) . '/tmp/' . $file_info['temp_filename'];
+			$temp_filename = rgar( $file_info, 'temp_filename', '' );
+			$temp_filepath = GFFormsModel::get_upload_path( $form_id ) . '/tmp/' . $temp_filename;
 
 			if ( $file_info && file_exists( $temp_filepath ) ) {
 				GFCommon::log_debug( __METHOD__ . '(): File already uploaded to tmp folder, moving.' );

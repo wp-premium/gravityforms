@@ -8,11 +8,12 @@ class GF_Installation_Wizard {
 	private $_step_class_names = array();
 
 	function __construct(){
-		$path = GFCOmmon::get_base_path()  . '/includes/wizard/steps/';
+		$path = GFCommon::get_base_path() . '/includes/wizard/steps/';
 		require_once( $path . 'class-gf-installation-wizard-step.php' );
 		$classes = array();
-		foreach ( glob( $path . 'class-gf-installation-wizard-step-*.php' ) as $filename ) {
-			require_once( $filename );
+		$files   = GFCommon::glob_require_once( 'class-gf-installation-wizard-step-*.php', $path );
+
+		foreach ( $files as $filename ) {
 			$regex = '/class-gf-installation-wizard-step-(.*?).php/';
 			preg_match( $regex, $filename, $matches );
 			$class_name = 'GF_Installation_Wizard_Step_' . str_replace( '-', '_', $matches[1] );

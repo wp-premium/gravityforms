@@ -112,7 +112,7 @@ __webpack_require__.r(__webpack_exports__);
 /**
  * WordPress dependencies
  */
-const { PanelBody, Placeholder, SelectControl, ServerSideRender, TextControl, ToggleControl } = wp.components;
+const { PanelBody, Placeholder, SelectControl, ServerSideRender, TextControl, TextareaControl, ToggleControl } = wp.components;
 const { InspectorControls } = wp.editor;
 const { Component, Fragment } = wp.element;
 const { __ } = wp.i18n;
@@ -204,7 +204,7 @@ class Edit extends Component {
 
 	render() {
 
-		let { formId, title, description, ajax, tabindex, formPreview } = this.props.attributes;
+		let { formId, title, description, ajax, tabindex, formPreview, fieldValues } = this.props.attributes;
 
 		const { setAttributes, isSelected } = this.props;
 
@@ -258,6 +258,13 @@ class Edit extends Component {
 					label: __('AJAX', 'gravityforms'),
 					checked: ajax,
 					onChange: toggleAjax
+				}),
+				React.createElement(TextareaControl, {
+					label: __('Field Values', 'gravityforms'),
+					value: fieldValues,
+					onChange: fieldValues => {
+						setAttributes({ fieldValues });
+					}
 				}),
 				React.createElement(TextControl, {
 					className: 'gform-block__tabindex',
@@ -404,22 +411,25 @@ registerBlockType('gravityforms/form', {
 			type: 'string'
 		},
 		title: {
-			type: 'bool',
+			type: 'boolean',
 			default: true
 		},
 		description: {
-			type: 'bool',
+			type: 'boolean',
 			default: true
 		},
 		ajax: {
-			type: 'bool',
+			type: 'boolean',
 			default: false
 		},
 		tabindex: {
 			type: 'string'
 		},
+		fieldValues: {
+			type: 'string'
+		},
 		formPreview: {
-			type: 'bool',
+			type: 'boolean',
 			default: true
 		}
 	},
@@ -437,19 +447,19 @@ registerBlockType('gravityforms/form', {
 					}
 				},
 				title: {
-					type: 'bool',
+					type: 'boolean',
 					shortcode: ({ named: { title } }) => {
 						return 'true' === title;
 					}
 				},
 				description: {
-					type: 'bool',
+					type: 'boolean',
 					shortcode: ({ named: { description } }) => {
 						return 'true' === description;
 					}
 				},
 				ajax: {
-					type: 'bool',
+					type: 'boolean',
 					shortcode: ({ named: { ajax } }) => {
 						return 'true' === ajax;
 					}

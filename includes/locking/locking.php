@@ -18,9 +18,9 @@ class GFFormLocking extends GFLocking {
 	public function get_strings() {
 		$strings = array(
 			'currently_locked'  => __( 'This form is currently locked. Click on the "Request Control" button to let %s know you\'d like to take over.', 'gravityforms' ),
-			'accept'            => 'Accept',
-			'currently_editing' => '%s is currently editing this form',
-			'taken_over'        => '%s has taken over and is currently editing this form.',
+			'accept'            => __( 'Accept', 'gravityforms' ),
+			'currently_editing' => __( '%s is currently editing this form', 'gravityforms' ),
+			'taken_over'        => __( '%s has taken over and is currently editing this form.', 'gravityforms' ),
 			'lock_requested'    => __( '%s has requested permission to take over control of this form.', 'gravityforms' )
 		);
 
@@ -59,8 +59,8 @@ class GFEntryLocking extends GFLocking {
 	public function get_strings() {
 		$strings = array(
 			'currently_locked'  => __( 'This entry is currently locked. Click on the "Request Control" button to let %s know you\'d like to take over.', 'gravityforms' ),
-			'currently_editing' => '%s is currently editing this entry',
-			'taken_over'        => '%s has taken over and is currently editing this entry.',
+			'currently_editing' => __( '%s is currently editing this entry', 'gravityforms' ),
+			'taken_over'        => __( '%s has taken over and is currently editing this entry.', 'gravityforms' ),
 			'lock_requested'    => __( '%s has requested permission to take over control of this entry.', 'gravityforms' )
 		);
 

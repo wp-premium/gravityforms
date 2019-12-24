@@ -1569,6 +1569,26 @@ class GFFormDetail {
 		<?php
 		do_action( 'gform_field_standard_settings', 1375, $form_id );
 		?>
+		<li class="password_setting field_setting">
+			<div class="custom_inputs_setting gfield_sub_setting">
+				<label for="field_password_fields"  class="section_label inline">
+					<?php esc_html_e( 'Password Fields', 'gravityforms' ); ?>
+					<?php gform_tooltip( 'form_field_password_fields' ) ?>
+				</label>
+
+				<div id="field_password_fields_container" style="padding-top:10px;">
+					<!-- content dynamically created from js.php -->
+				</div>
+			</div>
+
+		</li>
+		<li class="password_visibility_setting field_setting">
+			<input type="checkbox" id="gfield_password_visibility_enabled" onclick="TogglePasswordVisibility(); SetFieldProperty('passwordVisibilityEnabled', this.checked);" onkeypress="TogglePasswordVisibility(); SetFieldProperty('passwordVisibilityEnabled', this.checked);" />
+			<label for="gfield_password_visibility_enabled" class="inline">
+				<?php esc_html_e( 'Enable Password Visibility Toggle', 'gravityforms' ); ?>
+				<?php gform_tooltip( 'form_field_password_visibility_enable' ) ?>
+			</label>
+		</li>
 		<li class="password_strength_setting field_setting">
 			<input type="checkbox" id="gfield_password_strength_enabled" onclick="TogglePasswordStrength(); SetPasswordStrength(this.checked);" onkeypress="TogglePasswordStrength(); SetPasswordStrength(this.checked);" />
 			<label for="gfield_password_strength_enabled" class="inline">
@@ -3011,19 +3031,9 @@ class GFFormDetail {
 				RGFormsModel::save_form_notifications( $id, $notifications );
 			}
 
-			// add default confirmation when saving a new form
-			$confirmation_id                 = uniqid();
-			$confirmations                   = array();
-			$confirmations[ $confirmation_id ] = array(
-				'id'          => $confirmation_id,
-				'name'        => __( 'Default Confirmation', 'gravityforms' ),
-				'isDefault'   => true,
-				'type'        => 'message',
-				'message'     => __( 'Thanks for contacting us! We will get in touch with you shortly.', 'gravityforms' ),
-				'url'         => '',
-				'pageId'      => '',
-				'queryString' => '',
-			);
+			// Add default confirmation when saving a new form.
+			$confirmation  = GFFormsModel::get_default_confirmation();
+			$confirmations = array( $confirmation['id'] => $confirmation );
 			GFFormsModel::save_form_confirmations( $id, $confirmations );
 
 			//updating form meta

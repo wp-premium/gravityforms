@@ -38,6 +38,8 @@ class GFAutoUpgrade {
 
 			if ( RG_CURRENT_PAGE == 'plugins.php' ) {
 				add_action( 'after_plugin_row_' . $this->_path, array( $this, 'rg_plugin_row' ) );
+			} elseif ( in_array( RG_CURRENT_PAGE, array( 'admin-ajax.php' ) ) ) {
+				add_action( 'wp_ajax_gf_get_changelog', array( $this, 'ajax_display_changelog' ) );
 			}
 		}
 
@@ -50,24 +52,19 @@ class GFAutoUpgrade {
 		add_filter( 'mwp_premium_perform_update', array( $this, 'premium_update' ) );
 	}
 
+	/**
+	 * Displays messages for the Gravity Forms listing on the Plugins page.
+	 *
+	 * Displays if Gravity Forms isn't supported.
+	 *
+	 * @since  Unknown
+	 * @since  2.4.15  Update to improve multisite updates.
+	 */
 	public function rg_plugin_row() {
 
 		if ( ! $this->_is_gravityforms_supported ) {
 			$message = sprintf( esc_html__( 'Gravity Forms %s is required. Activate it now or %spurchase it today!%s', 'gravityforms' ), $this->_min_gravityforms_version, "<a href='https://www.gravityforms.com'>", '</a>' );
 			GFAddOn::display_plugin_message( $message, true );
-		} else {
-			$version_info = $this->get_version_info( $this->_slug );
-
-			if ( ! rgar( $version_info, 'is_valid_key' ) ) {
-				$title       = $this->_title;
-				if ( version_compare( $this->_version, $version_info['version'], '<' ) ) {
-					$new_version = sprintf( esc_html__( 'There is a new version of %s available.', 'gravityforms' ), $title ) . sprintf( ' <a class="thickbox" title="%s" href="plugin-install.php?tab=plugin-information&plugin=%s&TB_iframe=true&width=640&height=808">', $title, $this->_slug ) . sprintf( esc_html__( 'View version %s Details', 'gravityforms' ), $version_info['version'] ) . '</a>. ';
-				} else {
-					$new_version = '';
-				}
-				$message = $new_version . sprintf( esc_html__( '%sRegister%s your copy of Gravity Forms to receive access to automatic upgrades and support. Need a license key? %sPurchase one now%s.', 'gravityforms' ), '<a href="admin.php?page=gf_settings">', '</a>', '<a href="https://www.gravityforms.com">', '</a>' ) . '</div></td>';
-				GFAddOn::display_plugin_message( $message );
-			}
 		}
 	}
 
@@ -163,6 +160,17 @@ class GFAutoUpgrade {
 		echo $change_log;
 
 		exit;
+	}
+
+	/**
+	 * Get changelog with admin-ajax.php in GFForms::maybe_display_update_notification().
+	 *
+	 * @since 2.4.15
+	 */
+	public function ajax_display_changelog() {
+		check_admin_referer();
+
+		$this->display_changelog();
 	}
 
 	private function get_changelog() {
