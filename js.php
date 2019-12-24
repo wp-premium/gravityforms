@@ -1156,8 +1156,9 @@ if ( ! class_exists( 'GFForms' ) ) {
 			 */
 			type = gform.applyFilters('gform_field_choice_selected_type_form_editor', type, field);
 
-			var value = field.enableChoiceValue ? String(field.choices[i].value) : field.choices[i].text;
-			var price = field.choices[i].price ? currency.toMoney(field.choices[i].price) : "";
+			var text = String(field.choices[i].text),
+				value = field.enableChoiceValue ? String(field.choices[i].value) : text,
+				price = field.choices[i].price ? currency.toMoney(field.choices[i].price) : "";
 			if (!price){
 				price = "";
 			}
@@ -1166,7 +1167,7 @@ if ( ! class_exists( 'GFForms' ) ) {
 			str += "<li class='field-choice-row' data-input_type='" + inputType + "' data-index='" + i + "'>";
 			str += "<i class='fa fa-sort field-choice-handle'></i> ";
 			str += "<input type='" + type + "' class='gfield_choice_" + type + "' name='choice_selected' id='" + inputType + "_choice_selected_" + i + "' " + checked + " onclick=\"SetFieldChoice('" + inputType + "', " + i + ");\" onkeypress=\"SetFieldChoice('" + inputType + "', " + i + ");\" /> ";
-			str += "<input type='text' id='" + inputType + "_choice_text_" + i + "' value=\"" + field.choices[i].text.replace(/"/g, "&quot;") + "\" class='field-choice-input field-choice-text' />";
+			str += "<input type='text' id='" + inputType + "_choice_text_" + i + "' value=\"" + text.replace(/"/g, "&quot;") + "\" class='field-choice-input field-choice-text' />";
 			str += "<input type='text' id='" + inputType + "_choice_value_" + i + "' value=\"" + value.replace(/"/g, "&quot;") + "\" class='field-choice-input field-choice-value' />";
 			str += "<input type='text' id='" + inputType + "_choice_price_" + i + "' value=\"" + price.replace(/"/g, "&quot;") + "\" class='field-choice-input field-choice-price' />";
 
@@ -1199,12 +1200,13 @@ if ( ! class_exists( 'GFForms' ) ) {
 			var inputType = GetInputType(input);
 			var type = inputType == 'checkbox' ? 'checkbox' : 'radio';
 
-			var value = input.enableChoiceValue ? String(input.choices[i].value) : input.choices[i].text;
+			var text = String(input.choices[i].text),
+				value = input.enableChoiceValue ? String(input.choices[i].value) : text;
 
 			str += "<li class='field-choice-row' data-index='" + i + "' data-input_id='" + inputId + "'>";
 			str += "<i class='fa fa-sort field-choice-handle'></i> ";
 			str += "<input type='" + type + "' class='field-input-choice-" + inputId.replace('.', '_') + " gfield_choice_" + type + "' name='choice_selected' id='" + inputType + "_choice_selected_" + i + "' " + checked + " /> ";
-			str += "<input type='text' id='" + inputType + "_choice_text_" + i + "' value=\"" + input.choices[i].text.replace(/"/g, "&quot;") + "\" class='field-choice-input field-choice-text' />";
+			str += "<input type='text' id='" + inputType + "_choice_text_" + i + "' value=\"" + text.replace(/"/g, "&quot;") + "\" class='field-choice-input field-choice-text' />";
 			str += "<input type='text' id='" + inputType + "_choice_value_" + i + "' value=\"" + value.replace(/"/g, "&quot;") + "\" class='field-choice-input field-choice-value' />";
 
 			str += "<button class='gf_insert_field_choice field-input-insert-choice' onclick=\"InsertFieldChoice(" + (i + 1) + ");\" aria-label='<?php esc_attr_e( 'Add choice', 'gravityforms' ); ?>'><i class='gficon-add' aria-hidden='true'></i></button>";
