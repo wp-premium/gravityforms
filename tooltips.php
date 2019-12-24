@@ -175,7 +175,7 @@ $__gf_tooltips = array(
 	'personal_data_field_settings'                => '<h6>' . __( 'Field Settings', 'gravityforms' ) . '</h6>' . __( 'Select the fields which will be included when exporting or erasing personal data.', 'gravityforms' ),
 	'personal_data_prevent_ip'                    => '<h6>' . __( 'IP Address', 'gravityforms' ) . '</h6>' . __( 'Check this box if you would like to prevent the IP address from being stored during form submission.', 'gravityforms' ),
 	'personal_data_retention_policy'              => '<h6>' . __( 'Retention Policy', 'gravityforms' ) . '</h6>' . __( 'Use these settings to keep entries only as long as they are needed. Trash or delete entries automatically older than the specified number of days. The minimum number of days allowed is one. This is to ensure that all entry processing is complete before deleting/trashing. The number of days setting is a minimum, not an exact period of time. The trashing/deleting occurs during the daily cron task so some entries may appear to remain up to a day longer than expected.', 'gravityforms' ),
-    
+    'form_field_password_visibility_enable'       => '<h6>' . __( 'Password Visibility Toggle', 'gravityforms' ) . '</h6>' . __( 'Check this box to add a toggle allowing the user to see the password they are entering in.', 'gravityforms' ),
 );
 
 /**
