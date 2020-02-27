@@ -1,3 +1,36 @@
+### 2.4.17 | 2020-02-05
+- Added security enhancements. Credit: Ryan Knell.
+- Added the "Empty (no choices selected)" choice to the conditional logic rule value drop down for Multi Select fields.
+- Added an error message to Form block when no forms exist.
+- Added the *[gform_print_entry_notes](https://docs.gravityforms.com/gform_print_entry_notes/)* filter.
+- Updated the Field Choices tooltip in the form editor.
+- Updated file upload validation logging statements.
+- Updated documentation links on the Forms > Help page.
+- Updated the print entry stylesheet to remove the page break between the entry and its notes.
+- Updated the *[gform_form_export_filename](https://docs.gravityforms.com/gform_form_export_filename/)* filter to include an additional parameter containing the IDs of the forms to be exported.
+- Fixed an issue with the width of the Form Settings submenu links. Credit: The GravityView team.
+- Fixed an issue with the text format {all_fields} output for Multi Select fields created with GF2.2+.
+- Fixed an issue with the tabindex when the form contains a Captcha field which is not the last field.
+- Fixed a PHP notice which occurs when a page containing multiple Ajax enabled Form blocks is displayed.
+- Fixed an issue where an uploaded file could lose the original filename on entry save if it contains multibyte characters.
+- Fixed an issue where the Checkboxes "select all" feature does not trigger calculations.
+- Fixed an issue where the Checkboxes "select all" feature does not function for some form configurations using Poll, Quiz, or Survey fields.
+- Fixed an issue where multiple "other" inputs can be displayed for the Radio Buttons field in some scenarios.
+- Fixed an issue with the entry limit per day for timezones other than UTC.
+- Removed the orphaned (empty) entry deletion task from the daily cron job.
+- AF: Fixed PHP notices thrown on the feed edit page in PHP 7.4.
+- AF: Fixed a PHP 7.4 warning which occurs when the update_plugins transient is cleared on installation of a new plugin.
+- AF: Fixed an issue where an add-on is not deactivated on uninstall if it's path does not match the expected path.
+- AF: Added GFPaymentAddOn::get_payment_field() to determine what should be used as the payment amount; the form total or a specific product field.
+- AF: Fixed an issue on the results page where multiple filters are added after clearing the previous filters.
+- AF: Fixed a PHP 7.4 notice which can occur when payment add-ons retrieve the submission data.
+- AF: Updated the frontend feeds scripts loading priority to 20.
+- AF: Fixed an issue where payment add-ons may process submissions marked as spam.
+- API: Fixed an issue when providing an invalid date_created date while retrieving entries.
+- API: Fixed a PHP notice which occurred in GFAPI::get_form() when the meta is cached and the form properties have been deleted from the database.
+- API: Added support for the "notin" search operator. Credit: The GravityView team.
+
+
 ### 2.4.16 | 2019-12-18
 - Added security enhancements.
 - Added the *[gform_form_summary](https://docs.gravityforms.com/gform_form_summary/)* filter.

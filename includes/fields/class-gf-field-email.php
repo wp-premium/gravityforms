@@ -199,8 +199,11 @@ class GF_Field_Email extends GF_Field {
 	}
 
 	public function get_value_entry_detail( $value, $currency = '', $use_text = false, $format = 'html', $media = 'screen' ) {
+		if ( GFCommon::is_valid_email( $value ) && $format == 'html'  ) {
+			return sprintf( "<a href='mailto:%s'>%s</a>", esc_attr( $value ), esc_html( $value ) );
+		}
 
-		return GFCommon::is_valid_email( $value ) && $format == 'html' ? "<a href='mailto:$value'>$value</a>" : $value;
+		return esc_html( $value );
 	}
 
 	public function get_value_submission( $field_values, $get_from_post_global_var = true ) {

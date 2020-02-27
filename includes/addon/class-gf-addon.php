@@ -110,13 +110,14 @@ abstract class GFAddOn {
 	 * Class constructor which hooks the instance into the WordPress init action
 	 */
 	function __construct() {
+		$this->update_path();
 
 		add_action( 'init', array( $this, 'init' ) );
 
 		if ( $this->_enable_rg_autoupgrade ) {
 			require_once( 'class-gf-auto-upgrade.php' );
 			$is_gravityforms_supported = $this->is_gravityforms_supported( $this->_min_gravityforms_version );
-			new GFAutoUpgrade( $this->_slug, $this->_version, $this->_min_gravityforms_version, $this->_title, $this->_full_path, $this->_path, $this->_url, $is_gravityforms_supported );
+			new GFAutoUpgrade( $this->_slug, $this->_version, $this->_min_gravityforms_version, $this->_title, $this->_full_path, $this->get_path(), $this->_url, $is_gravityforms_supported );
 		}
 
 		$this->pre_init();
@@ -236,7 +237,7 @@ abstract class GFAddOn {
 
 		// message enforcing min version of Gravity Forms
 		if ( isset( $this->_min_gravityforms_version ) && RG_CURRENT_PAGE == 'plugins.php' ) {
-			add_action( 'after_plugin_row_' . $this->_path, array( $this, 'plugin_row' ), 10, 2 );
+			add_action( 'after_plugin_row_' . $this->get_path(), array( $this, 'plugin_row' ), 10, 2 );
 		}
 
 		// STOP HERE IF GRAVITY FORMS IS NOT SUPPORTED
@@ -4812,7 +4813,7 @@ abstract class GFAddOn {
 	}
 
 	public function plugin_settings_link( $links, $file ) {
-		if ( $file != $this->_path ) {
+		if ( $file != $this->get_path() ) {
 			return $links;
 		}
 
@@ -5396,8 +5397,8 @@ abstract class GFAddOn {
 
 
 		//Deactivating plugin
-		deactivate_plugins( $this->_path );
-		update_option( 'recently_activated', array( $this->_path => time() ) + (array) get_option( 'recently_activated' ) );
+		deactivate_plugins( $this->get_path() );
+		update_option( 'recently_activated', array( $this->get_path() => time() ) + (array) get_option( 'recently_activated' ) );
 
 		return true;
 
@@ -6258,6 +6259,21 @@ abstract class GFAddOn {
 	}
 
 	/**
+	 * Fixes the add-on _path property value, if the directory has been renamed.
+	 *
+	 * @since 2.4.17
+	 */
+	public function update_path() {
+		$path_dirname = dirname( $this->_path );
+		if ( $path_dirname !== '.' ) {
+			$full_path_dirname = basename( dirname( $this->_full_path ) );
+			if ( $path_dirname !== $full_path_dirname ) {
+				$this->_path = trailingslashit( $full_path_dirname ) . basename( $this->_path );
+			}
+		}
+	}
+
+	/**
 	 * Get all or a specific capability for Add-On.
 	 *
 	 * @since  2.2.5.27
@@ -6297,7 +6313,7 @@ abstract class GFAddOn {
 	 */
 	public function current_user_can_uninstall(){
 
-		return GFCommon::current_user_can_uninstall( $this->_capabilities_uninstall, $this->_path );
+		return GFCommon::current_user_can_uninstall( $this->_capabilities_uninstall, $this->get_path() );
 
 	}
 }

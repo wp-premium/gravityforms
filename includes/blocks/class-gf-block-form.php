@@ -243,7 +243,7 @@ class GF_Block_Form extends GF_Block {
 			$ajax    = rgars( $block, 'attrs/ajax' ) ? (bool) $block['attrs']['ajax'] : false;
 
 			// Add form ID to return array.
-			if ( ! in_array( $form_id, $form_ids ) || ( in_array( $form_id, $form_ids ) && true === $ajax && false === $form_ids[ $form_id ] ) ) {
+			if ( ! isset( $form_ids[ $form_id ] ) || ( isset( $form_ids[ $form_id ] ) && true === $ajax && false === $form_ids[ $form_id ] ) ) {
 				$form_ids[ $form_id ] = $ajax;
 			}
 

@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms
 Plugin URI: https://www.gravityforms.com
 Description: Easily create web forms and manage form entries within the WordPress admin.
-Version: 2.4.16
+Version: 2.4.17
 Author: rocketgenius
 Author URI: https://www.rocketgenius.com
 License: GPL-2.0+
@@ -11,7 +11,7 @@ Text Domain: gravityforms
 Domain Path: /languages
 
 ------------------------------------------------------------------------
-Copyright 2009-2019 Rocketgenius, Inc.
+Copyright 2009-2020 Rocketgenius, Inc.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -215,7 +215,7 @@ class GFForms {
 	 *
 	 * @var string $version The version number.
 	 */
-	public static $version = '2.4.16';
+	public static $version = '2.4.17';
 
 	/**
 	 * Handles background upgrade tasks.
@@ -5267,8 +5267,6 @@ class GFForms {
 
 		self::do_self_healing();
 
-		self::delete_orphaned_entries();
-
 		if ( ! get_option( 'gform_enable_logging' ) ) {
 			gf_logging()->delete_log_files();
 		}
@@ -5346,22 +5344,25 @@ class GFForms {
 	/**
 	 * Deletes all rows in the lead table that don't have corresponding rows in the details table.
 	 *
+	 * @deprecated
 	 * @since  2.0.0
 	 * @access public
 	 * @global $wpdb
 	 */
 	public static function delete_orphaned_entries() {
+		_deprecated_function( __METHOD__, '2.4.17' );
+
 		global $wpdb;
 
-		if ( version_compare( GFFormsModel::get_database_version(), '2.3-beta-1', '<' ) ) {
+		if ( version_compare( GFFormsModel::get_database_version(), '2.3-beta-1', '<' ) || GFFormsModel::has_batch_field_operations() ) {
 			return;
 		}
 
 		GFCommon::log_debug( __METHOD__ . '(): Starting to delete orphaned entries' );
-		$entry_table         = GFFormsModel::get_entry_table_name();
+		$entry_table      = GFFormsModel::get_entry_table_name();
 		$entry_meta_table = GFFormsModel::get_entry_meta_table_name();
-		$sql                = "DELETE FROM {$entry_table} WHERE id NOT IN( SELECT entry_id FROM {$entry_meta_table} )";
-		$result             = $wpdb->query( $sql );
+		$sql              = "DELETE FROM {$entry_table} WHERE id NOT IN( SELECT entry_id FROM {$entry_meta_table} )";
+		$result           = $wpdb->query( $sql );
 		GFCommon::log_debug( __METHOD__ . '(): Delete result: ' . print_r( $result, true ) );
 	}
 

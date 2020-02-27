@@ -42,8 +42,12 @@ class GFAPI {
 			return false;
 		}
 
+		$form_info = GFFormsModel::get_form( $form_id, true );
+		if ( ! $form_info ) {
+			return false;
+		}
+
 		// Loading form columns into meta.
-		$form_info            = GFFormsModel::get_form( $form_id, true );
 		$form['is_active']    = $form_info->is_active;
 		$form['date_created'] = $form_info->date_created;
 		$form['is_trash']     = $form_info->is_trash;
@@ -875,10 +879,8 @@ class GFAPI {
 		}
 		$source_url = $entry['source_url'];
 
-		if ( ! isset( $entry['user_agent'] ) ) {
-			$entry['user_agent'] = 'API';
-		}
-		$user_agent = $entry['user_agent'];
+		$entry['user_agent'] = isset( $entry['user_agent'] ) ? sanitize_text_field( $entry['user_agent'] ) : 'API';
+		$user_agent          = $entry['user_agent'];
 
 		if ( empty( $entry['currency'] ) ) {
 			$entry['currency'] = GFCommon::get_currency();
@@ -1207,7 +1209,7 @@ class GFAPI {
 		$request_ip     = rgars( $form, 'personalData/preventIP' ) ? '' : GFFormsModel::get_ip();
 		$ip             = isset( $entry['ip'] ) ? $entry['ip'] : $request_ip;
 		$source_url     = isset( $entry['source_url'] ) ? $entry['source_url'] : esc_url_raw( GFFormsModel::get_current_page_url() );
-		$user_agent     = isset( $entry['user_agent'] ) ? $entry['user_agent'] : 'API';
+		$user_agent     = isset( $entry['user_agent'] ) ? sanitize_text_field( $entry['user_agent'] ) : 'API';
 		$currency       = isset( $entry['currency'] ) ? $entry['currency'] : GFCommon::get_currency();
 		$payment_status = isset( $entry['payment_status'] ) ? sprintf( "'%s'", esc_sql( $entry['payment_status'] ) ) : 'NULL';
 		$payment_date   = strtotime( rgar( $entry, 'payment_date' ) ) ? sprintf( "'%s'", gmdate( 'Y-m-d H:i:s', strtotime( "{$entry['payment_date']}" ) ) ) : 'NULL';

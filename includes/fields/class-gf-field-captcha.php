@@ -205,8 +205,6 @@ class GF_Field_CAPTCHA extends GF_Field {
 					add_action( 'wp_footer', array( $this, 'ensure_recaptcha_js' ), 21 );
 					add_action( 'gform_preview_footer', array( $this, 'ensure_recaptcha_js' ) );
 
-					$tabindex = GFCommon::$tab_index++;
-
 					$stoken = '';
 
 					if ( $this->use_stoken() ) {
@@ -220,9 +218,11 @@ class GF_Field_CAPTCHA extends GF_Field {
 					$badge = '';
 
 					if ( $type == 'invisible' ) {
-						$size = "data-size='invisible'";
-						$badge = $this->captchaBadge ? $this->captchaBadge : 'bottomright';
+						$size     = "data-size='invisible'";
+						$badge    = $this->captchaBadge ? $this->captchaBadge : 'bottomright';
 						$tabindex = -1;
+					} else {
+						$tabindex = GFCommon::$tab_index > 0 ? GFCommon::$tab_index++ : 0;
 					}
 
 					$output = "<div id='" . esc_attr( $field_id ) ."' class='ginput_container ginput_recaptcha' data-sitekey='" . esc_attr( $site_key ) . "' {$stoken} data-theme='" . esc_attr( $theme ) . "' data-tabindex='{$tabindex}' {$size} data-badge='{$badge}'></div>";

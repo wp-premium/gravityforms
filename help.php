@@ -36,7 +36,7 @@ class GFHelp {
 
 				<div class="gf_admin_notice"><?php printf( esc_html__( '%sIMPORTANT NOTICE:%s We do not provide support via telephone or e-mail. Please %sopen a support ticket%s.', 'gravityforms' ), '<strong>', '</strong>', '<a href="https://www.gravityforms.com/support/" target="_blank">', '</a>' )  ?></div>
 
-				<div class="gf_help_content"><p><?php printf( esc_html__( "Please review the plugin documentation and %sfrequently asked questions (FAQ)%s first. If you still can't find the answer %sopen a support ticket%s and we will be happy to answer your questions and assist you with any problems. %sPlease note:%s If you have not %spurchased a license%s from us, you will not have access to these help resources.", 'gravityforms' ), '<a href="https://docs.gravityforms.com/category/knowledge-base/faqs/">', '</a>', '<a href="https://www.gravityforms.com/support/" target="_blank">', '</a>', '<strong>', '</strong>', '<a href="https://www.gravityforms.com/pricing/">', '</a>' ); ?></p></div>
+				<div class="gf_help_content"><p><?php printf( esc_html__( "Please review the %sdocumentation%s and %sknowledge base%s first. If you still can't find the answer %sopen a support ticket%s and we will be happy to answer your questions and assist you with any problems. %sPlease note:%s If you have not %spurchased a license%s from us, you will not have access to these help resources.", 'gravityforms' ), '<a href="https://docs.gravityforms.com/" target="_blank">', '</a>', '<a href="https://docs.gravityforms.com/category/knowledge-base/" target="_blank">', '</a>', '<a href="https://www.gravityforms.com/support/" target="_blank">', '</a>', '<strong>', '</strong>', '<a href="https://www.gravityforms.com/pricing/" target="_blank">', '</a>' ); ?></p></div>
 
 
 				<div class="hr-divider"></div>
@@ -46,12 +46,12 @@ class GFHelp {
                 <div class="gforms_helpbox" style="margin:15px 0;">
                     <ul class="resource_list">
                         <li>
-                            <i class="fa fa-book"></i> <a href="https://docs.gravityforms.com/creating-a-form/">
+                            <i class="fa fa-book"></i> <a target="_blank" href="https://docs.gravityforms.com/create-a-new-form/">
                                 <?php esc_html_e( 'Creating a Form', 'gravityforms' ); ?>
                             </a>
                         </li>
                         <li>
-                            <i class="fa fa-book"></i> <a target="_blank" href="https://docs.gravityforms.com/embedding-a-form/">
+                            <i class="fa fa-book"></i> <a target="_blank" href="https://docs.gravityforms.com/category/user-guides/getting-started/add-form-to-site/">
                                 <?php esc_html_e( 'Embedding a Form', 'gravityforms' ); ?>
                             </a>
                         </li>
@@ -61,7 +61,7 @@ class GFHelp {
                             </a>
                         </li>
                         <li>
-                            <i class="fa fa-book"></i> <a target="_blank" href="https://docs.gravityforms.com/configuring-confirmations-in-gravity-forms/">
+                            <i class="fa fa-book"></i> <a target="_blank" href="https://docs.gravityforms.com/configuring-confirmations/">
                                 <?php esc_html_e( 'Configuring Confirmations', 'gravityforms' ); ?>
                             </a>
                         </li>
@@ -81,7 +81,7 @@ class GFHelp {
                 <div class="gforms_helpbox" style="margin:15px 0;">
                     <ul class="resource_list">
                         <li>
-                            <i class="fa fa-book"></i> <a href="https://docs.gravityforms.com/getting-started-with-the-gravity-forms-api-gfapi/">
+                            <i class="fa fa-book"></i> <a target="_blank" href="https://docs.gravityforms.com/getting-started-gravity-forms-api-gfapi/">
                                 <?php esc_html_e( 'Getting Started with the Gravity Forms API', 'gravityforms' ); ?>
                             </a>
                         </li>
@@ -91,12 +91,12 @@ class GFHelp {
                             </a>
                         </li>
                         <li>
-                            <i class="fa fa-book"></i> <a target="_blank" href="https://docs.gravityforms.com/web-api/">
-                                <?php esc_html_e( 'Web API', 'gravityforms' ); ?>
+                            <i class="fa fa-book"></i> <a target="_blank" href="https://docs.gravityforms.com/category/developers/rest-api/">
+                                <?php esc_html_e( 'REST API', 'gravityforms' ); ?>
                             </a>
                         </li>
                         <li>
-                            <i class="fa fa-book"></i> <a target="_blank" href="https://docs.gravityforms.com/add-on-framework/">
+                            <i class="fa fa-book"></i> <a target="_blank" href="https://docs.gravityforms.com/category/developers/php-api/add-on-framework/">
                                 <?php esc_html_e( 'Add-On Framework', 'gravityforms' ); ?>
                             </a>
                         </li>
@@ -116,7 +116,7 @@ class GFHelp {
                 <div class="gforms_helpbox" style="margin:15px 0;">
                     <ul class="resource_list">
                         <li>
-                            <i class="fa fa-book"></i> <a href="https://docs.gravityforms.com/category/user-guides/design-and-layout/css-selectors/">
+                            <i class="fa fa-book"></i> <a target="_blank" href="https://docs.gravityforms.com/category/user-guides/design-and-layout/css-selectors/">
                                 <?php esc_html_e( 'CSS Selectors', 'gravityforms' ); ?>
                             </a>
                         </li>
