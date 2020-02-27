@@ -191,19 +191,21 @@ class GF_Field_MultiSelect extends GF_Field {
 	 */
 	public function get_value_entry_detail( $value, $currency = '', $use_text = false, $format = 'html', $media = 'screen' ) {
 
-		if ( empty( $value ) || $format == 'text' ) {
+		if ( empty( $value ) || ( $format == 'text' && $this->storageType !== 'json' ) ) {
 			return $value;
 		}
 
-		$value = $this->to_array( $value );
+		$items = $this->to_array( $value );
 
-		$items = '';
-		foreach ( $value as $item ) {
-			$item_value = GFCommon::selection_display( $item, $this, $currency, $use_text );
-			$items .= '<li>' . esc_html( $item_value ) . '</li>';
+		foreach ( $items as &$item ) {
+			$item = esc_html( GFCommon::selection_display( $item, $this, $currency, $use_text ) );
 		}
 
-		return "<ul class='bulleted'>{$items}</ul>";
+		if ( $format === 'text' ) {
+			return GFCommon::implode_non_blank( ', ', $items );
+		}
+
+		return "<ul class='bulleted'><li>" . GFCommon::implode_non_blank( '</li><li>', $items ) . '</li></ul>';
 	}
 
 	/**

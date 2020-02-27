@@ -62,94 +62,148 @@ class GF_Field_Radio extends GF_Field {
 
 	}
 
-	public function get_radio_choices( $value = '', $disabled_text, $form_id = 0 ) {
+	public function get_radio_choices( $value = '', $disabled_text = '', $form_id = 0 ) {
 		$choices = '';
-		$is_entry_detail = $this->is_entry_detail();
-		$is_form_editor  = $this->is_form_editor();
-		$is_admin = $is_entry_detail || $is_form_editor;
 
 		if ( is_array( $this->choices ) ) {
+			$is_entry_detail    = $this->is_entry_detail();
+			$is_form_editor     = $this->is_form_editor();
+			$is_admin           = $is_entry_detail || $is_form_editor;
+
+			$field_choices      = $this->choices;
+			$needs_other_choice = $this->enableOtherChoice;
+			$editor_limited     = false;
+
 			$choice_id = 0;
+			$count     = 1;
 
-			$other_default_value = '';
-
-			// add 'other' choice to choices if enabled
-			if ( $this->enableOtherChoice ) {
-				$other_default_value = GFCommon::get_other_choice_value( $this );
-				$this->choices[]     = array( 'text' => $other_default_value, 'value' => 'gf_other_choice', 'isSelected' => false, 'isOtherChoice' => true );
-			}
-
-			$count = 1;
-
-			foreach ( $this->choices as $choice ) {
-
-				if ( $is_entry_detail || $is_form_editor || $form_id == 0 ) {
-					$id = $this->id . '_' . $choice_id ++;
-				} else {
-					$id = $form_id . '_' . $this->id . '_' . $choice_id ++;
-				}
-
-				$field_value = ! empty( $choice['value'] ) || $this->enableChoiceValue ? $choice['value'] : $choice['text'];
-
-				if ( $this->enablePrice ) {
-					$price = rgempty( 'price', $choice ) ? 0 : GFCommon::to_number( rgar( $choice, 'price' ) );
-					$field_value .= '|' . $price;
-				}
-
-				if ( rgblank( $value ) && rgget('view') != 'entry' ) {
-					$checked = rgar( $choice, 'isSelected' ) ? "checked='checked'" : '';
-				} else {
-					$checked = RGFormsModel::choice_value_match( $this, $choice, $value ) ? "checked='checked'" : '';
-				}
-
-				$tabindex    = $this->get_tabindex();
-				$label       = sprintf( "<label for='choice_%s' id='label_%s'>%s</label>", $id, $id, $choice['text'] );
-				$input_focus = '';
-
-				// handle 'other' choice
+			foreach ( $field_choices as $choice ) {
 				if ( rgar( $choice, 'isOtherChoice' ) ) {
-
-					$onfocus = ! $is_admin ? 'jQuery(this).prev("input")[0].click(); if(jQuery(this).val() == "' . $other_default_value . '") { jQuery(this).val(""); }' : '';
-					$onblur  = ! $is_admin ? 'if(jQuery(this).val().replace(" ", "") == "") { jQuery(this).val("' . $other_default_value . '"); }' : '';
-
-					$input_focus  = ! $is_admin ? "onfocus=\"jQuery(this).next('input').focus();\"" : '';
-					$value_exists = RGFormsModel::choices_value_match( $this, $this->choices, $value );
-
-					if ( $value == 'gf_other_choice' && rgpost( "input_{$this->id}_other" ) ) {
-						$other_value = rgpost( "input_{$this->id}_other" );
-					} elseif ( ! $value_exists && ! empty( $value ) ) {
-						$other_value = $value;
-						$value       = 'gf_other_choice';
-						$checked     = "checked='checked'";
-					} else {
-						$other_value = $other_default_value;
+					if ( ! $needs_other_choice ) {
+						continue;
 					}
-
-					$label = "<input id='input_{$this->formId}_{$this->id}_other' name='input_{$this->id}_other' type='text' value='" . esc_attr( $other_value ) . "' aria-label='" . esc_attr__( 'Other', 'gravityforms' ) . "' onfocus='$onfocus' onblur='$onblur' $tabindex $disabled_text />";
+					$needs_other_choice = false;
 				}
 
-				$choice_markup = sprintf( "<li class='gchoice_$id'><input name='input_%d' type='radio' value='%s' %s id='choice_%s' $tabindex %s %s />%s</li>", $this->id, esc_attr( $field_value ), $checked, $id, $disabled_text, $input_focus, $label );
-
-				$choices .= gf_apply_filters( array(
-					'gform_field_choice_markup_pre_render',
-					$this->formId,
-					$this->id
-				), $choice_markup, $choice, $this, $value );
+				$choices .= $this->get_choice_html( $choice, $choice_id, $value, $disabled_text, $is_admin );
 
 				if ( $is_form_editor && $count >= 5 ) {
+					$editor_limited = true;
 					break;
 				}
 
 				$count ++;
 			}
 
-			$total = sizeof( $this->choices );
-			if ( $count < $total ) {
+			if ( $needs_other_choice ) {
+				$other_choice    = array(
+					'text'          => GFCommon::get_other_choice_value( $this ),
+					'value'         => 'gf_other_choice',
+					'isSelected'    => false,
+					'isOtherChoice' => true,
+				);
+				$field_choices[] = $other_choice;
+
+				if ( ! $is_form_editor || ! $editor_limited ) {
+					$choices .= $this->get_choice_html( $other_choice, $choice_id, $value, $disabled_text, $is_admin );
+					$count ++;
+				}
+			}
+
+			$total = sizeof( $field_choices );
+			if ( $is_form_editor && ( $count < $total ) ) {
 				$choices .= "<li class='gchoice_total'>" . sprintf( esc_html__( '%d of %d items shown. Edit field to view all', 'gravityforms' ), $count, $total ) . '</li>';
 			}
 		}
 
+		/**
+		 * Allows the HTML for multiple choices to be overridden.
+		 *
+		 * @since unknown
+		 *
+		 * @param string         $choices The choices HTML.
+		 * @param GF_Field_Radio $field   The current field object.
+		 */
 		return gf_apply_filters( array( 'gform_field_choices', $this->formId ), $choices, $this );
+	}
+
+	/**
+	 * Returns the choice HTML.
+	 *
+	 * @since 2.4.17
+	 *
+	 * @param array  $choice        The choice properties.
+	 * @param int    &$choice_id    The choice number.
+	 * @param string $value         The current field value.
+	 * @param string $disabled_text The disabled attribute or an empty string.
+	 * @param bool   $is_admin      Indicates if this is the form editor or entry detail page.
+	 *
+	 * @return string
+	 */
+	public function get_choice_html( $choice, &$choice_id, $value, $disabled_text, $is_admin ) {
+		$form_id = absint( $this->formId );
+
+		if ( $is_admin || $form_id == 0 ) {
+			$id = $this->id . '_' . $choice_id ++;
+		} else {
+			$id = $form_id . '_' . $this->id . '_' . $choice_id ++;
+		}
+
+		$field_value = ! empty( $choice['value'] ) || $this->enableChoiceValue ? $choice['value'] : $choice['text'];
+
+		if ( $this->enablePrice ) {
+			$price       = rgempty( 'price', $choice ) ? 0 : GFCommon::to_number( rgar( $choice, 'price' ) );
+			$field_value .= '|' . $price;
+		}
+
+		if ( rgblank( $value ) && rgget( 'view' ) != 'entry' ) {
+			$checked = rgar( $choice, 'isSelected' ) ? "checked='checked'" : '';
+		} else {
+			$checked = GFFormsModel::choice_value_match( $this, $choice, $value ) ? "checked='checked'" : '';
+		}
+
+		$tabindex    = $this->get_tabindex();
+		$label       = sprintf( "<label for='choice_%s' id='label_%s'>%s</label>", $id, $id, $choice['text'] );
+		$input_focus = '';
+
+		// Handle 'other' choice.
+		if ( $this->enableOtherChoice && rgar( $choice, 'isOtherChoice' ) ) {
+			$other_default_value = empty( $choice['text'] ) ? GFCommon::get_other_choice_value( $this ) : $choice['text'];
+
+			$onfocus = ! $is_admin ? 'jQuery(this).prev("input")[0].click(); if(jQuery(this).val() == "' . $other_default_value . '") { jQuery(this).val(""); }' : '';
+			$onblur  = ! $is_admin ? 'if(jQuery(this).val().replace(" ", "") == "") { jQuery(this).val("' . $other_default_value . '"); }' : '';
+
+			$input_focus  = ! $is_admin ? "onfocus=\"jQuery(this).next('input').focus();\"" : '';
+			$value_exists = GFFormsModel::choices_value_match( $this, $this->choices, $value );
+
+			if ( $value == 'gf_other_choice' && rgpost( "input_{$this->id}_other" ) ) {
+				$other_value = rgpost( "input_{$this->id}_other" );
+			} elseif ( ! $value_exists && ! empty( $value ) ) {
+				$other_value = $value;
+				$value       = 'gf_other_choice';
+				$checked     = "checked='checked'";
+			} else {
+				$other_value = $other_default_value;
+			}
+
+			$label = "<input id='input_{$this->formId}_{$this->id}_other' name='input_{$this->id}_other' type='text' value='" . esc_attr( $other_value ) . "' aria-label='" . esc_attr__( 'Other', 'gravityforms' ) . "' onfocus='$onfocus' onblur='$onblur' $tabindex $disabled_text />";
+		}
+
+		$choice_markup = sprintf( "<li class='gchoice_$id'><input name='input_%d' type='radio' value='%s' %s id='choice_%s' $tabindex %s %s />%s</li>", $this->id, esc_attr( $field_value ), $checked, $id, $disabled_text, $input_focus, $label );
+
+		/**
+		 * Allows the HTML for a specific choice to be overridden.
+		 *
+		 * @since 1.9.6
+		 * @since 1.9.12 Added the field specific version.
+		 * @since 2.4.17 Moved from GF_Field_Radio::get_radio_choices().
+		 *
+		 * @param string         $choice_markup The choice HTML.
+		 * @param array          $choice        The choice properties.
+		 * @param GF_Field_Radio $field         The current field object.
+		 * @param string         $value         The current field value.
+		 */
+		return gf_apply_filters( array( 'gform_field_choice_markup_pre_render', $this->formId, $this->id ), $choice_markup, $choice, $this, $value );
 	}
 
 	public function get_value_default() {

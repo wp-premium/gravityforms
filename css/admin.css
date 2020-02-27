@@ -3582,6 +3582,7 @@ ul#gf_form_toolbar_links .gf_submenu ul li a {
 	background: transparent none;
 	padding: 6px 10px;
 	line-height: 24px;
+	display: block;
 }
 
 ul#gf_form_toolbar_links .gf_submenu ul li:hover {

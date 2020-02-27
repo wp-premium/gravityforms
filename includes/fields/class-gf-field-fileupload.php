@@ -75,7 +75,7 @@ class GF_Field_FileUpload extends GF_Field {
 				$check_result = GFCommon::check_type_and_ext( $_FILES[ $input_name ] );
 				if ( is_wp_error( $check_result ) ) {
 					$this->failed_validation = true;
-					GFCommon::log_debug( __METHOD__ . '(): The uploaded file type is not allowed.' );
+					GFCommon::log_debug( sprintf( '%s(): %s; %s', __METHOD__, $check_result->get_error_code(), $check_result->get_error_message()  ) );
 					$this->validation_message = esc_html__( 'The uploaded file type is not allowed.', 'gravityforms' );
 					return;
 				}
@@ -353,7 +353,7 @@ class GF_Field_FileUpload extends GF_Field {
 				$uploaded_temp_files = GFFormsModel::$uploaded_files[ $form_id ][ $input_name ];
 				$uploaded_files      = array();
 				foreach ( $uploaded_temp_files as $i => $file_info ) {
-					$temp_filepath = GFFormsModel::get_upload_path( $form_id ) . '/tmp/' . basename( $file_info['temp_filename'] );
+					$temp_filepath = GFFormsModel::get_upload_path( $form_id ) . '/tmp/' . wp_basename( $file_info['temp_filename'] );
 					if ( $file_info && file_exists( $temp_filepath ) ) {
 						$uploaded_files[ $i ] = $this->move_temp_file( $form_id, $file_info );
 					}
@@ -466,7 +466,7 @@ class GF_Field_FileUpload extends GF_Field {
 
 			if ( is_array( $file_paths ) ) {
 				foreach ( $file_paths as $file_path ) {
-					$info = pathinfo( $file_path );
+					$basename = wp_basename( $file_path );
 					$file_path = $this->get_download_url( $file_path, $force_download );
 
 					/**
@@ -497,7 +497,7 @@ class GF_Field_FileUpload extends GF_Field {
 					 * @param GF_Field_FileUpload $field     The field object for further context.
 					 */
 					$file_path    = str_replace( ' ', '%20', apply_filters( 'gform_fileupload_entry_value_file_path', $file_path, $this ) );
-					$output_arr[] = $format == 'text' ? $file_path : sprintf( "<li><a href='%s' target='_blank' aria-label='%s'>%s</a></li>", esc_attr( $file_path ), esc_attr__( 'Click to view', 'gravityforms' ), $info['basename'] );
+					$output_arr[] = $format == 'text' ? $file_path : sprintf( "<li><a href='%s' target='_blank' aria-label='%s'>%s</a></li>", esc_attr( $file_path ), esc_attr__( 'Click to view', 'gravityforms' ), $basename );
 
 				}
 				$output = join( PHP_EOL, $output_arr );
@@ -561,8 +561,8 @@ class GF_Field_FileUpload extends GF_Field {
 
 	public function move_temp_file( $form_id, $tempfile_info ) {
 
-		$target = GFFormsModel::get_file_upload_path( $form_id, basename( $tempfile_info['uploaded_filename'] ) );
-		$source = GFFormsModel::get_upload_path( $form_id ) . '/tmp/' . basename( $tempfile_info['temp_filename']);
+		$target = GFFormsModel::get_file_upload_path( $form_id, $tempfile_info['uploaded_filename'] );
+		$source = GFFormsModel::get_upload_path( $form_id ) . '/tmp/' . wp_basename( $tempfile_info['temp_filename'] );
 
 		GFCommon::log_debug( __METHOD__ . '(): Moving temp file from: ' . $source );
 

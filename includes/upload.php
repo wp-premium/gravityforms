@@ -136,12 +136,14 @@ class GFAsyncUpload {
 			$valid_uploaded_filename = GFCommon::check_type_and_ext( $_FILES['file'], $uploaded_filename );
 
 			if ( is_wp_error( $valid_uploaded_filename ) ) {
+				GFCommon::log_debug( sprintf( '%s(): %s; %s; %s', __METHOD__, $uploaded_filename, $valid_uploaded_filename->get_error_code(), $valid_uploaded_filename->get_error_message() ) );
 				self::die_error( $valid_uploaded_filename->get_error_code(), $valid_uploaded_filename->get_error_message() );
 			}
 
 			$valid_file_name = GFCommon::check_type_and_ext( $_FILES['file'], $file_name );
 
 			if ( is_wp_error( $valid_file_name ) ) {
+				GFCommon::log_debug( sprintf( '%s(): %s; %s; %s', __METHOD__, $file_name, $valid_file_name->get_error_code(), $valid_file_name->get_error_message() ) );
 				self::die_error( $valid_file_name->get_error_code(), $valid_file_name->get_error_message() );
 			}
 		}

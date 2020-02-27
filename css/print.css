@@ -135,9 +135,6 @@ AND ANY CHANGES MADE HERE WILL BE OVERWRITTEN.
 	table.entry-detail-view, table.entry-detail-notes {
 		margin: 0 0 16px 0
 	}
-	table.entry-detail-notes {
-		page-break-before: always
-	}
 	table.entry-detail-view th, table.entry-detail-notes th {
 		font-size: 14px;
 		text-shadow: 0 1px 0 #FFF;
