@@ -115,7 +115,7 @@ class GF_Download {
 			header( 'X-Robots-Tag: noindex', true );
 			header( 'Content-Type: ' . $content_type );
 			header( 'Content-Description: File Transfer' );
-			header( 'Content-Disposition: ' . $content_disposition . '; filename="' . basename( $file ) . '"' );
+			header( 'Content-Disposition: ' . $content_disposition . '; filename="' . wp_basename( $file ) . '"' );
 			header( 'Content-Transfer-Encoding: binary' );
 			// Clear buffer AND turn off output buffering before starting delivery of files requested for download to prevent third-parties to corrupt the file content.
 			if ( ob_get_contents() ) {

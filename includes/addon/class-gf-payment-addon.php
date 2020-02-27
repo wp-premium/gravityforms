@@ -549,7 +549,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		// Validation called by partial entries feature via the heartbeat API.
 		$is_heartbeat = rgpost('action') == 'heartbeat';
 
-		if ( ! $validation_result['is_valid'] || ! $is_last_page || $failed_honeypot || $is_heartbeat) {
+		if ( ! $validation_result['is_valid'] || ! $is_last_page || $failed_honeypot || $is_heartbeat ) {
 			return $validation_result;
 		}
 
@@ -605,10 +605,15 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
 		$submission_data = $this->get_submission_data( $feed, $form, $entry );
 
-		//Do not process payment if payment amount is 0
+		// Do not process payment if payment amount is 0.
 		if ( floatval( $submission_data['payment_amount'] ) <= 0 ) {
-
 			$this->log_debug( __METHOD__ . '(): Payment amount is zero or less. Not sending to payment gateway.' );
+
+			return $validation_result;
+		}
+
+		if ( GFCommon::is_spam_entry( $entry, $form ) ) {
+			$this->log_debug( __METHOD__ . '() Aborting. Submission flagged as spam.' );
 
 			return $validation_result;
 		}
@@ -1193,6 +1198,10 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
 		$submission_data = array();
 
+		if ( empty( $feed['meta'] ) ) {
+			return $submission_data;
+		}
+
 		$submission_data['form_title'] = $form['title'];
 
 		// Getting mapped field data.
@@ -1299,7 +1308,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
 		$products = GFCommon::get_product_fields( $form, $entry );
 
-		$payment_field   = $feed['meta']['transactionType'] == 'product' ? rgars( $feed, 'meta/paymentAmount' ) : rgars( $feed, 'meta/recurringAmount' );
+		$payment_field   = $this->get_payment_field( $feed );
 		$setup_fee_field = rgar( $feed['meta'], 'setupFee_enabled' ) ? $feed['meta']['setupFee_product'] : false;
 		$trial_field     = rgar( $feed['meta'], 'trial_enabled' ) ? rgars( $feed, 'meta/trial_product' ) : false;
 
@@ -1395,6 +1404,23 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 			'line_items'     => $line_items,
 			'discounts'      => $discounts
 		);
+	}
+
+	/**
+	 * Returns what should be used to prepare the payment amount; the form_total or the ID of a specific product field.
+	 *
+	 * Override if your add-on uses custom choices for the transactionType setting or does not use the standard recurringAmount and paymentAmount settings.
+	 *
+	 * @since 2.4.17
+	 *
+	 * @param array $feed The current feed.
+	 *
+	 * @return string
+	 */
+	public function get_payment_field( $feed ) {
+		$key = rgars( $feed, 'meta/transactionType' ) === 'subscription' ? 'recurringAmount' : 'paymentAmount';
+
+		return rgars( $feed, 'meta/' . $key, 'form_total' );
 	}
 
 	/**
@@ -2276,7 +2302,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
 	public function get_column_value_amount( $feed ) {
 		$form     = $this->get_current_form();
-		$field_id = $feed['meta']['transactionType'] == 'subscription' ? rgars( $feed, 'meta/recurringAmount' ) : rgars( $feed, 'meta/paymentAmount' );
+		$field_id = $this->get_payment_field( $feed );
 		if ( $field_id == 'form_total' ) {
 			$label = esc_html__( 'Form Total', 'gravityforms' );
 		} else {

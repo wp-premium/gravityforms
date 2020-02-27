@@ -1187,14 +1187,8 @@ class GFCommon {
 			$text = str_replace( '{ip}', $url_encode ? urlencode( $ip ) : $ip, $text );
 
 			//user agent
-			$user_agent = RGForms::get( 'HTTP_USER_AGENT', $_SERVER );
-			if ( $esc_html ) {
-				$user_agent = esc_html( $user_agent );
-			}
-			if ( $url_encode ) {
-				$user_agent = urlencode( $user_agent );
-			}
-			$text = str_replace( '{user_agent}', $user_agent, $text );
+			$user_agent = isset( $entry['user_agent'] ) ? $entry['user_agent'] : sanitize_text_field( rgar( $_SERVER, 'HTTP_USER_AGENT' ) );
+			$text       = str_replace( '{user_agent}', self::format_variable_value( $user_agent, $url_encode, $esc_html, $format, $nl2br ), $text );
 
 			//referrer
 			$referer = RGForms::get( 'HTTP_REFERER', $_SERVER );
@@ -3923,6 +3917,62 @@ Content-Type: text/html;
 		return do_shortcode( $content );
 	}
 
+	/**
+	 * Determines if the supplied entry is spam.
+	 *
+	 * @since 2.4.17
+	 *
+	 * @param array $entry The entry currently being processed.
+	 * @param array $form  The form currently being processed.
+	 *
+	 * @return bool
+	 */
+	public static function is_spam_entry( $entry, $form ) {
+		$form_id   = absint( $form['id'] );
+		$use_cache = class_exists( 'GFFormDisplay' );
+
+		if ( $use_cache ) {
+			$is_spam = rgars( GFFormDisplay::$submission, $form_id . '/is_spam' );
+
+			if ( is_bool( $is_spam ) ) {
+				return $is_spam;
+			}
+		}
+
+		$is_spam = false;
+
+		if ( self::akismet_enabled( $form_id ) ) {
+			$is_spam = self::is_akismet_spam( $form, $entry );
+			self::log_debug( __METHOD__ . '(): Result from Akismet: ' . json_encode( $is_spam ) );
+		}
+
+		if ( has_filter( 'gform_entry_is_spam' ) || has_filter( "gform_entry_is_spam_{$form_id}" ) ) {
+
+			/**
+			 * Allows submissions to be flagged as spam by custom methods.
+			 *
+			 * @since 1.8.17
+			 * @since 2.4.17 Moved from GFFormDisplay::handle_submission().
+			 *
+			 * @param bool  $is_spam Indicates if the submission has been flagged as spam.
+			 * @param array $form    The form currently being processed.
+			 * @param array $entry   The entry currently being processed.
+			 */
+			$is_spam = gf_apply_filters( array( 'gform_entry_is_spam', $form_id ), $is_spam, $form, $entry );
+			self::log_debug( __METHOD__ . '(): Result from gform_entry_is_spam filter: ' . json_encode( $is_spam ) );
+
+		}
+
+		$log_is_spam = $is_spam ? 'Yes' : 'No';
+		self::log_debug( __METHOD__ . "(): Is submission considered spam? {$log_is_spam}." );
+
+		if ( $use_cache ) {
+			GFFormDisplay::$submission[ $form_id ]['is_spam'] = $is_spam;
+		}
+
+		return $is_spam;
+	}
+
 	public static function spam_enabled( $form_id ) {
 		$spam_enabled = self::akismet_enabled( $form_id ) || has_filter( 'gform_entry_is_spam' ) || has_filter( "gform_entry_is_spam_{$form_id}" );
 
@@ -3930,7 +3980,7 @@ Content-Type: text/html;
 	}
 
 	public static function has_akismet() {
-		$akismet_exists = function_exists( 'akismet_http_post' ) || function_exists( 'Akismet::http_post' );
+		$akismet_exists = function_exists( 'akismet_http_post' ) || method_exists( 'Akismet', 'http_post' );
 
 		return $akismet_exists;
 	}
@@ -4676,6 +4726,7 @@ Content-Type: text/html;
 		$gf_vars['contains']                = esc_html__( 'contains', 'gravityforms' );
 		$gf_vars['startsWith']              = esc_html__( 'starts with', 'gravityforms' );
 		$gf_vars['endsWith']                = esc_html__( 'ends with', 'gravityforms' );
+		$gf_vars['emptyChoice']             = wp_strip_all_tags( __( 'Empty (no choices selected)', 'gravityforms' ) );
 
 		$gf_vars['thisConfirmation']                 = esc_html__( 'Use this confirmation if', 'gravityforms' );
 		$gf_vars['thisNotification']                 = esc_html__( 'Send this notification if', 'gravityforms' );

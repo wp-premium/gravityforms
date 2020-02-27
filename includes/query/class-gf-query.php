@@ -319,6 +319,7 @@ class GF_Query {
 						$operator = GF_Query_Condition::LIKE;
 						break;
 					case 'NOT IN':
+					case 'NOTIN':
 						$operator = GF_Query_Condition::NIN;
 						break;
 					case 'IN':
@@ -355,20 +356,29 @@ class GF_Query {
 				}
 
 				if ( $key == 'date_created' && $operator == GF_Query_Condition::EQ ) {
-					$search_date           = new DateTime( $value );
-					$search_date_str       = $search_date->format( 'Y-m-d' );
-					$date_created_start    = $search_date_str . ' 00:00:00';
-					$date_create_start_utc = get_gmt_from_date( $date_created_start );
-					$date_created_end      = $search_date_str . ' 23:59:59';
-					$date_created_end_utc  = get_gmt_from_date( $date_created_end );
+					if ( ! empty( $value ) ) {
+						try {
+							$search_date           = new DateTime( $value );
+							$search_date_str       = $search_date->format( 'Y-m-d' );
+							$date_created_start    = $search_date_str . ' 00:00:00';
+							$date_create_start_utc = get_gmt_from_date( $date_created_start );
+							$date_created_end      = $search_date_str . ' 23:59:59';
+							$date_created_end_utc  = get_gmt_from_date( $date_created_end );
 
-					$column = count( $from ) > 1 ? new GF_Query_Column( $key ) : new GF_Query_Column( $key, $form_id );
+							$column = count( $from ) > 1 ? new GF_Query_Column( $key ) : new GF_Query_Column( $key, $form_id );
 
-					$filters[] = new GF_Query_Condition(
-						$column,
-						GF_Query_Condition::BETWEEN,
-						new GF_Query_Series( array( new GF_Query_Literal( $date_create_start_utc ), new GF_Query_Literal( $date_created_end_utc ) ) )
-					);
+							$filters[] = new GF_Query_Condition(
+								$column,
+								GF_Query_Condition::BETWEEN,
+								new GF_Query_Series( array(
+									new GF_Query_Literal( $date_create_start_utc ),
+									new GF_Query_Literal( $date_created_end_utc ),
+								) )
+							);
+						} catch ( Exception $e ) {
+							GFAPI::log_error( __METHOD__ . '(): Invalid date_created; ' . $e->getMessage() );
+						}
+					}
 
 					continue;
 				}
@@ -443,6 +453,7 @@ class GF_Query {
 				$operator = GF_Query_Condition::LIKE;
 				break;
 			case 'NOT IN':
+			case 'NOTIN':
 				$operator = GF_Query_Condition::NIN;
 				break;
 			case 'IN':

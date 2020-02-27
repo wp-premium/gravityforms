@@ -32,14 +32,31 @@ function gform_default_entry_content( $form, $entry, $entry_ids ) {
 
 	$page_break = rgget( 'page_break' ) ? 'print-page-break' : false;
 
-	// Separate each entry inside a form element so radio buttons don't get treated as a single group across multiple entries.
+	/**
+	 * @todo Review use of the form tag. The entry detail markup does not use inputs so they may no longer be needed.
+	 *
+	 * Previous comment: Separate each entry inside a form element so radio buttons don't get treated as a single group across multiple entries.
+	 */
 	echo '<form>';
 
 	GFEntryDetail::lead_detail_grid( $form, $entry );
 
 	echo '</form>';
 
-	if ( rgget( 'notes' ) ) {
+	$print_entry_notes = rgget( 'notes' ) === '1';
+
+	/**
+	 * Allows printing of entry notes to be overridden.
+	 *
+	 * @since 2.4.17
+	 *
+	 * @param bool  $print_entry_notes Indicates if printing of notes was enabled via the entry list or detail pages.
+	 * @param array $entry             The entry currently being printed.
+	 * @param array $form              The form which created the current entry.
+	 */
+	$print_entry_notes = apply_filters( 'gform_print_entry_notes', $print_entry_notes, $entry, $form );
+
+	if ( $print_entry_notes ) {
 		$notes = GFFormsModel::get_lead_notes( $entry['id'] );
 		if ( ! empty( $notes ) ) {
 			GFEntryDetail::notes_grid( $notes, false );

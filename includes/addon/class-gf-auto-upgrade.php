@@ -121,6 +121,10 @@ class GFAutoUpgrade {
 
 	public function check_update( $option ) {
 
+		if ( empty( $option ) ) {
+			return $option;
+		}
+
 		$key = $this->get_key();
 
 		$version_info = $this->get_version_info( $this->_slug );

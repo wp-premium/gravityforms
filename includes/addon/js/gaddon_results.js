@@ -159,7 +159,7 @@ var gresults = {
     },
 
     clearFilterForm: function () {
-        jQuery("#gresults-results-field-filters-container").gfFilterUI(gresultsFilterSettings, [], true);
+        jQuery("#gresults-results-field-filters-container").off('click', '.gform-add').gfFilterUI(gresultsFilterSettings, [], true);
         jQuery('#gresults-results-filter-form').find('input, select').each(function () {
             switch (this.type) {
                 case 'text':

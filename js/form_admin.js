@@ -336,8 +336,17 @@ function GetRuleValues(objectType, ruleIndex, selectedFieldId, selectedValue, in
         }
     }
     else if(field && field.choices && jQuery.inArray(operator, ["is", "isnot"]) > -1){
-        var ruleChoices = field.placeholder ? [{
-            text: field.placeholder,
+        var emptyChoice,
+            ruleChoices;
+
+        if (GetInputType(field) === 'multiselect') {
+            emptyChoice = gf_vars.emptyChoice;
+        } else if (field.placeholder) {
+            emptyChoice = field.placeholder;
+        }
+
+        ruleChoices = emptyChoice ? [{
+            text: emptyChoice,
             value: ''
         }].concat(field.choices) : field.choices;
         str = GetRuleValuesDropDown(ruleChoices, objectType, ruleIndex, selectedValue, inputName);

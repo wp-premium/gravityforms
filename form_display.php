@@ -683,39 +683,48 @@ class GFFormDisplay {
 		return $is_last_page;
 	}
 
+	/**
+	 * Returns the entry limit date range for the given period.
+	 *
+	 * @since unknown
+	 * @since 2.4.15 Updated the day period to use the local time.
+	 *
+	 * @param string $period The eriod for the entry limit.
+	 *
+	 * @return array
+	 */
 	private static function get_limit_period_dates( $period ) {
 		if ( empty( $period ) ) {
 			return array( 'start_date' => null, 'end_date' => null );
 		}
 
 		switch ( $period ) {
-			case 'day' :
+			case 'day':
 				return array(
-					'start_date' => gmdate( 'Y-m-d' ),
-					'end_date'   => gmdate( 'Y-m-d 23:59:59' )
+					'start_date' => current_time( 'Y-m-d' ),
+					'end_date'   => current_time( 'Y-m-d 23:59:59' ),
 				);
 				break;
 
-			case 'week' :
+			case 'week':
 				return array(
 					'start_date' => gmdate( 'Y-m-d', strtotime( 'Monday this week' ) ),
-					'end_date'   => gmdate( 'Y-m-d 23:59:59', strtotime( 'next Sunday' ) )
+					'end_date'   => gmdate( 'Y-m-d 23:59:59', strtotime( 'next Sunday' ) ),
 				);
 				break;
 
-			case 'month' :
-				$month_start = gmdate( 'Y-m-1' );
-
+			case 'month':
+				$month_start = gmdate( 'Y-m-1');
 				return array(
 					'start_date' => $month_start,
-					'end_date'   => gmdate( 'Y-m-d H:i:s', strtotime( "{$month_start} +1 month -1 second" ) )
+					'end_date'   => gmdate( 'Y-m-d H:i:s', strtotime( "{$month_start} +1 month -1 second" ) ),
 				);
 				break;
 
-			case 'year' :
+			case 'year':
 				return array(
 					'start_date' => gmdate( 'Y-1-1' ),
-					'end_date'   => gmdate( 'Y-12-31 23:59:59' )
+					'end_date'   => gmdate( 'Y-12-31 23:59:59' ),
 				);
 				break;
 		}
@@ -1468,28 +1477,11 @@ class GFFormDisplay {
 
 		$lead = GFFormsModel::set_entry_meta( $lead, $form );
 
-		//if Akismet plugin is installed, run lead through Akismet and mark it as Spam when appropriate
-		$is_spam = GFCommon::akismet_enabled( $form['id'] ) && GFCommon::is_akismet_spam( $form, $lead );
-
-		/**
-		 * A filter to set if an entry is spam
-		 *
-		 * @param int $form['id'] The Form ID to filter through (take directly from the form object)
-		 * @param bool $is_spam True or false to filter if the entry is spam
-		 * @param array $form The Form object to filer through
-		 * @param array $lead The Lead object to filter through
-		 */
-		$is_spam = gf_apply_filters( array( 'gform_entry_is_spam', $form['id'] ), $is_spam, $form, $lead );
-
-		if ( GFCommon::spam_enabled( $form['id'] ) ) {
-			GFCommon::log_debug( 'GFFormDisplay::handle_submission(): Akismet integration enabled OR gform_entry_is_spam hook in use.' );
-			$log_is_spam = $is_spam ? 'Yes' : 'No';
-			GFCommon::log_debug( "GFFormDisplay::handle_submission(): Is entry considered spam? {$log_is_spam}." );
-		}
+		$is_spam = GFCommon::is_spam_entry( $lead, $form );
 
 		if ( $is_spam ) {
 
-			//marking entry as spam
+			// Marking entry as spam.
 			GFFormsModel::update_entry_property( $lead['id'], 'status', 'spam', false, true );
 			$lead['status'] = 'spam';
 
@@ -2771,7 +2763,7 @@ class GFFormDisplay {
 
 		if ( is_array( $form['fields'] ) ) {
 			foreach ( $form['fields'] as $field ) {
-				if ( $field->type == 'checkbox' && ( ! $select_all_enabled || ( $select_all_enabled && $field->enableSelectAll ) ) ) {
+				if ( $field->get_input_type() == 'checkbox' && ( ! $select_all_enabled || ( $select_all_enabled && $field->enableSelectAll ) ) ) {
 					return true;
 				}
 			}
