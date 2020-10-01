@@ -166,6 +166,8 @@ class GFLogging extends GFAddOn {
 	 * Register needed hooks and included needed libraries.
 	 *
 	 * @since  2.2
+	 * @since  2.4.18 Removed caps integrations to prevent them being added to the Add-Ons group.
+	 *
 	 * @access public
 	 */
 	public function init() {
@@ -173,6 +175,11 @@ class GFLogging extends GFAddOn {
 		parent::init();
 
 		$this->include_logger();
+
+		remove_action( 'members_register_cap_groups', array( $this, 'members_register_cap_group' ), 11 );
+		remove_action( 'members_register_caps', array( $this, 'members_register_caps' ), 11 );
+		remove_filter( 'ure_capabilities_groups_tree', array( $this, 'filter_ure_capabilities_groups_tree' ), 11 );
+		remove_filter( 'ure_custom_capability_groups', array( $this, 'filter_ure_custom_capability_groups' ), 10 );
 
 	}
 
@@ -994,30 +1001,6 @@ class GFLogging extends GFAddOn {
 	 */
 	public function load_text_domain() {
 		GFCommon::load_gf_text_domain();
-	}
-
-	/**
-	 * Register Gravity Forms capabilities with Gravity Forms group in User Role Editor plugin.
-	 *
-	 * @since  2.4
-	 *
-	 * @param array  $groups Current capability groups.
-	 * @param string $cap_id Capability identifier.
-	 *
-	 * @return array
-	 */
-	public function filter_ure_custom_capability_groups( $groups = array(), $cap_id = '' ) {
-
-		// Get Add-On capabilities.
-		$caps = $this->_capabilities;
-
-		// If capability belongs to Add-On, register it to group.
-		if ( in_array( $cap_id, $caps, true ) ) {
-			$groups[] = 'gravityforms';
-		}
-
-		return $groups;
-
 	}
 
 }

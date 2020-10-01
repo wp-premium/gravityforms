@@ -1421,12 +1421,10 @@ class GFEntryDetail {
 					<?php
 					switch ( $entry['status'] ) {
 						case 'spam' :
-							if ( GFCommon::spam_enabled( $form['id'] ) ) {
-								?>
-								<a onclick="jQuery('#action').val('unspam'); jQuery('#entry_form').submit()" href="#"><?php esc_html_e( 'Not Spam', 'gravityforms' ) ?></a>
-								<?php
-								echo GFCommon::current_user_can_any( 'gravityforms_delete_entries' ) ? '|' : '';
-							}
+							?>
+							<a onclick="jQuery('#action').val('unspam'); jQuery('#entry_form').submit()" href="#"><?php esc_html_e( 'Not Spam', 'gravityforms' ) ?></a>
+							<?php
+							echo GFCommon::current_user_can_any( 'gravityforms_delete_entries' ) ? '|' : '';
 							if ( GFCommon::current_user_can_any( 'gravityforms_delete_entries' ) ) {
 								?>
 								<a class="submitdelete deletion" onclick="if ( confirm('<?php echo esc_js( __( "You are about to delete this entry. 'Cancel' to stop, 'OK' to delete.", 'gravityforms' ) ); ?>') ) {jQuery('#action').val('delete'); jQuery('#entry_form').submit(); return true;} return false;" href="#"><?php esc_html_e( 'Delete Permanently', 'gravityforms' ) ?></a>

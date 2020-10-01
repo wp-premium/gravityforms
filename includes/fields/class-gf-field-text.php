@@ -79,6 +79,7 @@ class GF_Field_Text extends GF_Field {
 		$size         = $this->size;
 		$class_suffix = $is_entry_detail ? '_admin' : '';
 		$class        = $size . $class_suffix;
+		$class        = esc_attr( $class );
 
 		$max_length = is_numeric( $this->maxLength ) ? "maxlength='{$this->maxLength}'" : '';
 

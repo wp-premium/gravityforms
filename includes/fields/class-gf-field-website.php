@@ -63,6 +63,7 @@ class GF_Field_Website extends GF_Field {
 		$disabled_text   = $is_form_editor ? "disabled='disabled'" : '';
 		$class_suffix    = $is_entry_detail ? '_admin' : '';
 		$class           = $size . $class_suffix;
+		$class           = esc_attr( $class );
 		$is_html5        = RGFormsModel::is_html5_enabled();
 		$html_input_type = $is_html5 ? 'url' : 'text';
 

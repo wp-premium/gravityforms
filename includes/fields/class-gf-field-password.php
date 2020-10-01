@@ -56,7 +56,7 @@ class GF_Field_Password extends GF_Field {
 			}
 
 			$levels = array( 'short' => 1, 'bad' => 2, 'good' => 3, 'strong' => 4 );
-			if ( $levels[ $strength ] < $levels[ $this->minPasswordStrength ] ) {
+			if ( rgar( $levels, $strength, 0 ) < $levels[ $this->minPasswordStrength ] ) {
 				$this->failed_validation  = true;
 				$this->validation_message = empty( $this->errorMessage ) ? sprintf( esc_html__( 'Your password does not meet the required strength. %sHint: To make it stronger, use upper and lower case letters, numbers and symbols like ! " ? $ %% ^ & ).', 'gravityforms' ), '<br />' ) : $this->errorMessage;
 			}
@@ -134,6 +134,7 @@ class GF_Field_Password extends GF_Field {
 		$size         = $this->size;
 		$class_suffix = $is_entry_detail ? '_admin' : '';
 		$class        = $this->is_confirm_input_enabled() ? '' : $size . $class_suffix; // Size only applies when confirmation is disabled.
+		$class        = esc_attr( $class );
 
 		$form_sub_label_placement  = rgar( $form, 'subLabelPlacement' );
 		$field_sub_label_placement = $this->subLabelPlacement;

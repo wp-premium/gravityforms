@@ -62,9 +62,24 @@ class GFCommon {
 		}
 	}
 
+	/**
+	 * Removes the currency symbol from the supplied value.
+	 *
+	 * @since unknown
+	 * @since 2.4.18 Updated to support the currency code being passed for the $currency param.
+	 *
+	 * @param string            $value    The value to be cleaned.
+	 * @param null|array|string $currency Null to use the default currency, an array of currency properties, or the currency code.
+	 *
+	 * @return string
+	 */
 	public static function remove_currency_symbol( $value, $currency = null ) {
-		if ( $currency == null ) {
-			$code = GFCommon::get_currency();
+		if ( empty( $value ) ) {
+			return $value;
+		}
+
+		if ( ! is_array( $currency ) ) {
+			$code = empty( $currency ) ? GFCommon::get_currency() : $currency;
 			if ( empty( $code ) ) {
 				$code = 'USD';
 			}
@@ -72,10 +87,15 @@ class GFCommon {
 			$currency = RGCurrency::get_currency( $code );
 		}
 
-		$value = str_replace( $currency['symbol_left'], '', $value );
-		$value = str_replace( $currency['symbol_right'], '', $value );
+		if ( ! empty( $currency['symbol_left'] ) ) {
+			$value = str_replace( $currency['symbol_left'], '', $value );
+		}
 
-		//some symbols can't be easily matched up, so this will catch any of them
+		if ( ! empty( $currency['symbol_right'] ) ) {
+			$value = str_replace( $currency['symbol_right'], '', $value );
+		}
+
+		// Some symbols can't be easily matched up, so this will catch any of them.
 		$value = preg_replace( '/[^,.\d]/', '', $value );
 
 		return $value;
@@ -468,11 +488,11 @@ class GFCommon {
 
 				if ( $group_label ) {
 					?>
-					<optgroup label="<?php echo $group_label; ?>">
+					<optgroup label="<?php esc_attr_e( $group_label ); ?>">
 				<?php } ?>
 
 				<?php foreach ( $tags as $tag ) { ?>
-					<option value="<?php echo $tag['tag']; ?>"><?php echo $tag['label']; ?></option>
+					<option value="<?php esc_attr_e( $tag['tag'] ); ?>"><?php esc_html_e( $tag['label'] ); ?></option>
 					<?php
 				}
 				if ( $group_label ) {
@@ -1679,6 +1699,19 @@ class GFCommon {
 		return compact( 'to', 'from', 'bcc', 'reply_to', 'subject', 'message', 'from_name', 'message_format', 'attachments', 'disableAutoformat' );
 	}
 
+	/**
+	 * Prepare admin notification.
+	 *
+	 * @deprecated
+	 *
+	 * @since unknown
+	 *
+	 * @param array      $form             The form object.
+	 * @param array      $lead             The lead object.
+	 * @param bool|array $override_options Defaults to false, or can be an array to override options.
+	 *
+	 * @return array
+	 */
 	private static function prepare_admin_notification( $form, $lead, $override_options = false ) {
 		$form_id = $form['id'];
 
@@ -2560,6 +2593,7 @@ Content-Type: text/html;
 	/**
 	 * Returns all the plugin capabilities.
 	 *
+	 * @since 2.4.18 Added gravityforms_logging and gravityforms_api_settings.
 	 * @since 2.2.1.12 Added gravityforms_system_status.
 	 * @since unknown
 	 *
@@ -2583,6 +2617,8 @@ Content-Type: text/html;
 			'gravityforms_view_addons',
 			'gravityforms_preview_forms',
 			'gravityforms_system_status',
+			'gravityforms_logging',
+			'gravityforms_api_settings',
 		);
 	}
 
@@ -2809,17 +2845,22 @@ Content-Type: text/html;
 		}
 
 		$version = rgar( $version_info, 'version' );
-		//Empty response means that the key is invalid. Do not queue for upgrade
+
+		$url    = rgar( $version_info, 'url' );
+		$plugin = array(
+			'url'         => 'https://gravityforms.com',
+			'slug'        => 'gravityforms',
+			'plugin'      => $plugin_path,
+			'package'     => str_replace( '{KEY}', GFCommon::get_key(), $url ),
+			'new_version' => $version,
+			'id'          => '0',
+		);
+		// Empty response means that the key is invalid. Do not queue for upgrade.
 		if ( ! rgar( $version_info, 'is_valid_key' ) || version_compare( GFCommon::$version, $version, '>=' ) ) {
 			unset( $option->response[ $plugin_path ] );
+			$option->no_update[ $plugin_path ] = (object) $plugin;
 		} else {
-			$url                                           = rgar( $version_info, 'url' );
-			$option->response[ $plugin_path ]->url         = 'http://www.gravityforms.com';
-			$option->response[ $plugin_path ]->slug        = 'gravityforms';
-			$option->response[ $plugin_path ]->plugin      = $plugin_path;
-			$option->response[ $plugin_path ]->package     = str_replace( '{KEY}', GFCommon::get_key(), $url );
-			$option->response[ $plugin_path ]->new_version = $version;
-			$option->response[ $plugin_path ]->id          = '0';
+			$option->response[ $plugin_path ] = (object) $plugin;
 		}
 
 		return $option;
@@ -2854,19 +2895,24 @@ Content-Type: text/html;
 		update_option( 'rg_gforms_message', $message );
 	}
 
+	/**
+	 * Post request to Gravity Manager.
+	 *
+	 * @since unknown
+	 * @since 2.5     Remove Gravity Manager Proxy.
+	 *
+	 * @param string $file    The file.
+	 * @param string $query   The query string.
+	 * @param array  $options The options.
+	 *
+	 * @return array|WP_Error
+	 */
 	public static function post_to_manager( $file, $query, $options ) {
 
 		$request_url = GRAVITY_MANAGER_URL . '/' . $file . '?' . $query;
 		self::log_debug( __METHOD__ . '(): endpoint: ' . $request_url );
 		$raw_response = wp_remote_post( $request_url, $options );
 		self::log_remote_response( $raw_response );
-
-		if ( is_wp_error( $raw_response ) || 200 != $raw_response['response']['code'] ) {
-			self::log_error( __METHOD__ . '(): Error from manager. Sending to proxy...' );
-			$request_url  = GRAVITY_MANAGER_PROXY_URL . '/proxy.php?f=' . $file . '&' . $query;
-			$raw_response = wp_remote_post( $request_url, $options );
-			self::log_remote_response( $raw_response );
-		}
 
 		return $raw_response;
 	}
@@ -3889,7 +3935,17 @@ Content-Type: text/html;
 		return array( 'name' => $name, 'price' => $price );
 	}
 
+	/**
+	 * Prints or enqueues form scripts and processes shortcodes found in the supplied content.
+	 *
+	 * @since unknown
+	 *
+	 * @param string $content The content to be processed.
+	 *
+	 * @return string
+	 */
 	public static function gform_do_shortcode( $content ) {
+		require_once self::get_base_path() . '/form_display.php';
 
 		$is_ajax = false;
 		$forms   = GFFormDisplay::get_embedded_forms( $content, $is_ajax );
@@ -3992,10 +4048,18 @@ Content-Type: text/html;
 		}
 
 		// if no option is set, leave akismet enabled; otherwise, use option value true/false
-		$enabled_by_setting = get_option( 'rg_gforms_enable_akismet' ) === false ? true : get_option( 'rg_gforms_enable_akismet' ) == true;
-		$enabled_by_filter  = gf_apply_filters( array( 'gform_akismet_enabled', $form_id ), $enabled_by_setting );
+		$enabled = get_option( 'rg_gforms_enable_akismet' ) === false ? true : get_option( 'rg_gforms_enable_akismet' ) == true;
 
-		return $enabled_by_filter;
+		/**
+		 * Allows the Akismet integration to be enabled or disabled.
+		 *
+		 * @since 1.6.3
+		 * @since 2.4.19 Added the $form_id param.
+		 *
+		 * @param bool $enabled Indicates if the Akismet integration is enabled.
+		 * @param int  $form_id The ID of the form being processed.
+		 */
+		return gf_apply_filters( array( 'gform_akismet_enabled', $form_id ), $enabled, $form_id );
 
 	}
 
@@ -4021,8 +4085,8 @@ Content-Type: text/html;
 
 		global $akismet_api_host, $akismet_api_port;
 
-		$fields = self::get_akismet_fields( $form, $lead );
 		$as     = $is_spam ? 'spam' : 'ham';
+		$fields = self::get_akismet_fields( $form, $lead, $as );
 
 		// Submitting info to Akismet
 		if ( defined( 'AKISMET_VERSION' ) && AKISMET_VERSION < 3.0 ) {
@@ -4033,30 +4097,53 @@ Content-Type: text/html;
 		}
 	}
 
-	private static function get_akismet_fields( $form, $lead ) {
+	/**
+	 * Prepares a query string containing the data to be sent to Akismet.
+	 *
+	 * @since unknown
+	 * @since 2.4.19 Added the $action param.
+	 *
+	 * @param array  $form   The form which created the entry.
+	 * @param array  $entry  The entry being processed.
+	 * @param string $action The action triggering the Akismet request: submit, spam, or ham.
+	 *
+	 * @return string
+	 */
+	private static function get_akismet_fields( $form, $entry, $action = 'submit' ) {
 
 		$is_form_editor  = GFCommon::is_form_editor();
 		$is_entry_detail = GFCommon::is_entry_detail();
 		$is_admin        = $is_form_editor || $is_entry_detail;
 
 		// Gathering Akismet information
-		$akismet_info                         = array();
-		$akismet_info['comment_type']         = 'gravity_form';
-		$akismet_info['comment_author']       = self::get_akismet_field( 'name', $form, $lead );
-		$akismet_info['comment_author_email'] = self::get_akismet_field( 'email', $form, $lead );
-		$akismet_info['comment_author_url']   = self::get_akismet_field( 'website', $form, $lead );
-		$akismet_info['comment_content']      = self::get_akismet_field( 'textarea', $form, $lead );
-		$akismet_info['contact_form_subject'] = $form['title'];
-		$akismet_info['comment_author_IP']    = $lead['ip'];
-		$akismet_info['permalink']            = $lead['source_url'];
-		$akismet_info['user_ip']              = preg_replace( '/[^0-9., ]/', '', $lead['ip'] );
-		$akismet_info['user_agent']           = $lead['user_agent'];
-		$akismet_info['referrer']             = $is_admin ? '' : $_SERVER['HTTP_REFERER'];
-		$akismet_info['blog']                 = get_option( 'home' );
+		$akismet_fields                         = array();
+		$akismet_fields['comment_type']         = 'gravity_form';
+		$akismet_fields['comment_author']       = self::get_akismet_field( 'name', $form, $entry );
+		$akismet_fields['comment_author_email'] = self::get_akismet_field( 'email', $form, $entry );
+		$akismet_fields['comment_author_url']   = self::get_akismet_field( 'website', $form, $entry );
+		$akismet_fields['comment_content']      = self::get_akismet_field( 'textarea', $form, $entry );
+		$akismet_fields['contact_form_subject'] = $form['title'];
+		$akismet_fields['comment_author_IP']    = rgar( $entry, 'ip' );
+		$akismet_fields['permalink']            = rgar( $entry, 'source_url' );
+		$akismet_fields['user_ip']              = preg_replace( '/[^0-9., ]/', '', rgar( $entry, 'ip' ) );
+		$akismet_fields['user_agent']           = rgar( $entry, 'user_agent' );
+		$akismet_fields['referrer']             = $is_admin ? '' : rgar( $_SERVER, 'HTTP_REFERER' );
+		$akismet_fields['blog']                 = get_option( 'home' );
 
-		$akismet_info = gf_apply_filters( array( 'gform_akismet_fields', $form['id'] ), $akismet_info, $form, $lead );
+		/**
+		 * Allows the data to be sent to Akismet to be overridden.
+		 *
+		 * @since unknown
+		 * @since 2.4.19 Added the $action param.
+		 *
+		 * @param array  $akismet_fields The data to be sent to Akismet.
+		 * @param array  $form           The form which created the entry.
+		 * @param array  $entry          The entry being processed.
+		 * @param string $action         The action triggering the Akismet request: submit, spam, or ham.
+		 */
+		$akismet_fields = gf_apply_filters( array( 'gform_akismet_fields', $form['id'] ), $akismet_fields, $form, $entry, $action );
 
-		return http_build_query( $akismet_info );
+		return http_build_query( $akismet_fields );
 	}
 
 	private static function get_akismet_field( $field_type, $form, $lead ) {
@@ -4595,7 +4682,7 @@ Content-Type: text/html;
 					'merge_tag' => '',
 					'condition' => '',
 					'value'     => '',
-				), $attributes
+				), $attributes, 'gravityforms_conditional'
 			)
 		);
 
@@ -4774,6 +4861,24 @@ Content-Type: text/html;
 			$gf_vars['addressTypes']       = $address_field->get_address_types( $form['id'] );
 			$gf_vars['defaultAddressType'] = $address_field->get_default_address_type( $form['id'] );
 
+		}
+
+		$prefixes = array_unique( array_filter( array(
+			__( 'Mr.', 'gravityforms' ),
+			__( 'Mrs.', 'gravityforms' ),
+			__( 'Miss', 'gravityforms' ),
+			__( 'Ms.', 'gravityforms' ),
+			__( 'Dr.', 'gravityforms' ),
+			__( 'Prof.', 'gravityforms' ),
+			__( 'Rev.', 'gravityforms' ),
+		) ) );
+		sort( $prefixes );
+
+		$gf_vars['nameFieldDefaultPrefixes'] = array();
+		foreach ( $prefixes as $prefix ) {
+			$prefix = wp_strip_all_tags( $prefix );
+
+			$gf_vars['nameFieldDefaultPrefixes'][] = array( 'text' => $prefix, 'value' => $prefix );
 		}
 
 		$gf_vars_json = 'var gf_vars = ' . json_encode( $gf_vars ) . ';';
@@ -5840,8 +5945,13 @@ Content-Type: text/html;
 			$value = esc_attr( $value );
 		}
 
-		if ( $modifier == 'label' ) {
-			$value = empty( $value ) ? '' : $field->label;
+		if ( in_array( 'label', $modifiers ) ) {
+			if ( empty( $value ) ) {
+				$value = '';
+			} else {
+				$field->set_context_property( 'use_admin_label', in_array( 'admin', $modifiers ) );
+				$value = $format == 'text' ? sanitize_text_field( self::get_label( $field ) ) : esc_html( self::get_label( $field ) );
+			}
 		} else if ( $modifier == 'numeric' ) {
 			$number_format = $field->numberFormat ? $field->numberFormat : 'decimal_dot';
 			$value         = self::clean_number( $value, $number_format );

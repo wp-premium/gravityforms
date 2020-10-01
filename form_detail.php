@@ -742,7 +742,7 @@ class GFFormDetail {
 			</label>
 			<select id="post_custom_field_type" onchange="if(jQuery(this).val() == '') return; jQuery('#field_settings').slideUp(function(){StartChangePostCustomFieldType(jQuery('#post_custom_field_type').val());});">
 				<optgroup class="option_header" label="<?php esc_attr_e( 'Standard Fields', 'gravityforms' ); ?>">
-					<option value="text"><?php esc_html_e( 'Single line text', 'gravityforms' ); ?></option>
+					<option value="text"><?php esc_html_e( 'Single Line Text', 'gravityforms' ); ?></option>
 					<option value="textarea"><?php esc_html_e( 'Paragraph Text', 'gravityforms' ); ?></option>
 					<option value="select"><?php esc_html_e( 'Drop Down', 'gravityforms' ); ?></option>
 					<option value="multiselect"><?php esc_html_e( 'Multi Select', 'gravityforms' ); ?></option>
@@ -771,7 +771,7 @@ class GFFormDetail {
 				<?php gform_tooltip( 'form_field_type' ) ?>
 			</label>
 			<select id="post_tag_type" onchange="if(jQuery(this).val() == '') return; jQuery('#field_settings').slideUp(function(){StartChangeInputType(jQuery('#post_tag_type').val());});">
-				<option value="text"><?php esc_html_e( 'Single line text', 'gravityforms' ); ?></option>
+				<option value="text"><?php esc_html_e( 'Single Line Text', 'gravityforms' ); ?></option>
 				<option value="select"><?php esc_html_e( 'Drop Down', 'gravityforms' ); ?></option>
 				<option value="multiselect"><?php esc_html_e( 'Multi Select', 'gravityforms' ); ?></option>
 				<option value="checkbox"><?php esc_html_e( 'Checkboxes', 'gravityforms' ); ?></option>
@@ -1676,7 +1676,7 @@ class GFFormDetail {
 				<?php esc_html_e( 'Card Icon Style', 'gravityforms' ); ?>
 				<?php gform_tooltip( 'form_field_card_style' ) ?>
 			</label>
-			<select id="credit_card_style" onchange="SetFieldProperty('creditCardStyle', this.value);">
+			<select id="credit_card_style" onchange="SetFieldProperty('creditCardStyle', this.value); jQuery('.gform_card_icon_container').toggleClass('gform_card_icon_style1 gform_card_icon_style2');">
 				<option value="style1"><?php esc_html_e( 'Standard', 'gravityforms' ) ?></option>
 				<option value="style2"><?php esc_html_e( '3D', 'gravityforms' ) ?></option>
 			</select>
@@ -2058,6 +2058,8 @@ class GFFormDetail {
 
 				<?php
 				do_action( 'gform_field_appearance_settings', 400, $form_id );
+
+				$size_choices = GF_Fields::get( 'text' )->get_size_choices();
 				?>
 
 				<li class="size_setting field_setting">
@@ -2065,11 +2067,14 @@ class GFFormDetail {
 						<?php esc_html_e( 'Field Size', 'gravityforms' ); ?>
 						<?php gform_tooltip( 'form_field_size' ) ?>
 					</label>
-					<select id="field_size" onchange="SetFieldSize(jQuery(this).val());">
-						<option value="small"><?php esc_html_e( 'Small', 'gravityforms' ); ?></option>
-						<option value="medium"><?php esc_html_e( 'Medium', 'gravityforms' ); ?></option>
-						<option value="large"><?php esc_html_e( 'Large', 'gravityforms' ); ?></option>
-					</select>
+					<select id="field_size" onchange="SetFieldSize(jQuery(this).val());"><?php
+						foreach ( $size_choices as $size_choice ) {
+							if ( empty( $size_choice['value'] ) || empty( $size_choice['text'] ) ) {
+								continue;
+							}
+							printf( '<option value="%s">%s</option>', esc_attr( $size_choice['value'] ), esc_html( $size_choice['text'] ) );
+						}
+					?></select>
 				</li>
 
 	            <?php

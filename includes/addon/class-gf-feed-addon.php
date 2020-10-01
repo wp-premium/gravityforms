@@ -737,7 +737,7 @@ abstract class GFFeedAddOn extends GFAddOn {
 
 			$feed = $this->_single_submission_feed;
 
-		} elseif ( $entry['id'] ) {
+		} elseif ( ! empty( $entry['id'] ) ) {
 
 			$feeds = $this->get_feeds_by_entry( $entry['id'] );
 

@@ -57,10 +57,30 @@ $min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] 
 		if ( ! empty( $styles ) ) {
 			wp_print_styles( $styles );
 		}
+
+		/**
+		 * Fire before the closing <head> tag of the preview page.
+		 *
+		 * @since 2.4.19
+		 *
+		 * @param int $form_id The ID of the form currently being previewed.
+		 */
+		do_action( 'gform_preview_header', $form_id );
+
 	?>
 
 </head>
 <body>
+<?php
+/**
+ * Fire after the opening <body> tag of the preview page.
+ *
+ * @since 2.4.19
+ *
+ * @param int $form_id The ID of the form currently being previewed.
+ */
+do_action( 'gform_preview_body_open', $form_id );
+?>
 <div id="preview_top">
 	<div id="preview_hdr">
 

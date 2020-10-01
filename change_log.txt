@@ -1,3 +1,81 @@
+### 2.4.20 | 2020-08-06
+- Added support for WordPress 5.5.
+- Updated background updates to be compatible with automatic updates in WordPress 5.5.
+- Updated the translated countries list to be sorted alphabetically.
+- Fixed a fatal error which occurs when the PowerPack for Beaver Builder plugin uses `GFCommon::gform_do_shortcode()`.
+- Fixed an issue with the empty form validation ignoring the values of fields with visibility set to hidden.
+- AF: Fixed a JavaScript error with WordPress 5.5 which prevents dynamic and generic mapping type settings rendering correctly.
+- AF: Fixed an issue with WordPress 5.5 that breaks the layout of the results pages.
+- API: Added GF_Field_Address::get_default_countries() which returns the default array of countries using the ISO 3166-1 alpha-2 code as the key to the country name.
+- API: Fixed the value not being padded when true is passed for the fifth argument of the Currency.numberFormat method in gravityforms.js.
+- API: Fixed an issue where GF_Field_Address::get_country_code() would return null for some translated countries.
+
+
+### 2.4.19 | 2020-07-15
+- Added security enhancements.
+- Added [gform_preview_header](https://docs.gravityforms.com/gform_preview_header), [gform_preview_body_open](https://docs.gravityforms.com/gform_preview_body_open) actions to Preview Form page.
+- Added the [gform_field_size_choices](https://docs.gravityforms.com/gform_field_size_choices/) filter allowing the choices for the Field Size setting in the form editor to be customized.
+- Updated recommended minimum PHP version on the System Status page to 7.3, matching the WordPress recommendation.
+- Updated minimum WordPress version on the System Status page to 5.3.
+- Updated the gravityforms.php examples for defining the reCAPTCHA constants: [GF_RECAPTCHA_PRIVATE_KEY](https://docs.gravityforms.com/gf_recaptcha_private_key/) and [GF_RECAPTCHA_PUBLIC_KEY](https://docs.gravityforms.com/gf_recaptcha_public_key/).
+- Updated the [field merge tag](https://docs.gravityforms.com/field-merge-tags/) to support the admin modifier.
+- Updated the [gform_akismet_enabled](https://docs.gravityforms.com/gform_akismet_enabled/) filter to include $form_id as the second parameter.
+- Updated the [gform_akismet_fields](https://docs.gravityforms.com/gform_akismet_fields/) filter to include $action as the fourth parameter.
+- Fixed an issue where the maximum files reached message is not removed from the multi-file upload field when an upload is cancelled or errors.
+- Fixed an issue with Ajax enabled forms where the default Confirmation is displayed instead of the Save and Continue Email Sent Confirmation.
+- Fixed an issue where the default prefixes for new Name fields can include duplicates when translated.
+- Fixed an issue with the saving of the screen options on the Forms and Entries list pages introduced by changes in WordPress 5.4.2.
+- Fixed an issue where the empty form validation error is applied to unsuitable fields such as HTML and Section.
+- Fixed an issue where PHP notice thrown when a payment add-on failed without providing proper error messages.
+- Fixed submissions which fail honeypot validation or are marked as spam using the configured confirmation. The default "Thanks for contacting us! We will get in touch with you shortly." message will be used instead.
+- AF: Fixed a floating point precision issue which can occur for some payment amounts when combined with a 100% coupon resulting in an error from the payment gateway.
+- API: Fixed an issue where leading and trailing spaces are not removed from values included in the temporary entry produced by GFFormsModel::create_lead().
+
+
+### 2.4.18 | 2020-05-06
+- Added security enhancements. Credit: Dominik Schilling.
+- Added a title attribute to the Ajax iframe to pass the W3 validator.
+- Added accessibility enhancements to the progress bar in multi-page forms.
+- Added the [gform_post_enqueue_scripts](https://docs.gravityforms.com/gform_post_enqueue_scripts) action hook.
+- Added *[three new filters](https://docs.gravityforms.com/gform_rich_text_editor_buttons/#filtering-additional-button-rows)* to control the display of buttons in rows two, three, and four of the paragraph field's rich text editor.
+- Added a logging statement to help identify the reason for the system report displaying the "Table has not been upgraded successfully" message.
+- Added support for filtering attributes for the [gravityforms] conditional action.
+- Updated credit card icons so that they are displayed properly on retina screens.
+- Updated one of the Field Type options to "Single Line Text" in Post Tags and Post Custom Field fields.
+- Updated the Members and User Role Editor integrations so the Logging and REST API capabilities are located in the Gravity Forms group instead of the GF Add-Ons group.
+- Fixed an issue introduced in GF 2.4.17.22 where all block types would be available regardless of the types allowed by the WordPress allowed_block_types filter.
+- Fixed an issue where the multi-file upload field on some multi-page forms can display escaped multibyte unicode characters.
+- Fixed an issue where the title and description are displayed by the AJAX submission response when disabled on the Form block.
+- Fixed PHP notices which can occur when uploading a file without an extension.
+- Fixed credit card icons positioning.
+- Fixed a PHP warning which occurs when the [gform_form_args](https://docs.gravityforms.com/gform_form_args/) filter does not return an array.
+- Fixed a PHP fatal error that occurs when the Gravity Forms Gutenberg Add-On (Experimental) is active.
+- Fixed an issue where Gravity Forms block assets are still enqueued when editing a page or post when the block type is disabled.
+- Fixed front-end merge tag replacement for the Email field, with confirmation input enabled, including values from both inputs.
+- Fixed PHP notices which occur when a currency code is passed to GFCommon::remove_currency_symbol().
+- Fixed an issue which prevents scripts and styles being enqueued correctly for forms embedded in reusable blocks.
+- Fixed alignment issues with Form block placeholder elements.
+- Fixed an issue where the spam filter link is not displayed on the Entries page when some third-party plugins mark entries as spam.
+- Fixed the product field mapping setting, in the form editor, not displaying the admin labels when available.
+- Fixed a PHP notice which occurs when using `GF_Field_Consent::get_value_export()` without specifying the input ID.
+- Fixed PHP notices on the Forms > System Status > Updates page when the plugin is installed in a custom directory.
+- Fixed an issue where notification routing initially displays the admin labels in the fields drop down but reverts to the front labels when a new rule is added.
+- Fixed an issue where entry limit and schedule validation errors are not displayed when processing Ajax submissions.
+- Fixed PHP 7.4 notices which occur when rendering a field without a form object e.g. the User Registration login form.
+- Fixed a PHP notice which can occur when validating the strength for the Password field.
+- Fixed PHP notices which occur when using the form title to embed the form and the form is not found.
+- AF: Fixed an issue on the installed plugins page where the add-on settings page link could disappear when the list is filtered.
+- AF: Fixed an issue where the Members integration does not list the Results Page capability for add-ons which register a results page configuration e.g. Polls.
+- AF: Fixed an issue where settings using the jQuery Repeater, such as generic_map, can be broken by custom keys and values containing quotes.
+- AF: Added `GFPaymentAddOn::is_valid_payment_amount()` which is called during validation when determining if the add-on should process the submission.
+- AF: Added the [gform_{$short_slug}_is_valid_payment_amount](https://docs.gravityforms.com/gform_short_slug_is_valid_payment_amount/) filter.
+- AF: Added `GFAddOn::get_short_slug()` to return the add-on slug with the gravityforms prefix removed.
+- API: Added the [gf_has_filters](https://docs.gravityforms.com/gf_has_filters/) function to check if a callback is registered for the specified filter.
+- API: Added the [gf_has_action](https://docs.gravityforms.com/gf_has_action/) function to check if a callback is registered for the specified action.
+- API: Add functions to get, add, update, and delete entry notes.
+- API: Add endpoints for notes to REST API v2.
+
+
 ### 2.4.17 | 2020-02-05
 - Added security enhancements. Credit: Ryan Knell.
 - Added the "Empty (no choices selected)" choice to the conditional logic rule value drop down for Multi Select fields.

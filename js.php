@@ -365,7 +365,7 @@ if ( ! class_exists( 'GFForms' ) ) {
 					selected = "selected='selected'";
 					is_selected = true;
 				}
-				product_field.append("<option value='" + productFields[i]["id"] + "' " + selected + ">" + productFields[i]["label"] + "</option>");
+				product_field.append("<option value='" + productFields[i]["id"] + "' " + selected + ">" + GetLabel(productFields[i]) + "</option>");
 			}
 
 			//Adds existing product field if it is not found in the list (to prevent confusion)
@@ -947,7 +947,7 @@ if ( ! class_exists( 'GFForms' ) ) {
 	}
 
 	function GetDefaultPrefixChoices() {
-		return new Array(new Choice(<?php echo json_encode( esc_html__( 'Mr.', 'gravityforms' ) ); ?>), new Choice(<?php echo json_encode( esc_html__( 'Mrs.', 'gravityforms' ) ); ?>), new Choice(<?php echo json_encode( esc_html__( 'Miss', 'gravityforms' ) ); ?>), new Choice(<?php echo json_encode( esc_html__( 'Ms.', 'gravityforms' ) ); ?>), new Choice(<?php echo json_encode( esc_html__( 'Dr.', 'gravityforms' ) ); ?>), new Choice(<?php echo json_encode( esc_html__( 'Prof.', 'gravityforms' ) ); ?>), new Choice(<?php echo json_encode( esc_html__( 'Rev.', 'gravityforms' ) ); ?>));
+		return gf_vars.nameFieldDefaultPrefixes;
 	}
 
 	function CreateField( id, type, index ) {

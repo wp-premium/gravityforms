@@ -171,6 +171,7 @@ class GF_Field_Number extends GF_Field {
 		$disabled_text = $is_form_editor ? "disabled='disabled'" : '';
 		$class_suffix  = $is_entry_detail ? '_admin' : '';
 		$class         = $size . $class_suffix;
+		$class         = esc_attr( $class );
 
 		$instruction = '';
 		$read_only   = '';

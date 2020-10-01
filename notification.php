@@ -386,7 +386,7 @@ Class GFNotification {
 				// See if this field type can be used for conditionals.
 				if (IsNotificationConditionalLogicField(form.fields[i])) {
 					var selected = form.fields[i].id == selectedFieldId ? "selected='selected'" : "";
-					str += "<option value='" + form.fields[i].id + "' " + selected + ">" + form.fields[i].label + "</option>";
+					str += "<option value='" + form.fields[i].id + "' " + selected + ">" + GetLabel(form.fields[i]) + "</option>";
 				}
 			}
 			return str;

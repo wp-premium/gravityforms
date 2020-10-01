@@ -162,7 +162,7 @@ class GF_Update {
 		$version_info = GFCommon::get_version_info( false );
 
 		// Define Gravity Forms plugin path.
-		$plugin_path = 'gravityforms/gravityforms.php';
+		$plugin_path = plugin_basename( GFCommon::get_base_path() . '/gravityforms.php' );
 
 		// Get upgrade URL.
 		$upgrade_url = wp_nonce_url( 'update.php?action=upgrade-plugin&amp;plugin=' . urlencode( $plugin_path ), 'upgrade-plugin_' . $plugin_path );

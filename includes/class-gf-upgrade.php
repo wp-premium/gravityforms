@@ -509,6 +509,7 @@ class GF_Upgrade {
 		if ( empty( $to_update ) ) {
 			return true;
 		} else {
+			GFCommon::log_debug( __METHOD__ . '(): Failed queries: ' . print_r( $to_update, true ) );
 
 			return false;
 		}

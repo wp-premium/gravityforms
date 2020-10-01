@@ -1496,10 +1496,10 @@ body .gform_wrapper ul.gform_fields li.gfield.gform_validation_container {
 .gform_wrapper div.gform_card_icon {
     margin-right: 4px;
     text-indent: -9000px;
-    background-image: url(../images/gf-creditcard-icons.png);
+    background-image: url(../images/gf-creditcard-icons.svg);
     background-repeat: no-repeat;
     width: 36px;
-    height: 32px;
+    height: 30px;
     float: left;
 }
 
@@ -1574,75 +1574,75 @@ body .gform_wrapper ul.gform_fields li.gfield.gform_validation_container {
 }
 
 .gform_wrapper .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_visa {
-    background-position: 0 -192px;
+    background-position: 0 -189px;
 }
 
 .gform_wrapper .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_selected.gform_card_icon_visa {
-    background-position: 0 -224px;
+    background-position: 0 -221px;
 }
 
 .gform_wrapper .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_inactive.gform_card_icon_visa {
-    background-position: 0 -256px;
+    background-position: 0 -252px;
 }
 
 .gform_wrapper .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_mastercard {
-    background-position: -36px -192px;
+    background-position: -36px -189px;
 }
 
 .gform_wrapper .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_selected.gform_card_icon_mastercard {
-    background-position: -36px -224px;
+    background-position: -36px -221px;
 }
 
 .gform_wrapper .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_inactive.gform_card_icon_mastercard {
-    background-position: -36px -256px;
+    background-position: -36px -252px;
 }
 
 .gform_wrapper .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_amex {
-    background-position: -72px -192px;
+    background-position: -72px -189px;
 }
 
 .gform_wrapper .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_selected.gform_card_icon_amex {
-    background-position: -72px -224px;
+    background-position: -72px -221px;
 }
 
 .gform_wrapper .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_inactive.gform_card_icon_amex {
-    background-position: -72px -256px;
+    background-position: -72px -252px;
 }
 
 .gform_wrapper .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_discover {
-    background-position: -108px -192px;
+    background-position: -108px -189px;
 }
 
 .gform_wrapper .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_selected.gform_card_icon_discover {
-    background-position: -108px -224px;
+    background-position: -108px -221px;
 }
 
 .gform_wrapper .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_inactive.gform_card_icon_discover {
-    background-position: -108px -256px;
+    background-position: -108px -252px;
 }
 
 .gform_wrapper .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_maestro {
-    background-position: -144px -192px;
+    background-position: -144px -189px;
 }
 
 .gform_wrapper .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_selected.gform_card_icon_maestro {
-    background-position: -144px -224px;
+    background-position: -144px -221px;
 }
 
 .gform_wrapper .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_inactive.gform_card_icon_maestro {
-    background-position: -144px -256px;
+    background-position: -144px -252px;
 }
 
 .gform_wrapper .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_jcb {
-    background-position: -180px -192px;
+    background-position: -180px -189px;
 }
 
 .gform_wrapper .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_selected.gform_card_icon_jcb {
-    background-position: -180px -224px;
+    background-position: -180px -221px;
 }
 
 .gform_wrapper .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_inactive.gform_card_icon_jcb {
-    background-position: -180px -256px;
+    background-position: -180px -252px;
 }
 
 .gform_card_icon_container input[type=radio]#gform_payment_method_creditcard {
@@ -1681,7 +1681,7 @@ body .gform_wrapper ul.gform_fields li.gfield.gform_validation_container {
 .gform_wrapper .ginput_complex .ginput_cardinfo_right span.ginput_card_security_code_icon {
     width: 32px;
     height: 23px;
-    background-image: url(../images/gf-creditcard-icons.png);
+    background-image: url(../images/gf-creditcard-icons.svg);
     background-repeat: no-repeat;
     background-position: 0 -128px;
     position: relative;
