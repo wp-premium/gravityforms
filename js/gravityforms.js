@@ -97,7 +97,7 @@ function Currency(currency){
 	 */
     this.numberFormat = function(number, decimals, dec_point, thousands_sep, padded){
 
-    	var padded = typeof padded == 'undefined';
+    	padded = typeof padded == 'undefined' ? true : padded;
         number = (number+'').replace(',', '').replace(' ', '');
         var n = !isFinite(+number) ? 0 : +number,
         prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
@@ -1233,6 +1233,11 @@ var GFMergeTag = function() {
 			return '';
 		}
 
+		// Filtering out the email field confirmation input to prevent the values from both inputs being returned.
+		if ( field.find( '.ginput_container_email' ).hasClass( 'ginput_complex' ) ) {
+			input = input.first();
+		}
+
 		//If value has been filtered, use it. Otherwise use default logic
 		var value = gform.applyFilters( 'gform_value_merge_tag_' + formId + '_' + fieldId, false, input, modifier );
 		if ( value !== false ){
@@ -1946,13 +1951,8 @@ function gformValidateFileSize( field, max_file_size ) {
         uploader.bind('Init', function(up, params) {
             if(!up.features.dragdrop)
                 $(".gform_drop_instructions").hide();
-            var fieldID = up.settings.multipart_params.field_id;
-            var maxFiles = parseInt(up.settings.gf_vars.max_files,10);
-            var initFileCount = countFiles(fieldID);
-            if(maxFiles > 0 && initFileCount >= maxFiles){
-                gfMultiFileUploader.toggleDisabled(up.settings, true);
-            }
 
+            toggleLimitReached(up.settings);
         });
 
         gfMultiFileUploader.toggleDisabled = function (settings, disabled){
@@ -1964,6 +1964,23 @@ function gformValidateFileSize( field, max_file_size ) {
         function addMessage(messagesID, message){
             $("#" + messagesID).prepend("<li>" + htmlEncode(message) + "</li>");
         }
+
+	    function removeMessage(messagesID, message) {
+		    $("#" + messagesID + " li:contains('" + message + "')").remove();
+	    }
+
+	    function toggleLimitReached(settings) {
+		    var limit = parseInt(settings.gf_vars.max_files, 10);
+		    if (limit > 0) {
+			    var totalCount = countFiles(settings.multipart_params.field_id),
+				    limitReached = totalCount >= limit;
+
+			    gfMultiFileUploader.toggleDisabled(settings, limitReached);
+			    if (!limitReached) {
+				    removeMessage(settings.gf_vars.message_id, strings.max_reached);
+			    }
+		    }
+	    }
 
         uploader.init();
 
@@ -2092,6 +2109,7 @@ function gformValidateFileSize( field, max_file_size ) {
             if(response.status == "error"){
                 addMessage(up.settings.gf_vars.message_id, file.name + " - " + response.error.message);
                 $('#' + file.id ).html('');
+                toggleLimitReached(up.settings);
                 return;
             }
 
@@ -2123,6 +2141,10 @@ function gformValidateFileSize( field, max_file_size ) {
 
 
         });
+
+	    uploader.bind('FilesRemoved', function (up, files) {
+		    toggleLimitReached(up.settings);
+	    });
 
 		function getAllFiles(){
 			var selector = '#gform_uploaded_files_' + formID,

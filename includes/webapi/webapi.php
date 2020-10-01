@@ -138,6 +138,12 @@ if ( class_exists( 'GFForms' ) ) {
 			add_action( 'wp_ajax_delete_key', array( $this, 'ajax_delete_key' ) );
 		}
 
+		/**
+		 * Adds admin hooks.
+		 *
+		 * @since unknown
+		 * @since 2.4.18 Removed caps integrations to prevent them being added to the Add-Ons group.
+		 */
 		public function init_admin() {
 			parent::init_admin();
 
@@ -149,6 +155,11 @@ if ( class_exists( 'GFForms' ) ) {
 			add_action( 'gform_after_update_entry', array( $this, 'entry_updated' ), 10, 2 );
 			add_action( 'gform_update_status', array( $this, 'update_entry_status' ), 10, 2 );
 			add_action( 'gform_after_save_form', array( $this, 'after_save_form' ), 10, 2 );
+
+			remove_action( 'members_register_cap_groups', array( $this, 'members_register_cap_group' ), 11 );
+			remove_action( 'members_register_caps', array( $this, 'members_register_caps' ), 11 );
+			remove_filter( 'ure_capabilities_groups_tree', array( $this, 'filter_ure_capabilities_groups_tree' ), 11 );
+			remove_filter( 'ure_custom_capability_groups', array( $this, 'filter_ure_custom_capability_groups' ), 10 );
 		}
 
 		public function init_frontend() {
@@ -927,11 +938,25 @@ if ( class_exists( 'GFForms' ) ) {
 			$this->die_forbidden();
 		}
 
+		/**
+		 * Deletes a REST API key from an AJAX request.
+		 *
+		 * @since Unknown
+		 */
 		public function ajax_delete_key() {
+
+			// Verify nonce.
+			check_ajax_referer( 'gf_revoke_key' );
+
+			// Verify capabilities.
+			if ( ! GFCommon::current_user_can_any( $this->_capabilities_settings_page ) ) {
+				die();
+			}
 
 			$key_id = rgpost( 'key' );
 			$this->delete_api_key( $key_id );
 			die( 0 );
+
 		}
 
 		public static function get_api_keys() {

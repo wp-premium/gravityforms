@@ -81,6 +81,9 @@ class GF_Field_Textarea extends GF_Field {
 			$tabindex = GFCommon::$tab_index > 0 ? GFCommon::$tab_index ++ : '';
 
 			add_filter( 'mce_buttons', array( $this, 'filter_mce_buttons' ), 10, 2 );
+			add_filter( 'mce_buttons_2', array( $this, 'filter_mce_buttons' ), 10, 2 );
+			add_filter( 'mce_buttons_3', array( $this, 'filter_mce_buttons' ), 10, 2 );
+			add_filter( 'mce_buttons_4', array( $this, 'filter_mce_buttons' ), 10, 2 );
 
 			/**
 			 * Filters the field options for the rich text editor.
@@ -124,6 +127,9 @@ class GF_Field_Textarea extends GF_Field {
 			$input = ob_get_clean();
 
 			remove_filter( 'mce_buttons', array( $this, 'filter_mce_buttons' ), 10 );
+			remove_filter( 'mce_buttons_2', array( $this, 'filter_mce_buttons' ), 10 );
+			remove_filter( 'mce_buttons_3', array( $this, 'filter_mce_buttons' ), 10 );
+			remove_filter( 'mce_buttons_4', array( $this, 'filter_mce_buttons' ), 10 );
 		} else {
 
 			$input       = '';
@@ -200,6 +206,31 @@ class GF_Field_Textarea extends GF_Field {
 		if ( $remove_key !== false ) {
 			unset( $mce_buttons[ $remove_key ] );
 		}
+
+		// Get current filter to detect which mce_buttons core filter is running.
+		$current_filter = current_filter();
+
+		// Depending on the current mce_buttons filter, set variable to support filtering all potential rows.
+		switch ( $current_filter ) {
+
+			case 'mce_buttons_2':
+				$mce_filter = '_row_two';
+				break;
+
+			case 'mce_buttons_3':
+				$mce_filter = '_row_three';
+				break;
+
+			case 'mce_buttons_4':
+				$mce_filter = '_row_four';
+				break;
+
+			default:
+				$mce_filter = '';
+				break;
+
+		}
+
 		/**
 		 * Filters the buttons within the TinyMCE editor
 		 *
@@ -211,9 +242,7 @@ class GF_Field_Textarea extends GF_Field {
 		 *
 		 * Additional filters for specific form and fields IDs.
 		 */
-		$mce_buttons = apply_filters( 'gform_rich_text_editor_buttons',                                            $mce_buttons, $editor_id, $this );
-		$mce_buttons = apply_filters( sprintf( 'gform_rich_text_editor_buttons_%d', $this->formId ),               $mce_buttons, $editor_id, $this );
-		$mce_buttons = apply_filters( sprintf( 'gform_rich_text_editor_buttons_%d_%d', $this->formId, $this->id ), $mce_buttons, $editor_id, $this );
+		$mce_buttons = gf_apply_filters( array( 'gform_rich_text_editor_buttons' . $mce_filter, $this->formId, $this->id ), $mce_buttons, $editor_id, $this );
 
 		return $mce_buttons;
 	}

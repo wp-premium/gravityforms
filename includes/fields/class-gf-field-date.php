@@ -111,7 +111,7 @@ class GF_Field_Date extends GF_Field {
 			// GFCommon::parse_date() takes a numeric array.
 			$value = array_values( $value );
 		} else {
-			$picker_value = $value;
+			$picker_value = esc_attr( $value );
 		}
 		$format    = empty( $this->dateFormat ) ? 'mdy' : esc_attr( $this->dateFormat );
 		$date_info = GFCommon::parse_date( $value, $format );
@@ -131,6 +131,7 @@ class GF_Field_Date extends GF_Field {
 		$disabled_text = $is_form_editor ? "disabled='disabled'" : '';
 		$class_suffix  = $is_entry_detail ? '_admin' : '';
 		$class         = $size . $class_suffix;
+		$class         = esc_attr( $class );
 
 		$form_sub_label_placement  = rgar( $form, 'subLabelPlacement' );
 		$field_sub_label_placement = $this->subLabelPlacement;
@@ -207,7 +208,7 @@ class GF_Field_Date extends GF_Field {
 			$day_dropdown   = "<div class='gfield_date_dropdown_day ginput_date_dropdown' id='gfield_dropdown_date_day' style='display:$dropdown_display'>" . $this->get_day_dropdown( '', "{$field_id}_2", rgar( $date_info, 'day' ), '', $disabled_text, $day_placeholder_value ) . '</div>';
 			$year_dropdown  = "<div class='gfield_date_dropdown_year ginput_date_dropdown' id='gfield_dropdown_date_year' style='display:$dropdown_display'>" . $this->get_year_dropdown( '', "{$field_id}_3", rgar( $date_info, 'year' ), '', $disabled_text, $year_placeholder_value, $form ) . '</div>';
 
-			$field_string = "<div class='ginput_container ginput_container_date' id='gfield_input_datepicker' style='display:$datepicker_display'><input name='ginput_datepicker' type='text' {$date_picker_placeholder} {$disabled_text} value = '{$picker_value}'/><img src='" . GFCommon::get_base_url() . "/images/calendar.png' id='gfield_input_datepicker_icon' style='display:$icon_display'/></div>";
+			$field_string = "<div class='ginput_container ginput_container_date' id='gfield_input_datepicker' style='display:$datepicker_display'><input name='ginput_datepicker' type='text' {$date_picker_placeholder} {$disabled_text} value='{$picker_value}'/><img src='" . GFCommon::get_base_url() . "/images/calendar.png' id='gfield_input_datepicker_icon' style='display:$icon_display'/></div>";
 
 			switch ( $field_position ) {
 				case 'dmy' :

@@ -392,9 +392,13 @@ class GF_Field_Consent extends GF_Field {
 	 * @return string|array
 	 */
 	public function get_value_export( $entry, $input_id = '', $use_text = false, $is_csv = false ) {
+		if ( empty( $input_id ) ) {
+			return '';
+		}
+
 		$value = parent::get_value_export( $entry, $input_id, $use_text, $is_csv );
 
-		list( $field_id, $input_id ) = explode( '.', $input_id );
+		list( $field_id, $input_id ) = rgexplode( '.', $input_id, 2 );
 
 		switch ( $input_id ) {
 			case '1':

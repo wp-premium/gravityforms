@@ -583,8 +583,8 @@ class GF_System_Report {
 								'value'              => esc_html( phpversion() ),
 								'type'               => 'version_check',
 								'version_compare'    => '>=',
-								'minimum_version'    => '7.1',
-								'validation_message' => esc_html__( 'Recommended: PHP 7.1 or higher.', 'gravityforms' ),
+								'minimum_version'    => '7.3',
+								'validation_message' => esc_html__( 'Recommended: PHP 7.3 or higher.', 'gravityforms' ),
 							),
 							array(
 								'label'        => esc_html__( 'Memory Limit', 'gravityforms' ) . ' (memory_limit)',
@@ -872,16 +872,6 @@ class GF_System_Report {
 		// Prepare versions array.
 		$gravityforms = array(
 			array(
-				'export_only'               => true,
-				'label'                     => esc_html__( 'Registration', 'gravityforms' ),
-				'label_export'              => 'Registration',
-				'value'                     => $is_registered ? esc_html__( 'Site registered ', 'gravityforms' ) . ' ( ' . $site_key . ' ) ' : '',
-				'is_valid'                  => $is_registered,
-				'value_export'              => $is_registered ? 'Site registered ( ' . $site_key . ' ) ' : 'Not registered',
-				'validation_message'        => $validation_message,
-				'validation_message_export' => '',
-			),
-			array(
 				'label'              => esc_html__( 'Version', 'gravityforms' ),
 				'label_export'       => 'Version',
 				'value'              => GFForms::$version,
@@ -940,6 +930,16 @@ class GF_System_Report {
 				'label_export' => 'Locale',
 				'value'        => $locale,
 				'value_export' => $locale,
+			),
+			array(
+				'export_only'               => true,
+				'label'                     => esc_html__( 'Registration', 'gravityforms' ),
+				'label_export'              => 'Registration',
+				'value'                     => $is_registered ? esc_html__( 'Site registered ', 'gravityforms' ) . ' ( ' . $site_key . ' ) ' : '',
+				'is_valid'                  => $is_registered,
+				'value_export'              => $is_registered ? 'Site registered ( ' . $site_key . ' ) ' : 'Site not registered',
+				'validation_message'        => $validation_message,
+				'validation_message_export' => '',
 			),
 		);
 

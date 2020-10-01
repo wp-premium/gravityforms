@@ -86,6 +86,7 @@ class GF_Field_Email extends GF_Field {
 		$class_suffix  = $is_entry_detail ? '_admin' : '';
 
 		$class         = $this->emailConfirmEnabled ? '' : $size . $class_suffix; //Size only applies when confirmation is disabled
+		$class         = esc_attr( $class );
 
 		$form_sub_label_placement  = rgar( $form, 'subLabelPlacement' );
 		$field_sub_label_placement = $this->subLabelPlacement;

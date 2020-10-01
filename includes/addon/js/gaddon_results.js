@@ -210,7 +210,7 @@ google.load('visualization', '1', {packages: ['corechart']});
 google.setOnLoadCallback(gresults.drawCharts);
 
 
-jQuery(document).ready(function () {
+jQuery( window ).on( 'load', function () {
 
     if (jQuery("#gresults-results").length > 0) {
 

@@ -3103,7 +3103,7 @@ div#notifications_container .inside div.message.error {
 div.gform_card_icon {
 	margin-right: 4px;
 	text-indent: -9000px;
-	background-image: url(../images/gf-creditcard-icons.png);
+	background-image: url(../images/gf-creditcard-icons.svg);
 	background-repeat: no-repeat;
 	width: 36px;
 	height: 32px;
@@ -3183,75 +3183,75 @@ div.gform_card_icon {
 }
 
 .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_visa {
-	background-position: 0 -192px;
+	background-position: 0 -189px;
 }
 
 .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_selected.gform_card_icon_visa {
-	background-position: 0 -224px;
+	background-position: 0 -221px;
 }
 
 .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_inactive.gform_card_icon_visa {
-	background-position: 0 -256px;
+	background-position: 0 -252px;
 }
 
 .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_mastercard {
-	background-position: -36px -192px;
+	background-position: -36px -189px;
 }
 
 .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_selected.gform_card_icon_mastercard {
-	background-position: -36px -224px;
+	background-position: -36px -221px;
 }
 
 .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_inactive.gform_card_icon_mastercard {
-	background-position: -36px -256px;
+	background-position: -36px -252px;
 }
 
 .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_amex {
-	background-position: -72px -192px;
+	background-position: -72px -189px;
 }
 
 .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_selected.gform_card_icon_amex {
-	background-position: -72px -224px;
+	background-position: -72px -221px;
 }
 
 .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_inactive.gform_card_icon_amex {
-	background-position: -72px -256px;
+	background-position: -72px -252px;
 }
 
 .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_discover {
-	background-position: -108px -192px;
+	background-position: -108px -189px;
 }
 
 .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_selected.gform_card_icon_discover {
-	background-position: -108px -224px;
+	background-position: -108px -221px;
 }
 
 .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_inactive.gform_card_icon_discover {
-	background-position: -108px -256px;
+	background-position: -108px -252px;
 }
 
 .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_maestro {
-	background-position: -144px -192px;
+	background-position: -144px -189px;
 }
 
 .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_selected.gform_card_icon_maestro {
-	background-position: -144px -224px;
+	background-position: -144px -221px;
 }
 
 .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_inactive.gform_card_icon_maestro {
-	background-position: -144px -256px;
+	background-position: -144px -252px;
 }
 
 .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_jcb {
-	background-position: -180px -192px;
+	background-position: -180px -189px;
 }
 
 .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_selected.gform_card_icon_jcb {
-	background-position: -180px -224px;
+	background-position: -180px -221px;
 }
 
 .gform_card_icon_container.gform_card_icon_style2 div.gform_card_icon.gform_card_icon_inactive.gform_card_icon_jcb {
-	background-position: -180px -256px;
+	background-position: -180px -252px;
 }
 
 /* credit card fields */
@@ -3305,7 +3305,7 @@ div.gform_card_icon {
 .ginput_complex .ginput_cardinfo_right span.ginput_card_security_code_icon {
 	width: 32px;
 	height: 23px;
-	background-image: url(../images/gf-creditcard-icons.png);
+	background-image: url(../images/gf-creditcard-icons.svg);
 	background-repeat: no-repeat;
 	background-position: 0 -128px;
 	position: relative;
@@ -5292,4 +5292,44 @@ div .gfield_repeater_cell {
 /*Addded this temporarily to disable extra spacing*/
 .gfield_repeater_cell .gfield_admin_icons {
 	height: 0px;
+}
+
+/* inner 2 column liquid layout */
+
+.inner-sidebar {
+	float: right;
+	clear: right;
+	display: none;
+	width: 281px;
+	position: relative;
+}
+
+.columns-2 .inner-sidebar {
+	margin-right: auto;
+	width: 286px;
+	display: block;
+}
+
+.inner-sidebar #side-sortables,
+.columns-2 .inner-sidebar #side-sortables {
+	min-height: 300px;
+	width: 280px;
+	padding: 0;
+}
+
+.has-right-sidebar .inner-sidebar {
+	display: block;
+}
+
+.has-right-sidebar #post-body {
+	float: left;
+	clear: left;
+	width: 100%;
+	margin-right: -2000px;
+}
+
+.has-right-sidebar #post-body-content {
+	margin-right: 300px;
+	float: none;
+	width: auto;
 }
