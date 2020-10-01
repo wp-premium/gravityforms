@@ -441,7 +441,7 @@ class GFEntryList {
 				'label'   => esc_html_x( 'Starred', 'Entry List', 'gravityforms' ),
 			),
 		);
-		if ( GFCommon::spam_enabled( $form_id ) ) {
+		if ( ( $spam_count > 0 ) || GFCommon::spam_enabled( $form_id ) ) {
 			$filter_links[] = array(
 				'id' => 'spam',
 				'field_filters' => array(),
@@ -828,7 +828,15 @@ final class GF_Entry_List_Table extends WP_List_Table {
 			$table_columns['field_id-id'] = esc_html__( 'Entry Id', 'gravityforms' );
 		}
 
-		$table_columns['column_selector'] = '<a aria-label="' . esc_attr__( 'click to select columns to display', 'gravityforms' ) . '" href="' . trailingslashit( site_url( null, 'admin' ) ) . '?gf_page=select_columns&id=' . absint( $form_id ) . '&TB_iframe=true&height=365&width=600" class="thickbox entries_edit_icon"><i aria-hidden="true" class="fa fa-cog" title="' . esc_attr__( 'click to select columns to display', 'gravityforms' ) . '"></i></a>';
+		$column_selector_url = add_query_arg( array(
+			'gf_page'   => 'select_columns',
+			'id'        => absint( $form_id ),
+			'TB_iframe' => 'true',
+			'height'    => 365,
+			'width'     => 600,
+		), admin_url() );
+
+		$table_columns['column_selector'] = '<a aria-label="' . esc_attr__( 'click to select columns to display', 'gravityforms' ) . '" href="' . esc_url( $column_selector_url ) . '" class="thickbox entries_edit_icon"><i aria-hidden="true" class="fa fa-cog" title="' . esc_attr__( 'click to select columns to display', 'gravityforms' ) . '"></i></a>';
 
 		/**
 		 * Allow the columns to be displayed in the entry list table to be overridden.

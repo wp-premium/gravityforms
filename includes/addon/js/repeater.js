@@ -123,7 +123,7 @@ jQuery.fn.repeater = function( options ) {
 
             itemMarkup = itemMarkup.replace( /{i}/g, index );
             itemMarkup = itemMarkup.replace( '{buttons}', self.getRepeaterButtonsMarkup( index ) );
-            itemMarkup = itemMarkup.replace( new RegExp( '{' + property + '}', 'g' ), item[property] );
+            itemMarkup = itemMarkup.replace( new RegExp( '{' + property + '}', 'g' ), escapeAttr( item[property] ) );
 
         }
 

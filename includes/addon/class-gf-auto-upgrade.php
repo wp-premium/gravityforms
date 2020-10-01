@@ -137,16 +137,21 @@ class GFAutoUpgrade {
 			$option->response[ $this->_path ] = new stdClass();
 		}
 
+		$plugin = array(
+			'plugin'      => $this->_path,
+			'url'         => $this->_url,
+			'slug'        => $this->_slug,
+			'package'     => str_replace( '{KEY}', $key, $version_info['url'] ),
+			'new_version' => $version_info['version'],
+			'id'          => '0',
+		);
+
 		//Empty response means that the key is invalid. Do not queue for upgrade
 		if ( ! rgar( $version_info, 'is_valid_key' ) || version_compare( $this->_version, $version_info['version'], '>=' ) ) {
 			unset( $option->response[ $this->_path ] );
+			$option->no_update[ $this->_path ] = (object) $plugin;
 		} else {
-			$option->response[ $this->_path ]->plugin      = $this->_path;
-			$option->response[ $this->_path ]->url         = $this->_url;
-			$option->response[ $this->_path ]->slug        = $this->_slug;
-			$option->response[ $this->_path ]->package     = str_replace( '{KEY}', $key, $version_info['url'] );
-			$option->response[ $this->_path ]->new_version = $version_info['version'];
-			$option->response[ $this->_path ]->id          = '0';
+			$option->response[ $this->_path ] = (object) $plugin;
 		}
 
 		return $option;

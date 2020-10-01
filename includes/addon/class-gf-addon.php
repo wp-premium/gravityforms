@@ -342,6 +342,10 @@ abstract class GFAddOn {
 			$config = $this->get_locking_config();
 			new GFAddonLocking( $config, $this );
 		}
+
+		if ( $this->has_plugin_settings_page() && $this->current_user_can_any( $this->_capabilities_settings_page ) ) {
+			add_filter( 'plugin_action_links', array( $this, 'plugin_settings_link' ), 10, 2 );
+		}
 	}
 
 
@@ -1137,6 +1141,7 @@ abstract class GFAddOn {
 	 *       );
 	 * }
 	 *
+     * @return array|bool
 	 */
 	public function get_results_page_config() {
 		return false;
@@ -1264,6 +1269,11 @@ abstract class GFAddOn {
 		}
 		if ( ! empty( $this->_capabilities_settings_page ) && is_string( $this->_capabilities_settings_page ) ) {
 			$caps[ $this->_capabilities_settings_page ] = esc_html__( 'Add-On Settings', 'gravityforms' );
+		}
+
+		$results_cap = rgars( $this->get_results_page_config(), 'capabilities/0' );
+		if ( ! empty( $results_cap ) && $results_cap !== 'gravityforms_view_entries' && ! isset( $caps[ $results_cap ] ) ) {
+			$caps[ $results_cap ] = esc_html__( 'Results Page', 'gravityforms' );
 		}
 
 		return $caps;
@@ -6247,6 +6257,17 @@ abstract class GFAddOn {
 	 */
 	public function get_slug() {
 		return $this->_slug;
+	}
+
+	/**
+	 * Returns the add-on slug with the gravityforms prefix removed.
+	 *
+	 * @since 2.4.18
+	 *
+	 * @return string
+	 */
+	public function get_short_slug() {
+		return str_replace( 'gravityforms', '', $this->get_slug() );
 	}
 
 	/**

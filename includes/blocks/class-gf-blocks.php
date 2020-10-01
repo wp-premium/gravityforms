@@ -73,6 +73,17 @@ class GF_Blocks {
 
 	}
 
+	/**
+	 * Returns an array of registered block types.
+	 *
+	 * @since 2.4.18
+	 *
+	 * @return array
+	 */
+	public static function get_all_types() {
+		return array_keys( self::$_blocks );
+	}
+
 }
 
 new GF_Blocks();

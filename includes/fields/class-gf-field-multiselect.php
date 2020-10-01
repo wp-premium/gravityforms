@@ -104,7 +104,8 @@ class GF_Field_MultiSelect extends GF_Field {
 		$size          = $this->size;
 		$class_suffix  = $is_entry_detail ? '_admin' : '';
 		$class         = $size . $class_suffix;
-		$css_class     = trim( esc_attr( $class ) . ' gfield_select' );
+		$class         = esc_attr( $class );
+		$css_class     = trim( $class . ' gfield_select' );
 		$tabindex      = $this->get_tabindex();
 		$disabled_text = $is_form_editor ? 'disabled="disabled"' : '';
 
@@ -129,6 +130,7 @@ class GF_Field_MultiSelect extends GF_Field {
 		if ( empty( $size ) ) {
 			$size = 7;
 		}
+		$size = esc_attr( $size );
 
 		return sprintf( "<div class='ginput_container ginput_container_multiselect'><select multiple='multiple' {$placeholder} size='{$size}' name='input_%d[]' id='%s' class='%s' $tabindex %s>%s</select></div>", $id, esc_attr( $field_id ), $css_class, $disabled_text, $this->get_choices( $value ) );
 	}

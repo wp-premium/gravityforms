@@ -58,8 +58,9 @@ class GF_Block {
 
 		$this->register_block_type();
 
-		add_action( 'enqueue_block_editor_assets', array( $this, 'enqueue_scripts' ) );
-		add_action( 'enqueue_block_editor_assets', array( $this, 'enqueue_styles' ) );
+		add_filter( 'allowed_block_types', array( $this, 'check_allowed_blocks' ), 9999 );
+
+		add_action( 'gform_post_enqueue_scripts', array( $this, 'post_enqueue_scripts' ), 10, 3 );
 
 	}
 
@@ -97,6 +98,26 @@ class GF_Block {
 
 	}
 
+
+	/**
+	 * Checks allowed blocks for Gravity forms blocks to only enqueue block editor assets when necessary.
+	 *
+	 * @since  2.4.18
+	 *
+	 * @param bool|array $allowed_block_types Array of block type slugs, or boolean to enable/disable all.
+	 *
+	 * @return bool|array
+	 */
+	public function check_allowed_blocks( $allowed_block_types ) {
+
+		// Only enqueue block editor assets if all blocks are allowed or if the current block type is an allowed block.
+		if ( $allowed_block_types === true || ( is_array( $allowed_block_types ) && in_array( $this->get_type(), $allowed_block_types ) ) ) {
+			add_action( 'enqueue_block_editor_assets', array( $this, 'enqueue_scripts' ) );
+			add_action( 'enqueue_block_editor_assets', array( $this, 'enqueue_styles' ) );
+		}
+
+		return $allowed_block_types;
+	}
 
 
 
@@ -250,6 +271,18 @@ class GF_Block {
 
 		return '';
 
+	}
+
+	/**
+	 * Override to perform additional actions when scripts/styles are enqueued on the wp_enqueue_scripts hook.
+	 *
+	 * @since 2.4.18
+	 *
+	 * @param array   $found_forms  An array of found forms using the form ID as the key to the ajax status.
+	 * @param array   $found_blocks An array of found GF blocks.
+	 * @param WP_Post $post         The post which was processed.
+	 */
+	public function post_enqueue_scripts( $found_forms, $found_blocks, $post ) {
 	}
 
 }
