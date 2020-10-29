@@ -4904,7 +4904,11 @@ div.wrap.gf_browser_chrome .gfield_checkbox li input {
 
 #entry_search_button{
     float:right;
-	margin-top:3px;
+	margin-top:4px;
+	min-height: 32px;
+}
+.gform-filter-value{
+	min-height: 32px;
 }
 
 /* Entry Detail */
