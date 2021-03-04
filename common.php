@@ -3625,7 +3625,7 @@ Content-Type: text/html;
 		$type            = empty( $wp_filetype['type'] ) ? '' : $wp_filetype['type'];
 		$proper_filename = empty( $wp_filetype['proper_filename'] ) ? '' : $wp_filetype['proper_filename'];
 
-		if ( $proper_filename ) {
+		if ( ! $proper_filename ) {
 			return new WP_Error( 'invalid_file', esc_html__( 'There was an problem while verifying your file.' ) );
 		}
 		if ( ! $ext ) {
